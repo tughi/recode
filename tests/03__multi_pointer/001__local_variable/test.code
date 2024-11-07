@@ -1,4 +1,4 @@
 func main() -> i32 {
-    let array: [i32; ?]
+    let array: [@]i32
     return 0
 }

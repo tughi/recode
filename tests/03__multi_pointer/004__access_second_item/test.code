@@ -1,4 +1,4 @@
-func main(anon argc: i32, anon argv: [[u8; ?]; ?]) -> i32 {
+func main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
     if argc < 2 {
         return 1
     }

@@ -722,7 +722,7 @@ Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self, Parse
 /*
 type
     | "@" type
-    | "[" type ( ";" ( expression | "?" ) )? "]"
+    | "[" ( expression | "@" ) "]" type
     | IDENTIFIER
     | func "(" function_parameters? ")" ( "->" type )?
 */
@@ -736,26 +736,20 @@ Parsed_Type *Parser__parse_type(Parser *self) {
     if (Parser__matches_one(self, Token__is_opening_bracket)) {
         Source_Location *location = Parser__consume_token(self, Token__is_opening_bracket)->location;
         Parser__consume_space(self, 0);
-        Parsed_Type *item_type = Parser__parse_type(self);
-        Parser__consume_space(self, 0);
-        if (Parser__matches_one(self, Token__is_semicolon)) {
-            Parser__consume_token(self, Token__is_semicolon);
-            Parser__consume_space(self, 1);
-            if (Parser__matches_one(self, Token__is_question_mark)) {
-                Parser__consume_token(self, Token__is_question_mark);
-                Parser__consume_space(self, 0);
-                Parser__consume_token(self, Token__is_closing_bracket);
-                return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, false, NULL);
-            } else {
-                Parsed_Expression *size_expression = Parser__parse_expression(self);
-                Parser__consume_space(self, 0);
-                Parser__consume_token(self, Token__is_closing_bracket);
-                return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, true, size_expression);
-            }
+        if (Parser__matches_one(self, Token__is_at)) {
+            Parser__consume_token(self, Token__is_at);
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_closing_bracket);
+            Parser__consume_space(self, 0);
+            Parsed_Type *item_type = Parser__parse_type(self);
+            return (Parsed_Type *)Parsed_Multi_Pointer_Type__create(location, item_type);
         }
+        Parsed_Expression *size_expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_bracket);
-        return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, true, NULL);
+        Parser__consume_space(self, 0);
+        Parsed_Type *item_type = Parser__parse_type(self);
+        return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, size_expression);
     }
     if (Parser__matches_one(self, Token__is_func)) {
         Source_Location *location = Parser__consume_token(self, Token__is_func)->location;

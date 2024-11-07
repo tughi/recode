@@ -12,7 +12,7 @@ func make_string() -> @String {
 }
 
 struct String {
-    data = malloc(16usize).as([u8; ?])
+    data = malloc(16usize).as([@]u8)
     data_size = 16usize
     length = 0usize
 }

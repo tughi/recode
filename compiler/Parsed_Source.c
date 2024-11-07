@@ -7,10 +7,9 @@ Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
     return type;
 }
 
-Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, bool is_checked, Parsed_Expression *size_expression) {
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, Parsed_Expression *size_expression) {
     Parsed_Array_Type *type = (Parsed_Array_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__ARRAY, sizeof(Parsed_Array_Type), location);
     type->item_type = item_type;
-    type->is_checked = is_checked;
     type->size_expression = size_expression;
     return type;
 }
@@ -28,6 +27,12 @@ Parsed_Type *Parsed_Function_Type__create(Source_Location *location, Parsed_Func
     Parsed_Function_Type *type = (Parsed_Function_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__FUNCTION, sizeof(Parsed_Function_Type), location);
     type->first_parameter = first_parameter;
     type->return_type = return_type;
+    return (Parsed_Type *)type;
+}
+
+Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location *location, Parsed_Type *item_type) {
+    Parsed_Multi_Pointer_Type *type = (Parsed_Multi_Pointer_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__MULTI_POINTER, sizeof(Parsed_Multi_Pointer_Type), location);
+    type->item_type = item_type;
     return (Parsed_Type *)type;
 }
 

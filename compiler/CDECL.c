@@ -58,29 +58,7 @@ void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
 }
 
 void declare_array(CDECL *cdecl, Checked_Array_Type *array_type) {
-    if (array_type->is_checked) {
-        todo("Declare checked array");
-    }
-    CDECL type_cdecl = {NULL, NULL, NULL};
-    declare(&type_cdecl, array_type->item_type);
-    cdecl->type = type_cdecl.type;
-    cdecl->left = String__create();
-    if (type_cdecl.left != NULL) {
-        String__append_string(cdecl->left, type_cdecl.left);
-        String__delete(type_cdecl.left);
-    }
-    if (array_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)array_type->item_type)->is_checked || array_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        String__append_char(cdecl->left, '(');
-    }
-    String__append_char(cdecl->left, '*');
-    cdecl->right = String__create();
-    if (array_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)array_type->item_type)->is_checked || array_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        String__append_char(cdecl->right, ')');
-    }
-    if (type_cdecl.right != NULL) {
-        String__append_string(cdecl->right, type_cdecl.right);
-        String__delete(type_cdecl.right);
-    }
+    todo("Declare checked array");
 }
 
 void declare_function(CDECL *cdecl, Checked_Function_Type *function_type) {
@@ -118,6 +96,30 @@ void declare_function_pointer(CDECL *cdecl, Checked_Function_Pointer_Type *funct
     String__delete(function_cdecl.right);
 }
 
+void declare_multi_pointer(CDECL *cdecl, Checked_Multi_Pointer_Type *multi_pointer_type) {
+    CDECL type_cdecl = {NULL, NULL, NULL};
+    declare(&type_cdecl, multi_pointer_type->item_type);
+    cdecl->type = type_cdecl.type;
+    cdecl->left = String__create();
+    if (type_cdecl.left != NULL) {
+        String__append_string(cdecl->left, type_cdecl.left);
+        String__delete(type_cdecl.left);
+    }
+    bool needs_parentheses = multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY || multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION;
+    if (needs_parentheses) {
+        String__append_char(cdecl->left, '(');
+    }
+    String__append_char(cdecl->left, '*');
+    cdecl->right = String__create();
+    if (needs_parentheses) {
+        String__append_char(cdecl->right, ')');
+    }
+    if (type_cdecl.right != NULL) {
+        String__append_string(cdecl->right, type_cdecl.right);
+        String__delete(type_cdecl.right);
+    }
+}
+
 void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
     CDECL type_cdecl = {NULL, NULL, NULL};
     declare(&type_cdecl, pointer_type->other_type);
@@ -127,12 +129,13 @@ void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
         String__append_string(cdecl->left, type_cdecl.left);
         String__delete(type_cdecl.left);
     }
-    if (pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)pointer_type->other_type)->is_checked || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+    bool needs_parentheses = pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION;
+    if (needs_parentheses) {
         String__append_char(cdecl->left, '(');
     }
     String__append_char(cdecl->left, '*');
     cdecl->right = String__create();
-    if (pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)pointer_type->other_type)->is_checked || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+    if (needs_parentheses) {
         String__append_char(cdecl->right, ')');
     }
     if (type_cdecl.right != NULL) {
@@ -190,6 +193,9 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__TRAIT:
         cdecl->type = String__create_from("struct ");
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
+        break;
+    case CHECKED_TYPE_KIND__MULTI_POINTER:
+        declare_multi_pointer(cdecl, (Checked_Multi_Pointer_Type *)symbol_type);
         break;
     case CHECKED_TYPE_KIND__POINTER:
         declare_pointer(cdecl, (Checked_Pointer_Type *)symbol_type);

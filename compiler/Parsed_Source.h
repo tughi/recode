@@ -44,6 +44,7 @@ typedef struct Parsed_Expression {
 typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__ARRAY,
     PARSED_TYPE_KIND__FUNCTION,
+    PARSED_TYPE_KIND__MULTI_POINTER,
     PARSED_TYPE_KIND__NAMED,
     PARSED_TYPE_KIND__POINTER,
     PARSED_TYPE_KIND__RECEIVER
@@ -59,11 +60,10 @@ Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
 typedef struct Parsed_Array_Type {
     Parsed_Type super;
     Parsed_Type *item_type;
-    bool is_checked;
     Parsed_Expression *size_expression;
 } Parsed_Array_Type;
 
-Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, bool is_checked, Parsed_Expression *size_expression);
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, Parsed_Expression *size_expression);
 
 typedef struct Parsed_Function_Parameter {
     Token *label;
@@ -81,6 +81,13 @@ typedef struct Parsed_Function_Type {
 } Parsed_Function_Type;
 
 Parsed_Type *Parsed_Function_Type__create(Source_Location *location, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
+
+typedef struct Parsed_Multi_Pointer_Type {
+    Parsed_Type super;
+    Parsed_Type *item_type;
+} Parsed_Multi_Pointer_Type;
+
+Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location *location, Parsed_Type *item_type);
 
 typedef struct Parsed_Named_Type {
     Parsed_Type super;

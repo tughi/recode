@@ -27,16 +27,15 @@ bool Checked_Type__is_numeric_type(Checked_Type *self) {
     }
 }
 
-Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, bool is_checked, Checked_Expression *size_expression) {
+Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, Checked_Expression *size_expression) {
     Checked_Array_Type *type = (Checked_Array_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__ARRAY, sizeof(Checked_Array_Type), location);
     type->item_type = item_type;
-    type->is_checked = is_checked;
     type->size_expression = size_expression;
     return type;
 }
 
 bool Checked_Array_Type__equals(Checked_Array_Type *self, Checked_Array_Type *other) {
-    if (self->is_checked != other->is_checked || !Checked_Type__equals(self->item_type, other->item_type)) {
+    if (!Checked_Type__equals(self->item_type, other->item_type)) {
         return false;
     }
     if (self->size_expression == NULL) {
@@ -104,6 +103,16 @@ Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Loca
 
 bool Checked_Function_Pointer_Type__equals(Checked_Function_Pointer_Type *self, Checked_Function_Pointer_Type *other) {
     return Checked_Function_Type__equals(self->function_type, other->function_type);
+}
+
+Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location *location, Checked_Type *item_type) {
+    Checked_Multi_Pointer_Type *type = (Checked_Multi_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__MULTI_POINTER, sizeof(Checked_Multi_Pointer_Type), location);
+    type->item_type = item_type;
+    return type;
+}
+
+bool Checked_Multi_Pointer_Type__equals(Checked_Multi_Pointer_Type *self, Checked_Multi_Pointer_Type *other) {
+    return Checked_Type__equals(self->item_type, other->item_type);
 }
 
 Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location *location, Checked_Type *other_type) {
@@ -178,6 +187,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Function_Type__equals((Checked_Function_Type *)self, (Checked_Function_Type *)other);
     case CHECKED_TYPE_KIND__FUNCTION_POINTER:
         return Checked_Function_Pointer_Type__equals((Checked_Function_Pointer_Type *)self, (Checked_Function_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__MULTI_POINTER:
+        return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__STRUCT:
@@ -206,17 +217,6 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         pWriter__write__string(self, named_type->name);
         break;
     }
-    case CHECKED_TYPE_KIND__ARRAY: {
-        Checked_Array_Type *array_type = (Checked_Array_Type *)type;
-        pWriter__write__char(self, '[');
-        pWriter__write__checked_type(self, array_type->item_type);
-        if (array_type->is_checked) {
-            panic();
-        } else {
-            pWriter__write__cstring(self, "; ?]");
-        }
-        break;
-    }
     case CHECKED_TYPE_KIND__FUNCTION: {
         panic();
         break;
@@ -236,6 +236,12 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         }
         pWriter__write__cstring(self, ") -> ");
         pWriter__write__checked_type(self, function_pointer_type->function_type->return_type);
+        break;
+    }
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)type;
+        pWriter__write__cstring(self, "[@]");
+        pWriter__write__checked_type(self, multi_pointer_type->item_type);
         break;
     }
     case CHECKED_TYPE_KIND__NULL: {

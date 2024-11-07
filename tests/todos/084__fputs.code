@@ -2,12 +2,12 @@
 \ - output: 'PASS\n'
 
 struct String {
-    data: [u8; ?]
+    data: [@]u8
 }
 
 external type File
 external stdout: @File
-external func fputs(s: [u8; ?], stream: @File) -> i32
+external func fputs(s: [@]u8, stream: @File) -> i32
 
 func main() -> i32 {
     let value_1: i32 = undefined

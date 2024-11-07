@@ -28,6 +28,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__TRAIT,
     /* Dynamic */
     CHECKED_TYPE_KIND__FUNCTION_POINTER,
+    CHECKED_TYPE_KIND__MULTI_POINTER,
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
 
@@ -83,11 +84,10 @@ typedef struct Checked_Expression {
 typedef struct Checked_Array_Type {
     Checked_Type super;
     Checked_Type *item_type;
-    bool is_checked;
     Checked_Expression *size_expression;
 } Checked_Array_Type;
 
-Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, bool is_checked, Checked_Expression *size_expression);
+Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, Checked_Expression *size_expression);
 
 typedef struct Checked_Named_Type {
     Checked_Type super;
@@ -128,6 +128,13 @@ typedef struct Checked_Function_Pointer_Type {
 } Checked_Function_Pointer_Type;
 
 Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location *location, Checked_Function_Type *function_type);
+
+typedef struct Checked_Multi_Pointer_Type {
+    Checked_Type super;
+    Checked_Type *item_type;
+} Checked_Multi_Pointer_Type;
+
+Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location *location, Checked_Type *item_type);
 
 typedef struct Checked_Pointer_Type {
     Checked_Type super;

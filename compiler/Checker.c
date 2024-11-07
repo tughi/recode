@@ -87,7 +87,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         if (parsed_array_type->size_expression != NULL) {
             checked_size_expression = Checker__check_expression(self, parsed_array_type->size_expression, (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__ISIZE));
         }
-        return (Checked_Type *)Checked_Array_Type__create(parsed_type->location, checked_item_type, parsed_array_type->is_checked, checked_size_expression);
+        return (Checked_Type *)Checked_Array_Type__create(parsed_type->location, checked_item_type, checked_size_expression);
     }
     case PARSED_TYPE_KIND__FUNCTION: {
         Parsed_Function_Type *parsed_function_type = (Parsed_Function_Type *)parsed_type;
@@ -113,6 +113,8 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         Checked_Function_Type *function_type = Checked_Function_Type__create(parsed_function_type->super.location, function_first_parameter, function_return_type);
         return (Checked_Type *)Checked_Function_Pointer_Type__create(parsed_type->location, function_type);
     }
+    case PARSED_TYPE_KIND__MULTI_POINTER:
+        return (Checked_Type *)Checked_Multi_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Multi_Pointer_Type *)parsed_type)->item_type));
     case PARSED_TYPE_KIND__NAMED: {
         Checked_Named_Type *type = Checker__find_type(self, ((Parsed_Named_Type *)parsed_type)->name);
         if (type != NULL) {
@@ -180,7 +182,7 @@ Checked_Expression *Checker__check_address_of_expression(Checker *self, Parsed_A
 Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed_Array_Access_Expression *parsed_expression) {
     Checked_Expression *array_expression = Checker__check_expression(self, parsed_expression->array_expression, NULL);
     Checked_Type *array_type = array_expression->type;
-    if (array_type->kind != CHECKED_TYPE_KIND__ARRAY) {
+    if (array_type->kind != CHECKED_TYPE_KIND__MULTI_POINTER) {
         pWriter__begin_location_message(stderr_writer, parsed_expression->array_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not an array");
         pWriter__end_location_message(stderr_writer);
@@ -450,13 +452,13 @@ Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Ex
         if (other_expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
             can_cast = true;
         } else if (expression_pointer_type->other_type->kind == CHECKED_TYPE_KIND__ANY) {
-            if (other_expression_type->kind == CHECKED_TYPE_KIND__ARRAY) {
+            if (other_expression_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
                 can_cast = true;
             }
         }
     } else if (Checked_Type__is_numeric_type(expression_type)) {
         can_cast = true;
-    } else if (expression_type->kind == CHECKED_TYPE_KIND__ARRAY) {
+    } else if (expression_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
         if (other_expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
             can_cast = true;
         }
@@ -1158,13 +1160,10 @@ Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_Wh
 
 static void String__append_receiver_type(String *symbol_name, Checked_Type *receiver_type) {
     switch (receiver_type->kind) {
-    case CHECKED_TYPE_KIND__ARRAY: {
-        Checked_Array_Type *array_type = (Checked_Array_Type *)receiver_type;
-        if (array_type->is_checked) {
-            panic();
-        }
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)receiver_type;
         String__append_cstring(symbol_name, "d_");
-        String__append_receiver_type(symbol_name, array_type->item_type);
+        String__append_receiver_type(symbol_name, multi_pointer_type->item_type);
         String__append_cstring(symbol_name, "_b");
         break;
     }

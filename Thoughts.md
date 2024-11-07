@@ -106,36 +106,43 @@ The compiler generates trait objects that could be modeled like this:
     }
 
 
-## Extension methods
+## Pointers
 
-Methods can be declared also outside of a type block.
-
-    func @Binary_Expression.accept(self, visitor: @Visitor) {
-        visitor.visit(self)
-    }
-
-## References
-
-References point to a value and can be created usig the `@` operator:
+A pointer contains the address of a value and can be created usig the `@` operator:
 
     struct Data {
         value: i32
     }
 
     let data = make Data()              \ local Data variable
-    let data_ref = @data                \ reference to data
-    let data_value_ref = @data.value    \ reference to data.value
+    let data_ptr = @data                \ create pointer to data having type @Data
+    let data_value_ptr = @data.value    \ create pointer to data.value having type @i32
 
 Dereferencing is done via the `.@` operator:
 
     let response = 0
-    let response_ref = @response
-    response_ref.@ = 42
+    let response_ptr = @response
+    response_ptr.@ = 42
 
 Struct member access uses auto-dereferencing. Following statements are the same:
 
-    let response = data_ref.value
-    let response = data_ref.@.value
+    let response = data_ptr.value
+    let response = data_ptr.@.value
+
+There is no pointer arithmetic.
+
+## Multi-pointers
+
+A multi-pointer contains the address of a sequence of items that can be accessed like an array.
+
+    let data: [42]Data                  \ array of 42 Data items
+    let data_ptrs = @data               \ create pointer to data with type [@]Data
+
+Accessing multi-pointer items is an unsafe operation.
+
+    let result = data[1] == data_ptrs[1]    \ true
+
+Default value is `nil`.
 
 ## Nullable values
 
@@ -158,29 +165,9 @@ The compiler will complain of missing null-checks.
 
 ## Arrays
 
-Like structs, arrays are passed by reference.
+An array is a sequence of items with a size known at compile time.
 
-### Checked Arrays
-
-An `[i8]` array has the following in-memory structure:
-
-    struct Int8_Array {
-        data: [i8; ?]       \ reference to an unchecked array
-        size: isize
-    }
-
-For checked arrays, the compiler makes sure that each access has a bounds-check, similar to a null-
-check like in the case of nullable types.
-
-### Unchecked Arrays
-
-Unchecked arrays are unsafe. Avoid using them as much as possible.
-
-#### Fixed arrays
-
-Fixed arrays, like `[i8; 42]` are arrays for which the compiler knows their size.
-
-An `[i32; 7]` array has the following in-memory structure:
+An `[7]i32` array has the following in-memory structure:
 
     struct I32_7_Array {
         _0: i32
@@ -192,12 +179,20 @@ An `[i32; 7]` array has the following in-memory structure:
         _6: i32
     }
 
+Arrays are value types but are passed by reference for performance reasons. A function can modify an
+array only if it was explicitly passed as a pointer to the array.
+
+    func change(a1: [42]Data, a2: @[42]Data) {
+        a1[0].value = 13        \ raises a compiler error
+        a2[0].value = 42        \ this is the way
+    }
+
 ## Strings
 
 The `String` type has the following structure:
 
     struct String {
-        data: [u8; ?]
+        data: [@]u8
         data_size: i32
         length: i32
     }
@@ -284,4 +279,12 @@ The last block-parameter can be declared after the macro _invocation_.
 
     list.for_each() {
         stdout.write(item)
+    }
+
+## Extension methods
+
+Methods can be declared also outside of a type block.
+
+    func @Binary_Expression.accept(self, visitor: @Visitor) {
+        visitor.visit(self)
     }
