@@ -1,0 +1,9 @@
+func main() -> i32 {
+    let string: str
+    return 0
+}
+
+struct String {
+    data: [@]u8
+    length: usize
+}

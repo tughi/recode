@@ -25,6 +25,6 @@ int32_t main() {
 #line 11 "tests/01__basics/026__convert_u8_to_i32/test.code"
 int32_t cast(uint8_t value) {
 #line 12 "tests/01__basics/026__convert_u8_to_i32/test.code"
-    return (int32_t) value;
+    return ((int32_t) value);
 }
 

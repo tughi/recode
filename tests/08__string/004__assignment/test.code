@@ -1,0 +1,21 @@
+func main() -> i32 {
+    let message = "I am a string!"
+    if message.length != 14 {
+        return 1
+    }
+    message = "I am a different string!"
+    if message.length != 24 {
+        return 2
+    }
+    let message_ptr = @message
+    message_ptr.@ = "I am an even more different string!"
+    if message.length != 35 {
+        return 3
+    }
+    return 0
+}
+
+struct String {
+    data: [@]u8
+    length: usize
+}

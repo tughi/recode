@@ -254,6 +254,10 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         pWriter__write__checked_type(self, pointer_type->other_type);
         break;
     }
+    case CHECKED_TYPE_KIND__STRING: {
+        pWriter__write__cstring(self, "str");
+        break;
+    }
     default:
         panic();
     }
@@ -545,6 +549,12 @@ Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location *lo
 Checked_String_Expression *Checked_String_Expression__create(Source_Location *location, Checked_Type *type, String *value) {
     Checked_String_Expression *expression = (Checked_String_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__STRING, sizeof(Checked_String_Expression), location, type);
     expression->value = value;
+    return expression;
+}
+
+Checked_String_Length_Expression *Checked_String_Length_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *string_expression) {
+    Checked_String_Length_Expression *expression = (Checked_String_Length_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__STRING_LENGTH, sizeof(Checked_String_Length_Expression), location, type);
+    expression->string_expression = string_expression;
     return expression;
 }
 

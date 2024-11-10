@@ -20,6 +20,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__ANY,
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
+    CHECKED_TYPE_KIND__STRING,
     /* Defined */
     CHECKED_TYPE_KIND__ARRAY,
     CHECKED_TYPE_KIND__EXTERNAL,
@@ -71,6 +72,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__NULL,
     CHECKED_EXPRESSION_KIND__SIZEOF,
     CHECKED_EXPRESSION_KIND__STRING,
+    CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__SUBSTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL
 } Checked_Expression_Kind;
@@ -497,6 +499,13 @@ typedef struct Checked_String_Expression {
 } Checked_String_Expression;
 
 Checked_String_Expression *Checked_String_Expression__create(Source_Location *location, Checked_Type *type, String *value);
+
+typedef struct Checked_String_Length_Expression {
+    Checked_Expression super;
+    Checked_Expression *string_expression;
+} Checked_String_Length_Expression;
+
+Checked_String_Length_Expression *Checked_String_Length_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *string_expression);
 
 typedef struct Checked_Substract_Expression {
     Checked_Binary_Expression super;

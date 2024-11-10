@@ -44,11 +44,11 @@ int32_t main() {
 #line 22 "tests/07__trait/003__call_trait_method/test.code"
     struct Square square = (struct Square){.side = 10};
 #line 23 "tests/07__trait/003__call_trait_method/test.code"
-    struct Shape square_shape = (struct Shape){.self = &square, .area = (int32_t (*)(void *self)) pSquare__area};
+    struct Shape square_shape = (struct Shape){.self = &square, .area = ((int32_t (*)(void *self)) pSquare__area)};
 #line 24 "tests/07__trait/003__call_trait_method/test.code"
     struct Circle circle = (struct Circle){.radius = 10};
 #line 25 "tests/07__trait/003__call_trait_method/test.code"
-    struct Shape circle_shape = (struct Shape){.self = &circle, .area = (int32_t (*)(void *self)) pCircle__area};
+    struct Shape circle_shape = (struct Shape){.self = &circle, .area = ((int32_t (*)(void *self)) pCircle__area)};
 #line 27 "tests/07__trait/003__call_trait_method/test.code"
     if (square_shape.area(square_shape.self) != 100) {
 #line 28 "tests/07__trait/003__call_trait_method/test.code"

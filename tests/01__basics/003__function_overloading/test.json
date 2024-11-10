@@ -1,8 +1,0 @@
-{
-    "compile": {
-        "error": 1,
-        "stderr": [
-            "tests/01__basics/003__function_overloading/test.code:4:6: Symbol already defined here: tests/01__basics/003__function_overloading/test.code:1:6"
-        ]
-    }
-}

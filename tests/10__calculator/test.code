@@ -9,6 +9,9 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
     )
 
     let stdout_writer = make Writer(stdout)
+
+    stdout_writer.write(string: "Tokens:").end_line()
+
     while tokenizer.has_next_token() {
         let token = tokenizer.next_token()
         if token.kind == 0 {
@@ -29,11 +32,7 @@ struct Tokenizer {
     }
 
     func next_token(self) -> @Token {
-        let lexeme_builder = make StringBuilder(
-            data: malloc(4).as([@]u8)
-            data_size: 4
-            length: 0
-        )
+        let lexeme_builder = make_string_builder()
         let c = self.data[self.index]
         if c >= '0' and c <= '9' {
             return self.scan_number_token(@lexeme_builder)
@@ -48,7 +47,7 @@ struct Tokenizer {
         )
     }
 
-    func scan_number_token(self, anon lexeme_builder: @StringBuilder) -> @Token {
+    func scan_number_token(self, anon lexeme_builder: @String_Builder) -> @Token {
         let value = 0
         loop {
             let c = self.data[self.index]
@@ -69,10 +68,27 @@ struct Tokenizer {
     }
 }
 
+\ ------------------------------------------------------------------------------ String
+
+struct String {
+    data: [@]u8
+    length: i32
+}
+
+func @Writer.write(self, string: str) -> @Writer {
+    let string_data = (@string).as(@String).data
+    let index = 0usize
+    while index < string.length {
+        self.write(char: string_data[index])
+        index = index + 1
+    }
+    return self
+}
+
 \ ------------------------------------------------------------------------------ Token
 
 struct Span {
-    lexeme: [@]u8
+    lexeme: str
 }
 
 struct Token {
@@ -89,14 +105,14 @@ func @Writer.write(self, token: @Token) -> @Writer {
     return self
 }
 
-\ ------------------------------------------------------------------------------ StringBuilder
+\ ------------------------------------------------------------------------------ String_Builder
 
-struct StringBuilder {
+struct String_Builder {
     data: [@]u8
     data_size: i32
     length: i32
 
-    func write(self, char c: u8) -> @StringBuilder {
+    func write(self, char c: u8) -> @String_Builder {
         if self.length == self.data_size {
             self.data_size = self.data_size + 8
             self.data = realloc(
@@ -109,13 +125,29 @@ struct StringBuilder {
         return self
     }
 
-    func build(self) -> [@]u8 {
+    func build(self) -> str {
         self.write(char: 0)
-        return self.data
+        let string = make String(
+            data: self.data
+            length: self.length
+        )
+        return (@string).as(@str).@
     }
 }
 
-func @StringBuilder.write_char(self, anon c: u8) {
+func make_string_builder() -> String_Builder {
+    return make_string_builder(initial_data_size: 4)
+}
+
+func make_string_builder(initial_data_size: i32) -> String_Builder {
+    return make String_Builder(
+        data: malloc(initial_data_size.as(u64)).as([@]u8)
+        data_size: initial_data_size
+        length: 0
+    )
+}
+
+func @String_Builder.write_char(self, anon c: u8) {
     self.write(char: c)
 }
 

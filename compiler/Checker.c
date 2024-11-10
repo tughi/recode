@@ -13,6 +13,7 @@ typedef struct Checker {
 } Checker;
 
 void Checker__append_type(Checker *self, Checked_Named_Type *type);
+Checked_Named_Type *Checker__get_builtin_type(Checker *self, Checked_Type_Kind kind);
 
 Checker *Checker__create() {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
@@ -30,9 +31,11 @@ Checker *Checker__create() {
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U32, sizeof(Checked_Named_Type), NULL, String__create_from("u32")));
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U64, sizeof(Checked_Named_Type), NULL, String__create_from("u64")));
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), NULL, String__create_from("u8")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), NULL, String__create_from("usize")));
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ANY, sizeof(Checked_Named_Type), NULL, String__create_from("Any")));
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NOTHING, sizeof(Checked_Named_Type), NULL, String__create_from("__nothing__")));
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NULL, sizeof(Checked_Named_Type), NULL, String__create_from("null")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRING, sizeof(Checked_Named_Type), NULL, String__create_from("str")));
     checker->last_builting_type = checker->last_type;
 
     return checker;
@@ -263,7 +266,7 @@ typedef struct Checked_Callable {
 Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_name, Parsed_Call_Argument *first_parsed_argument, Checked_Expression *receiver_expression) {
     if (receiver_expression == NULL) {
         Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, symbol_name->lexeme);
-        if (symbol != NULL) {
+        if (symbol != NULL && symbol->kind != CHECKED_SYMBOL_KIND__FUNCTION) {
             if (symbol->type->kind != CHECKED_TYPE_KIND__FUNCTION_POINTER) {
                 pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Not a function pointer");
@@ -714,7 +717,11 @@ Checked_Expression *Checker__check_make_expression(Checker *self, Parsed_Make_Ex
     case CHECKED_TYPE_KIND__TRAIT:
         return Checker__check_make_trait_expression(self, parsed_expression, expression_type, (Checked_Trait_Type *)expression_type);
     }
-    todo("Handle unexpected Checked_Type_Kind");
+    pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Cannot make ");
+    pWriter__write__checked_type(stderr_writer, expression_type);
+    pWriter__end_location_message(stderr_writer);
+    panic();
 }
 
 Checked_Expression *Checker__check_member_access_expression(Checker *self, Parsed_Member_Access_Expression *parsed_expression) {
@@ -723,7 +730,18 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
     if (object_type->kind == CHECKED_TYPE_KIND__POINTER) {
         object_type = ((Checked_Pointer_Type *)object_type)->other_type;
     }
-    if (object_type->kind != CHECKED_TYPE_KIND__STRUCT) {
+    switch (object_type->kind) {
+    case CHECKED_TYPE_KIND__STRING:
+        if (String__equals_cstring(parsed_expression->member_name->lexeme, "length")) {
+            return (Checked_Expression *)Checked_String_Length_Expression__create(parsed_expression->super.location, (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__USIZE), object_expression);
+        }
+        pWriter__begin_location_message(stderr_writer, parsed_expression->member_name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "No such string member");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    case CHECKED_TYPE_KIND__STRUCT:
+        break;
+    default:
         pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not a struct type");
         pWriter__end_location_message(stderr_writer);
@@ -789,10 +807,9 @@ Checked_Expression *Checker__check_sizeof_expression(Checker *self, Parsed_Sizeo
 }
 
 Checked_Expression *Checker__check_string_expression(Checker *self, Parsed_String_Expression *parsed_expression) {
-    Checked_Type *char_type = (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__U8);
-    Checked_Type *expression_type = (Checked_Type *)Checked_Pointer_Type__create(parsed_expression->super.literal->location, char_type);
-    String *value = parsed_expression->value;
-    return (Checked_Expression *)Checked_String_Expression__create(parsed_expression->super.super.location, expression_type, value);
+    Checked_Type *string_type = (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__STRING);
+    String *string_value = parsed_expression->value;
+    return (Checked_Expression *)Checked_String_Expression__create(parsed_expression->super.super.location, string_type, string_value);
 }
 
 Checked_Expression *Checker__check_substract_expression(Checker *self, Parsed_Substract_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -942,7 +959,15 @@ void Checker__check_struct_statement(Checker *self, Parsed_Struct_Statement *par
     Checked_Struct_Type *struct_type;
     if (other_type != NULL) {
         if (other_type->super.kind != CHECKED_TYPE_KIND__STRUCT || (((Checked_Struct_Type *)other_type)->first_member != NULL)) {
-            todo("Report type redeclaration");
+            pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Type redeclaration");
+            pWriter__end_location_message(stderr_writer);
+            if (other_type->super.location != NULL) {
+                pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
+                pWriter__write__cstring(stderr_writer, "Previous declaration here");
+                pWriter__end_location_message(stderr_writer);
+            }
+            panic();
         }
         struct_type = (Checked_Struct_Type *)other_type;
     } else {
@@ -1174,6 +1199,7 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
     }
     case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__STRING:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__U8: {

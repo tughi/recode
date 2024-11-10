@@ -189,20 +189,26 @@ array only if it was explicitly passed as a pointer to the array.
 
 ## Strings
 
-The `String` type has the following structure:
+Strings have the `str` type, are immutable and default to the `""` value.
+
+The `str` type is treated internally as the following struct:
 
     struct String {
         data: [@]u8
-        data_size: i32
-        length: i32
+        length: usize
     }
 
-String literals are global values of type `String`.
+String literals are converted to `str` values.
+
+    let text = "Hello"      \ text uses 16 bytes on the stack and 2 bytes in the data section
+    text = "42"             \ this assignment changes the data pointer and sets len to 2
+
+Strings can be created at runtime using builtin functions...
 
 ## Variables
 
-    let text: @String = "123"           \ text holds the address to the specified string
-    let number: i32 = text.length + 1   \ number holds the result of the provided expression
+    let text = "123"                    \ text holds address and length of "123"
+    let number = text.length + 1        \ number holds the usize result of the provided expression
     let root_node = make @Node()        \ root_node holds the address of a new Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
@@ -237,7 +243,7 @@ The function parameters order must be respected and parameter labels are mandato
 paramaters are marked as anonymous with the `anon` modifier.
 
     func panic() {}
-    func panic(at location: @Location, anon message: @String) {}
+    func panic(at location: @Location, anon message: str) {}
     func panic(at location: @Location, unexpected_keyword: @Token) {}
     func panic(at location: @Location, unexpected_token: @Token) {}
 

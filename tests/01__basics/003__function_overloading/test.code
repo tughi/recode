@@ -1,5 +1,11 @@
-func test() {
+func main() -> i32 {
+    return fallback() - fallback(value: 42)
 }
 
-func test(anon value: i32) {
+func fallback() -> i32 {
+    return 42
+}
+
+func fallback(value: i32) -> i32 {
+    return value
 }

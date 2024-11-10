@@ -70,11 +70,11 @@ int32_t main() {
 #line 22 "tests/07__trait/004__make_heap_trait_variable/test.code"
     struct Square *square = __make_Square_value((struct Square){.side = 10});
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *square_shape = __make_Shape_value((struct Shape){.self = square, .area = (int32_t (*)(void *self)) pSquare__area});
+    struct Shape *square_shape = __make_Shape_value((struct Shape){.self = square, .area = ((int32_t (*)(void *self)) pSquare__area)});
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
     struct Circle *circle = __make_Circle_value((struct Circle){.radius = 10});
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *circle_shape = __make_Shape_value((struct Shape){.self = circle, .area = (int32_t (*)(void *self)) pCircle__area});
+    struct Shape *circle_shape = __make_Shape_value((struct Shape){.self = circle, .area = ((int32_t (*)(void *self)) pCircle__area)});
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (square_shape->area(square_shape->self) != 100) {
 #line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"

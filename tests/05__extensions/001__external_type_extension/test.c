@@ -22,7 +22,7 @@ int32_t main() {
 #line 6 "tests/05__extensions/001__external_type_extension/test.code"
 FILE *pFILE__write__1_char(FILE *self, uint8_t ch) {
 #line 7 "tests/05__extensions/001__external_type_extension/test.code"
-    fputc((int32_t) ch, stdout);
+    fputc(((int32_t) ch), stdout);
 #line 8 "tests/05__extensions/001__external_type_extension/test.code"
     return self;
 }
