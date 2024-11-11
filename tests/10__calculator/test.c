@@ -213,115 +213,117 @@ struct Token *pTokenizer__scan_number_token(struct Tokenizer *self, struct Strin
 #line 78 "tests/10__calculator/test.code"
 struct Writer *pWriter__write__1_string(struct Writer *self, struct String string) {
 #line 79 "tests/10__calculator/test.code"
-    uint8_t *string_data = ((struct String *) (&string))->data;
+    struct String string_copy = string;
 #line 80 "tests/10__calculator/test.code"
-    uintmax_t index = 0;
+    uint8_t *string_data = ((struct String *) (&string_copy))->data;
 #line 81 "tests/10__calculator/test.code"
-    while (index < string.length) {
+    uintmax_t index = 0;
 #line 82 "tests/10__calculator/test.code"
-        pWriter__write__1_char(self, string_data[index]);
+    while (index < string.length) {
 #line 83 "tests/10__calculator/test.code"
+        pWriter__write__1_char(self, string_data[index]);
+#line 84 "tests/10__calculator/test.code"
         index = index + 1;
     }
-#line 85 "tests/10__calculator/test.code"
+#line 86 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 100 "tests/10__calculator/test.code"
-struct Writer *pWriter__write__1_token(struct Writer *self, struct Token *token) {
 #line 101 "tests/10__calculator/test.code"
-    pWriter__write__1_char(self, token->kind);
+struct Writer *pWriter__write__1_token(struct Writer *self, struct Token *token) {
 #line 102 "tests/10__calculator/test.code"
-    if (token->kind == 'n') {
+    pWriter__write__1_char(self, token->kind);
 #line 103 "tests/10__calculator/test.code"
+    if (token->kind == 'n') {
+#line 104 "tests/10__calculator/test.code"
         pWriter__write__1_signed(pWriter__write__1_char(pWriter__write__1_char(self, ':'), ' '), token->value);
     }
-#line 105 "tests/10__calculator/test.code"
+#line 106 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 115 "tests/10__calculator/test.code"
-struct String_Builder *pString_Builder__write__1_char(struct String_Builder *self, uint8_t c) {
 #line 116 "tests/10__calculator/test.code"
-    if (self->length == self->data_size) {
+struct String_Builder *pString_Builder__write__1_char(struct String_Builder *self, uint8_t c) {
 #line 117 "tests/10__calculator/test.code"
-        self->data_size = self->data_size + 8;
+    if (self->length == self->data_size) {
 #line 118 "tests/10__calculator/test.code"
+        self->data_size = self->data_size + 8;
+#line 119 "tests/10__calculator/test.code"
         self->data = ((uint8_t *) realloc(((void *) self->data), ((uint64_t) self->data_size)));
     }
-#line 123 "tests/10__calculator/test.code"
-    self->data[self->length] = c;
 #line 124 "tests/10__calculator/test.code"
-    self->length = self->length + 1;
+    self->data[self->length] = c;
 #line 125 "tests/10__calculator/test.code"
+    self->length = self->length + 1;
+#line 126 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 128 "tests/10__calculator/test.code"
-struct String pString_Builder__build(struct String_Builder *self) {
 #line 129 "tests/10__calculator/test.code"
-    pString_Builder__write__1_char(self, 0);
+struct String pString_Builder__build(struct String_Builder *self) {
 #line 130 "tests/10__calculator/test.code"
+    pString_Builder__write__1_char(self, 0);
+#line 131 "tests/10__calculator/test.code"
     struct String string = (struct String){.data = self->data, .length = self->length};
-#line 134 "tests/10__calculator/test.code"
+#line 135 "tests/10__calculator/test.code"
     return *((struct String *) (&string));
 }
 
-#line 138 "tests/10__calculator/test.code"
-struct String_Builder make_string_builder() {
 #line 139 "tests/10__calculator/test.code"
+struct String_Builder make_string_builder() {
+#line 140 "tests/10__calculator/test.code"
     return make_string_builder__0_initial_data_size(4);
 }
 
-#line 142 "tests/10__calculator/test.code"
-struct String_Builder make_string_builder__0_initial_data_size(int32_t initial_data_size) {
 #line 143 "tests/10__calculator/test.code"
+struct String_Builder make_string_builder__0_initial_data_size(int32_t initial_data_size) {
+#line 144 "tests/10__calculator/test.code"
     return (struct String_Builder){.data = ((uint8_t *) malloc(((uint64_t) initial_data_size))), .data_size = initial_data_size, .length = 0};
 }
 
-#line 150 "tests/10__calculator/test.code"
-void pString_Builder__write_char(struct String_Builder *self, uint8_t c) {
 #line 151 "tests/10__calculator/test.code"
+void pString_Builder__write_char(struct String_Builder *self, uint8_t c) {
+#line 152 "tests/10__calculator/test.code"
     pString_Builder__write__1_char(self, c);
 }
 
-#line 160 "tests/10__calculator/test.code"
-struct Writer *pWriter__write__1_char(struct Writer *self, uint8_t c) {
 #line 161 "tests/10__calculator/test.code"
-    self->write_char(self->self, c);
+struct Writer *pWriter__write__1_char(struct Writer *self, uint8_t c) {
 #line 162 "tests/10__calculator/test.code"
+    self->write_char(self->self, c);
+#line 163 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 165 "tests/10__calculator/test.code"
+#line 166 "tests/10__calculator/test.code"
 struct Writer *pWriter__write__1_signed(struct Writer *self, int32_t value) {
-#line 167 "tests/10__calculator/test.code"
-    if (value < 0) {
 #line 168 "tests/10__calculator/test.code"
-        pWriter__write__1_char(self, '-');
+    if (value < 0) {
 #line 169 "tests/10__calculator/test.code"
+        pWriter__write__1_char(self, '-');
+#line 170 "tests/10__calculator/test.code"
         return pWriter__write__1_signed(self, -value);
     }
-#line 171 "tests/10__calculator/test.code"
-    if (value >= 10) {
 #line 172 "tests/10__calculator/test.code"
+    if (value >= 10) {
+#line 173 "tests/10__calculator/test.code"
         pWriter__write__1_signed(self, value / 10);
     }
-#line 174 "tests/10__calculator/test.code"
+#line 175 "tests/10__calculator/test.code"
     return pWriter__write__1_char(self, ((uint8_t) (value % 10)) + '0');
 }
 
-#line 177 "tests/10__calculator/test.code"
-struct Writer *pWriter__end_line(struct Writer *self) {
 #line 178 "tests/10__calculator/test.code"
-    pWriter__write__1_char(self, '\n');
+struct Writer *pWriter__end_line(struct Writer *self) {
 #line 179 "tests/10__calculator/test.code"
+    pWriter__write__1_char(self, '\n');
+#line 180 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 192 "tests/10__calculator/test.code"
-void pFILE__write_char(FILE *self, uint8_t c) {
 #line 193 "tests/10__calculator/test.code"
+void pFILE__write_char(FILE *self, uint8_t c) {
+#line 194 "tests/10__calculator/test.code"
     fputc(((int32_t) c), stdout);
 }
 

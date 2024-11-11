@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/08__string/003__length_assignment/test.code:3:5: Cannot assign to immutable expression"
+        ]
+    }
+}

@@ -1,0 +1,9 @@
+func main() -> i32 {
+    let x = 0
+    set(pointer: @x, value: 42)
+    return x - 42
+}
+
+func set(pointer: @i32, value: i32) {
+    pointer.@ = value
+}

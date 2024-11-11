@@ -83,6 +83,8 @@ typedef struct Checked_Expression {
     Checked_Type *type;
 } Checked_Expression;
 
+bool Checked_Expression__is_mutable(Checked_Expression *self);
+
 typedef struct Checked_Array_Type {
     Checked_Type super;
     Checked_Type *item_type;

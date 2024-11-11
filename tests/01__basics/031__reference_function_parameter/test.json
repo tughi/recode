@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/031__reference_function_parameter/test.code:2:26: Cannot take address of this expression"
+        ]
+    }
+}

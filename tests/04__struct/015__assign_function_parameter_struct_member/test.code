@@ -1,0 +1,13 @@
+struct Number {
+    value: i32
+}
+
+func main() -> i32 {
+    let number: Number
+    set(number: number, value: 42)
+    return number.value
+}
+
+func set(number: Number, value: i32) {
+    number.value = 42
+}

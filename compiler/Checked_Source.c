@@ -386,6 +386,32 @@ Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind
     return expression;
 }
 
+bool Checked_Expression__is_mutable(Checked_Expression *self) {
+    switch (self->kind) {
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS: {
+        Checked_Array_Access_Expression *array_access_expression = (Checked_Array_Access_Expression *)self;
+        Checked_Expression *array_expression = array_access_expression->array_expression;
+        Checked_Type *array_type = array_expression->type;
+        return array_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER || Checked_Expression__is_mutable(array_expression);
+    }
+    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
+        return true;
+    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS: {
+        Checked_Member_Access_Expression *member_access_expression = (Checked_Member_Access_Expression *)self;
+        Checked_Expression *object_expression = member_access_expression->object_expression;
+        Checked_Type *object_type = object_expression->type;
+        return object_type->kind == CHECKED_TYPE_KIND__POINTER || Checked_Expression__is_mutable(object_expression);
+    }
+    case CHECKED_EXPRESSION_KIND__SYMBOL: {
+        Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)self;
+        Checked_Symbol *symbol = symbol_expression->symbol;
+        return symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE;
+    }
+    default:
+        return false;
+    }
+}
+
 Checked_Binary_Expression *Checked_Binary_Expression__create_kind(Checked_Expression_Kind kind, Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     Checked_Binary_Expression *expression = (Checked_Binary_Expression *)Checked_Expression__create_kind(kind, sizeof(Checked_Binary_Expression), location, type);
     expression->left_expression = left_expression;

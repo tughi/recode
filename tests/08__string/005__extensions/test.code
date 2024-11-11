@@ -14,7 +14,8 @@ func str.concat(self, anon other: str) -> str {
         length: self.length + other.length
     )
     if self.length > 0 {
-        let self_data = (@self).as(@String).data
+        let self_copy = self
+        let self_data = (@self_copy).as(@String).data
         let index: usize = 0
         while index < self.length {
             result.data[index] = self_data[index]
@@ -22,7 +23,8 @@ func str.concat(self, anon other: str) -> str {
         }
     }
     if other.length > 0 {
-        let other_data = (@other).as(@String).data
+        let other_copy = other
+        let other_data = (@other_copy).as(@String).data
         let index: usize = 0
         while index < other.length {
             result.data[self.length + index] = other_data[index]
@@ -36,8 +38,10 @@ func str.equals(self, anon other: str) -> bool {
     if self.length != other.length {
         return false
     }
-    let self_data = (@self).as(@String).data
-    let other_data = (@other).as(@String).data
+    let self_copy = self
+    let self_data = (@self_copy).as(@String).data
+    let other_copy = other
+    let other_data = (@other_copy).as(@String).data
     if self_data == other_data {
         return true
     }

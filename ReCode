@@ -203,8 +203,8 @@ class Tester:
 
     def save_test_data(self) -> None:
         if not self.actual_test_data.has_data():
-            if os.path.exists(f'{test_dir}/test.json'):
-                os.remove(f'{test_dir}/test.json')
+            if os.path.exists(f'{self.test_dir}/test.json'):
+                os.remove(f'{self.test_dir}/test.json')
         else:
             compile_data = {}
             execute_data = {}

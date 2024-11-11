@@ -171,15 +171,13 @@ Checked_Expression *Checker__check_add_expression(Checker *self, Parsed_Add_Expr
 
 Checked_Expression *Checker__check_address_of_expression(Checker *self, Parsed_Address_Of_Expression *parsed_expression) {
     Checked_Expression *other_expression = Checker__check_expression(self, parsed_expression->super.other_expression, NULL);
-    switch (other_expression->kind) {
-    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
-    case CHECKED_EXPRESSION_KIND__SYMBOL:
-        return (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_expression->super.super.location, (Checked_Type *)Checked_Pointer_Type__create(other_expression->location, other_expression->type), other_expression);
+    if (!Checked_Expression__is_mutable(other_expression)) {
+        pWriter__begin_location_message(stderr_writer, other_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot take address of this expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
     }
-    pWriter__begin_location_message(stderr_writer, other_expression->location, WRITER_STYLE__ERROR);
-    pWriter__write__cstring(stderr_writer, "Cannot take address of this expression");
-    pWriter__end_location_message(stderr_writer);
-    panic();
+    return (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_expression->super.super.location, (Checked_Type *)Checked_Pointer_Type__create(other_expression->location, other_expression->type), other_expression);
 }
 
 Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed_Array_Access_Expression *parsed_expression) {
@@ -1091,6 +1089,12 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
 
 Checked_Assignment_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
     Checked_Expression *object_expression = Checker__check_expression(self, parsed_statement->object_expression, NULL);
+    if (!Checked_Expression__is_mutable(object_expression)) {
+        pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot assign to immutable expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     Checked_Expression *value_expression = Checker__check_expression(self, parsed_statement->value_expression, object_expression->type);
     Checker__require_same_type(self, object_expression->type, value_expression->type, value_expression->location);
     return Checked_Assignment_Statement__create(parsed_statement->super.location, object_expression, value_expression);

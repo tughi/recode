@@ -76,7 +76,8 @@ struct String {
 }
 
 func @Writer.write(self, string: str) -> @Writer {
-    let string_data = (@string).as(@String).data
+    let string_copy = string
+    let string_data = (@string_copy).as(@String).data
     let index = 0usize
     while index < string.length {
         self.write(char: string_data[index])

@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/04__struct/015__assign_function_parameter_struct_member/test.code:12:5: Cannot assign to immutable expression"
+        ]
+    }
+}

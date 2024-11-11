@@ -1,0 +1,4 @@
+func main(anon argc: i32) -> i32 {
+    argc = 42
+    return 0
+}
