@@ -337,6 +337,19 @@ Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location *location
     return statement;
 }
 
+Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type) {
+    Parsed_Union_Variant *variant = (Parsed_Union_Variant *)malloc(sizeof(Parsed_Union_Variant));
+    variant->type = type;
+    variant->next_variant = NULL;
+    return variant;
+}
+
+Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location, Token *name) {
+    Parsed_Union_Statement *statement = (Parsed_Union_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__UNION, sizeof(Parsed_Union_Statement), location, name);
+    statement->first_variant = NULL;
+    return statement;
+}
+
 Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location *location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external) {
     Parsed_Variable_Statement *statement = (Parsed_Variable_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;

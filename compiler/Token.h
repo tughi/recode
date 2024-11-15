@@ -149,6 +149,7 @@ bool Token__is_trait(Token *self);
 bool Token__is_true(Token *self);
 bool Token__is_type(Token *self);
 bool Token__is_typedef(Token *self);
+bool Token__is_union(Token *self);
 bool Token__is_vertical_bar(Token *self);
 bool Token__is_while(Token *self);
 

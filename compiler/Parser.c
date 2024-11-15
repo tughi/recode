@@ -642,6 +642,40 @@ Parsed_Statement *Parser__parse_trait(Parser *self) {
 }
 
 /*
+union
+    | "union" IDENTIFIER "{" ( type )* "}"
+*/
+Parsed_Statement *Parser__parse_union(Parser *self) {
+    Source_Location *union_location = Parser__consume_token(self, Token__is_union)->location;
+    Parser__consume_space(self, 1);
+    Token *union_name = Parser__consume_token(self, Token__is_identifier);
+    Parsed_Union_Statement *union_statement = Parsed_Union_Statement__create(union_location, union_name);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_opening_brace);
+    Parser__consume_end_of_line(self);
+    self->current_identation = self->current_identation + 1;
+    Parsed_Union_Variant *last_union_variant = NULL;
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        if (!Parser__consume_empty_line(self)) {
+            Parser__consume_space(self, self->current_identation * 4);
+            Parsed_Type *union_variant_type = Parser__parse_type(self);
+            Parser__consume_end_of_line(self);
+            Parsed_Union_Variant *union_variant = Parsed_Union_Variant__create(union_variant_type);
+            if (last_union_variant == NULL) {
+                union_statement->first_variant = union_variant;
+            } else {
+                last_union_variant->next_variant = union_variant;
+            }
+            last_union_variant = union_variant;
+        }
+    }
+    self->current_identation = self->current_identation - 1;
+    Parser__consume_space(self, self->current_identation * 4);
+    Parser__consume_token(self, Token__is_closing_brace);
+    return (Parsed_Statement *)union_statement;
+}
+
+/*
 external_type
     | "external" "type" IDENTIFIER
 */
@@ -982,6 +1016,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_one(self, Token__is_trait)) {
         return Parser__parse_trait(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_union)) {
+        return Parser__parse_union(self);
     }
 
     if (Parser__matches_one(self, Token__is_if)) {

@@ -185,6 +185,10 @@ bool Token__is_typedef(Token *self) {
     return Token__is_keyword(self, "typedef");
 }
 
+bool Token__is_union(Token *self) {
+    return Token__is_keyword(self, "union");
+}
+
 bool Token__is_while(Token *self) {
     return Token__is_keyword(self, "while");
 }

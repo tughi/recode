@@ -351,6 +351,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
     PARSED_STATEMENT_KIND__TRAIT,
+    PARSED_STATEMENT_KIND__UNION,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
 } Parsed_Statement_Kind;
@@ -479,6 +480,20 @@ typedef struct Parsed_Trait_Statement {
 } Parsed_Trait_Statement;
 
 Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location *location, Token *name);
+
+typedef struct Parsed_Union_Variant {
+    Parsed_Type *type;
+    struct Parsed_Union_Variant *next_variant;
+} Parsed_Union_Variant;
+
+Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type);
+
+typedef struct Parsed_Union_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Union_Variant *first_variant;
+} Parsed_Union_Statement;
+
+Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location, Token *name);
 
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;
