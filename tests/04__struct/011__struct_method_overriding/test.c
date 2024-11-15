@@ -22,21 +22,21 @@ bool pBoolean__get_value(struct Boolean *self);
 
 int32_t main();
 
-#line 4 "tests/04__struct/011__struct_method_overriding/test.code"
-int32_t pNumber__get_value(struct Number *self) {
 #line 5 "tests/04__struct/011__struct_method_overriding/test.code"
+int32_t pNumber__get_value(struct Number *self) {
+#line 6 "tests/04__struct/011__struct_method_overriding/test.code"
     return self->value;
 }
 
-#line 8 "tests/04__struct/011__struct_method_overriding/test.code"
-void pNumber__set_value(struct Number *self, int32_t value) {
 #line 9 "tests/04__struct/011__struct_method_overriding/test.code"
+void pNumber__set_value(struct Number *self, int32_t value) {
+#line 10 "tests/04__struct/011__struct_method_overriding/test.code"
     self->value = value;
 }
 
-#line 16 "tests/04__struct/011__struct_method_overriding/test.code"
-bool pBoolean__get_value(struct Boolean *self) {
 #line 17 "tests/04__struct/011__struct_method_overriding/test.code"
+bool pBoolean__get_value(struct Boolean *self) {
+#line 18 "tests/04__struct/011__struct_method_overriding/test.code"
     return self->value;
 }
 

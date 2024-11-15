@@ -456,17 +456,9 @@ typedef struct Parsed_Struct_Member {
 
 Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type);
 
-typedef struct Parsed_Struct_Method {
-    Parsed_Function_Statement *function_statement;
-    struct Parsed_Struct_Method *next_method;
-} Parsed_Struct_Method;
-
-Parsed_Struct_Method *Parsed_Struct_Method__create(Parsed_Function_Statement *function_statement);
-
 typedef struct Parsed_Struct_Statement {
     Parsed_Named_Statement super;
     Parsed_Struct_Member *first_member;
-    Parsed_Struct_Method *first_method;
 } Parsed_Struct_Statement;
 
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name);

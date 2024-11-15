@@ -38,17 +38,17 @@ There will be a fixed set of float types:
         parent: @Node       \ parent Node reference
         children: [@Node]   \ checked array of Node references
         type: i32 = 42      \ with default value
+    }
 
-        \ a method that returns @Node
-        func add(self, child: @Node) -> @Self { \ Self is a placeholder for the struct name
-            self.children.append(child)
-            return self
-        }
+    \ a method that returns @Node
+    func @Node.add(self, child: @Node) -> @Self {   \ Self is a placeholder for the struct name
+        self.children.append(child)
+        return self
+    }
 
-        \ static method
-        func new() -> Node {
-            return make Node()
-        }
+    \ custom constructor
+    func @Node.init() -> Node {
+        return make Node()
     }
 
     struct Extended_Node {
@@ -77,26 +77,29 @@ Generic structs have one or more other types as parameters.
     struct Item[T] {
         next_item: @Self
         data: T
+    }
 
-        func append(self, item: @Self) -> @Self {
-            self.next_item = item
-            return self
-        }
+    func @Item[T].append(self, item: @Self) -> @Self {
+        self.next_item = item
+        return self
     }
 
 ## Traits
 
-A trait defines shared methods between different types and allows their invocation in a polymorphic
-way, enabling code to operate on objects of different types through a common interface.
+A trait defines common functions implemented by different types and allows their invocation in a
+polymorphic way, enabling code to operate on objects of different types through a common interface.
 
     trait Visitable {
         func accept(self, visitor: @Visitor)
     }
 
-    struct Expression {
-        func accept(self, visitor: @Visitor)
+    func @Expression.accept(self, visitor: @Visitor) {
+        ...
     }
 
+    func @Statement.accept(self, visitor: @Visitor) {
+        ...
+    }
 
 The compiler generates trait objects that could be modeled like this:
 
@@ -104,7 +107,6 @@ The compiler generates trait objects that could be modeled like this:
         object: @T
         accept: func (self: @T, visitor: @Visitor)
     }
-
 
 ## Pointers
 
@@ -253,6 +255,21 @@ paramaters are marked as anonymous with the `anon` modifier.
 *panic__at__unexpected_keyword* and *panic__at__unexpected_token*. There cannot be two functions
 having the same name and the same sequence of parameter labels.
 
+## Extension functions
+
+Extension functions are functions that require a receiver. The first parameter is anonymous and has
+the receiver type.
+
+    func @Binary_Expression.accept(self, visitor: @Visitor) {
+        visitor.visit_binary_expression(self)
+    }
+
+Receivers can be of any type.
+
+    func str.concat(self, other: str) -> str {
+        ...
+    }
+
 ## Generic functions
 
     func max[T](v1: T, v2: T) -> T {
@@ -285,12 +302,4 @@ The last block-parameter can be declared after the macro _invocation_.
 
     list.for_each() {
         stdout.write(item)
-    }
-
-## Extension methods
-
-Methods can be declared also outside of a type block.
-
-    func @Binary_Expression.accept(self, visitor: @Visitor) {
-        visitor.visit(self)
     }

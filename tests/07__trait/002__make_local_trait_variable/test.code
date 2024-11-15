@@ -1,9 +1,9 @@
 struct Dog {
     age: i32
+}
 
-    func legs(self) -> i32 {
-        return 4
-    }
+func @Dog.legs(self) -> i32 {
+    return 4
 }
 
 trait Animal {

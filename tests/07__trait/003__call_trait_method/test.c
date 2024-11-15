@@ -27,15 +27,15 @@ int32_t pCircle__area(struct Circle *self);
 
 int32_t main();
 
-#line 8 "tests/07__trait/003__call_trait_method/test.code"
-int32_t pSquare__area(struct Square *self) {
 #line 9 "tests/07__trait/003__call_trait_method/test.code"
+int32_t pSquare__area(struct Square *self) {
+#line 10 "tests/07__trait/003__call_trait_method/test.code"
     return self->side * self->side;
 }
 
-#line 16 "tests/07__trait/003__call_trait_method/test.code"
-int32_t pCircle__area(struct Circle *self) {
 #line 17 "tests/07__trait/003__call_trait_method/test.code"
+int32_t pCircle__area(struct Circle *self) {
+#line 18 "tests/07__trait/003__call_trait_method/test.code"
     return 312 * self->radius * self->radius / 100;
 }
 

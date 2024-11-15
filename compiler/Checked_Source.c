@@ -289,9 +289,23 @@ Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *locati
 
 void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol) {
     pWriter__write__cstring(writer, "func ");
-    pWriter__write__string(writer, function_symbol->function_name);
-    pWriter__write__char(writer, '(');
     Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
+    if (function_symbol->receiver_type != NULL) {
+        pWriter__write__checked_type(writer, function_symbol->receiver_type);
+        pWriter__write__char(writer, '.');
+        pWriter__write__string(writer, function_symbol->function_name);
+        pWriter__write__char(writer, '(');
+        if (parameter != NULL) {
+            pWriter__write__string(writer, parameter->name);
+            parameter = parameter->next_parameter;
+            if (parameter != NULL) {
+                pWriter__write__cstring(writer, ", ");
+            }
+        }
+    } else {
+        pWriter__write__string(writer, function_symbol->function_name);
+        pWriter__write__char(writer, '(');
+    }
     while (parameter != NULL) {
         if (parameter->label != NULL && !String__equals_string(parameter->label, parameter->name)) {
             pWriter__write__string(writer, parameter->label);

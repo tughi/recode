@@ -1367,27 +1367,13 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         Checked_Statement *checked_statement = NULL;
         switch (parsed_statement->kind) {
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
+        case PARSED_STATEMENT_KIND__STRUCT:
+        case PARSED_STATEMENT_KIND__TRAIT:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__FUNCTION:
             Checker__check_function_declaration(self, (Parsed_Function_Statement *)parsed_statement);
             break;
-        case PARSED_STATEMENT_KIND__STRUCT: {
-            Parsed_Struct_Statement *parsed_struct_statement = (Parsed_Struct_Statement *)parsed_statement;
-            Parsed_Struct_Method *parsed_struct_method = parsed_struct_statement->first_method;
-            if (parsed_struct_method != NULL) {
-                self->receiver_type = (Checked_Type *)Checked_Pointer_Type__create(parsed_struct_statement->super.name->location, (Checked_Type *)Checker__find_type(self, parsed_struct_statement->super.name->lexeme));
-                while (parsed_struct_method != NULL) {
-                    Checker__check_function_declaration(self, parsed_struct_method->function_statement);
-                    parsed_struct_method = parsed_struct_method->next_method;
-                }
-            }
-            break;
-        }
-        case PARSED_STATEMENT_KIND__TRAIT: {
-            /* ignored */
-            break;
-        }
         case PARSED_STATEMENT_KIND__VARIABLE:
             checked_statement = (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
             break;
@@ -1408,6 +1394,9 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
     while (parsed_statement != NULL) {
         switch (parsed_statement->kind) {
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
+        case PARSED_STATEMENT_KIND__STRUCT:
+        case PARSED_STATEMENT_KIND__TRAIT:
+        case PARSED_STATEMENT_KIND__VARIABLE:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__FUNCTION: {
@@ -1428,21 +1417,6 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
             }
             break;
         }
-        case PARSED_STATEMENT_KIND__STRUCT: {
-            Parsed_Struct_Statement *parsed_struct_statement = (Parsed_Struct_Statement *)parsed_statement;
-            Parsed_Struct_Method *parsed_struct_method = parsed_struct_statement->first_method;
-            while (parsed_struct_method != NULL) {
-                Checker__check_function_definition(self, parsed_struct_method->function_statement);
-                parsed_struct_method = parsed_struct_method->next_method;
-            }
-            break;
-        }
-        case PARSED_STATEMENT_KIND__TRAIT:
-            /* ignored */
-            break;
-        case PARSED_STATEMENT_KIND__VARIABLE:
-            /* ignored */
-            break;
         default:
             pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Unsupported statement");

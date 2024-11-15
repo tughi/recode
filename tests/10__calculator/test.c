@@ -163,50 +163,50 @@ void main(int32_t argc, uint8_t **argv) {
     }
 }
 
-#line 30 "tests/10__calculator/test.code"
-bool pTokenizer__has_next_token(struct Tokenizer *self) {
 #line 31 "tests/10__calculator/test.code"
+bool pTokenizer__has_next_token(struct Tokenizer *self) {
+#line 32 "tests/10__calculator/test.code"
     return self->data[self->index] != 0;
 }
 
-#line 34 "tests/10__calculator/test.code"
-struct Token *pTokenizer__next_token(struct Tokenizer *self) {
 #line 35 "tests/10__calculator/test.code"
-    struct String_Builder lexeme_builder = make_string_builder();
+struct Token *pTokenizer__next_token(struct Tokenizer *self) {
 #line 36 "tests/10__calculator/test.code"
-    uint8_t c = self->data[self->index];
+    struct String_Builder lexeme_builder = make_string_builder();
 #line 37 "tests/10__calculator/test.code"
-    if (c >= '0' && c <= '9') {
+    uint8_t c = self->data[self->index];
 #line 38 "tests/10__calculator/test.code"
+    if (c >= '0' && c <= '9') {
+#line 39 "tests/10__calculator/test.code"
         return pTokenizer__scan_number_token(self, &lexeme_builder);
     }
-#line 40 "tests/10__calculator/test.code"
-    self->index = self->index + 1;
 #line 41 "tests/10__calculator/test.code"
+    self->index = self->index + 1;
+#line 42 "tests/10__calculator/test.code"
     return __make_Token_value((struct Token){.kind = c, .span = (struct Span){.lexeme = pString_Builder__build(pString_Builder__write__1_char(&lexeme_builder, c))}, .value = 0});
 }
 
-#line 50 "tests/10__calculator/test.code"
-struct Token *pTokenizer__scan_number_token(struct Tokenizer *self, struct String_Builder *lexeme_builder) {
 #line 51 "tests/10__calculator/test.code"
-    int32_t value = 0;
+struct Token *pTokenizer__scan_number_token(struct Tokenizer *self, struct String_Builder *lexeme_builder) {
 #line 52 "tests/10__calculator/test.code"
-    for (;;) {
+    int32_t value = 0;
 #line 53 "tests/10__calculator/test.code"
-        uint8_t c = self->data[self->index];
+    for (;;) {
 #line 54 "tests/10__calculator/test.code"
-        if (c < '0' || c > '9') {
+        uint8_t c = self->data[self->index];
 #line 55 "tests/10__calculator/test.code"
+        if (c < '0' || c > '9') {
+#line 56 "tests/10__calculator/test.code"
             break;
         }
-#line 57 "tests/10__calculator/test.code"
-        pString_Builder__write__1_char(lexeme_builder, c);
 #line 58 "tests/10__calculator/test.code"
-        value = value * 10 + ((int32_t) (c - '0'));
+        pString_Builder__write__1_char(lexeme_builder, c);
 #line 59 "tests/10__calculator/test.code"
+        value = value * 10 + ((int32_t) (c - '0'));
+#line 60 "tests/10__calculator/test.code"
         self->index = self->index + 1;
     }
-#line 61 "tests/10__calculator/test.code"
+#line 62 "tests/10__calculator/test.code"
     return __make_Token_value((struct Token){.kind = 'n', .span = (struct Span){.lexeme = pString_Builder__build(lexeme_builder)}, .value = value});
 }
 
@@ -242,30 +242,30 @@ struct Writer *pWriter__write__1_token(struct Writer *self, struct Token *token)
     return self;
 }
 
-#line 116 "tests/10__calculator/test.code"
-struct String_Builder *pString_Builder__write__1_char(struct String_Builder *self, uint8_t c) {
 #line 117 "tests/10__calculator/test.code"
-    if (self->length == self->data_size) {
+struct String_Builder *pString_Builder__write__1_char(struct String_Builder *self, uint8_t c) {
 #line 118 "tests/10__calculator/test.code"
-        self->data_size = self->data_size + 8;
+    if (self->length == self->data_size) {
 #line 119 "tests/10__calculator/test.code"
+        self->data_size = self->data_size + 8;
+#line 120 "tests/10__calculator/test.code"
         self->data = ((uint8_t *) realloc(((void *) self->data), ((uint64_t) self->data_size)));
     }
-#line 124 "tests/10__calculator/test.code"
-    self->data[self->length] = c;
 #line 125 "tests/10__calculator/test.code"
-    self->length = self->length + 1;
+    self->data[self->length] = c;
 #line 126 "tests/10__calculator/test.code"
+    self->length = self->length + 1;
+#line 127 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 129 "tests/10__calculator/test.code"
-struct String pString_Builder__build(struct String_Builder *self) {
 #line 130 "tests/10__calculator/test.code"
-    pString_Builder__write__1_char(self, 0);
+struct String pString_Builder__build(struct String_Builder *self) {
 #line 131 "tests/10__calculator/test.code"
+    pString_Builder__write__1_char(self, 0);
+#line 132 "tests/10__calculator/test.code"
     struct String string = (struct String){.data = self->data, .length = self->length};
-#line 135 "tests/10__calculator/test.code"
+#line 136 "tests/10__calculator/test.code"
     return *((struct String *) (&string));
 }
 

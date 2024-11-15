@@ -1,21 +1,21 @@
 struct Number {
     value: i32
+}
 
-    func get_value(self) -> i32 {
-        return self.value
-    }
+func @Number.get_value(self) -> i32 {
+    return self.value
+}
 
-    func set_value(self, anon value: i32) {
-        self.value = value
-    }
+func @Number.set_value(self, anon value: i32) {
+    self.value = value
 }
 
 struct Boolean {
     value: bool
+}
 
-    func get_value(self) -> bool {
-        return self.value
-    }
+func @Boolean.get_value(self) -> bool {
+    return self.value
 }
 
 func main() -> i32 {

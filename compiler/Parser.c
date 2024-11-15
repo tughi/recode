@@ -553,7 +553,7 @@ Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_typ
 
 /*
 struct
-    | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type | function )* "}"
+    | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type )* "}"
 */
 Parsed_Statement *Parser__parse_struct(Parser *self) {
     Source_Location *struct_location = Parser__consume_token(self, Token__is_struct)->location;
@@ -565,35 +565,22 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     Parser__consume_end_of_line(self);
     self->current_identation = self->current_identation + 1;
     Parsed_Struct_Member *last_struct_member = NULL;
-    Parsed_Struct_Method *last_struct_method = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
             Parser__consume_space(self, self->current_identation * 4);
-            if (Parser__matches_one(self, Token__is_func)) {
-                Parsed_Statement *function_statement = Parser__parse_function(self, (Parsed_Type *)Parsed_Receiver_Type__create(struct_name->location));
-                Parsed_Struct_Method *struct_method = Parsed_Struct_Method__create((Parsed_Function_Statement *)function_statement);
-                if (last_struct_method == NULL) {
-                    struct_statement->first_method = struct_method;
-                    last_struct_method = struct_method;
-                } else {
-                    last_struct_method->next_method = struct_method;
-                    last_struct_method = struct_method;
-                }
+            Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_colon);
+            Parser__consume_space(self, 1);
+            Parsed_Type *struct_member_type = Parser__parse_type(self);
+            Parser__consume_end_of_line(self);
+            Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
+            if (last_struct_member == NULL) {
+                struct_statement->first_member = struct_member;
+                last_struct_member = struct_member;
             } else {
-                Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
-                Parser__consume_space(self, 0);
-                Parser__consume_token(self, Token__is_colon);
-                Parser__consume_space(self, 1);
-                Parsed_Type *struct_member_type = Parser__parse_type(self);
-                Parser__consume_end_of_line(self);
-                Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
-                if (last_struct_member == NULL) {
-                    struct_statement->first_member = struct_member;
-                    last_struct_member = struct_member;
-                } else {
-                    last_struct_member->next_member = struct_member;
-                    last_struct_member = struct_member;
-                }
+                last_struct_member->next_member = struct_member;
+                last_struct_member = struct_member;
             }
         }
     }

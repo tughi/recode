@@ -14,15 +14,15 @@ void pNumber__set_value(struct Number *self, int32_t value);
 
 int32_t main();
 
-#line 4 "tests/04__struct/010__struct_methods/test.code"
-int32_t pNumber__get_value(struct Number *self) {
 #line 5 "tests/04__struct/010__struct_methods/test.code"
+int32_t pNumber__get_value(struct Number *self) {
+#line 6 "tests/04__struct/010__struct_methods/test.code"
     return self->value;
 }
 
-#line 8 "tests/04__struct/010__struct_methods/test.code"
-void pNumber__set_value(struct Number *self, int32_t value) {
 #line 9 "tests/04__struct/010__struct_methods/test.code"
+void pNumber__set_value(struct Number *self, int32_t value) {
+#line 10 "tests/04__struct/010__struct_methods/test.code"
     self->value = value;
 }
 

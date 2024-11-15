@@ -19,9 +19,9 @@ int32_t pDog__legs(struct Dog *self);
 
 int32_t main();
 
-#line 4 "tests/07__trait/002__make_local_trait_variable/test.code"
-int32_t pDog__legs(struct Dog *self) {
 #line 5 "tests/07__trait/002__make_local_trait_variable/test.code"
+int32_t pDog__legs(struct Dog *self) {
+#line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
     return 4;
 }
 

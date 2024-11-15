@@ -315,17 +315,9 @@ Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *typ
     return member;
 }
 
-Parsed_Struct_Method *Parsed_Struct_Method__create(Parsed_Function_Statement *function_statement) {
-    Parsed_Struct_Method *method = (Parsed_Struct_Method *)malloc(sizeof(Parsed_Struct_Method));
-    method->function_statement = function_statement;
-    method->next_method = NULL;
-    return method;
-}
-
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name) {
     Parsed_Struct_Statement *statement = (Parsed_Struct_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
     statement->first_member = NULL;
-    statement->first_method = NULL;
     return statement;
 }
 
