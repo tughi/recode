@@ -538,16 +538,40 @@ Checked_Expression *Checker__check_group_expression(Checker *self, Parsed_Group_
 }
 
 Checked_Expression *Checker__check_integer_expression(Checker *self, Parsed_Integer_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Type *expression_type;
+    Checked_Type *expression_type = NULL;
     if (parsed_expression->type != NULL) {
         expression_type = Checker__resolve_type(self, (Parsed_Type *)parsed_expression->type);
     } else if (expected_type != NULL) {
-        expression_type = expected_type;
-    } else {
+        if (Checked_Type__is_numeric_type(expected_type)) {
+            expression_type = expected_type;
+        } else if (expected_type->kind == CHECKED_TYPE_KIND__UNION) {
+            Checked_Union_Type *union_type = (Checked_Union_Type *)expected_type;
+            Checked_Union_Variant *union_variant = union_type->first_variant;
+            for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+                if (Checked_Type__is_numeric_type(union_variant->type)) {
+                    if (expression_type != NULL) {
+                        pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
+                        pWriter__write__cstring(stderr_writer, "Union type ");
+                        pWriter__write__checked_type(stderr_writer, expected_type);
+                        pWriter__write__cstring(stderr_writer, " requires to specify the integer type");
+                        pWriter__end_location_message(stderr_writer);
+                        panic();
+                    }
+                    expression_type = union_variant->type;
+                }
+            }
+        } else {
+            pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Expected numeric type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+    }
+    if (expression_type == NULL) {
         expression_type = (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__I32);
     }
-    uint64_t value = parsed_expression->value;
-    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, value);
+    uint64_t expression_value = parsed_expression->value;
+    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value);
 }
 
 Checked_Expression *Checker__check_less_expression(Checker *self, Parsed_Less_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -1118,8 +1142,10 @@ void Checker__check_union_statement(Checker *self, Parsed_Union_Statement *parse
         }
         Checked_Union_Variant *union_variant = Checked_Union_Variant__create(parsed_variant->type->location, union_variant_type);
         if (last_union_variant == NULL) {
+            union_variant->index = 1;
             union_type->first_variant = union_variant;
         } else {
+            union_variant->index = last_union_variant->index + 1;
             last_union_variant->next_variant = union_variant;
         }
         last_union_variant = union_variant;
@@ -1192,9 +1218,9 @@ Checked_Return_Statement *Checker__check_return_statement(Checker *self, Parsed_
 }
 
 Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Parsed_Variable_Statement *parsed_statement) {
-    Checked_Type *type = NULL;
+    Checked_Type *variable_type = NULL;
     if (parsed_statement->type != NULL) {
-        type = Checker__resolve_type(self, parsed_statement->type);
+        variable_type = Checker__resolve_type(self, parsed_statement->type);
     } else if (parsed_statement->expression == NULL) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Missing type");
@@ -1203,8 +1229,8 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
     }
     Checked_Expression *expression = NULL;
     if (parsed_statement->expression != NULL) {
-        expression = Checker__check_expression(self, parsed_statement->expression, type);
-        if (type == NULL) {
+        expression = Checker__check_expression(self, parsed_statement->expression, variable_type);
+        if (variable_type == NULL) {
             switch (expression->type->kind) {
             case CHECKED_TYPE_KIND__NULL:
                 pWriter__begin_location_message(stderr_writer, parsed_statement->expression->location, WRITER_STYLE__ERROR);
@@ -1212,12 +1238,31 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            type = expression->type;
+            variable_type = expression->type;
+        } else if (variable_type->kind == CHECKED_TYPE_KIND__UNION) {
+            Checked_Union_Type *union_type = (Checked_Union_Type *)variable_type;
+            Checked_Union_Variant *union_variant = union_type->first_variant;
+            for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+                if (Checked_Type__equals(union_variant->type, expression->type)) {
+                    break;
+                }
+            }
+            if (union_variant == NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_statement->expression->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Union type ");
+                pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
+                pWriter__write__cstring(stderr_writer, " does not have ");
+                pWriter__write__checked_type(stderr_writer, expression->type);
+                pWriter__write__cstring(stderr_writer, " variant");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            expression = (Checked_Expression *)Checked_Make_Union_Expression__create(parsed_statement->expression->location, variable_type, union_type, union_variant, (Checked_Expression *)expression);
         } else {
-            Checker__require_same_type(self, type, expression->type, expression->location);
+            Checker__require_same_type(self, variable_type, expression->type, expression->location);
         }
     }
-    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, type);
+    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variable);
     return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, expression, parsed_statement->is_external);
 }

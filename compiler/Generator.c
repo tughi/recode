@@ -204,6 +204,21 @@ void Generator__generate_make_struct_expression(Generator *self, Checked_Make_St
     }
 }
 
+void Generator__generate_make_union_expression(Generator *self, Checked_Make_Union_Expression *expression) {
+    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
+        todo("Implement make union pointer");
+    }
+    pWriter__write__char(self->writer, '(');
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->union_type);
+    pWriter__write__cstring(self->writer, "){.variant = ");
+    pWriter__write__int64(self->writer, expression->union_variant->index);
+    pWriter__write__cstring(self->writer, ", .variant_");
+    pWriter__write__int64(self->writer, expression->union_variant->index);
+    pWriter__write__cstring(self->writer, " = ");
+    Generator__generate_expression(self, expression->expression);
+    pWriter__write__char(self->writer, '}');
+}
+
 void Generator__generate_member_access_expression(Generator *self, Checked_Member_Access_Expression *expression) {
     Generator__generate_expression(self, expression->object_expression);
     if (expression->object_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
@@ -329,6 +344,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         Generator__generate_logic_or_expression(self, (Checked_Logic_Or_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__MAKE_STRUCT) {
         Generator__generate_make_struct_expression(self, (Checked_Make_Struct_Expression *)expression);
+    } else if (expression->kind == CHECKED_EXPRESSION_KIND__MAKE_UNION) {
+        Generator__generate_make_union_expression(self, (Checked_Make_Union_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__MEMBER_ACCESS) {
         Generator__generate_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__MINUS) {
@@ -575,7 +592,7 @@ void Generator__declare_union(Generator *self, Checked_Union_Type *union_type) {
 void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " {\n");
-    pWriter__write__cstring(self->writer, "    intmax_t variant;\n");
+    pWriter__write__cstring(self->writer, "    int32_t variant;\n");
     Checked_Union_Variant *variant = union_type->first_variant;
     if (variant != NULL) {
         int variant_index = 0;

@@ -75,7 +75,8 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__SUBSTRACT,
-    CHECKED_EXPRESSION_KIND__SYMBOL
+    CHECKED_EXPRESSION_KIND__SYMBOL,
+    CHECKED_EXPRESSION_KIND__MAKE_UNION
 } Checked_Expression_Kind;
 
 typedef struct Checked_Expression {
@@ -186,6 +187,7 @@ typedef struct Checked_Trait_Type {
 Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name);
 
 typedef struct Checked_Union_Variant {
+    int32_t index;
     Checked_Type *type;
     struct Checked_Union_Variant *next_variant;
 } Checked_Union_Variant;
@@ -458,6 +460,15 @@ typedef struct Checked_Make_Struct_Expression {
 } Checked_Make_Struct_Expression;
 
 Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location *location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument);
+
+typedef struct Checked_Make_Union_Expression {
+    Checked_Expression super;
+    Checked_Union_Type *union_type;
+    Checked_Union_Variant *union_variant;
+    Checked_Expression *expression;
+} Checked_Make_Union_Expression;
+
+Checked_Make_Union_Expression *Checked_Make_Union_Expression__create(Source_Location *location, Checked_Type *type, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Expression *expression);
 
 typedef struct Checked_Member_Access_Expression {
     Checked_Expression super;

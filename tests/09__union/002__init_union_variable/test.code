@@ -1,0 +1,14 @@
+union Integer {
+    i8
+    i32
+}
+
+union Value {
+    bool
+    Integer
+}
+
+func main() -> i32 {
+    let value: Value = false
+    return 0
+}

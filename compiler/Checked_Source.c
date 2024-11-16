@@ -155,6 +155,10 @@ bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type 
     return String__equals_string(self->super.name, other->super.name);
 }
 
+bool Checked_Union_Type__equals(Checked_Union_Type *self, Checked_Union_Type *other) {
+    return String__equals_string(self->super.name, other->super.name);
+}
+
 Checked_Trait_Method *Checked_Trait_Method__create(Source_Location *location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member) {
     Checked_Trait_Method *method = (Checked_Trait_Method *)malloc(sizeof(Checked_Trait_Method));
     method->location = location;
@@ -206,6 +210,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__STRUCT:
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
+    case CHECKED_TYPE_KIND__UNION:
+        return Checked_Union_Type__equals((Checked_Union_Type *)self, (Checked_Union_Type *)other);
     }
     todo("Handle unexpected Checked_Type_Kind");
 }
@@ -225,7 +231,8 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__STRUCT:
-    case CHECKED_TYPE_KIND__TRAIT: {
+    case CHECKED_TYPE_KIND__TRAIT:
+    case CHECKED_TYPE_KIND__UNION: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         pWriter__write__string(self, named_type->name);
         break;
@@ -619,6 +626,14 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location *lo
     Checked_Symbol_Expression *expression = (Checked_Symbol_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SYMBOL, sizeof(Checked_Symbol_Expression), location, type);
     expression->symbol = symbol;
     return expression;
+}
+
+Checked_Make_Union_Expression *Checked_Make_Union_Expression__create(Source_Location *location, Checked_Type *type, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Expression *expression) {
+    Checked_Make_Union_Expression *union_expression = (Checked_Make_Union_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MAKE_UNION, sizeof(Checked_Make_Union_Expression), location, type);
+    union_expression->union_type = union_type;
+    union_expression->union_variant = union_variant;
+    union_expression->expression = expression;
+    return union_expression;
 }
 
 Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location *location) {
