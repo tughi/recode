@@ -1085,6 +1085,48 @@ void Checker__check_trait_statement(Checker *self, Parsed_Trait_Statement *parse
     }
 }
 
+void Checker__check_union_statement(Checker *self, Parsed_Union_Statement *parsed_statement) {
+    Checked_Named_Type *other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
+    if (other_type != NULL) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__UNION && other_type->super.location != parsed_statement->super.name->location) {
+            /* Type checked already */
+            return;
+        }
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type redeclaration");
+        pWriter__end_location_message(stderr_writer);
+        if (other_type->super.location != NULL) {
+            pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Previous declaration here");
+            pWriter__end_location_message(stderr_writer);
+        }
+        panic();
+    }
+
+    Checked_Union_Type *union_type = Checked_Union_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
+    Checker__append_type(self, (Checked_Named_Type *)union_type);
+
+    Checked_Union_Variant *last_union_variant = NULL;
+    Parsed_Union_Variant *parsed_variant = parsed_statement->first_variant;
+    while (parsed_variant != NULL) {
+        Checked_Type *union_variant_type = Checker__resolve_type(self, parsed_variant->type);
+        if (Checked_Type__equals(union_variant_type, (Checked_Type *)union_type)) {
+            pWriter__begin_location_message(stderr_writer, parsed_variant->type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Union variant cannot be of its own type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Union_Variant *union_variant = Checked_Union_Variant__create(parsed_variant->type->location, union_variant_type);
+        if (last_union_variant == NULL) {
+            union_type->first_variant = union_variant;
+        } else {
+            last_union_variant->next_variant = union_variant;
+        }
+        last_union_variant = union_variant;
+        parsed_variant = parsed_variant->next_variant;
+    }
+}
+
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
 
 Checked_Assignment_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
@@ -1357,6 +1399,9 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__TRAIT:
             Checker__check_trait_statement(self, (Parsed_Trait_Statement *)parsed_statement);
             break;
+        case PARSED_STATEMENT_KIND__UNION:
+            Checker__check_union_statement(self, (Parsed_Union_Statement *)parsed_statement);
+            break;
         }
         parsed_statement = parsed_statement->next_statement;
     }
@@ -1369,6 +1414,7 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
         case PARSED_STATEMENT_KIND__STRUCT:
         case PARSED_STATEMENT_KIND__TRAIT:
+        case PARSED_STATEMENT_KIND__UNION:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__FUNCTION:
@@ -1396,6 +1442,7 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
         case PARSED_STATEMENT_KIND__STRUCT:
         case PARSED_STATEMENT_KIND__TRAIT:
+        case PARSED_STATEMENT_KIND__UNION:
         case PARSED_STATEMENT_KIND__VARIABLE:
             /* ignored */
             break;

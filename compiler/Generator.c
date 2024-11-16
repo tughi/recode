@@ -559,11 +559,41 @@ void Generator__generate_make_struct_function(Generator *self, Checked_Struct_Ty
 }
 
 void Generator__declare_trait(Generator *self, Checked_Trait_Type *trait_type) {
-    Generator__declare_struct(self, trait_type->struct_type);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)trait_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__generate_trait(Generator *self, Checked_Trait_Type *trait_type) {
     Generator__generate_struct(self, trait_type->struct_type);
+}
+
+void Generator__declare_union(Generator *self, Checked_Union_Type *union_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
+    pWriter__write__cstring(self->writer, ";\n");
+}
+
+void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
+    pWriter__write__cstring(self->writer, " {\n");
+    pWriter__write__cstring(self->writer, "    intmax_t variant;\n");
+    Checked_Union_Variant *variant = union_type->first_variant;
+    if (variant != NULL) {
+        int variant_index = 0;
+        String *variant_name = String__create();
+        pWriter__write__cstring(self->writer, "    union {\n");
+        while (variant != NULL) {
+            variant_index = variant_index + 1;
+            String__clear(variant_name);
+            String__append_cstring(variant_name, "variant_");
+            String__append_int16_t(variant_name, variant_index);
+            pWriter__write__cstring(self->writer, "        ");
+            pWriter__write__cdecl(self->writer, variant_name, variant->type);
+            pWriter__write__cstring(self->writer, ";\n");
+            variant = variant->next_variant;
+        }
+        pWriter__write__cstring(self->writer, "    };\n");
+    }
+    pWriter__write__cstring(self->writer, "};\n\n");
 }
 
 void generate(Writer *writer, Checked_Source *checked_source) {
@@ -610,6 +640,9 @@ void generate(Writer *writer, Checked_Source *checked_source) {
             case CHECKED_TYPE_KIND__TRAIT:
                 Generator__declare_trait(&generator, (Checked_Trait_Type *)named_type);
                 break;
+            case CHECKED_TYPE_KIND__UNION:
+                Generator__declare_union(&generator, (Checked_Union_Type *)named_type);
+                break;
             }
             pWriter__end_line(generator.writer);
         } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_cstring(checked_symbol->name, "malloc")) {
@@ -629,6 +662,9 @@ void generate(Writer *writer, Checked_Source *checked_source) {
                 break;
             case CHECKED_TYPE_KIND__TRAIT:
                 Generator__generate_trait(&generator, (Checked_Trait_Type *)named_type);
+                break;
+            case CHECKED_TYPE_KIND__UNION:
+                Generator__generate_union(&generator, (Checked_Union_Type *)named_type);
                 break;
             }
         }

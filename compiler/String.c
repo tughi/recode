@@ -12,6 +12,10 @@ String *String__create() {
     return String__create_empty(16);
 }
 
+void String__clear(String *self) {
+    self->length = 0;
+}
+
 void String__delete(String *self) {
     free((void *)self->data);
     free((void *)self);

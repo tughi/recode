@@ -1,0 +1,9 @@
+union Integer {
+    i8
+    i32
+}
+
+func main() -> i32 {
+    let integer: Integer
+    return 0
+}

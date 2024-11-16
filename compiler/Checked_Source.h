@@ -27,6 +27,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
     CHECKED_TYPE_KIND__TRAIT,
+    CHECKED_TYPE_KIND__UNION,
     /* Dynamic */
     CHECKED_TYPE_KIND__FUNCTION_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
@@ -183,6 +184,20 @@ typedef struct Checked_Trait_Type {
 } Checked_Trait_Type;
 
 Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name);
+
+typedef struct Checked_Union_Variant {
+    Checked_Type *type;
+    struct Checked_Union_Variant *next_variant;
+} Checked_Union_Variant;
+
+Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type);
+
+typedef struct Checked_Union_Type {
+    Checked_Named_Type super;
+    Checked_Union_Variant *first_variant;
+} Checked_Union_Type;
+
+Checked_Union_Type *Checked_Union_Type__create(Source_Location *location, String *name);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 

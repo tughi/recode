@@ -173,6 +173,19 @@ Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String
     return type;
 }
 
+Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type) {
+    Checked_Union_Variant *member = (Checked_Union_Variant *)malloc(sizeof(Checked_Union_Variant));
+    member->type = type;
+    member->next_variant = NULL;
+    return member;
+}
+
+Checked_Union_Type *Checked_Union_Type__create(Source_Location *location, String *name) {
+    Checked_Union_Type *type = (Checked_Union_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UNION, sizeof(Checked_Union_Type), location, name);
+    type->first_variant = NULL;
+    return type;
+}
+
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     if (self == other) {
         return true;

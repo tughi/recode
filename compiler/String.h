@@ -18,6 +18,8 @@ String *String__create_empty(size_t data_size);
 
 String *String__create_from(char *data);
 
+void String__clear(String *self);
+
 void String__delete(String *self);
 
 String *String__append_char(String *self, char ch);

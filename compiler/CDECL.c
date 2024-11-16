@@ -200,6 +200,7 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
         break;
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
+    case CHECKED_TYPE_KIND__UNION:
         cdecl->type = String__create_from("struct ");
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
         break;
