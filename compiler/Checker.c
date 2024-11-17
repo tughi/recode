@@ -406,7 +406,7 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
     return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
 }
 
-Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Checked_Union_Type *union_type, Checked_Expression *expression) {
+Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Source_Location *location, Checked_Union_Type *union_type, Checked_Expression *expression) {
     Checked_Union_Variant *union_variant = union_type->first_variant;
     for (; union_variant != NULL; union_variant = union_variant->next_variant) {
         if (Checked_Type__equals(union_variant->type, expression->type)) {
@@ -423,7 +423,7 @@ Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Che
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    return Checked_Make_Union_Expression__create(expression->location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
+    return Checked_Make_Union_Expression__create(location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
 }
 
 Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
@@ -461,7 +461,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         while (function_parameter != NULL && parsed_argument != NULL) {
             Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, function_parameter->type);
             if (function_parameter->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(function_parameter->type, argument_expression->type)) {
-                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, (Checked_Union_Type *)function_parameter->type, argument_expression);
+                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, argument_expression->location, (Checked_Union_Type *)function_parameter->type, argument_expression);
             }
             Checker__require_same_type(self, function_parameter->type, argument_expression->type, argument_expression->location);
             Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression);
@@ -762,6 +762,31 @@ Checked_Expression *Checker__check_make_trait_expression(Checker *self, Parsed_M
     return (Checked_Expression *)Checked_Make_Struct_Expression__create(parsed_expression->super.location, expression_type, trait_type->struct_type, first_make_struct_argument);
 }
 
+Checked_Expression *Checker__check_make_union_expression(Checker *self, Parsed_Make_Expression *parsed_expression, Checked_Type *expression_type, Checked_Union_Type *union_type) {
+    Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument;
+    if (parsed_argument == NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Missing argument");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    if (parsed_argument->name != NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_argument->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unexpected argument name");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    if (parsed_argument->next_argument != NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_argument->next_argument->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unexpected argument");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    Checked_Expression *variant_expression = Checker__check_expression(self, parsed_argument->expression, NULL);
+    return (Checked_Expression *)Checker__make_union_expression(self, parsed_expression->super.location, union_type, variant_expression);
+}
+
 Checked_Expression *Checker__check_make_expression(Checker *self, Parsed_Make_Expression *parsed_expression) {
     Checked_Type *expression_type = Checker__resolve_type(self, parsed_expression->type);
     switch (expression_type->kind) {
@@ -779,6 +804,8 @@ Checked_Expression *Checker__check_make_expression(Checker *self, Parsed_Make_Ex
         return Checker__check_make_struct_expression(self, parsed_expression, expression_type, (Checked_Struct_Type *)expression_type);
     case CHECKED_TYPE_KIND__TRAIT:
         return Checker__check_make_trait_expression(self, parsed_expression, expression_type, (Checked_Trait_Type *)expression_type);
+    case CHECKED_TYPE_KIND__UNION:
+        return Checker__check_make_union_expression(self, parsed_expression, expression_type, (Checked_Union_Type *)expression_type);
     }
     pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Cannot make ");
@@ -1206,7 +1233,7 @@ Checked_Assignment_Statement *Checker__check_assignment_statement(Checker *self,
     }
     Checked_Expression *value_expression = Checker__check_expression(self, parsed_statement->value_expression, object_expression->type);
     if (object_expression->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(object_expression->type, value_expression->type)) {
-        value_expression = (Checked_Expression *)Checker__make_union_expression(self, (Checked_Union_Type *)object_expression->type, value_expression);
+        value_expression = (Checked_Expression *)Checker__make_union_expression(self, value_expression->location, (Checked_Union_Type *)object_expression->type, value_expression);
     }
     Checker__require_same_type(self, object_expression->type, value_expression->type, value_expression->location);
     return Checked_Assignment_Statement__create(parsed_statement->super.location, object_expression, value_expression);
@@ -1284,7 +1311,7 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
             }
             variable_type = expression->type;
         } else if (variable_type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(variable_type, expression->type)) {
-            expression = (Checked_Expression *)Checker__make_union_expression(self, (Checked_Union_Type *)variable_type, expression);
+            expression = (Checked_Expression *)Checker__make_union_expression(self, expression->location, (Checked_Union_Type *)variable_type, expression);
         } else {
             Checker__require_same_type(self, variable_type, expression->type, expression->location);
         }

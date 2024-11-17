@@ -1,0 +1,15 @@
+union Integer {
+    i8
+    i32
+}
+
+union Value {
+    bool
+    Integer
+}
+
+func main() -> i32 {
+    let value = make Value(make Integer(256))
+    value = make Integer(42)
+    return 0
+}
