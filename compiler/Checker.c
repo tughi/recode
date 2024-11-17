@@ -406,6 +406,26 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
     return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
 }
 
+Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Checked_Union_Type *union_type, Checked_Expression *expression) {
+    Checked_Union_Variant *union_variant = union_type->first_variant;
+    for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+        if (Checked_Type__equals(union_variant->type, expression->type)) {
+            break;
+        }
+    }
+    if (union_variant == NULL) {
+        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Union type ");
+        pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
+        pWriter__write__cstring(stderr_writer, " does not have ");
+        pWriter__write__checked_type(stderr_writer, expression->type);
+        pWriter__write__cstring(stderr_writer, " variant");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    return Checked_Make_Union_Expression__create(expression->location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
+}
+
 Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
     Checked_Callable checked_callable;
     switch (parsed_expression->callee_expression->kind) {
@@ -440,6 +460,9 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument;
         while (function_parameter != NULL && parsed_argument != NULL) {
             Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, function_parameter->type);
+            if (function_parameter->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(function_parameter->type, argument_expression->type)) {
+                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, (Checked_Union_Type *)function_parameter->type, argument_expression);
+            }
             Checker__require_same_type(self, function_parameter->type, argument_expression->type, argument_expression->location);
             Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression);
             if (last_argument == NULL) {
@@ -1172,26 +1195,6 @@ void Checker__check_union_statement(Checker *self, Parsed_Union_Statement *parse
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
-
-Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Checked_Union_Type *union_type, Checked_Expression *expression) {
-    Checked_Union_Variant *union_variant = union_type->first_variant;
-    for (; union_variant != NULL; union_variant = union_variant->next_variant) {
-        if (Checked_Type__equals(union_variant->type, expression->type)) {
-            break;
-        }
-    }
-    if (union_variant == NULL) {
-        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Union type ");
-        pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
-        pWriter__write__cstring(stderr_writer, " does not have ");
-        pWriter__write__checked_type(stderr_writer, expression->type);
-        pWriter__write__cstring(stderr_writer, " variant");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    return Checked_Make_Union_Expression__create(expression->location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
-}
 
 Checked_Assignment_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
     Checked_Expression *object_expression = Checker__check_expression(self, parsed_statement->object_expression, NULL);
