@@ -9,8 +9,9 @@ union Value {
 }
 
 func main() -> i32 {
-    let value: Value = false
-    let other_value: Value = value
-    let another_value = other_value
+    let value: Value
+    value = true
+    let other_value: Value
+    other_value = value
     return 0
 }
