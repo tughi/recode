@@ -350,6 +350,22 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location
     return statement;
 }
 
+Parsed_Union_Switch_Case *Parsed_Union_Switch_Case__create(Parsed_Type *type, Parsed_Statement *block) {
+    Parsed_Union_Switch_Case *case_ = (Parsed_Union_Switch_Case *)malloc(sizeof(Parsed_Union_Switch_Case));
+    case_->type = type;
+    case_->statement = block;
+    case_->next_case = NULL;
+    return case_;
+}
+
+Parsed_Union_Switch_Statement *Parsed_Union_Switch_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Union_Switch_Case *first_case) {
+    Parsed_Union_Switch_Statement *statement = (Parsed_Union_Switch_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__UNION_SWITCH, sizeof(Parsed_Union_Switch_Statement), location);
+    statement->variant_alias = variant_alias;
+    statement->expression = expression;
+    statement->first_case = first_case;
+    return statement;
+}
+
 Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location *location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external) {
     Parsed_Variable_Statement *statement = (Parsed_Variable_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;

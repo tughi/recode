@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__union/006__switch_in_unexpected_expression_type/test.code:3:23: Not a union type"
+        ]
+    }
+}

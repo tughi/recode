@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__union/006__switch_not_exhaustive/test.code:10:5: Missing case for i32"
+        ]
+    }
+}

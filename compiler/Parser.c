@@ -917,6 +917,55 @@ Parsed_Statement *Parser__parse_return_statement(Parser *self) {
 }
 
 /*
+switch
+    | "switch"
+        ( IDENTIFIER "in" expression "{" ( "case" type block )* "}"
+        | expression "{" ( "case" expression block )* "}"
+        | "{" ( "case" expression block )* "}"
+        )
+*/
+Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
+    Source_Location *location = Parser__consume_token(self, Token__is_switch)->location;
+    Parser__consume_space(self, 1);
+    if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, true, Token__is_in)) {
+        Identifier_Token *variant_alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_in);
+        Parser__consume_space(self, 1);
+        Parsed_Expression *expression = Parser__parse_expression(self);
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_opening_brace);
+        Parser__consume_end_of_line(self);
+        self->current_identation = self->current_identation + 1;
+        Parsed_Union_Switch_Case *first_case = NULL;
+        Parsed_Union_Switch_Case *last_case = NULL;
+        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+            if (!Parser__consume_empty_line(self)) {
+                Parser__consume_space(self, self->current_identation * 4);
+                Parser__consume_token(self, Token__is_case);
+                Parser__consume_space(self, 1);
+                Parsed_Type *variant_type = Parser__parse_type(self);
+                Parser__consume_space(self, 1);
+                Parsed_Statement *variant_block = (Parsed_Statement *)Parser__parse_block_statement(self);
+                Parsed_Union_Switch_Case *current_case = Parsed_Union_Switch_Case__create(variant_type, variant_block);
+                if (first_case == NULL) {
+                    first_case = current_case;
+                } else {
+                    last_case->next_case = current_case;
+                }
+                last_case = current_case;
+            }
+        }
+        self->current_identation = self->current_identation - 1;
+        Parser__consume_space(self, self->current_identation * 4);
+        Parser__consume_token(self, Token__is_closing_brace);
+        return (Parsed_Statement *)Parsed_Union_Switch_Statement__create(location, variant_alias, expression, first_case);
+    }
+
+    todo("Parse switch statement");
+}
+
+/*
 break
     | "break" ";"
 */
@@ -1040,6 +1089,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_one(self, Token__is_break)) {
         return Parser__parse_break_statement(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_switch)) {
+        return Parser__parse_switch_statement(self);
     }
 
     Parsed_Expression *expresion = Parser__parse_access_expression(self);

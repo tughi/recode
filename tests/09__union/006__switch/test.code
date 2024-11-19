@@ -1,0 +1,38 @@
+union Integer {
+    i8
+    i32
+}
+
+union Value {
+    bool
+    Integer
+}
+
+func main() -> i32 {
+    let value: Value = make Integer(42)
+
+    loop {
+        switch value_variant in value {
+            case bool {
+                return 1
+            }
+            case Integer {
+                switch integer_variant in value_variant {
+                    case i8 {
+                        return 2
+                    }
+                    case i32 {
+                        if integer_variant != 42 {
+                            return 3
+                        }
+                        break
+                    }
+                }
+            }
+        }
+
+        return 4
+    }
+
+    return 0
+}

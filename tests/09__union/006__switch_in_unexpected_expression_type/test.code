@@ -1,0 +1,7 @@
+func main() -> i32 {
+    let unexpected_expression = 13
+    switch variant in unexpected_expression {
+        case i32 {
+        }
+    }
+}

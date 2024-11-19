@@ -1,0 +1,16 @@
+union Value {
+    bool
+    i8
+    i32
+}
+
+func main() -> i32 {
+    let value: Value = true
+
+    switch variant in value {
+        case bool {
+        }
+        case i8 {
+        }
+    }
+}

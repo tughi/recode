@@ -105,6 +105,10 @@ bool Token__is_break(Token *self) {
     return Token__is_keyword(self, "break");
 }
 
+bool Token__is_case(Token *self) {
+    return Token__is_keyword(self, "case");
+}
+
 bool Token__is_else(Token *self) {
     return Token__is_keyword(self, "else");
 }
@@ -131,6 +135,10 @@ bool Token__is_func(Token *self) {
 
 bool Token__is_if(Token *self) {
     return Token__is_keyword(self, "if");
+}
+
+bool Token__is_in(Token *self) {
+    return Token__is_keyword(self, "in");
 }
 
 bool Token__is_let(Token *self) {
@@ -167,6 +175,10 @@ bool Token__is_sizeof(Token *self) {
 
 bool Token__is_struct(Token *self) {
     return Token__is_keyword(self, "struct");
+}
+
+bool Token__is_switch(Token *self) {
+    return Token__is_keyword(self, "switch");
 }
 
 bool Token__is_trait(Token *self) {

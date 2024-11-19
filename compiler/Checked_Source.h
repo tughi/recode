@@ -16,7 +16,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
     CHECKED_TYPE_KIND__STRING,
-    CHECKED_TYPE_KIND__TYPE,    /* Pseudo type */
+    CHECKED_TYPE_KIND__TYPE, /* Pseudo type */
     CHECKED_TYPE_KIND__U16,
     CHECKED_TYPE_KIND__U32,
     CHECKED_TYPE_KIND__U64,
@@ -198,6 +198,7 @@ Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, 
 typedef struct Checked_Union_Type {
     Checked_Named_Type super;
     Checked_Union_Variant *first_variant;
+    int32_t variant_count;
 } Checked_Union_Type;
 
 Checked_Union_Type *Checked_Union_Type__create(Source_Location *location, String *name);
@@ -211,7 +212,8 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__FUNCTION,
     CHECKED_SYMBOL_KIND__FUNCTION_PARAMETER,
     CHECKED_SYMBOL_KIND__TYPE,
-    CHECKED_SYMBOL_KIND__VARIABLE
+    CHECKED_SYMBOL_KIND__VARIABLE,
+    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT
 } Checked_Symbol_Kind;
 
 typedef struct Checked_Symbol {
@@ -239,6 +241,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
     CHECKED_STATEMENT_KIND__RETURN,
+    CHECKED_STATEMENT_KIND__UNION_SWITCH,
     CHECKED_STATEMENT_KIND__VARIABLE,
     CHECKED_STATEMENT_KIND__WHILE
 } Checked_Statement_Kind;
@@ -290,6 +293,14 @@ typedef struct Checked_Variable_Symbol {
 } Checked_Variable_Symbol;
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location *location, String *name, Checked_Type *type);
+
+typedef struct Checked_Union_Switch_Variant_Symbol {
+    Checked_Symbol super;
+    Checked_Expression *union_expression;
+    Checked_Union_Variant *union_variant;
+} Checked_Union_Switch_Variant_Symbol;
+
+Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Source_Location *location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -599,6 +610,25 @@ typedef struct Checked_Return_Statement {
 } Checked_Return_Statement;
 
 Checked_Return_Statement *Checked_Return_Statement__create(Source_Location *location, Checked_Expression *expression);
+
+typedef struct Checked_Union_Switch_Case {
+    Source_Location *location;
+    Checked_Union_Type *union_type;
+    Checked_Union_Variant *union_variant;
+    Checked_Statement *statement;
+    struct Checked_Union_Switch_Case *next_union_switch_case;
+} Checked_Union_Switch_Case;
+
+Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location *location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement);
+
+typedef struct Checked_Union_Switch_Statement {
+    Checked_Statement super;
+    Checked_Expression *expression;
+    Checked_Union_Switch_Case *first_union_switch_case;
+    Checked_Statement *else_statement;
+} Checked_Union_Switch_Statement;
+
+Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Statement *else_statement);
 
 typedef struct Checked_Variable_Statement {
     Checked_Statement super;

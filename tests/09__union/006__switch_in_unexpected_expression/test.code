@@ -1,0 +1,17 @@
+union Value {
+    bool
+    i8
+    i32
+}
+
+struct Literal {
+    value: Value
+}
+
+func main() -> i32 {
+    let literal = make Literal(value: make Value(13))
+    switch variant in literal.value {
+        case i32 {
+        }
+    }
+}
