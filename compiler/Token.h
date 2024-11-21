@@ -124,6 +124,7 @@ bool Token__is_identifier(Token *self);
 bool Token__is_if(Token *self);
 bool Token__is_in(Token *self);
 bool Token__is_integer(Token *self);
+bool Token__is_is(Token *self);
 bool Token__is_keyword(Token *self, char *lexeme);
 bool Token__is_less_than(Token *self);
 bool Token__is_let(Token *self);

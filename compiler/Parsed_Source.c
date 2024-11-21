@@ -350,6 +350,16 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location
     return statement;
 }
 
+Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Type *variant_type, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
+    Parsed_Union_If_Statement *statement = (Parsed_Union_If_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__UNION_IF, sizeof(Parsed_Union_If_Statement), location);
+    statement->variant_alias = variant_alias;
+    statement->expression = expression;
+    statement->variant_type = variant_type;
+    statement->true_statement = true_statement;
+    statement->false_statement = false_statement;
+    return statement;
+}
+
 Parsed_Union_Switch_Case *Parsed_Union_Switch_Case__create(Parsed_Type *type, Parsed_Statement *block) {
     Parsed_Union_Switch_Case *case_ = (Parsed_Union_Switch_Case *)malloc(sizeof(Parsed_Union_Switch_Case));
     case_->type = type;

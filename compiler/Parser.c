@@ -977,10 +977,36 @@ Parsed_Statement *Parser__parse_break_statement(Parser *self) {
 /*
 if
     | "if" expression block ( "else" ( if |  block ) )?
+    | "if" IDENTIFIER "in" expression "is" type block ( "else" ( if |  block ) )?
 */
 Parsed_Statement *Parser__parse_if_statement(Parser *self) {
     Source_Location *location = Parser__consume_token(self, Token__is_if)->location;
     Parser__consume_space(self, 1);
+    if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, true, Token__is_in)) {
+        Identifier_Token *variant_alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_in);
+        Parser__consume_space(self, 1);
+        Parsed_Expression *expression = Parser__parse_expression(self);
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_is);
+        Parser__consume_space(self, 1);
+        Parsed_Type *variant_type = Parser__parse_type(self);
+        Parser__consume_space(self, 1);
+        Parsed_Statement *true_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
+        Parsed_Statement *false_statement = NULL;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
+            Parser__consume_space(self, 1);
+            Parser__consume_token(self, Token__is_else);
+            Parser__consume_space(self, 1);
+            if (Parser__matches_one(self, Token__is_if)) {
+                false_statement = Parser__parse_if_statement(self);
+            } else {
+                false_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
+            }
+        }
+        return (Parsed_Statement *)Parsed_Union_If_Statement__create(location, variant_alias, expression, variant_type, true_statement, false_statement);
+    }
     Parsed_Expression *condition_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 1);
     Parsed_Statement *true_statement = (Parsed_Statement *)Parser__parse_block_statement(self);

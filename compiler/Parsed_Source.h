@@ -352,6 +352,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__STRUCT,
     PARSED_STATEMENT_KIND__TRAIT,
     PARSED_STATEMENT_KIND__UNION,
+    PARSED_STATEMENT_KIND__UNION_IF,
     PARSED_STATEMENT_KIND__UNION_SWITCH,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
@@ -495,6 +496,17 @@ typedef struct Parsed_Union_Statement {
 } Parsed_Union_Statement;
 
 Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location, Token *name);
+
+typedef struct Parsed_Union_If_Statement {
+    Parsed_Statement super;
+    Identifier_Token *variant_alias;
+    Parsed_Expression *expression;
+    Parsed_Type *variant_type;
+    Parsed_Statement *true_statement;
+    Parsed_Statement *false_statement;
+} Parsed_Union_If_Statement;
+
+Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Type *variant_type, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
 
 typedef struct Parsed_Union_Switch_Case {
     Parsed_Type *type;

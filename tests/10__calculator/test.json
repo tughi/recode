@@ -5,11 +5,11 @@
         ],
         "stdout": [
             "Tokens:",
-            "n: 100",
-            " ",
-            "+",
-            " ",
-            "n: 42"
+            "Number: 100",
+            "Space: 1",
+            "Other: +",
+            "Space: 1",
+            "Number: 42"
         ]
     }
 }

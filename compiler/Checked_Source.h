@@ -241,6 +241,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
     CHECKED_STATEMENT_KIND__RETURN,
+    CHECKED_STATEMENT_KIND__UNION_IF,
     CHECKED_STATEMENT_KIND__UNION_SWITCH,
     CHECKED_STATEMENT_KIND__VARIABLE,
     CHECKED_STATEMENT_KIND__WHILE
@@ -610,6 +611,16 @@ typedef struct Checked_Return_Statement {
 } Checked_Return_Statement;
 
 Checked_Return_Statement *Checked_Return_Statement__create(Source_Location *location, Checked_Expression *expression);
+
+typedef struct Checked_Union_If_Statement {
+    Checked_Statement super;
+    Checked_Expression *union_expression;
+    Checked_Union_Variant *union_variant;
+    Checked_Statement *true_statement;
+    Checked_Statement *false_statement;
+} Checked_Union_If_Statement;
+
+Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location *location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement);
 
 typedef struct Checked_Union_Switch_Case {
     Source_Location *location;

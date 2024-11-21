@@ -10,15 +10,19 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
 
     let stdout_writer = make Writer(stdout)
 
-    stdout_writer.write(string: "Tokens:").end_line()
+    stdout_writer.write("Tokens:").end_line()
 
     while tokenizer.has_next_token() {
         let token = tokenizer.next_token()
-        if token.kind == 0 {
-            break
-        }
         stdout_writer.write(token: token).end_line()
     }
+
+    let stop_token = tokenizer.next_token()
+    if variant in stop_token is Stop {
+        exit(0)
+    }
+
+    exit(2)
 }
 
 \ ------------------------------------------------------------------------------ Tokenizer
@@ -32,23 +36,31 @@ func @Tokenizer.has_next_token(self) -> bool {
     return self.data[self.index] != 0
 }
 
-func @Tokenizer.next_token(self) -> @Token {
+func @Tokenizer.next_token(self) -> Token {
     let lexeme_builder = make_string_builder()
     let c = self.data[self.index]
+    if c == 0 {
+        return make Token(make Stop(
+            span: make Span(
+                lexeme: lexeme_builder.build()
+            )
+        ))
+    }
     if c >= '0' and c <= '9' {
         return self.scan_number_token(@lexeme_builder)
     }
+    if c == ' ' {
+        return self.scan_space_token(@lexeme_builder)
+    }
     self.index = self.index + 1
-    return make @Token(
-        kind: c
+    return make Token(make Other(
         span: make Span(
             lexeme: lexeme_builder.write(char: c).build()
         )
-        value: 0
-    )
+    ))
 }
 
-func @Tokenizer.scan_number_token(self, anon lexeme_builder: @String_Builder) -> @Token {
+func @Tokenizer.scan_number_token(self, anon lexeme_builder: @String_Builder) -> Token {
     let value = 0
     loop {
         let c = self.data[self.index]
@@ -59,13 +71,31 @@ func @Tokenizer.scan_number_token(self, anon lexeme_builder: @String_Builder) ->
         value = value * 10 + (c - '0').as(i32)
         self.index = self.index + 1
     }
-    return make @Token(
-        kind: 'n'
+    return make Token(make Number(
         span: make Span(
             lexeme: lexeme_builder.build()
         )
         value: value
-    )
+    ))
+}
+
+func @Tokenizer.scan_space_token(self, anon lexeme_builder: @String_Builder) -> Token {
+    let count = 0
+    loop {
+        let c = self.data[self.index]
+        if c != ' ' {
+            break
+        }
+        lexeme_builder.write(char: c)
+        count = count + 1
+        self.index = self.index + 1
+    }
+    return make Token(make Space(
+        span: make Span(
+            lexeme: lexeme_builder.build()
+        )
+        count: count
+    ))
 }
 
 \ ------------------------------------------------------------------------------ String
@@ -75,7 +105,7 @@ struct String {
     length: i32
 }
 
-func @Writer.write(self, string: str) -> @Writer {
+func @Writer.write(self, anon string: str) -> @Writer {
     let string_copy = string
     let string_data = (@string_copy).as(@String).data
     let index = 0usize
@@ -88,23 +118,54 @@ func @Writer.write(self, string: str) -> @Writer {
 
 \ ------------------------------------------------------------------------------ Token
 
+
 struct Span {
     lexeme: str
 }
 
-struct Token {
-    kind: u8
+struct Number {
     span: Span
     value: i32
 }
 
-func @Writer.write(self, token: @Token) -> @Writer {
-    self.write(char: token.kind)
-    if token.kind == 'n' {
-        self.write(char: ':').write(char: ' ').write(signed: token.value)
+struct Space {
+    span: Span
+    count: i32
+}
+
+struct Other {
+    span: Span
+}
+
+struct Stop {
+    span: Span
+}
+
+union Token {
+    Number
+    Space
+    Other
+    Stop
+}
+
+func @Writer.write(self, token: Token) -> @Writer {
+    switch token_kind in token {
+        case Number {
+            return self.write("Number: ").write(signed: token_kind.value)
+        }
+        case Space {
+            return self.write("Space: ").write(signed: token_kind.count)
+        }
+        case Other {
+            return self.write("Other: ").write(token_kind.span.lexeme)
+        }
+        case Stop {
+            return self.write("Stop")
+        }
     }
     return self
 }
+
 
 \ ------------------------------------------------------------------------------ String_Builder
 
@@ -131,7 +192,7 @@ func @String_Builder.build(self) -> str {
     self.write(char: 0)
     let string = make String(
         data: self.data
-        length: self.length
+        length: self.length - 1
     )
     return (@string).as(@str).@
 }

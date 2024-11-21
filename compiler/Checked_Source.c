@@ -695,6 +695,15 @@ Checked_Return_Statement *Checked_Return_Statement__create(Source_Location *loca
     return statement;
 }
 
+Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location *location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement) {
+    Checked_Union_If_Statement *statement = (Checked_Union_If_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__UNION_IF, sizeof(Checked_Union_If_Statement), location);
+    statement->union_expression = union_expression;
+    statement->union_variant = union_variant;
+    statement->true_statement = true_statement;
+    statement->false_statement = false_statement;
+    return statement;
+}
+
 Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location *location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement) {
     Checked_Union_Switch_Case *union_switch_case = (Checked_Union_Switch_Case *)malloc(sizeof(Checked_Union_Switch_Case));
     union_switch_case->location = location;

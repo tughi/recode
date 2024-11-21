@@ -477,6 +477,19 @@ void Generator__generate_return_statement(Generator *self, Checked_Return_Statem
     pWriter__write__cstring(self->writer, ";");
 }
 
+void Generator__generate_union_if_statement(Generator *self, Checked_Union_If_Statement *statement) {
+    pWriter__write__cstring(self->writer, "if (");
+    Generator__generate_expression(self, statement->union_expression);
+    pWriter__write__cstring(self->writer, ".variant == ");
+    pWriter__write__int64(self->writer, statement->union_variant->index);
+    pWriter__write__cstring(self->writer, ") ");
+    Generator__generate_statement(self, statement->true_statement);
+    if (statement->false_statement != NULL) {
+        pWriter__write__cstring(self->writer, " else ");
+        Generator__generate_statement(self, statement->false_statement);
+    }
+}
+
 void Generator__generate_union_switch_statement(Generator *self, Checked_Union_Switch_Statement *statement) {
     // The switch statement is generated as if-else statements to allow the use of break statements within the cases.
 
@@ -544,6 +557,9 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
         break;
     case CHECKED_STATEMENT_KIND__RETURN:
         Generator__generate_return_statement(self, (Checked_Return_Statement *)statement);
+        break;
+    case CHECKED_STATEMENT_KIND__UNION_IF:
+        Generator__generate_union_if_statement(self, (Checked_Union_If_Statement *)statement);
         break;
     case CHECKED_STATEMENT_KIND__UNION_SWITCH:
         Generator__generate_union_switch_statement(self, (Checked_Union_Switch_Statement *)statement);

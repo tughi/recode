@@ -141,6 +141,10 @@ bool Token__is_in(Token *self) {
     return Token__is_keyword(self, "in");
 }
 
+bool Token__is_is(Token *self) {
+    return Token__is_keyword(self, "is");
+}
+
 bool Token__is_let(Token *self) {
     return Token__is_keyword(self, "let");
 }
