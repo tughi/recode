@@ -244,6 +244,17 @@ Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size
     return statement;
 }
 
+bool Parsed_Statement__is_type_statement(Parsed_Statement *statement) {
+    switch (statement->kind) {
+    case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
+    case PARSED_STATEMENT_KIND__STRUCT:
+    case PARSED_STATEMENT_KIND__TRAIT:
+    case PARSED_STATEMENT_KIND__UNION:
+        return true;
+    }
+    return false;
+}
+
 Parsed_Named_Statement *Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location *location, Token *name) {
     Parsed_Named_Statement *statement = (Parsed_Named_Statement *)Parsed_Statement__create_kind(kind, kind_size, location);
     statement->name = name;

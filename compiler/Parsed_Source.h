@@ -366,6 +366,8 @@ typedef struct Parsed_Statement {
 
 Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location *location);
 
+bool Parsed_Statement__is_type_statement(Parsed_Statement *self);
+
 typedef struct Parsed_Statements {
     Parsed_Statement *first_statement;
     Parsed_Statement *last_statement;

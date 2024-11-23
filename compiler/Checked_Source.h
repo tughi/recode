@@ -35,11 +35,21 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
 
+struct Checked_Type_Dependency;
+
 typedef struct Checked_Type {
     Checked_Type_Kind kind;
     Source_Location *location;
     struct Checked_Type *next_type;
+    struct Checked_Type_Dependency *first_dependency;
+
+    bool has_generated_definition;
 } Checked_Type;
+
+struct Checked_Type_Dependency {
+    Checked_Type *type;
+    struct Checked_Type_Dependency *next_dependency;
+};
 
 Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location);
 

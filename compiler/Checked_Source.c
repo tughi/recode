@@ -6,6 +6,8 @@ Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
     type->kind = kind;
     type->location = location;
     type->next_type = NULL;
+    type->first_dependency = NULL;
+    type->has_generated_definition = false;
     return type;
 }
 

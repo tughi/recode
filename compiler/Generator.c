@@ -708,6 +708,28 @@ void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) 
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
+void Generator__define_type(Generator *self, Checked_Type *type) {
+    struct Checked_Type_Dependency *dependency = type->first_dependency;
+    while (dependency != NULL) {
+        if (!dependency->type->has_generated_definition) {
+            Generator__define_type(self, dependency->type);
+        }
+        dependency = dependency->next_dependency;
+    }
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__STRUCT:
+        Generator__generate_struct(self, (Checked_Struct_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__TRAIT:
+        Generator__generate_trait(self, (Checked_Trait_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__UNION:
+        Generator__generate_union(self, (Checked_Union_Type *)type);
+        break;
+    }
+    type->has_generated_definition = true;
+}
+
 void generate(Writer *writer, Checked_Source *checked_source) {
     Generator generator;
     generator.writer = writer;
@@ -740,7 +762,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source || String__equals_cstring(checked_symbol->name, "String"))) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source)) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
             switch (named_type->super.kind) {
             case CHECKED_TYPE_KIND__EXTERNAL:
@@ -766,18 +788,10 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source || String__equals_cstring(checked_symbol->name, "String"))) {
-            Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-            switch (named_type->super.kind) {
-            case CHECKED_TYPE_KIND__STRUCT:
-                Generator__generate_struct(&generator, (Checked_Struct_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__TRAIT:
-                Generator__generate_trait(&generator, (Checked_Trait_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__UNION:
-                Generator__generate_union(&generator, (Checked_Union_Type *)named_type);
-                break;
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source)) {
+            Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
+            if (!type->has_generated_definition) {
+                Generator__define_type(&generator, type);
             }
         }
         checked_symbol = checked_symbol->next_symbol;
