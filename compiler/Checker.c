@@ -143,7 +143,8 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
     case PARSED_TYPE_KIND__MULTI_POINTER:
         return (Checked_Type *)Checked_Multi_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Multi_Pointer_Type *)parsed_type)->item_type));
     case PARSED_TYPE_KIND__NAMED: {
-        Checked_Named_Type *type = Checker__find_type(self, ((Parsed_Named_Type *)parsed_type)->name);
+        Parsed_Named_Type *parsed_named_type = (Parsed_Named_Type *)parsed_type;
+        Checked_Named_Type *type = Checker__find_type(self, parsed_named_type->name);
         if (type != NULL) {
             return (Checked_Type *)type;
         }
@@ -152,7 +153,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         for (; parsed_statement != NULL; parsed_statement = parsed_statement->next_statement) {
             if (Parsed_Statement__is_type_statement(parsed_statement)) {
                 Parsed_Named_Statement *parsed_type_statement = (Parsed_Named_Statement *)parsed_statement;
-                if (String__equals_string(parsed_type_statement->name->lexeme, ((Parsed_Named_Type *)parsed_type)->name)) {
+                if (String__equals_string(parsed_type_statement->name->lexeme, parsed_named_type->name)) {
                     return Checker__check_type(self, parsed_statement);
                 }
             }
@@ -160,6 +161,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
 
         pWriter__begin_location_message(stderr_writer, parsed_type->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined type: ");
+        pWriter__write__string(stderr_writer, parsed_named_type->name);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
@@ -1068,7 +1070,7 @@ struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *ty
     return dependency;
 }
 
-void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location *location) {
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location *location, Checker *checker) {
     if (self == other) {
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type ");
@@ -1079,7 +1081,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     switch (other->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
-        Checked_Type__append_dependencies(self, ((Checked_Array_Type *)other)->item_type, location);
+        Checked_Type__append_dependencies(self, ((Checked_Array_Type *)other)->item_type, location, checker);
         return;
     case CHECKED_TYPE_KIND__EXTERNAL:
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
@@ -1089,6 +1091,13 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
         pWriter__write__checked_type(stderr_writer, other);
         pWriter__end_location_message(stderr_writer);
         panic();
+    case CHECKED_TYPE_KIND__STRING: {
+        String string_type_name = {.data = "String", .length = 6};
+        Parsed_Named_Type parsed_string_type = {.super = {.kind = PARSED_TYPE_KIND__NAMED, .location = location}, .name = &string_type_name};
+        Checked_Type *checked_string_type = Checker__resolve_type(checker, (Parsed_Type *)&parsed_string_type);
+        Checked_Type__append_dependencies(self, checked_string_type, location, checker);
+        return;
+    }
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__UNION:
         break;
@@ -1109,7 +1118,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     struct Checked_Type_Dependency *other_dependency = other->first_dependency;
     while (other_dependency != NULL) {
-        Checked_Type__append_dependencies(self, other_dependency->type, location);
+        Checked_Type__append_dependencies(self, other_dependency->type, location, checker);
         other_dependency = other_dependency->next_dependency;
     }
 }
@@ -1150,7 +1159,7 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            Checked_Type__append_dependencies((Checked_Type *)struct_type, struct_member_type, parsed_member->type->location);
+            Checked_Type__append_dependencies((Checked_Type *)struct_type, struct_member_type, parsed_member->type->location, self);
             struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
             if (last_struct_member == NULL) {
                 struct_type->first_member = struct_member;
@@ -1283,7 +1292,7 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
             pWriter__end_location_message(stderr_writer);
             panic();
         }
-        Checked_Type__append_dependencies((Checked_Type *)union_type, union_variant_type, parsed_variant->type->location);
+        Checked_Type__append_dependencies((Checked_Type *)union_type, union_variant_type, parsed_variant->type->location, self);
         Checked_Union_Variant *union_variant = Checked_Union_Variant__create(parsed_variant->type->location, union_variant_type);
         if (last_union_variant == NULL) {
             union_variant->index = 1;
@@ -1358,6 +1367,9 @@ Checked_Return_Statement *Checker__check_return_statement(Checker *self, Parsed_
     Checked_Expression *expression = NULL;
     if (parsed_statement->expression != NULL) {
         expression = Checker__check_expression(self, parsed_statement->expression, self->return_type);
+        if (self->return_type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(self->return_type, expression->type)) {
+            expression = (Checked_Expression *)Checker__make_union_expression(self, expression->location, (Checked_Union_Type *)self->return_type, expression);
+        }
         Checker__require_same_type(self, self->return_type, expression->type, expression->location);
     } else if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);

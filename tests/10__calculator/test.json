@@ -1,15 +1,18 @@
 {
     "execute": {
         "args": [
-            "100 + 42"
+            "5 - 4 * 3 / 2 + 1"
         ],
         "stdout": [
-            "Tokens:",
-            "Number: 100",
-            "Space: 1",
-            "Other: +",
-            "Space: 1",
-            "Number: 42"
+            "Number: 5",
+            "Minus",
+            "Number: 4",
+            "Multiply",
+            "Number: 3",
+            "Divide",
+            "Number: 2",
+            "Plus",
+            "Number: 1"
         ]
     }
 }
