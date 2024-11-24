@@ -160,6 +160,14 @@ Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *lite
     return expression;
 }
 
+Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *value_expression, Parsed_Type *runtime_type, bool is_not) {
+    Parsed_Is_Expression *expression = (Parsed_Is_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__IS, sizeof(Parsed_Is_Expression), value_expression->location);
+    expression->value_expression = value_expression;
+    expression->runtime_type = runtime_type;
+    expression->is_not = is_not;
+    return expression;
+}
+
 Parsed_Less_Expression *Parsed_Less_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
     return (Parsed_Less_Expression *)Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LESS, left_expression, right_expression);
 }
@@ -226,8 +234,8 @@ Parsed_String_Expression *Parsed_String_Expression__create(String_Token *literal
     return expression;
 }
 
-Parsed_Substract_Expression *Parsed_Substract_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
-    return (Parsed_Substract_Expression *)Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression);
+Parsed_Subtract_Expression *Parsed_Subtract_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
+    return (Parsed_Subtract_Expression *)Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__SUBTRACT, left_expression, right_expression);
 }
 
 Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name) {

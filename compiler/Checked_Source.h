@@ -70,6 +70,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
     CHECKED_EXPRESSION_KIND__GROUP,
     CHECKED_EXPRESSION_KIND__INTEGER,
+    CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT,
     CHECKED_EXPRESSION_KIND__LESS,
     CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS,
     CHECKED_EXPRESSION_KIND__LOGIC_AND,
@@ -85,7 +86,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__SIZEOF,
     CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
-    CHECKED_EXPRESSION_KIND__SUBSTRACT,
+    CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
     CHECKED_EXPRESSION_KIND__MAKE_UNION
 } Checked_Expression_Kind;
@@ -444,6 +445,15 @@ typedef struct Checked_Integer_Expression {
 
 Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location *location, Checked_Type *type, uint64_t value);
 
+typedef struct Checked_Is_Union_Variant_Expression {
+    Checked_Expression super;
+    Checked_Expression *union_expression;
+    Checked_Union_Variant *union_variant;
+    bool is_not;
+} Checked_Is_Union_Variant_Expression;
+
+Checked_Is_Union_Variant_Expression *Checked_Is_Union_Variant_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, bool is_not);
+
 typedef struct Checked_Less_Expression {
     Checked_Binary_Expression super;
 } Checked_Less_Expression;
@@ -558,11 +568,11 @@ typedef struct Checked_String_Length_Expression {
 
 Checked_String_Length_Expression *Checked_String_Length_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *string_expression);
 
-typedef struct Checked_Substract_Expression {
+typedef struct Checked_Subtract_Expression {
     Checked_Binary_Expression super;
-} Checked_Substract_Expression;
+} Checked_Subtract_Expression;
 
-Checked_Substract_Expression *Checked_Substract_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Symbol_Expression {
     Checked_Expression super;

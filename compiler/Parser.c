@@ -388,17 +388,15 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
     return Parser__parse_access_expression(self);
 }
 
-bool Token__is_mutliplication(Token *self) {
+bool Token__is_asterisk_or_slash(Token *self) {
     return Token__is_asterisk(self) || Token__is_slash(self);
 }
 
-/*
-multiplication
-    | unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
-*/
-Parsed_Expression *Parser__parse_multiplication_expression(Parser *self) {
+// multiplicative_expression
+//  | unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
+Parsed_Expression *Parser__parse_multiplicative_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_unary_expression(self);
-    while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk_or_slash)) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_asterisk)) {
             Parser__consume_token(self, Token__is_asterisk);
@@ -422,50 +420,47 @@ Parsed_Expression *Parser__parse_multiplication_expression(Parser *self) {
     return expression;
 }
 
-bool Token__is_addition(Token *self) {
+bool Token__is_plus_or_minus(Token *self) {
     return Token__is_plus(self) || Token__is_minus(self);
 }
 
-/*
-addition
-    | multiplication ( ( "+" | "-" ) multiplication )*
-*/
-Parsed_Expression *Parser__parse_addition_expression(Parser *self) {
-    Parsed_Expression *expression = Parser__parse_multiplication_expression(self);
-    while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
+// additive_expression
+//  | multiplicative ( ( "+" | "-" ) multiplicative )*
+Parsed_Expression *Parser__parse_additive_expression(Parser *self) {
+    Parsed_Expression *expression = Parser__parse_multiplicative_expression(self);
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_plus_or_minus)) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_plus)) {
             Parser__consume_token(self, Token__is_plus);
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_multiplication_expression(self);
+            Parsed_Expression *right_expression = Parser__parse_multiplicative_expression(self);
             expression = (Parsed_Expression *)Parsed_Add_Expression__create(expression, right_expression);
         } else {
             Parser__consume_token(self, Token__is_minus);
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_multiplication_expression(self);
-            expression = (Parsed_Expression *)Parsed_Substract_Expression__create(expression, right_expression);
+            Parsed_Expression *right_expression = Parser__parse_multiplicative_expression(self);
+            expression = (Parsed_Expression *)Parsed_Subtract_Expression__create(expression, right_expression);
         }
     }
     return expression;
 }
 
-/*
-comparison
-    | addition ( ( "<=" | "<" | ">" | ">=") addition )*
-*/
+// comparison_expression
+//  | additive_expression ( ( "<=" | "<" | ">" | ">=") additive_expression )*
+//  | additive_expression ( "is" "not"? type )*
 Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
-    Parsed_Expression *expression = Parser__parse_addition_expression(self);
+    Parsed_Expression *expression = Parser__parse_additive_expression(self);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_less_than);
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals);
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_addition_expression(self);
+            Parsed_Expression *right_expression = Parser__parse_additive_expression(self);
             expression = (Parsed_Expression *)Parsed_Less_Or_Equals_Expression__create(expression, right_expression);
         } else {
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_addition_expression(self);
+            Parsed_Expression *right_expression = Parser__parse_additive_expression(self);
             expression = (Parsed_Expression *)Parsed_Less_Expression__create(expression, right_expression);
         }
     } else if (Parser__matches_two(self, Token__is_space, false, Token__is_greater_than)) {
@@ -474,21 +469,31 @@ Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals);
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_addition_expression(self);
+            Parsed_Expression *right_expression = Parser__parse_additive_expression(self);
             expression = (Parsed_Expression *)Parsed_Greater_Or_Equals_Expression__create(expression, right_expression);
         } else {
             Parser__consume_space(self, 1);
-            Parsed_Expression *right_expression = Parser__parse_addition_expression(self);
+            Parsed_Expression *right_expression = Parser__parse_additive_expression(self);
             expression = (Parsed_Expression *)Parsed_Greater_Expression__create(expression, right_expression);
         }
+    } else if (Parser__matches_two(self, Token__is_space, false, Token__is_is)) {
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_is);
+        Parser__consume_space(self, 1);
+        bool is_not = false;
+        if (Parser__matches_one(self, Token__is_not)) {
+            Parser__consume_token(self, Token__is_not);
+            Parser__consume_space(self, 1);
+            is_not = true;
+        }
+        Parsed_Type *type = Parser__parse_type(self);
+        expression = (Parsed_Expression *)Parsed_Is_Expression__create(expression, type, is_not);
     }
     return expression;
 }
 
-/*
-equality
-    | comparison ( ( "==" | "!=" ) comparison )*
-*/
+// equality
+//  | comparison ( ( "==" | "!=" ) comparison )*
 Parsed_Expression *Parser__parse_equality_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_comparison_expression(self);
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
@@ -987,7 +992,7 @@ Parsed_Statement *Parser__parse_if_statement(Parser *self) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_in);
         Parser__consume_space(self, 1);
-        Parsed_Expression *expression = Parser__parse_expression(self);
+        Parsed_Expression *expression = Parser__parse_access_expression(self);
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_is);
         Parser__consume_space(self, 1);

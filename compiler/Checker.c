@@ -420,6 +420,10 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
             object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
             object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_callee_expression->object_expression->location, object_type, object_expression);
         }
+    } else if (object_type->kind == CHECKED_TYPE_KIND__UNION) {
+        /* auto reference */
+        object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
+        object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_callee_expression->object_expression->location, object_type, object_expression);
     }
     return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
 }
@@ -631,6 +635,30 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Parsed_Inte
     }
     uint64_t expression_value = parsed_expression->value;
     return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value);
+}
+
+Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expression *parsed_expression) {
+    Checked_Expression *value_expression = Checker__check_expression(self, parsed_expression->value_expression, NULL);
+    Checked_Type *value_type = value_expression->type;
+    Checked_Type *runtime_type = Checker__resolve_type(self, parsed_expression->runtime_type);
+    switch (value_type->kind) {
+    case CHECKED_TYPE_KIND__UNION: {
+        Checked_Union_Type *union_type = (Checked_Union_Type *)value_type;
+        Checked_Union_Variant *union_variant = union_type->first_variant;
+        for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+            if (Checked_Type__equals(union_variant->type, runtime_type)) {
+                return (Checked_Expression *)Checked_Is_Union_Variant_Expression__create(parsed_expression->super.location, (Checked_Type *)self->bool_type, value_expression, union_variant, parsed_expression->is_not);
+            }
+        }
+        break;
+    }
+    }
+    pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Value type ");
+    pWriter__write__checked_type(stderr_writer, value_type);
+    pWriter__write__cstring(stderr_writer, " doesn't support the is operator");
+    pWriter__end_location_message(stderr_writer);
+    panic();
 }
 
 Checked_Expression *Checker__check_less_expression(Checker *self, Parsed_Less_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -920,12 +948,12 @@ Checked_Expression *Checker__check_string_expression(Checker *self, Parsed_Strin
     return (Checked_Expression *)Checked_String_Expression__create(parsed_expression->super.super.location, string_type, string_value);
 }
 
-Checked_Expression *Checker__check_substract_expression(Checker *self, Parsed_Substract_Expression *parsed_expression, Checked_Type *expected_type) {
+Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Subtract_Expression *parsed_expression, Checked_Type *expected_type) {
     Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
     Checker__require_numeric_type(self, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
-    return (Checked_Expression *)Checked_Substract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
+    return (Checked_Expression *)Checked_Subtract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -1014,6 +1042,8 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         return Checker__check_group_expression(self, (Parsed_Group_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__INTEGER:
         return Checker__check_integer_expression(self, (Parsed_Integer_Expression *)parsed_expression, expected_type);
+    case PARSED_EXPRESSION_KIND__IS:
+        return Checker__check_is_expression(self, (Parsed_Is_Expression *)parsed_expression);
     case PARSED_EXPRESSION_KIND__LESS:
         return Checker__check_less_expression(self, (Parsed_Less_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__LESS_OR_EQUALS:
@@ -1042,8 +1072,8 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         return Checker__check_sizeof_expression(self, (Parsed_Sizeof_Expression *)parsed_expression);
     case PARSED_EXPRESSION_KIND__STRING:
         return Checker__check_string_expression(self, (Parsed_String_Expression *)parsed_expression);
-    case PARSED_EXPRESSION_KIND__SUBSTRACT:
-        return Checker__check_substract_expression(self, (Parsed_Substract_Expression *)parsed_expression, expected_type);
+    case PARSED_EXPRESSION_KIND__SUBTRACT:
+        return Checker__check_subtract_expression(self, (Parsed_Subtract_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__SYMBOL:
         return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression, expected_type);
     }
@@ -1563,12 +1593,14 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
         String__append_receiver_type(symbol_name, ((Checked_Pointer_Type *)receiver_type)->other_type);
         break;
     }
-    case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__STRING:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
-    case CHECKED_TYPE_KIND__U8: {
+    case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__UNION:
+     {
         String__append_string(symbol_name, ((Checked_Named_Type *)receiver_type)->name);
         break;
     }

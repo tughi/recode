@@ -153,6 +153,16 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
         break;
     }
 }
+void Generator__generate_is_union_variant_expression(Generator *self, Checked_Is_Union_Variant_Expression *expression) {
+    Generator__generate_expression(self, expression->union_expression);
+    pWriter__write__cstring(self->writer, ".variant");
+    if (expression->is_not) {
+        pWriter__write__cstring(self->writer, " != ");
+    } else {
+        pWriter__write__cstring(self->writer, " == ");
+    }
+    pWriter__write__int64(self->writer, expression->union_variant->index);
+}
 
 void Generator__generate_less_expression(Generator *self, Checked_Less_Expression *expression) {
     Generator__generate_expression(self, expression->super.left_expression);
@@ -295,7 +305,7 @@ void Generator__generate_string_length_expression(Generator *self, Checked_Strin
     pWriter__write__cstring(self->writer, "length");
 }
 
-void Generator__generate_substract_expression(Generator *self, Checked_Substract_Expression *expression) {
+void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_Expression *expression) {
     Generator__generate_expression(self, expression->super.left_expression);
     pWriter__write__cstring(self->writer, " - ");
     Generator__generate_expression(self, expression->super.right_expression);
@@ -356,6 +366,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__INTEGER:
         Generator__generate_integer_expression(self, (Checked_Integer_Expression *)expression);
         break;
+    case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
+        Generator__generate_is_union_variant_expression(self, (Checked_Is_Union_Variant_Expression *)expression);
+        break;
     case CHECKED_EXPRESSION_KIND__LESS:
         Generator__generate_less_expression(self, (Checked_Less_Expression *)expression);
         break;
@@ -404,8 +417,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
         Generator__generate_string_length_expression(self, (Checked_String_Length_Expression *)expression);
         break;
-    case CHECKED_EXPRESSION_KIND__SUBSTRACT:
-        Generator__generate_substract_expression(self, (Checked_Substract_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__SUBTRACT:
+        Generator__generate_subtract_expression(self, (Checked_Subtract_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         Generator__generate_symbol_expression(self, (Checked_Symbol_Expression *)expression);

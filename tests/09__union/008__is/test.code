@@ -1,0 +1,14 @@
+union Value {
+    bool
+    i32
+}
+
+func main() -> i32 {
+    let value: Value = 42
+
+    if value is i32 {
+        return 0
+    }
+
+    return 1
+}

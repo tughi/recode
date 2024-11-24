@@ -18,6 +18,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS,
     PARSED_EXPRESSION_KIND__GROUP,
     PARSED_EXPRESSION_KIND__INTEGER,
+    PARSED_EXPRESSION_KIND__IS,
     PARSED_EXPRESSION_KIND__LESS,
     PARSED_EXPRESSION_KIND__LESS_OR_EQUALS,
     PARSED_EXPRESSION_KIND__LOGIC_AND,
@@ -32,7 +33,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__NULL,
     PARSED_EXPRESSION_KIND__SIZEOF,
     PARSED_EXPRESSION_KIND__STRING,
-    PARSED_EXPRESSION_KIND__SUBSTRACT,
+    PARSED_EXPRESSION_KIND__SUBTRACT,
     PARSED_EXPRESSION_KIND__SYMBOL
 } Parsed_Expression_Kind;
 
@@ -236,6 +237,15 @@ typedef struct Parsed_Integer_Expression {
 
 Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *literal, Parsed_Named_Type *type);
 
+typedef struct Parsed_Is_Expression {
+    Parsed_Expression super;
+    Parsed_Expression *value_expression;
+    Parsed_Type *runtime_type;
+    bool is_not;
+} Parsed_Is_Expression;
+
+Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *object_expression, Parsed_Type *runtime_type, bool is_not);
+
 typedef struct Parsed_Less_Expression {
     Parsed_Binary_Expression super;
 } Parsed_Less_Expression;
@@ -326,11 +336,11 @@ typedef struct Parsed_String_Expression {
 
 Parsed_String_Expression *Parsed_String_Expression__create(String_Token *literal);
 
-typedef struct Parsed_Substract_Expression {
+typedef struct Parsed_Subtract_Expression {
     Parsed_Binary_Expression super;
-} Parsed_Substract_Expression;
+} Parsed_Subtract_Expression;
 
-Parsed_Substract_Expression *Parsed_Substract_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression);
+Parsed_Subtract_Expression *Parsed_Subtract_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression);
 
 typedef struct Parsed_Symbol_Expression {
     Parsed_Expression super;

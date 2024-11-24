@@ -548,6 +548,14 @@ Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location *
     return expression;
 }
 
+Checked_Is_Union_Variant_Expression *Checked_Is_Union_Variant_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, bool is_not) {
+    Checked_Is_Union_Variant_Expression *expression = (Checked_Is_Union_Variant_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT, sizeof(Checked_Is_Union_Variant_Expression), location, type);
+    expression->union_expression = union_expression;
+    expression->union_variant = union_variant;
+    expression->is_not = is_not;
+    return expression;
+}
+
 Checked_Less_Expression *Checked_Less_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     return (Checked_Less_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LESS, location, type, left_expression, right_expression);
 }
@@ -628,8 +636,8 @@ Checked_String_Length_Expression *Checked_String_Length_Expression__create(Sourc
     return expression;
 }
 
-Checked_Substract_Expression *Checked_Substract_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
-    return (Checked_Substract_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__SUBSTRACT, location, type, left_expression, right_expression);
+Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
+    return (Checked_Subtract_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__SUBTRACT, location, type, left_expression, right_expression);
 }
 
 Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location *location, Checked_Type *type, Checked_Symbol *symbol) {
