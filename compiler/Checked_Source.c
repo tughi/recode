@@ -179,10 +179,11 @@ Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String
     return type;
 }
 
-Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type) {
+Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type, int32_t index) {
     Checked_Union_Variant *member = (Checked_Union_Variant *)malloc(sizeof(Checked_Union_Variant));
     member->type = type;
     member->next_variant = NULL;
+    member->index = index;
     return member;
 }
 
@@ -227,6 +228,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__I64:
     case CHECKED_TYPE_KIND__I8:
     case CHECKED_TYPE_KIND__ISIZE:
+    case CHECKED_TYPE_KIND__NIL:
     case CHECKED_TYPE_KIND__U16:
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
@@ -279,6 +281,10 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__STRING: {
         pWriter__write__cstring(self, "str");
+        break;
+    }
+    case CHECKED_TYPE_KIND__TYPE: {
+        pWriter__write__cstring(self, "type");
         break;
     }
     default:
@@ -353,8 +359,8 @@ Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Sou
     return (Checked_Function_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION_PARAMETER, sizeof(Checked_Function_Parameter_Symbol), location, name, type);
 }
 
-Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, String *name, Checked_Named_Type *named_type) {
-    Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), location, name, NULL);
+Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {
+    Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), location, name, type);
     symbol->named_type = named_type;
     return symbol;
 }

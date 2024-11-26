@@ -9,6 +9,7 @@ typedef struct Checker {
     Checked_Named_Type *i64_type;
     Checked_Named_Type *i8_type;
     Checked_Named_Type *isize_type;
+    Checked_Named_Type *nil_type;
     Checked_Named_Type *nothing_type;
     Checked_Named_Type *null_type;
     Checked_Named_Type *string_type;
@@ -43,6 +44,7 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
     checker->i64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I64, sizeof(Checked_Named_Type), NULL, String__create_from("i64"));
     checker->i8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I8, sizeof(Checked_Named_Type), NULL, String__create_from("i8"));
     checker->isize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ISIZE, sizeof(Checked_Named_Type), NULL, String__create_from("isize"));
+    checker->nil_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NIL, sizeof(Checked_Named_Type), NULL, String__create_from("nil"));
     checker->nothing_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NOTHING, sizeof(Checked_Named_Type), NULL, String__create_from("Nothing"));
     checker->null_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NULL, sizeof(Checked_Named_Type), NULL, String__create_from("Null"));
     checker->string_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRING, sizeof(Checked_Named_Type), NULL, String__create_from("str"));
@@ -65,6 +67,7 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
     Checker__append_type(checker, checker->i64_type);
     Checker__append_type(checker, checker->i8_type);
     Checker__append_type(checker, checker->isize_type);
+    Checker__append_type(checker, checker->nil_type);
     Checker__append_type(checker, checker->string_type);
     Checker__append_type(checker, checker->u16_type);
     Checker__append_type(checker, checker->u32_type);
@@ -85,8 +88,7 @@ void Checker__append_type(Checker *self, Checked_Named_Type *type) {
     }
     self->last_type = type;
 
-    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, type->name, type);
-    type_symbol->super.type = (Checked_Type *)self->type_type;
+    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, type->name, (Checked_Type *)self->type_type, type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_symbol);
 }
 
@@ -430,6 +432,15 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
 
 Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Source_Location *location, Checked_Union_Type *union_type, Checked_Expression *expression) {
     Checked_Union_Variant *union_variant = union_type->first_variant;
+    if (expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
+        if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
+            if (type_symbol->named_type == self->nil_type) {
+                return Checked_Make_Union_Expression__create(location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
+            }
+        }
+    }
     for (; union_variant != NULL; union_variant = union_variant->next_variant) {
         if (Checked_Type__equals(union_variant->type, expression->type)) {
             break;
@@ -650,6 +661,14 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expres
                 return (Checked_Expression *)Checked_Is_Union_Variant_Expression__create(parsed_expression->super.location, (Checked_Type *)self->bool_type, value_expression, union_variant, parsed_expression->is_not);
             }
         }
+        pWriter__begin_location_message(stderr_writer, parsed_expression->value_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Union type ");
+        pWriter__write__checked_type(stderr_writer, value_type);
+        pWriter__write__cstring(stderr_writer, " doesn't have ");
+        pWriter__write__checked_type(stderr_writer, runtime_type);
+        pWriter__write__cstring(stderr_writer, " variant");
+        pWriter__end_location_message(stderr_writer);
+        panic();
         break;
     }
     }
@@ -1312,7 +1331,11 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
     Checked_Union_Type *union_type = Checked_Union_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
     Checker__append_type(self, (Checked_Named_Type *)union_type);
 
-    Checked_Union_Variant *last_union_variant = NULL;
+    // Each union has the nil variant
+    Checked_Union_Variant *nil_variant = Checked_Union_Variant__create(parsed_statement->super.super.location, (Checked_Type *)self->nil_type, 0);
+    union_type->first_variant = nil_variant;
+
+    Checked_Union_Variant *last_union_variant = union_type->first_variant;
     Parsed_Union_Variant *parsed_variant = parsed_statement->first_variant;
     while (parsed_variant != NULL) {
         Checked_Type *union_variant_type = Checker__resolve_type(self, parsed_variant->type);
@@ -1323,15 +1346,8 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
             panic();
         }
         Checked_Type__append_dependencies((Checked_Type *)union_type, union_variant_type, parsed_variant->type->location, self);
-        Checked_Union_Variant *union_variant = Checked_Union_Variant__create(parsed_variant->type->location, union_variant_type);
-        if (last_union_variant == NULL) {
-            union_variant->index = 1;
-            union_type->first_variant = union_variant;
-        } else {
-            union_variant->index = last_union_variant->index + 1;
-            last_union_variant->next_variant = union_variant;
-        }
-        last_union_variant = union_variant;
+        Checked_Union_Variant *union_variant = Checked_Union_Variant__create(parsed_variant->type->location, union_variant_type, last_union_variant->index + 1);
+        last_union_variant = last_union_variant->next_variant = union_variant;
         parsed_variant = parsed_variant->next_variant;
     }
 
@@ -1599,8 +1615,7 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__U8:
-    case CHECKED_TYPE_KIND__UNION:
-     {
+    case CHECKED_TYPE_KIND__UNION: {
         String__append_string(symbol_name, ((Checked_Named_Type *)receiver_type)->name);
         break;
     }

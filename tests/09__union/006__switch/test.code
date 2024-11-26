@@ -27,11 +27,17 @@ func main() -> i32 {
                         }
                         break
                     }
+                    case nil {
+                        return 4
+                    }
                 }
+            }
+            case nil {
+                return 5
             }
         }
 
-        return 4
+        return 6
     }
 
     return 0

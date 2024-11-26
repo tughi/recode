@@ -13,6 +13,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__I64,
     CHECKED_TYPE_KIND__I8,
     CHECKED_TYPE_KIND__ISIZE,
+    CHECKED_TYPE_KIND__NIL,     /* Pseudo type */
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
     CHECKED_TYPE_KIND__STRING,
@@ -199,12 +200,12 @@ typedef struct Checked_Trait_Type {
 Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name);
 
 typedef struct Checked_Union_Variant {
-    int32_t index;
     Checked_Type *type;
+    int32_t index;
     struct Checked_Union_Variant *next_variant;
 } Checked_Union_Variant;
 
-Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type);
+Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type, int32_t index);
 
 typedef struct Checked_Union_Type {
     Checked_Named_Type super;
@@ -298,7 +299,7 @@ typedef struct Checked_Type_Symbol {
     Checked_Named_Type *named_type;
 } Checked_Type_Symbol;
 
-Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, String *name, Checked_Named_Type *named_type);
+Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
 
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;

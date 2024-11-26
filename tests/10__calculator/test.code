@@ -10,17 +10,10 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
 
     let stdout_writer = make Writer(stdout)
 
-    while tokenizer.has_next_token() {
+    while tokenizer.peek_token() is not Stop {
         let token = tokenizer.next_token()
         stdout_writer.write(token: token).end_line()
     }
-
-    let stop_token = tokenizer.next_token()
-    if variant in stop_token is Stop {
-        exit(0)
-    }
-
-    exit(2)
 }
 
 \ ------------------------------------------------------------------------------ Parser
@@ -29,39 +22,73 @@ struct Parser {
     tokenizer: Tokenizer
 }
 
-func @Parser.parse_expression(self) -> @Expression {
-    return self.parse_additive_expression()
-}
-
-func @Parser.parse_additive_expression(self) -> @Expression {
-    let expression = self.parse_multiplicative_expression()
-    \ loop {
-    \     let token = self.tokenizer.next_token()
-    \     if variant in token is Stop {
-    \         return expression
-    \     }
-    \     if variant in token is Add {
-    \         let right = self.parse_multiplicative_expression()
-    \         expression = make Addition(
-    \             span: token.span
-    \             left: expression
-    \             right: right
-    \         )
-    \     }
-    \     if variant in token is Subtraction {
-    \         let right = self.parse_multiplicative_expression()
-    \         expression = make Subtraction(
-    \             span: token.span
-    \             left: expression
-    \             right: right
-    \         )
-    \     }
-    \ }
-}
-
-func @Parser.parse_multiplicative_expression(self) -> @Expression {
-
-}
+\ func @Parser.parse_expression(self) -> Expression {
+\     return self.parse_additive_expression()
+\ }
+\ 
+\ func @Parser.parse_additive_expression(self) -> Expression {
+\     let expression = self.parse_multiplicative_expression()
+\     loop {
+\         let token = self.tokenizer.peek_token()
+\         if plus in token is Plus {
+\             self.tokenizer.next_token()
+\             let other_expression = self.parse_multiplicative_expression()
+\             expression = make Addition(
+\                 span: make Span(start: expression.span().start, end: other_expression.span().end)
+\                 left: expression
+\                 right: other_expression
+\             )
+\         } else if minus in token is Minus {
+\             self.tokenizer.next_token()
+\             let other_expression = self.parse_multiplicative_expression()
+\             expression = make Subtraction(
+\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\                 left: expression
+\                 right: other_expression
+\             )
+\         } else {
+\             break
+\         }
+\     }
+\ }
+\ 
+\ func @Parser.parse_multiplicative_expression(self) -> Expression {
+\     let expression = self.parse_primary_expression()
+\     loop {
+\         let token = self.tokenizer.peek_token()
+\         if multiply in token is Multiply {
+\             self.tokenizer.next_token()
+\             let other_expression = self.parse_primary_expression()
+\             expression = make Multiplication(
+\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\                 left: expression
+\                 right: other_expression
+\             )
+\         } else if divide in token is Divide {
+\             self.tokenizer.next_token()
+\             let other_expression = self.parse_primary_expression()
+\             expression = make Division(
+\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\                 left: expression
+\                 right: other_expression
+\             )
+\         } else {
+\             break
+\         }
+\     }
+\     return expression
+\ }
+\ 
+\ func @Parser.parse_primary_expression(self) -> Expression {
+\     let token = self.tokenizer.next_token()
+\     if number in token is Number {
+\         return number
+\     }
+\     return make Error(
+\         span: token.span
+\         message: "Expected number"
+\     )
+\ }
 
 \ ------------------------------------------------------------------------------ Parsed_Expression
 
@@ -74,23 +101,51 @@ union Expression {
 }
 
 struct Addition {
+    span: Span
     left: @Expression
     right: @Expression
 }
 
 struct Division {
+    span: Span
     left: @Expression
     right: @Expression
 }
 
 struct Multiplication {
+    span: Span
     left: @Expression
     right: @Expression
 }
 
 struct Subtraction {
+    span: Span
     left: @Expression
     right: @Expression
+}
+
+func @Expression.span(self) -> Span {
+    let expression = self.@
+    switch variant in expression {
+        case Number {
+            return variant.span
+        }
+        case Addition {
+            return variant.span
+        }
+        case Division {
+            return variant.span
+        }
+        case Multiplication {
+            return variant.span
+        }
+        case Subtraction {
+            return variant.span
+        }
+        case nil {
+            return make Span(start: 0, end: 0)
+        }
+    }
 }
 
 \ ------------------------------------------------------------------------------ Tokenizer
@@ -98,13 +153,24 @@ struct Subtraction {
 struct Tokenizer {
     data: [@]u8
     index: i32
+
+    current_token: Token
 }
 
-func @Tokenizer.has_next_token(self) -> bool {
-    return self.data[self.index] != 0
+func @Tokenizer.peek_token(self) -> Token {
+    if self.current_token is nil {
+        self.current_token = self.scan_token()
+    }
+    return self.current_token
 }
 
 func @Tokenizer.next_token(self) -> Token {
+    let token = self.peek_token()
+    self.current_token = nil
+    return token
+}
+
+func @Tokenizer.scan_token(self) -> Token {
     while self.data[self.index] == ' ' {
         self.index = self.index + 1
     }
@@ -223,6 +289,9 @@ func @Writer.write(self, token: Token) -> @Writer {
         }
         case Error {
             return self.write("Error: ").write(token_kind.message)
+        }
+        case nil {
+            return self.write("Nil!")
         }
     }
     return self

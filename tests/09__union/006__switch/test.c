@@ -58,11 +58,21 @@ int32_t main() {
 #line 28 "tests/09__union/006__switch/test.code"
                 break;
             }
+#line 30 "tests/09__union/006__switch/test.code"
+            else if (value.variant_2.variant == 0) {
+#line 31 "tests/09__union/006__switch/test.code"
+                return 4;
+            }
         }
-#line 34 "tests/09__union/006__switch/test.code"
-        return 4;
+#line 35 "tests/09__union/006__switch/test.code"
+        else if (value.variant == 0) {
+#line 36 "tests/09__union/006__switch/test.code"
+            return 5;
+        }
+#line 40 "tests/09__union/006__switch/test.code"
+        return 6;
     }
-#line 37 "tests/09__union/006__switch/test.code"
+#line 43 "tests/09__union/006__switch/test.code"
     return 0;
 }
 
