@@ -9,7 +9,7 @@ union Value {
 }
 
 func main() -> i32 {
-    let value = make Value(make Integer(256))
-    value = make Integer(42)
+    let value = Value(Integer(256))
+    value = Integer(42)
     return 0
 }

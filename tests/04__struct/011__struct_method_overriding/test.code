@@ -19,7 +19,7 @@ func @Boolean.get_value(self) -> bool {
 }
 
 func main() -> i32 {
-    let number = make Number(value: 0)
+    let number = Number(value: 0)
 
     number.set_value(42)
 

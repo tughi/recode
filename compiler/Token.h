@@ -91,6 +91,7 @@ typedef struct String_Token {
 
 String_Token *String_Token__create(Source_Location *location, String *lexeme, String *value);
 
+bool Token__is_alloc(Token *self);
 bool Token__is_ampersand(Token *self);
 bool Token__is_and(Token *self);
 bool Token__is_anon(Token *self);
@@ -129,7 +130,6 @@ bool Token__is_keyword(Token *self, char *lexeme);
 bool Token__is_less_than(Token *self);
 bool Token__is_let(Token *self);
 bool Token__is_loop(Token *self);
-bool Token__is_make(Token *self);
 bool Token__is_minus(Token *self);
 bool Token__is_not(Token *self);
 bool Token__is_null(Token *self);

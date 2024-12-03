@@ -6,6 +6,6 @@ trait Animal {
 }
 
 func main() {
-    let dog = make Dog()
-    let animal = make Animal(@dog)
+    let dog = Dog()
+    let animal = Animal(@dog)
 }

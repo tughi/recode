@@ -9,7 +9,7 @@ struct Literal {
 }
 
 func main() -> i32 {
-    let literal = make Literal(value: make Value(13))
+    let literal = Literal(value: Value(13))
     switch variant in literal.value {
         case i32 {
         }

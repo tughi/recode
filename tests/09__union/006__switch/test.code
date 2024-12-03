@@ -9,7 +9,7 @@ union Value {
 }
 
 func main() -> i32 {
-    let value: Value = make Integer(42)
+    let value: Value = Integer(42)
 
     loop {
         switch value_variant in value {

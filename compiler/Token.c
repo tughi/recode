@@ -89,6 +89,10 @@ bool Token__is_keyword(Token *self, char *lexeme) {
     return self->kind == TOKEN_KIND__IDENTIFIER && String__equals_cstring(self->lexeme, lexeme);
 }
 
+bool Token__is_alloc(Token *self) {
+    return Token__is_keyword(self, "alloc");
+}
+
 bool Token__is_and(Token *self) {
     return Token__is_keyword(self, "and");
 }
@@ -151,10 +155,6 @@ bool Token__is_let(Token *self) {
 
 bool Token__is_loop(Token *self) {
     return Token__is_keyword(self, "loop");
-}
-
-bool Token__is_make(Token *self) {
-    return Token__is_keyword(self, "make");
 }
 
 bool Token__is_not(Token *self) {

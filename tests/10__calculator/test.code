@@ -3,12 +3,12 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
         exit(1)
     }
 
-    let tokenizer = make Tokenizer(
+    let tokenizer = Tokenizer(
         data: argv[1]
         index: 0
     )
 
-    let stdout_writer = make Writer(stdout)
+    let stdout_writer = Writer(stdout)
 
     while tokenizer.peek_token() is not Stop {
         let token = tokenizer.next_token()
@@ -33,16 +33,16 @@ struct Parser {
 \         if plus in token is Plus {
 \             self.tokenizer.next_token()
 \             let other_expression = self.parse_multiplicative_expression()
-\             expression = make Addition(
-\                 span: make Span(start: expression.span().start, end: other_expression.span().end)
+\             expression = Addition(
+\                 span: Span(start: expression.span().start, end: other_expression.span().end)
 \                 left: expression
 \                 right: other_expression
 \             )
 \         } else if minus in token is Minus {
 \             self.tokenizer.next_token()
 \             let other_expression = self.parse_multiplicative_expression()
-\             expression = make Subtraction(
-\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\             expression = Subtraction(
+\                 span: Span(start: expression.span.start, end: other_expression.span.end)
 \                 left: expression
 \                 right: other_expression
 \             )
@@ -59,16 +59,16 @@ struct Parser {
 \         if multiply in token is Multiply {
 \             self.tokenizer.next_token()
 \             let other_expression = self.parse_primary_expression()
-\             expression = make Multiplication(
-\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\             expression = Multiplication(
+\                 span: Span(start: expression.span.start, end: other_expression.span.end)
 \                 left: expression
 \                 right: other_expression
 \             )
 \         } else if divide in token is Divide {
 \             self.tokenizer.next_token()
 \             let other_expression = self.parse_primary_expression()
-\             expression = make Division(
-\                 span: make Span(start: expression.span.start, end: other_expression.span.end)
+\             expression = Division(
+\                 span: Span(start: expression.span.start, end: other_expression.span.end)
 \                 left: expression
 \                 right: other_expression
 \             )
@@ -84,7 +84,7 @@ struct Parser {
 \     if number in token is Number {
 \         return number
 \     }
-\     return make Error(
+\     return Error(
 \         span: token.span
 \         message: "Expected number"
 \     )
@@ -143,7 +143,7 @@ func @Expression.span(self) -> Span {
             return variant.span
         }
         case nil {
-            return make Span(start: 0, end: 0)
+            return Span(start: 0, end: 0)
         }
     }
 }
@@ -176,7 +176,7 @@ func @Tokenizer.scan_token(self) -> Token {
     }
     let ch = self.data[self.index]
     if ch == 0 {
-        return make Stop(span: make Span(start: self.index, end: self.index))
+        return Stop(span: Span(start: self.index, end: self.index))
     }
     if ch != ' ' {
         if ch >= '0' and ch <= '9' {
@@ -184,19 +184,19 @@ func @Tokenizer.scan_token(self) -> Token {
         }
         self.index = self.index + 1
         if ch == '+' {
-            return make Plus(span: make Span(start: self.index - 1, end: self.index))
+            return Plus(span: Span(start: self.index - 1, end: self.index))
         }
         if ch == '-' {
-            return make Minus(span: make Span(start: self.index - 1, end: self.index))
+            return Minus(span: Span(start: self.index - 1, end: self.index))
         }
         if ch == '*' {
-            return make Multiply(span: make Span(start: self.index - 1, end: self.index))
+            return Multiply(span: Span(start: self.index - 1, end: self.index))
         }
         if ch == '/' {
-            return make Divide(span: make Span(start: self.index - 1, end: self.index))
+            return Divide(span: Span(start: self.index - 1, end: self.index))
         }
-        return make Error(
-            span: make Span(start: self.index - 1, end: self.index)
+        return Error(
+            span: Span(start: self.index - 1, end: self.index)
             message: "Unexpected character"
         )
     }
@@ -213,8 +213,8 @@ func @Tokenizer.scan_number_token(self) -> Token {
         value = value * 10 + (c - '0').as(i32)
         self.index = self.index + 1
     }
-    return make Token(make Number(
-        span: make Span(start: start, end: self.index)
+    return Token(Number(
+        span: Span(start: start, end: self.index)
         value: value
     ))
 }
@@ -349,7 +349,7 @@ func @String_Builder.write(self, char c: u8) -> @String_Builder {
 
 func @String_Builder.build(self) -> str {
     self.write(char: 0)
-    let string = make String(
+    let string = String(
         data: self.data
         length: self.length - 1
     )
@@ -361,7 +361,7 @@ func make_string_builder() -> String_Builder {
 }
 
 func make_string_builder(initial_data_size: i32) -> String_Builder {
-    return make String_Builder(
+    return String_Builder(
         data: malloc(initial_data_size.as(u64)).as([@]u8)
         data_size: initial_data_size
         length: 0

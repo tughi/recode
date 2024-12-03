@@ -10,7 +10,7 @@ func @Dog.legs(self) -> i32 {
 }
 
 func main() -> i32 {
-    let dog = make Dog()
-    let animal = make Animal(dog)
+    let dog = Dog()
+    let animal = Animal(dog)
     return 0
 }

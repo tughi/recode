@@ -6,6 +6,7 @@
 typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__ADD,
     PARSED_EXPRESSION_KIND__ADDRESS_OF,
+    PARSED_EXPRESSION_KIND__ALLOC,
     PARSED_EXPRESSION_KIND__ARRAY_ACCESS,
     PARSED_EXPRESSION_KIND__BOOL,
     PARSED_EXPRESSION_KIND__CALL,
@@ -23,7 +24,6 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__LESS_OR_EQUALS,
     PARSED_EXPRESSION_KIND__LOGIC_AND,
     PARSED_EXPRESSION_KIND__LOGIC_OR,
-    PARSED_EXPRESSION_KIND__MAKE,
     PARSED_EXPRESSION_KIND__MEMBER_ACCESS,
     PARSED_EXPRESSION_KIND__MINUS,
     PARSED_EXPRESSION_KIND__MODULO,
@@ -111,6 +111,13 @@ typedef struct Parsed_Receiver_Type {
 Parsed_Receiver_Type *Parsed_Receiver_Type__create(Source_Location *location);
 
 Parsed_Expression *Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location *location);
+
+typedef struct Parsed_Alloc_Expression {
+    Parsed_Expression super;
+    Parsed_Expression *value_expression;
+} Parsed_Alloc_Expression;
+
+Parsed_Alloc_Expression *Parsed_Alloc_Expression__create(Source_Location *location, Parsed_Expression *value_expression);
 
 typedef struct Parsed_Binary_Expression {
     Parsed_Expression super;
@@ -269,14 +276,6 @@ typedef struct Parsed_Logic_Or_Expression {
 } Parsed_Logic_Or_Expression;
 
 Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression);
-
-typedef struct Parsed_Make_Expression {
-    Parsed_Expression super;
-    Parsed_Type *type;
-    Parsed_Call_Argument *first_argument;
-} Parsed_Make_Expression;
-
-Parsed_Make_Expression *Parsed_Make_Expression__create(Source_Location *location, Parsed_Type *type, Parsed_Call_Argument *first_argument);
 
 typedef struct Parsed_Member_Access_Expression {
     Parsed_Expression super;

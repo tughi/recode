@@ -462,6 +462,12 @@ bool Checked_Expression__is_mutable(Checked_Expression *self) {
     }
 }
 
+Checked_Alloc_Expression *Checked_Alloc_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *value_expression) {
+    Checked_Alloc_Expression *expression = (Checked_Alloc_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__ALLOC, sizeof(Checked_Alloc_Expression), location, type);
+    expression->value_expression = value_expression;
+    return expression;
+}
+
 Checked_Binary_Expression *Checked_Binary_Expression__create_kind(Checked_Expression_Kind kind, Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     Checked_Binary_Expression *expression = (Checked_Binary_Expression *)Checked_Expression__create_kind(kind, sizeof(Checked_Binary_Expression), location, type);
     expression->left_expression = left_expression;

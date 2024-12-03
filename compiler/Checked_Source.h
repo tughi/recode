@@ -59,6 +59,7 @@ bool Checked_Type__is_numeric_type(Checked_Type *self);
 typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__ADD,
     CHECKED_EXPRESSION_KIND__ADDRESS_OF,
+    CHECKED_EXPRESSION_KIND__ALLOC,
     CHECKED_EXPRESSION_KIND__ARRAY_ACCESS,
     CHECKED_EXPRESSION_KIND__BOOL,
     CHECKED_EXPRESSION_KIND__CALL,
@@ -77,6 +78,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__LOGIC_AND,
     CHECKED_EXPRESSION_KIND__LOGIC_OR,
     CHECKED_EXPRESSION_KIND__MAKE_STRUCT,
+    CHECKED_EXPRESSION_KIND__MAKE_UNION,
     CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
     CHECKED_EXPRESSION_KIND__MINUS,
     CHECKED_EXPRESSION_KIND__MODULO,
@@ -89,7 +91,6 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
-    CHECKED_EXPRESSION_KIND__MAKE_UNION
 } Checked_Expression_Kind;
 
 typedef struct Checked_Expression {
@@ -330,6 +331,13 @@ void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbo
 Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, String *name);
 
 Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location *location, Checked_Type *type);
+
+typedef struct Checked_Alloc_Expression {
+    Checked_Expression super;
+    Checked_Expression *value_expression;
+} Checked_Alloc_Expression;
+
+Checked_Alloc_Expression *Checked_Alloc_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *value_expression);
 
 typedef struct Checked_Binary_Expression {
     Checked_Expression super;

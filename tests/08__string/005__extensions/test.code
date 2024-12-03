@@ -9,7 +9,7 @@ func str.concat(self, anon other: str) -> str {
     if self.length == 0 {
         return other
     }
-    let result = make String(
+    let result = String(
         data: malloc(self.length + other.length).as([@]u8)
         length: self.length + other.length
     )

@@ -7,7 +7,7 @@ func forty_two() -> i32 {
 }
 
 func main() -> i32 {
-    let function = make Function(run: forty_two)
+    let function = Function(run: forty_two)
 
     return function.run() - 42
 }

@@ -28,6 +28,14 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
+void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
+    pWriter__write__cstring(self->writer, "__make_");
+    pWriter__write__checked_type(self->writer, expression->value_expression->type);
+    pWriter__write__cstring(self->writer, "_value(");
+    Generator__generate_expression(self, expression->value_expression);
+    pWriter__write__cstring(self->writer, ")");
+}
+
 void Generator__generate_array_access_expression(Generator *self, Checked_Array_Access_Expression *expression) {
     Generator__generate_expression(self, expression->array_expression);
     pWriter__write__cstring(self->writer, "[");
@@ -189,11 +197,6 @@ void Generator__generate_logic_or_expression(Generator *self, Checked_Logic_Or_E
 }
 
 void Generator__generate_make_struct_expression(Generator *self, Checked_Make_Struct_Expression *expression) {
-    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
-        pWriter__write__cstring(self->writer, "__make_");
-        pWriter__write__string(self->writer, expression->struct_type->super.name);
-        pWriter__write__cstring(self->writer, "_value(");
-    }
     pWriter__write__char(self->writer, '(');
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->struct_type);
     pWriter__write__cstring(self->writer, "){");
@@ -209,15 +212,9 @@ void Generator__generate_make_struct_expression(Generator *self, Checked_Make_St
         }
     }
     pWriter__write__char(self->writer, '}');
-    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
-        pWriter__write__char(self->writer, ')');
-    }
 }
 
 void Generator__generate_make_union_expression(Generator *self, Checked_Make_Union_Expression *expression) {
-    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
-        todo("Implement make union pointer");
-    }
     pWriter__write__char(self->writer, '(');
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->union_type);
     pWriter__write__cstring(self->writer, "){.variant = ");
@@ -331,6 +328,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         break;
     case CHECKED_EXPRESSION_KIND__ADDRESS_OF:
         Generator__generate_address_of_expression(self, (Checked_Address_Of_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__ALLOC:
+        Generator__generate_alloc_expression(self, (Checked_Alloc_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         Generator__generate_array_access_expression(self, (Checked_Array_Access_Expression *)expression);

@@ -19,10 +19,10 @@ func @Circle.area(self) -> i32 {
 }
 
 func main() -> i32 {
-    let square = make @Square(side: 10)
-    let square_shape = make @Shape(square)
-    let circle = make @Circle(radius: 10)
-    let circle_shape = make @Shape(circle)
+    let square = alloc(Square(side: 10))
+    let square_shape = alloc(Shape(square))
+    let circle = alloc(Circle(radius: 10))
+    let circle_shape = alloc(Shape(circle))
 
     if square_shape.area() != 100 {
         return 1

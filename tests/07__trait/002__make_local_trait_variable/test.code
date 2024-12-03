@@ -11,7 +11,7 @@ trait Animal {
 }
 
 func main() -> i32 {
-    let dog = make Dog(age: 10)
-    let animal = make Animal(@dog)
+    let dog = Dog(age: 10)
+    let animal = Animal(@dog)
     return 0
 }

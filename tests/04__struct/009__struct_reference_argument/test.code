@@ -4,7 +4,7 @@ struct Point {
 }
 
 func main() -> i32 {
-    let point = make Point(x: 16, y: 32)
+    let point = Point(x: 16, y: 32)
     return get_y(@point) - 32
 }
 

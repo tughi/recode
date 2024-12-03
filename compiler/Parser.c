@@ -118,26 +118,24 @@ Parsed_Type *Parser__parse_type(Parser *self);
 
 /*
 primary_expression
+    | "alloc" "(" expression ")"
     | "false"
     | "null"
     | "true"
-    | "make" type "(" call_arguments? ")"
     | CHARACTER
     | IDENTIFIER
     | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
-    if (Parser__matches_one(self, Token__is_make)) {
-        Source_Location *location = Parser__consume_token(self, Token__is_make)->location;
-        Parser__consume_space(self, 1);
-        Parsed_Type *type = Parser__parse_type(self);
+    if (Parser__matches_one(self, Token__is_alloc)) {
+        Source_Location *location = Parser__consume_token(self, Token__is_alloc)->location;
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_opening_paren);
-        Parsed_Call_Argument *first_call_argument = Parser__parse_call_arguments(self);
+        Parsed_Expression *expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Make_Expression__create(location, type, first_call_argument);
+        return (Parsed_Expression *)Parsed_Alloc_Expression__create(location, expression);
     }
     if (Parser__matches_one(self, Token__is_null)) {
         return (Parsed_Expression *)Parsed_Null_Expression__create(Parser__consume_token(self, Token__is_null));
