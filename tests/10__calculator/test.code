@@ -14,6 +14,45 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
         let token = tokenizer.next_token()
         stdout_writer.write(token: token).end_line()
     }
+
+    let parser = Parser(tokenizer: Tokenizer(
+        data: argv[1]
+        index: 0
+    ))
+    let expression = parser.parse_expression()
+    stdout_writer.write("Expression: ").write(expression: @expression).end_line()
+
+    let result = evaluate(expression: @expression)
+    stdout_writer.write("Result: ").write(signed: result).end_line()
+}
+
+\ ------------------------------------------------------------------------------ Evaluator
+
+func evaluate(expression: @Expression) -> i32 {
+    let expression_value = expression.@
+    switch expression_kind in expression_value {
+        case Number {
+            return expression_kind.value
+        }
+        case Addition {
+            return evaluate(expression: expression_kind.left) + evaluate(expression: expression_kind.right)
+        }
+        case Division {
+            return evaluate(expression: expression_kind.left) / evaluate(expression: expression_kind.right)
+        }
+        case Multiplication {
+            return evaluate(expression: expression_kind.left) * evaluate(expression: expression_kind.right)
+        }
+        case Subtraction {
+            return evaluate(expression: expression_kind.left) - evaluate(expression: expression_kind.right)
+        }
+        case Error {
+            exit(1)
+        }
+        case nil {
+            exit(1)
+        }
+    }
 }
 
 \ ------------------------------------------------------------------------------ Parser
@@ -22,73 +61,74 @@ struct Parser {
     tokenizer: Tokenizer
 }
 
-\ func @Parser.parse_expression(self) -> Expression {
-\     return self.parse_additive_expression()
-\ }
-\ 
-\ func @Parser.parse_additive_expression(self) -> Expression {
-\     let expression = self.parse_multiplicative_expression()
-\     loop {
-\         let token = self.tokenizer.peek_token()
-\         if plus in token is Plus {
-\             self.tokenizer.next_token()
-\             let other_expression = self.parse_multiplicative_expression()
-\             expression = Addition(
-\                 span: Span(start: expression.span().start, end: other_expression.span().end)
-\                 left: expression
-\                 right: other_expression
-\             )
-\         } else if minus in token is Minus {
-\             self.tokenizer.next_token()
-\             let other_expression = self.parse_multiplicative_expression()
-\             expression = Subtraction(
-\                 span: Span(start: expression.span.start, end: other_expression.span.end)
-\                 left: expression
-\                 right: other_expression
-\             )
-\         } else {
-\             break
-\         }
-\     }
-\ }
-\ 
-\ func @Parser.parse_multiplicative_expression(self) -> Expression {
-\     let expression = self.parse_primary_expression()
-\     loop {
-\         let token = self.tokenizer.peek_token()
-\         if multiply in token is Multiply {
-\             self.tokenizer.next_token()
-\             let other_expression = self.parse_primary_expression()
-\             expression = Multiplication(
-\                 span: Span(start: expression.span.start, end: other_expression.span.end)
-\                 left: expression
-\                 right: other_expression
-\             )
-\         } else if divide in token is Divide {
-\             self.tokenizer.next_token()
-\             let other_expression = self.parse_primary_expression()
-\             expression = Division(
-\                 span: Span(start: expression.span.start, end: other_expression.span.end)
-\                 left: expression
-\                 right: other_expression
-\             )
-\         } else {
-\             break
-\         }
-\     }
-\     return expression
-\ }
-\ 
-\ func @Parser.parse_primary_expression(self) -> Expression {
-\     let token = self.tokenizer.next_token()
-\     if number in token is Number {
-\         return number
-\     }
-\     return Error(
-\         span: token.span
-\         message: "Expected number"
-\     )
-\ }
+func @Parser.parse_expression(self) -> Expression {
+    return self.parse_additive_expression()
+}
+
+func @Parser.parse_additive_expression(self) -> Expression {
+    let expression = self.parse_multiplicative_expression()
+    loop {
+        let token = self.tokenizer.peek_token()
+        if plus in token is Plus {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_multiplicative_expression()
+            expression = Addition(
+                span: Span(start: expression.span().start, end: other_expression.span().end)
+                left: alloc(expression)
+                right: alloc(other_expression)
+            )
+        } else if minus in token is Minus {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_multiplicative_expression()
+            expression = Subtraction(
+                span: Span(start: expression.span().start, end: other_expression.span().end)
+                left: alloc(expression)
+                right: alloc(other_expression)
+            )
+        } else {
+            break
+        }
+    }
+    return expression
+}
+
+func @Parser.parse_multiplicative_expression(self) -> Expression {
+    let expression = self.parse_primary_expression()
+    loop {
+        let token = self.tokenizer.peek_token()
+        if multiply in token is Multiply {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            expression = Multiplication(
+                span: Span(start: expression.span().start, end: other_expression.span().end)
+                left: alloc(expression)
+                right: alloc(other_expression)
+            )
+        } else if divide in token is Divide {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            expression = Division(
+                span: Span(start: expression.span().start, end: other_expression.span().end)
+                left: alloc(expression)
+                right: alloc(other_expression)
+            )
+        } else {
+            break
+        }
+    }
+    return expression
+}
+
+func @Parser.parse_primary_expression(self) -> Expression {
+    let token = self.tokenizer.next_token()
+    if number in token is Number {
+        return number
+    }
+    return Error(
+        span: token.span()
+        message: "Expected number"
+    )
+}
 
 \ ------------------------------------------------------------------------------ Parsed_Expression
 
@@ -98,6 +138,7 @@ union Expression {
     Division
     Multiplication
     Subtraction
+    Error
 }
 
 struct Addition {
@@ -142,10 +183,41 @@ func @Expression.span(self) -> Span {
         case Subtraction {
             return variant.span
         }
+        case Error {
+            return variant.span
+        }
         case nil {
             return Span(start: 0, end: 0)
         }
     }
+}
+
+func @Writer.write(self, expression: @Expression) -> @Writer {
+    let expression_value = expression.@
+    switch expression_kind in expression_value {
+        case Number {
+            return self.write(signed: expression_kind.value)
+        }
+        case Addition {
+            return self.write("(").write(expression: expression_kind.left).write(" + ").write(expression: expression_kind.right).write(")")
+        }
+        case Division {
+            return self.write("(").write(expression: expression_kind.left).write(" / ").write(expression: expression_kind.right).write(")")
+        }
+        case Multiplication {
+            return self.write("(").write(expression: expression_kind.left).write(" * ").write(expression: expression_kind.right).write(")")
+        }
+        case Subtraction {
+            return self.write("(").write(expression: expression_kind.left).write(" - ").write(expression: expression_kind.right).write(")")
+        }
+        case Error {
+            return self.write("Error: ").write(expression_kind.message)
+        }
+        case nil {
+            return self.write("Nil!")
+        }
+    }
+    return self
 }
 
 \ ------------------------------------------------------------------------------ Tokenizer
@@ -265,6 +337,36 @@ union Token {
     Divide
     Stop
     Error
+}
+
+func @Token.span(self) -> Span {
+    let token = self.@
+    switch token_kind in token {
+        case Number {
+            return token_kind.span
+        }
+        case Plus {
+            return token_kind.span
+        }
+        case Minus {
+            return token_kind.span
+        }
+        case Multiply {
+            return token_kind.span
+        }
+        case Divide {
+            return token_kind.span
+        }
+        case Stop {
+            return token_kind.span
+        }
+        case Error {
+            return token_kind.span
+        }
+        case nil {
+            return Span(start: 0, end: 0)
+        }
+    }
 }
 
 func @Writer.write(self, token: Token) -> @Writer {

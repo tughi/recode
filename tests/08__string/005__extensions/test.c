@@ -9,7 +9,7 @@ struct String {
     uintmax_t length;
 };
 
-struct String *__make_String_value(struct String value);
+struct String *__alloc_String_value(struct String value);
 
 void *malloc(uintmax_t size);
 
@@ -19,7 +19,7 @@ bool str__equals(struct String self, struct String other);
 
 int32_t main();
 
-struct String *__make_String_value(struct String value) {
+struct String *__alloc_String_value(struct String value) {
     struct String *result = (struct String *)malloc(sizeof(struct String));
     *result = value;
     return result;

@@ -12,7 +12,9 @@
             "Divide",
             "Number: 2",
             "Plus",
-            "Number: 1"
+            "Number: 1",
+            "Expression: ((5 - ((4 * 3) / 2)) + 1)",
+            "Result: 0"
         ]
     }
 }
