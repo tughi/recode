@@ -12,27 +12,27 @@ func main() -> i32 {
     let value: Value = Integer(42)
 
     loop {
-        switch value_variant in value {
-            case bool {
+        switch value {
+            is bool {
                 return 1
             }
-            case Integer {
-                switch integer_variant in value_variant {
-                    case i8 {
+            is Integer as integer {
+                switch integer {
+                    is i8 {
                         return 2
                     }
-                    case i32 {
-                        if integer_variant != 42 {
+                    is i32 as integer_value {
+                        if integer_value != 42 {
                             return 3
                         }
                         break
                     }
-                    case nil {
+                    is nil {
                         return 4
                     }
                 }
             }
-            case nil {
+            is nil {
                 return 5
             }
         }

@@ -10,8 +10,8 @@ struct Literal {
 
 func main() -> i32 {
     let literal = Literal(value: Value(13))
-    switch variant in literal.value {
-        case i32 {
+    switch literal.value {
+        is i32 {
         }
     }
 }

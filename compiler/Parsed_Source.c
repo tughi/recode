@@ -339,6 +339,43 @@ Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *locati
     return statement;
 }
 
+Parsed_Switch_Case *Parsed_Switch_Else__create(Source_Location *location) {
+    Parsed_Switch_Case *switch_else = (Parsed_Switch_Case *)malloc(sizeof(Parsed_Switch_Case));
+    switch_else->kind = PARSED_SWITCH_CASE_KIND__ELSE;
+    switch_else->location = location;
+    switch_else->statement = NULL;
+    switch_else->next_case = NULL;
+    return switch_else;
+}
+
+Parsed_Switch_Case *Parsed_Switch_Expression__create(Source_Location *location, Parsed_Expression *expression) {
+    Parsed_Switch_Case *switch_case = (Parsed_Switch_Case *)malloc(sizeof(Parsed_Switch_Case));
+    switch_case->kind = PARSED_SWITCH_CASE_KIND__EXPRESSION;
+    switch_case->location = location;
+    switch_case->expression = expression;
+    switch_case->statement = NULL;
+    switch_case->next_case = NULL;
+    return switch_case;
+}
+
+Parsed_Switch_Case *Parsed_Switch_Variant__create(Source_Location *location, Parsed_Type *type, Identifier_Token *alias) {
+    Parsed_Switch_Case *switch_variant = (Parsed_Switch_Case *)malloc(sizeof(Parsed_Switch_Case));
+    switch_variant->kind = PARSED_SWITCH_CASE_KIND__VARIANT;
+    switch_variant->location = location;
+    switch_variant->variant.type = type;
+    switch_variant->variant.alias = alias;
+    switch_variant->statement = NULL;
+    switch_variant->next_case = NULL;
+    return switch_variant;
+}
+
+Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location *location, Parsed_Expression *expression, Parsed_Switch_Case *first_case) {
+    Parsed_Switch_Statement *statement = (Parsed_Switch_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__SWITCH, sizeof(Parsed_Switch_Statement), location);
+    statement->expression = expression;
+    statement->first_case = first_case;
+    return statement;
+}
+
 Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location *location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type) {
     Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
     method->location = location;
@@ -375,22 +412,6 @@ Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *lo
     statement->variant_type = variant_type;
     statement->true_statement = true_statement;
     statement->false_statement = false_statement;
-    return statement;
-}
-
-Parsed_Union_Switch_Case *Parsed_Union_Switch_Case__create(Parsed_Type *type, Parsed_Statement *block) {
-    Parsed_Union_Switch_Case *case_ = (Parsed_Union_Switch_Case *)malloc(sizeof(Parsed_Union_Switch_Case));
-    case_->type = type;
-    case_->statement = block;
-    case_->next_case = NULL;
-    return case_;
-}
-
-Parsed_Union_Switch_Statement *Parsed_Union_Switch_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Union_Switch_Case *first_case) {
-    Parsed_Union_Switch_Statement *statement = (Parsed_Union_Switch_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__UNION_SWITCH, sizeof(Parsed_Union_Switch_Statement), location);
-    statement->variant_alias = variant_alias;
-    statement->expression = expression;
-    statement->first_case = first_case;
     return statement;
 }
 

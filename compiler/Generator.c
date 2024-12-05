@@ -314,7 +314,12 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
     if (expression->symbol->kind == CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT) {
         Checked_Union_Switch_Variant_Symbol *variant_symbol = (Checked_Union_Switch_Variant_Symbol *)expression->symbol;
         Generator__generate_expression(self, variant_symbol->union_expression);
-        pWriter__write__cstring(self->writer, ".variant_");
+        if (variant_symbol->union_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+            pWriter__write__cstring(self->writer, "->");
+        } else {
+            pWriter__write__char(self->writer, '.');
+        }
+        pWriter__write__cstring(self->writer, "variant_");
         pWriter__write__int64(self->writer, variant_symbol->union_variant->index);
     } else {
         pWriter__write__string(self->writer, expression->symbol->name);
@@ -524,10 +529,25 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
         }
         pWriter__write__cstring(self->writer, "if (");
         Generator__generate_expression(self, statement->expression);
-        pWriter__write__cstring(self->writer, ".variant == ");
+        if (statement->expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+            pWriter__write__cstring(self->writer, "->");
+        } else {
+            pWriter__write__char(self->writer, '.');
+        }
+        pWriter__write__cstring(self->writer, "variant == ");
         pWriter__write__int64(self->writer, union_switch_case->union_variant->index);
         pWriter__write__cstring(self->writer, ") ");
         Generator__generate_statement(self, union_switch_case->statement);
+    }
+
+    if (statement->switch_else) {
+        pWriter__end_line(self->writer);
+        Generator__write_source_location(self, statement->switch_else->location);
+        Generator__write_identation(self);
+        if (statement->first_union_switch_case != NULL) {
+            pWriter__write__cstring(self->writer, " else ");
+        }
+        Generator__generate_statement(self, statement->switch_else->statement);
     }
 }
 

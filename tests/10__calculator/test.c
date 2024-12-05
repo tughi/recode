@@ -219,7 +219,7 @@ struct Token pTokenizer__scan_number_token(struct Tokenizer *self);
 
 struct Span pToken__span(struct Token *self);
 
-struct Writer *pWriter__write__1_token(struct Writer *self, struct Token token);
+struct Writer *pWriter__write__1_token(struct Writer *self, struct Token *token);
 
 struct Writer *pWriter__write__1_char(struct Writer *self, uint8_t c);
 
@@ -379,7 +379,7 @@ void main(int32_t argc, uint8_t **argv) {
 #line 14 "tests/10__calculator/test.code"
         struct Token token = pTokenizer__next_token(&tokenizer);
 #line 15 "tests/10__calculator/test.code"
-        pWriter__end_line(pWriter__write__1_token(&stdout_writer, token));
+        pWriter__end_line(pWriter__write__1_token(&stdout_writer, &token));
     }
 #line 18 "tests/10__calculator/test.code"
     struct Parser parser = (struct Parser){.tokenizer = (struct Tokenizer){.data = argv[1], .index = 0}};
@@ -396,512 +396,499 @@ void main(int32_t argc, uint8_t **argv) {
 #line 31 "tests/10__calculator/test.code"
 int32_t evaluate__0_expression(struct Expression *expression) {
 #line 32 "tests/10__calculator/test.code"
-    struct Expression expression_value = *expression;
-#line 33 "tests/10__calculator/test.code"
     while (false) {
     }
+#line 33 "tests/10__calculator/test.code"
+    if (expression->variant == 1) {
 #line 34 "tests/10__calculator/test.code"
-    if (expression_value.variant == 1) {
-#line 35 "tests/10__calculator/test.code"
-        return expression_value.variant_1.value;
+        return expression->variant_1.value;
     }
+#line 36 "tests/10__calculator/test.code"
+    else if (expression->variant == 2) {
 #line 37 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 2) {
-#line 38 "tests/10__calculator/test.code"
-        return evaluate__0_expression(expression_value.variant_2.left) + evaluate__0_expression(expression_value.variant_2.right);
+        return evaluate__0_expression(expression->variant_2.left) + evaluate__0_expression(expression->variant_2.right);
     }
+#line 39 "tests/10__calculator/test.code"
+    else if (expression->variant == 3) {
 #line 40 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 3) {
-#line 41 "tests/10__calculator/test.code"
-        return evaluate__0_expression(expression_value.variant_3.left) / evaluate__0_expression(expression_value.variant_3.right);
+        return evaluate__0_expression(expression->variant_3.left) / evaluate__0_expression(expression->variant_3.right);
     }
+#line 42 "tests/10__calculator/test.code"
+    else if (expression->variant == 4) {
 #line 43 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 4) {
-#line 44 "tests/10__calculator/test.code"
-        return evaluate__0_expression(expression_value.variant_4.left) * evaluate__0_expression(expression_value.variant_4.right);
+        return evaluate__0_expression(expression->variant_4.left) * evaluate__0_expression(expression->variant_4.right);
     }
+#line 45 "tests/10__calculator/test.code"
+    else if (expression->variant == 5) {
 #line 46 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 5) {
-#line 47 "tests/10__calculator/test.code"
-        return evaluate__0_expression(expression_value.variant_5.left) - evaluate__0_expression(expression_value.variant_5.right);
+        return evaluate__0_expression(expression->variant_5.left) - evaluate__0_expression(expression->variant_5.right);
     }
+#line 48 "tests/10__calculator/test.code"
+     else {
 #line 49 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 6) {
-#line 50 "tests/10__calculator/test.code"
-        exit(1);
-    }
-#line 52 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 0) {
-#line 53 "tests/10__calculator/test.code"
         exit(1);
     }
 }
 
-#line 64 "tests/10__calculator/test.code"
+#line 60 "tests/10__calculator/test.code"
 struct Expression pParser__parse_expression(struct Parser *self) {
-#line 65 "tests/10__calculator/test.code"
+#line 61 "tests/10__calculator/test.code"
     return pParser__parse_additive_expression(self);
 }
 
-#line 68 "tests/10__calculator/test.code"
+#line 64 "tests/10__calculator/test.code"
 struct Expression pParser__parse_additive_expression(struct Parser *self) {
-#line 69 "tests/10__calculator/test.code"
+#line 65 "tests/10__calculator/test.code"
     struct Expression expression = pParser__parse_multiplicative_expression(self);
-#line 70 "tests/10__calculator/test.code"
+#line 66 "tests/10__calculator/test.code"
     for (;;) {
-#line 71 "tests/10__calculator/test.code"
+#line 67 "tests/10__calculator/test.code"
         struct Token token = pTokenizer__peek_token(&self->tokenizer);
-#line 72 "tests/10__calculator/test.code"
+#line 68 "tests/10__calculator/test.code"
         if (token.variant == 2) {
-#line 73 "tests/10__calculator/test.code"
+#line 69 "tests/10__calculator/test.code"
             pTokenizer__next_token(&self->tokenizer);
-#line 74 "tests/10__calculator/test.code"
+#line 70 "tests/10__calculator/test.code"
             struct Expression other_expression = pParser__parse_multiplicative_expression(self);
-#line 75 "tests/10__calculator/test.code"
+#line 71 "tests/10__calculator/test.code"
             expression = (struct Expression){.variant = 2, .variant_2 = (struct Addition){.span = (struct Span){.start = pExpression__span(&expression).start, .end = pExpression__span(&other_expression).end}, .left = __alloc_Expression_value(expression), .right = __alloc_Expression_value(other_expression)}};
         } else if (token.variant == 3) {
-#line 81 "tests/10__calculator/test.code"
+#line 77 "tests/10__calculator/test.code"
             pTokenizer__next_token(&self->tokenizer);
-#line 82 "tests/10__calculator/test.code"
+#line 78 "tests/10__calculator/test.code"
             struct Expression other_expression = pParser__parse_multiplicative_expression(self);
-#line 83 "tests/10__calculator/test.code"
+#line 79 "tests/10__calculator/test.code"
             expression = (struct Expression){.variant = 5, .variant_5 = (struct Subtraction){.span = (struct Span){.start = pExpression__span(&expression).start, .end = pExpression__span(&other_expression).end}, .left = __alloc_Expression_value(expression), .right = __alloc_Expression_value(other_expression)}};
         } else {
-#line 89 "tests/10__calculator/test.code"
+#line 85 "tests/10__calculator/test.code"
             break;
         }
     }
-#line 92 "tests/10__calculator/test.code"
+#line 88 "tests/10__calculator/test.code"
     return expression;
 }
 
-#line 95 "tests/10__calculator/test.code"
+#line 91 "tests/10__calculator/test.code"
 struct Expression pParser__parse_multiplicative_expression(struct Parser *self) {
-#line 96 "tests/10__calculator/test.code"
+#line 92 "tests/10__calculator/test.code"
     struct Expression expression = pParser__parse_primary_expression(self);
-#line 97 "tests/10__calculator/test.code"
+#line 93 "tests/10__calculator/test.code"
     for (;;) {
-#line 98 "tests/10__calculator/test.code"
+#line 94 "tests/10__calculator/test.code"
         struct Token token = pTokenizer__peek_token(&self->tokenizer);
-#line 99 "tests/10__calculator/test.code"
+#line 95 "tests/10__calculator/test.code"
         if (token.variant == 4) {
-#line 100 "tests/10__calculator/test.code"
+#line 96 "tests/10__calculator/test.code"
             pTokenizer__next_token(&self->tokenizer);
-#line 101 "tests/10__calculator/test.code"
+#line 97 "tests/10__calculator/test.code"
             struct Expression other_expression = pParser__parse_primary_expression(self);
-#line 102 "tests/10__calculator/test.code"
+#line 98 "tests/10__calculator/test.code"
             expression = (struct Expression){.variant = 4, .variant_4 = (struct Multiplication){.span = (struct Span){.start = pExpression__span(&expression).start, .end = pExpression__span(&other_expression).end}, .left = __alloc_Expression_value(expression), .right = __alloc_Expression_value(other_expression)}};
         } else if (token.variant == 5) {
-#line 108 "tests/10__calculator/test.code"
+#line 104 "tests/10__calculator/test.code"
             pTokenizer__next_token(&self->tokenizer);
-#line 109 "tests/10__calculator/test.code"
+#line 105 "tests/10__calculator/test.code"
             struct Expression other_expression = pParser__parse_primary_expression(self);
-#line 110 "tests/10__calculator/test.code"
+#line 106 "tests/10__calculator/test.code"
             expression = (struct Expression){.variant = 3, .variant_3 = (struct Division){.span = (struct Span){.start = pExpression__span(&expression).start, .end = pExpression__span(&other_expression).end}, .left = __alloc_Expression_value(expression), .right = __alloc_Expression_value(other_expression)}};
         } else {
-#line 116 "tests/10__calculator/test.code"
+#line 112 "tests/10__calculator/test.code"
             break;
         }
     }
-#line 119 "tests/10__calculator/test.code"
+#line 115 "tests/10__calculator/test.code"
     return expression;
 }
 
-#line 122 "tests/10__calculator/test.code"
+#line 118 "tests/10__calculator/test.code"
 struct Expression pParser__parse_primary_expression(struct Parser *self) {
-#line 123 "tests/10__calculator/test.code"
+#line 119 "tests/10__calculator/test.code"
     struct Token token = pTokenizer__next_token(&self->tokenizer);
-#line 124 "tests/10__calculator/test.code"
+#line 120 "tests/10__calculator/test.code"
     if (token.variant == 1) {
-#line 125 "tests/10__calculator/test.code"
+#line 121 "tests/10__calculator/test.code"
         return (struct Expression){.variant = 1, .variant_1 = token.variant_1};
     }
-#line 127 "tests/10__calculator/test.code"
+#line 123 "tests/10__calculator/test.code"
     return (struct Expression){.variant = 6, .variant_6 = (struct Error){.span = pToken__span(&token), .message = (struct String){.data = "Expected number", .length = 15}}};
 }
 
-#line 168 "tests/10__calculator/test.code"
+#line 164 "tests/10__calculator/test.code"
 struct Span pExpression__span(struct Expression *self) {
-#line 169 "tests/10__calculator/test.code"
-    struct Expression expression = *self;
-#line 170 "tests/10__calculator/test.code"
+#line 165 "tests/10__calculator/test.code"
     while (false) {
     }
-#line 171 "tests/10__calculator/test.code"
-    if (expression.variant == 1) {
+#line 166 "tests/10__calculator/test.code"
+    if (self->variant == 1) {
+#line 167 "tests/10__calculator/test.code"
+        return self->variant_1.span;
+    }
+#line 169 "tests/10__calculator/test.code"
+    else if (self->variant == 2) {
+#line 170 "tests/10__calculator/test.code"
+        return self->variant_2.span;
+    }
 #line 172 "tests/10__calculator/test.code"
-        return expression.variant_1.span;
+    else if (self->variant == 3) {
+#line 173 "tests/10__calculator/test.code"
+        return self->variant_3.span;
     }
-#line 174 "tests/10__calculator/test.code"
-    else if (expression.variant == 2) {
 #line 175 "tests/10__calculator/test.code"
-        return expression.variant_2.span;
+    else if (self->variant == 4) {
+#line 176 "tests/10__calculator/test.code"
+        return self->variant_4.span;
     }
-#line 177 "tests/10__calculator/test.code"
-    else if (expression.variant == 3) {
 #line 178 "tests/10__calculator/test.code"
-        return expression.variant_3.span;
+    else if (self->variant == 5) {
+#line 179 "tests/10__calculator/test.code"
+        return self->variant_5.span;
     }
-#line 180 "tests/10__calculator/test.code"
-    else if (expression.variant == 4) {
 #line 181 "tests/10__calculator/test.code"
-        return expression.variant_4.span;
+    else if (self->variant == 6) {
+#line 182 "tests/10__calculator/test.code"
+        return self->variant_6.span;
     }
-#line 183 "tests/10__calculator/test.code"
-    else if (expression.variant == 5) {
 #line 184 "tests/10__calculator/test.code"
-        return expression.variant_5.span;
-    }
-#line 186 "tests/10__calculator/test.code"
-    else if (expression.variant == 6) {
-#line 187 "tests/10__calculator/test.code"
-        return expression.variant_6.span;
-    }
-#line 189 "tests/10__calculator/test.code"
-    else if (expression.variant == 0) {
-#line 190 "tests/10__calculator/test.code"
+    else if (self->variant == 0) {
+#line 185 "tests/10__calculator/test.code"
         return (struct Span){.start = 0, .end = 0};
     }
 }
 
-#line 195 "tests/10__calculator/test.code"
+#line 190 "tests/10__calculator/test.code"
 struct Writer *pWriter__write__1_expression(struct Writer *self, struct Expression *expression) {
-#line 196 "tests/10__calculator/test.code"
-    struct Expression expression_value = *expression;
-#line 197 "tests/10__calculator/test.code"
+#line 191 "tests/10__calculator/test.code"
     while (false) {
     }
+#line 192 "tests/10__calculator/test.code"
+    if (expression->variant == 1) {
+#line 193 "tests/10__calculator/test.code"
+        return pWriter__write__1_signed(self, expression->variant_1.value);
+    }
+#line 195 "tests/10__calculator/test.code"
+    else if (expression->variant == 2) {
+#line 196 "tests/10__calculator/test.code"
+        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression->variant_2.left), (struct String){.data = " + ", .length = 3}), expression->variant_2.right), (struct String){.data = ")", .length = 1});
+    }
 #line 198 "tests/10__calculator/test.code"
-    if (expression_value.variant == 1) {
+    else if (expression->variant == 3) {
 #line 199 "tests/10__calculator/test.code"
-        return pWriter__write__1_signed(self, expression_value.variant_1.value);
+        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression->variant_3.left), (struct String){.data = " / ", .length = 3}), expression->variant_3.right), (struct String){.data = ")", .length = 1});
     }
 #line 201 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 2) {
+    else if (expression->variant == 4) {
 #line 202 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression_value.variant_2.left), (struct String){.data = " + ", .length = 3}), expression_value.variant_2.right), (struct String){.data = ")", .length = 1});
+        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression->variant_4.left), (struct String){.data = " * ", .length = 3}), expression->variant_4.right), (struct String){.data = ")", .length = 1});
     }
 #line 204 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 3) {
+    else if (expression->variant == 5) {
 #line 205 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression_value.variant_3.left), (struct String){.data = " / ", .length = 3}), expression_value.variant_3.right), (struct String){.data = ")", .length = 1});
+        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression->variant_5.left), (struct String){.data = " - ", .length = 3}), expression->variant_5.right), (struct String){.data = ")", .length = 1});
     }
 #line 207 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 4) {
+    else if (expression->variant == 6) {
 #line 208 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression_value.variant_4.left), (struct String){.data = " * ", .length = 3}), expression_value.variant_4.right), (struct String){.data = ")", .length = 1});
+        return pWriter__write(pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), expression->variant_6.message);
     }
 #line 210 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 5) {
+    else if (expression->variant == 0) {
 #line 211 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write__1_expression(pWriter__write(pWriter__write__1_expression(pWriter__write(self, (struct String){.data = "(", .length = 1}), expression_value.variant_5.left), (struct String){.data = " - ", .length = 3}), expression_value.variant_5.right), (struct String){.data = ")", .length = 1});
-    }
-#line 213 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 6) {
-#line 214 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), expression_value.variant_6.message);
-    }
-#line 216 "tests/10__calculator/test.code"
-    else if (expression_value.variant == 0) {
-#line 217 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Nil!", .length = 4});
     }
-#line 220 "tests/10__calculator/test.code"
+#line 214 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 232 "tests/10__calculator/test.code"
+#line 226 "tests/10__calculator/test.code"
 struct Token pTokenizer__peek_token(struct Tokenizer *self) {
-#line 233 "tests/10__calculator/test.code"
+#line 227 "tests/10__calculator/test.code"
     if (self->current_token.variant == 0) {
-#line 234 "tests/10__calculator/test.code"
+#line 228 "tests/10__calculator/test.code"
         self->current_token = pTokenizer__scan_token(self);
     }
-#line 236 "tests/10__calculator/test.code"
+#line 230 "tests/10__calculator/test.code"
     return self->current_token;
 }
 
-#line 239 "tests/10__calculator/test.code"
+#line 233 "tests/10__calculator/test.code"
 struct Token pTokenizer__next_token(struct Tokenizer *self) {
-#line 240 "tests/10__calculator/test.code"
+#line 234 "tests/10__calculator/test.code"
     struct Token token = pTokenizer__peek_token(self);
-#line 241 "tests/10__calculator/test.code"
+#line 235 "tests/10__calculator/test.code"
     self->current_token = (struct Token){.variant = 0};
-#line 242 "tests/10__calculator/test.code"
+#line 236 "tests/10__calculator/test.code"
     return token;
 }
 
-#line 245 "tests/10__calculator/test.code"
+#line 239 "tests/10__calculator/test.code"
 struct Token pTokenizer__scan_token(struct Tokenizer *self) {
-#line 246 "tests/10__calculator/test.code"
+#line 240 "tests/10__calculator/test.code"
     while (self->data[self->index] == ' ') {
-#line 247 "tests/10__calculator/test.code"
+#line 241 "tests/10__calculator/test.code"
         self->index = self->index + 1;
     }
-#line 249 "tests/10__calculator/test.code"
+#line 243 "tests/10__calculator/test.code"
     uint8_t ch = self->data[self->index];
-#line 250 "tests/10__calculator/test.code"
+#line 244 "tests/10__calculator/test.code"
     if (ch == 0) {
-#line 251 "tests/10__calculator/test.code"
+#line 245 "tests/10__calculator/test.code"
         return (struct Token){.variant = 6, .variant_6 = (struct Stop){.span = (struct Span){.start = self->index, .end = self->index}}};
     }
-#line 253 "tests/10__calculator/test.code"
+#line 247 "tests/10__calculator/test.code"
     if (ch != ' ') {
-#line 254 "tests/10__calculator/test.code"
+#line 248 "tests/10__calculator/test.code"
         if (ch >= '0' && ch <= '9') {
-#line 255 "tests/10__calculator/test.code"
+#line 249 "tests/10__calculator/test.code"
             return pTokenizer__scan_number_token(self);
         }
-#line 257 "tests/10__calculator/test.code"
+#line 251 "tests/10__calculator/test.code"
         self->index = self->index + 1;
-#line 258 "tests/10__calculator/test.code"
+#line 252 "tests/10__calculator/test.code"
         if (ch == '+') {
-#line 259 "tests/10__calculator/test.code"
+#line 253 "tests/10__calculator/test.code"
             return (struct Token){.variant = 2, .variant_2 = (struct Plus){.span = (struct Span){.start = self->index - 1, .end = self->index}}};
         }
-#line 261 "tests/10__calculator/test.code"
+#line 255 "tests/10__calculator/test.code"
         if (ch == '-') {
-#line 262 "tests/10__calculator/test.code"
+#line 256 "tests/10__calculator/test.code"
             return (struct Token){.variant = 3, .variant_3 = (struct Minus){.span = (struct Span){.start = self->index - 1, .end = self->index}}};
         }
-#line 264 "tests/10__calculator/test.code"
+#line 258 "tests/10__calculator/test.code"
         if (ch == '*') {
-#line 265 "tests/10__calculator/test.code"
+#line 259 "tests/10__calculator/test.code"
             return (struct Token){.variant = 4, .variant_4 = (struct Multiply){.span = (struct Span){.start = self->index - 1, .end = self->index}}};
         }
-#line 267 "tests/10__calculator/test.code"
+#line 261 "tests/10__calculator/test.code"
         if (ch == '/') {
-#line 268 "tests/10__calculator/test.code"
+#line 262 "tests/10__calculator/test.code"
             return (struct Token){.variant = 5, .variant_5 = (struct Divide){.span = (struct Span){.start = self->index - 1, .end = self->index}}};
         }
-#line 270 "tests/10__calculator/test.code"
+#line 264 "tests/10__calculator/test.code"
         return (struct Token){.variant = 7, .variant_7 = (struct Error){.span = (struct Span){.start = self->index - 1, .end = self->index}, .message = (struct String){.data = "Unexpected character", .length = 20}}};
     }
 }
 
-#line 277 "tests/10__calculator/test.code"
+#line 271 "tests/10__calculator/test.code"
 struct Token pTokenizer__scan_number_token(struct Tokenizer *self) {
-#line 278 "tests/10__calculator/test.code"
+#line 272 "tests/10__calculator/test.code"
     int32_t start = self->index;
-#line 279 "tests/10__calculator/test.code"
+#line 273 "tests/10__calculator/test.code"
     int32_t value = 0;
-#line 280 "tests/10__calculator/test.code"
+#line 274 "tests/10__calculator/test.code"
     for (;;) {
-#line 281 "tests/10__calculator/test.code"
+#line 275 "tests/10__calculator/test.code"
         uint8_t c = self->data[self->index];
-#line 282 "tests/10__calculator/test.code"
+#line 276 "tests/10__calculator/test.code"
         if (c < '0' || c > '9') {
-#line 283 "tests/10__calculator/test.code"
+#line 277 "tests/10__calculator/test.code"
             break;
         }
-#line 285 "tests/10__calculator/test.code"
+#line 279 "tests/10__calculator/test.code"
         value = value * 10 + ((int32_t) (c - '0'));
-#line 286 "tests/10__calculator/test.code"
+#line 280 "tests/10__calculator/test.code"
         self->index = self->index + 1;
     }
-#line 288 "tests/10__calculator/test.code"
+#line 282 "tests/10__calculator/test.code"
     return (struct Token){.variant = 1, .variant_1 = (struct Number){.span = (struct Span){.start = start, .end = self->index}, .value = value}};
 }
 
-#line 342 "tests/10__calculator/test.code"
+#line 336 "tests/10__calculator/test.code"
 struct Span pToken__span(struct Token *self) {
-#line 343 "tests/10__calculator/test.code"
-    struct Token token = *self;
-#line 344 "tests/10__calculator/test.code"
+#line 337 "tests/10__calculator/test.code"
     while (false) {
     }
+#line 338 "tests/10__calculator/test.code"
+    if (self->variant == 1) {
+#line 339 "tests/10__calculator/test.code"
+        return self->variant_1.span;
+    }
+#line 341 "tests/10__calculator/test.code"
+    else if (self->variant == 2) {
+#line 342 "tests/10__calculator/test.code"
+        return self->variant_2.span;
+    }
+#line 344 "tests/10__calculator/test.code"
+    else if (self->variant == 3) {
 #line 345 "tests/10__calculator/test.code"
-    if (token.variant == 1) {
-#line 346 "tests/10__calculator/test.code"
-        return token.variant_1.span;
+        return self->variant_3.span;
     }
+#line 347 "tests/10__calculator/test.code"
+    else if (self->variant == 4) {
 #line 348 "tests/10__calculator/test.code"
-    else if (token.variant == 2) {
-#line 349 "tests/10__calculator/test.code"
-        return token.variant_2.span;
+        return self->variant_4.span;
     }
+#line 350 "tests/10__calculator/test.code"
+    else if (self->variant == 5) {
 #line 351 "tests/10__calculator/test.code"
-    else if (token.variant == 3) {
-#line 352 "tests/10__calculator/test.code"
-        return token.variant_3.span;
+        return self->variant_5.span;
     }
+#line 353 "tests/10__calculator/test.code"
+    else if (self->variant == 6) {
 #line 354 "tests/10__calculator/test.code"
-    else if (token.variant == 4) {
-#line 355 "tests/10__calculator/test.code"
-        return token.variant_4.span;
+        return self->variant_6.span;
     }
+#line 356 "tests/10__calculator/test.code"
+    else if (self->variant == 7) {
 #line 357 "tests/10__calculator/test.code"
-    else if (token.variant == 5) {
-#line 358 "tests/10__calculator/test.code"
-        return token.variant_5.span;
+        return self->variant_7.span;
     }
+#line 359 "tests/10__calculator/test.code"
+    else if (self->variant == 0) {
 #line 360 "tests/10__calculator/test.code"
-    else if (token.variant == 6) {
-#line 361 "tests/10__calculator/test.code"
-        return token.variant_6.span;
-    }
-#line 363 "tests/10__calculator/test.code"
-    else if (token.variant == 7) {
-#line 364 "tests/10__calculator/test.code"
-        return token.variant_7.span;
-    }
-#line 366 "tests/10__calculator/test.code"
-    else if (token.variant == 0) {
-#line 367 "tests/10__calculator/test.code"
         return (struct Span){.start = 0, .end = 0};
     }
 }
 
-#line 372 "tests/10__calculator/test.code"
-struct Writer *pWriter__write__1_token(struct Writer *self, struct Token token) {
-#line 373 "tests/10__calculator/test.code"
+#line 365 "tests/10__calculator/test.code"
+struct Writer *pWriter__write__1_token(struct Writer *self, struct Token *token) {
+#line 366 "tests/10__calculator/test.code"
     while (false) {
     }
-#line 374 "tests/10__calculator/test.code"
-    if (token.variant == 1) {
-#line 375 "tests/10__calculator/test.code"
-        return pWriter__write__1_signed(pWriter__write(self, (struct String){.data = "Number: ", .length = 8}), token.variant_1.value);
+#line 367 "tests/10__calculator/test.code"
+    if (token->variant == 1) {
+#line 368 "tests/10__calculator/test.code"
+        return pWriter__write__1_signed(pWriter__write(self, (struct String){.data = "Number: ", .length = 8}), token->variant_1.value);
     }
-#line 377 "tests/10__calculator/test.code"
-    else if (token.variant == 2) {
-#line 378 "tests/10__calculator/test.code"
+#line 370 "tests/10__calculator/test.code"
+    else if (token->variant == 2) {
+#line 371 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Plus", .length = 4});
     }
-#line 380 "tests/10__calculator/test.code"
-    else if (token.variant == 3) {
-#line 381 "tests/10__calculator/test.code"
+#line 373 "tests/10__calculator/test.code"
+    else if (token->variant == 3) {
+#line 374 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Minus", .length = 5});
     }
-#line 383 "tests/10__calculator/test.code"
-    else if (token.variant == 4) {
-#line 384 "tests/10__calculator/test.code"
+#line 376 "tests/10__calculator/test.code"
+    else if (token->variant == 4) {
+#line 377 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Multiply", .length = 8});
     }
-#line 386 "tests/10__calculator/test.code"
-    else if (token.variant == 5) {
-#line 387 "tests/10__calculator/test.code"
+#line 379 "tests/10__calculator/test.code"
+    else if (token->variant == 5) {
+#line 380 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Divide", .length = 6});
     }
-#line 389 "tests/10__calculator/test.code"
-    else if (token.variant == 6) {
-#line 390 "tests/10__calculator/test.code"
+#line 382 "tests/10__calculator/test.code"
+    else if (token->variant == 6) {
+#line 383 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Stop", .length = 4});
     }
-#line 392 "tests/10__calculator/test.code"
-    else if (token.variant == 7) {
-#line 393 "tests/10__calculator/test.code"
-        return pWriter__write(pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), token.variant_7.message);
+#line 385 "tests/10__calculator/test.code"
+    else if (token->variant == 7) {
+#line 386 "tests/10__calculator/test.code"
+        return pWriter__write(pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), token->variant_7.message);
     }
-#line 395 "tests/10__calculator/test.code"
-    else if (token.variant == 0) {
-#line 396 "tests/10__calculator/test.code"
+#line 388 "tests/10__calculator/test.code"
+    else if (token->variant == 0) {
+#line 389 "tests/10__calculator/test.code"
         return pWriter__write(self, (struct String){.data = "Nil!", .length = 4});
     }
-#line 399 "tests/10__calculator/test.code"
+#line 392 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 409 "tests/10__calculator/test.code"
+#line 402 "tests/10__calculator/test.code"
 struct Writer *pWriter__write__1_char(struct Writer *self, uint8_t c) {
-#line 410 "tests/10__calculator/test.code"
+#line 403 "tests/10__calculator/test.code"
     self->write_char(self->self, c);
-#line 411 "tests/10__calculator/test.code"
+#line 404 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 414 "tests/10__calculator/test.code"
+#line 407 "tests/10__calculator/test.code"
 struct Writer *pWriter__write__1_signed(struct Writer *self, int32_t value) {
-#line 416 "tests/10__calculator/test.code"
+#line 409 "tests/10__calculator/test.code"
     if (value < 0) {
-#line 417 "tests/10__calculator/test.code"
+#line 410 "tests/10__calculator/test.code"
         pWriter__write__1_char(self, '-');
-#line 418 "tests/10__calculator/test.code"
+#line 411 "tests/10__calculator/test.code"
         return pWriter__write__1_signed(self, -value);
     }
-#line 420 "tests/10__calculator/test.code"
+#line 413 "tests/10__calculator/test.code"
     if (value >= 10) {
-#line 421 "tests/10__calculator/test.code"
+#line 414 "tests/10__calculator/test.code"
         pWriter__write__1_signed(self, value / 10);
     }
-#line 423 "tests/10__calculator/test.code"
+#line 416 "tests/10__calculator/test.code"
     return pWriter__write__1_char(self, ((uint8_t) (value % 10)) + '0');
 }
 
-#line 426 "tests/10__calculator/test.code"
+#line 419 "tests/10__calculator/test.code"
 struct Writer *pWriter__end_line(struct Writer *self) {
-#line 427 "tests/10__calculator/test.code"
+#line 420 "tests/10__calculator/test.code"
     pWriter__write__1_char(self, '\n');
-#line 428 "tests/10__calculator/test.code"
+#line 421 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 439 "tests/10__calculator/test.code"
+#line 432 "tests/10__calculator/test.code"
 struct String_Builder *pString_Builder__write__1_char(struct String_Builder *self, uint8_t c) {
-#line 440 "tests/10__calculator/test.code"
+#line 433 "tests/10__calculator/test.code"
     if (self->length == self->data_size) {
-#line 441 "tests/10__calculator/test.code"
+#line 434 "tests/10__calculator/test.code"
         self->data_size = self->data_size + 8;
-#line 442 "tests/10__calculator/test.code"
+#line 435 "tests/10__calculator/test.code"
         self->data = ((uint8_t *) realloc(((void *) self->data), ((uint64_t) self->data_size)));
     }
-#line 447 "tests/10__calculator/test.code"
+#line 440 "tests/10__calculator/test.code"
     self->data[self->length] = c;
-#line 448 "tests/10__calculator/test.code"
+#line 441 "tests/10__calculator/test.code"
     self->length = self->length + 1;
-#line 449 "tests/10__calculator/test.code"
+#line 442 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 452 "tests/10__calculator/test.code"
+#line 445 "tests/10__calculator/test.code"
 struct String pString_Builder__build(struct String_Builder *self) {
-#line 453 "tests/10__calculator/test.code"
+#line 446 "tests/10__calculator/test.code"
     pString_Builder__write__1_char(self, 0);
-#line 454 "tests/10__calculator/test.code"
+#line 447 "tests/10__calculator/test.code"
     struct String string = (struct String){.data = self->data, .length = self->length - 1};
-#line 458 "tests/10__calculator/test.code"
+#line 451 "tests/10__calculator/test.code"
     return *((struct String *) (&string));
 }
 
-#line 461 "tests/10__calculator/test.code"
+#line 454 "tests/10__calculator/test.code"
 struct String_Builder make_string_builder() {
-#line 462 "tests/10__calculator/test.code"
+#line 455 "tests/10__calculator/test.code"
     return make_string_builder__0_initial_data_size(4);
 }
 
-#line 465 "tests/10__calculator/test.code"
+#line 458 "tests/10__calculator/test.code"
 struct String_Builder make_string_builder__0_initial_data_size(int32_t initial_data_size) {
-#line 466 "tests/10__calculator/test.code"
+#line 459 "tests/10__calculator/test.code"
     return (struct String_Builder){.data = ((uint8_t *) malloc(((uint64_t) initial_data_size))), .data_size = initial_data_size, .length = 0};
 }
 
-#line 473 "tests/10__calculator/test.code"
+#line 466 "tests/10__calculator/test.code"
 void pString_Builder__write_char(struct String_Builder *self, uint8_t c) {
-#line 474 "tests/10__calculator/test.code"
+#line 467 "tests/10__calculator/test.code"
     pString_Builder__write__1_char(self, c);
 }
 
-#line 484 "tests/10__calculator/test.code"
+#line 477 "tests/10__calculator/test.code"
 struct Writer *pWriter__write(struct Writer *self, struct String string) {
-#line 485 "tests/10__calculator/test.code"
+#line 478 "tests/10__calculator/test.code"
     struct String string_copy = string;
-#line 486 "tests/10__calculator/test.code"
+#line 479 "tests/10__calculator/test.code"
     uint8_t *string_data = ((struct String *) (&string_copy))->data;
-#line 487 "tests/10__calculator/test.code"
+#line 480 "tests/10__calculator/test.code"
     uintmax_t index = 0;
-#line 488 "tests/10__calculator/test.code"
+#line 481 "tests/10__calculator/test.code"
     while (index < string.length) {
-#line 489 "tests/10__calculator/test.code"
+#line 482 "tests/10__calculator/test.code"
         pWriter__write__1_char(self, string_data[index]);
-#line 490 "tests/10__calculator/test.code"
+#line 483 "tests/10__calculator/test.code"
         index = index + 1;
     }
-#line 492 "tests/10__calculator/test.code"
+#line 485 "tests/10__calculator/test.code"
     return self;
 }
 
-#line 505 "tests/10__calculator/test.code"
+#line 498 "tests/10__calculator/test.code"
 void pFILE__write_char(FILE *self, uint8_t c) {
-#line 506 "tests/10__calculator/test.code"
+#line 499 "tests/10__calculator/test.code"
     fputc(((int32_t) c), stdout);
 }
 

@@ -726,6 +726,13 @@ Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location *
     return statement;
 }
 
+Checked_Switch_Else *Checked_Switch_Else__create(Source_Location *location, Checked_Statement *statement) {
+    Checked_Switch_Else *switch_else = (Checked_Switch_Else *)malloc(sizeof(Checked_Switch_Else));
+    switch_else->location = location;
+    switch_else->statement = statement;
+    return switch_else;
+}
+
 Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location *location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement) {
     Checked_Union_Switch_Case *union_switch_case = (Checked_Union_Switch_Case *)malloc(sizeof(Checked_Union_Switch_Case));
     union_switch_case->location = location;
@@ -736,11 +743,11 @@ Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location *lo
     return union_switch_case;
 }
 
-Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Statement *else_statement) {
+Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Switch_Else *switch_else) {
     Checked_Union_Switch_Statement *statement = (Checked_Union_Switch_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__UNION_SWITCH, sizeof(Checked_Union_Switch_Statement), location);
     statement->expression = expression;
     statement->first_union_switch_case = first_union_switch_case;
-    statement->else_statement = else_statement;
+    statement->switch_else = switch_else;
     return statement;
 }
 

@@ -919,53 +919,63 @@ Parsed_Statement *Parser__parse_return_statement(Parser *self) {
     return Parsed_Return_Statement__create(location, expression);
 }
 
-/*
-switch
-    | "switch"
-        ( IDENTIFIER "in" expression "{" ( "case" type block )* "}"
-        | expression "{" ( "case" expression block )* "}"
-        | "{" ( "case" expression block )* "}"
-        )
-*/
+// switch
+//  : "switch" expression "{"
+//      ( "case" expression block
+//      | "is" type ( "as" IDENTIFIER )? block
+//      )*
+//      ( "else" block )?
+//  "}"
 Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
-    Source_Location *location = Parser__consume_token(self, Token__is_switch)->location;
+    Source_Location *switch_location = Parser__consume_token(self, Token__is_switch)->location;
     Parser__consume_space(self, 1);
-    if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, true, Token__is_in)) {
-        Identifier_Token *variant_alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
-        Parser__consume_space(self, 1);
-        Parser__consume_token(self, Token__is_in);
-        Parser__consume_space(self, 1);
-        Parsed_Expression *expression = Parser__parse_expression(self);
-        Parser__consume_space(self, 1);
-        Parser__consume_token(self, Token__is_opening_brace);
-        Parser__consume_end_of_line(self);
-        self->current_identation = self->current_identation + 1;
-        Parsed_Union_Switch_Case *first_case = NULL;
-        Parsed_Union_Switch_Case *last_case = NULL;
-        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
-            if (!Parser__consume_empty_line(self)) {
-                Parser__consume_space(self, self->current_identation * 4);
-                Parser__consume_token(self, Token__is_case);
+    Parsed_Expression *switch_expression = Parser__parse_expression(self);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_opening_brace);
+    self->current_identation = self->current_identation + 1;
+    Parsed_Switch_Case *first_case = NULL;
+    Parsed_Switch_Case *last_case = NULL;
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        if (!Parser__consume_empty_line(self)) {
+            Parser__consume_space(self, self->current_identation * 4);
+            Parsed_Switch_Case *switch_case = NULL;
+            if (Parser__matches_one(self, Token__is_case)) {
+                Source_Location *location = Parser__consume_token(self, Token__is_case)->location;
+                Parser__consume_space(self, 1);
+                Parsed_Expression *case_expression = Parser__parse_expression(self);
+                Parser__consume_space(self, 1);
+                switch_case = Parsed_Switch_Expression__create(location, case_expression);
+            } else if (Parser__matches_one(self, Token__is_is)) {
+                Source_Location *location = Parser__consume_token(self, Token__is_is)->location;
                 Parser__consume_space(self, 1);
                 Parsed_Type *variant_type = Parser__parse_type(self);
                 Parser__consume_space(self, 1);
-                Parsed_Statement *variant_block = (Parsed_Statement *)Parser__parse_block_statement(self);
-                Parsed_Union_Switch_Case *current_case = Parsed_Union_Switch_Case__create(variant_type, variant_block);
-                if (first_case == NULL) {
-                    first_case = current_case;
-                } else {
-                    last_case->next_case = current_case;
+                Identifier_Token *variant_alias = NULL;
+                if (Parser__matches_one(self, Token__is_as)) {
+                    Parser__consume_token(self, Token__is_as);
+                    Parser__consume_space(self, 1);
+                    variant_alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
+                    Parser__consume_space(self, 1);
                 }
-                last_case = current_case;
+                switch_case = Parsed_Switch_Variant__create(location, variant_type, variant_alias);
+            } else if (Parser__matches_one(self, Token__is_else)) {
+                Source_Location *location = Parser__consume_token(self, Token__is_else)->location;
+                Parser__consume_space(self, 1);
+                switch_case = Parsed_Switch_Else__create(location);
             }
+            switch_case->statement = (Parsed_Statement *)Parser__parse_block_statement(self);
+            if (first_case == NULL) {
+                first_case = switch_case;
+            } else {
+                last_case->next_case = switch_case;
+            }
+            last_case = switch_case;
         }
-        self->current_identation = self->current_identation - 1;
-        Parser__consume_space(self, self->current_identation * 4);
-        Parser__consume_token(self, Token__is_closing_brace);
-        return (Parsed_Statement *)Parsed_Union_Switch_Statement__create(location, variant_alias, expression, first_case);
     }
-
-    todo("Parse switch statement");
+    self->current_identation = self->current_identation - 1;
+    Parser__consume_space(self, self->current_identation * 4);
+    Parser__consume_token(self, Token__is_closing_brace);
+    return (Parsed_Statement *)Parsed_Switch_Statement__create(switch_location, switch_expression, first_case);
 }
 
 /*

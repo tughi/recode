@@ -359,10 +359,10 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
+    PARSED_STATEMENT_KIND__SWITCH,
     PARSED_STATEMENT_KIND__TRAIT,
     PARSED_STATEMENT_KIND__UNION,
     PARSED_STATEMENT_KIND__UNION_IF,
-    PARSED_STATEMENT_KIND__UNION_SWITCH,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
 } Parsed_Statement_Kind;
@@ -477,6 +477,40 @@ typedef struct Parsed_Struct_Statement {
 
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name);
 
+typedef enum Parsed_Switch_Case_Kind {
+    PARSED_SWITCH_CASE_KIND__ELSE,
+    PARSED_SWITCH_CASE_KIND__EXPRESSION,
+    PARSED_SWITCH_CASE_KIND__VARIANT,
+} Parsed_Switch_Case_Kind;
+
+typedef struct Parsed_Switch_Case {
+    Parsed_Switch_Case_Kind kind;
+    Source_Location *location;
+    union {
+        Parsed_Expression *expression;
+        struct {
+            Parsed_Type *type;
+            Identifier_Token *alias;
+        } variant;
+    };
+    Parsed_Statement *statement;
+    struct Parsed_Switch_Case *next_case;
+} Parsed_Switch_Case;
+
+Parsed_Switch_Case *Parsed_Switch_Else__create(Source_Location *location);
+
+Parsed_Switch_Case *Parsed_Switch_Expression__create(Source_Location *location, Parsed_Expression *expression);
+
+Parsed_Switch_Case *Parsed_Switch_Variant__create(Source_Location *location, Parsed_Type *type, Identifier_Token *alias);
+
+typedef struct Parsed_Switch_Statement {
+    Parsed_Statement super;
+    Parsed_Expression *expression;
+    Parsed_Switch_Case *first_case;
+} Parsed_Switch_Statement;
+
+Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location *location, Parsed_Expression *expression, Parsed_Switch_Case *first_case);
+
 typedef struct Parsed_Trait_Method {
     Source_Location *location;
     Token *name;
@@ -518,23 +552,6 @@ typedef struct Parsed_Union_If_Statement {
 } Parsed_Union_If_Statement;
 
 Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Type *variant_type, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
-
-typedef struct Parsed_Union_Switch_Case {
-    Parsed_Type *type;
-    Parsed_Statement *statement;
-    struct Parsed_Union_Switch_Case *next_case;
-} Parsed_Union_Switch_Case;
-
-Parsed_Union_Switch_Case *Parsed_Union_Switch_Case__create(Parsed_Type *type, Parsed_Statement *block);
-
-typedef struct Parsed_Union_Switch_Statement {
-    Parsed_Statement super;
-    Identifier_Token *variant_alias;
-    Parsed_Expression *expression;
-    Parsed_Union_Switch_Case *first_case;
-} Parsed_Union_Switch_Statement;
-
-Parsed_Union_Switch_Statement *Parsed_Union_Switch_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Union_Switch_Case *first_case);
 
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;

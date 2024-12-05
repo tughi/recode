@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__union/006__switch_with_case_after_else/test.code:21:9: Switch case cannot follow else case"
+        ]
+    }
+}

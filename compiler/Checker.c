@@ -1441,6 +1441,33 @@ Checked_Return_Statement *Checker__check_return_statement(Checker *self, Parsed_
     return Checked_Return_Statement__create(parsed_statement->super.location, expression);
 }
 
+Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement, Checked_Expression *union_expression, Checked_Union_Type *union_type);
+
+Checked_Statement *Checker__check_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement) {
+    Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, NULL);
+    if (expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
+        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in switch statements");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    if (expression->type->kind == CHECKED_TYPE_KIND__UNION) {
+        return (Checked_Statement *)Checker__check_union_switch_statement(self, parsed_statement, expression, (Checked_Union_Type *)expression->type);
+    }
+    if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+        Checked_Type *pointed_type = ((Checked_Pointer_Type *)expression->type)->other_type;
+        if (pointed_type->kind == CHECKED_TYPE_KIND__UNION) {
+            return (Checked_Statement *)Checker__check_union_switch_statement(self, parsed_statement, expression, (Checked_Union_Type *)pointed_type);
+        }
+    }
+    pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Switch doesn't support ");
+    pWriter__write__checked_type(stderr_writer, expression->type);
+    pWriter__write__cstring(stderr_writer, " expressions yet");
+    pWriter__end_location_message(stderr_writer);
+    panic();
+}
+
 Checked_Union_If_Statement *Checker__check_union_if_statement(Checker *self, Parsed_Union_If_Statement *parsed_statement) {
     Checked_Expression *union_expression = Checker__check_expression(self, parsed_statement->expression, NULL);
     if (union_expression->type->kind != CHECKED_TYPE_KIND__UNION) {
@@ -1490,84 +1517,101 @@ Checked_Union_If_Statement *Checker__check_union_if_statement(Checker *self, Par
     return Checked_Union_If_Statement__create(parsed_statement->super.location, union_expression, union_variant, true_statement, false_statement);
 }
 
-Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *self, Parsed_Union_Switch_Statement *parsed_statement) {
-    Checked_Expression *union_expression = Checker__check_expression(self, parsed_statement->expression, NULL);
-    if (union_expression->type->kind != CHECKED_TYPE_KIND__UNION) {
-        pWriter__begin_location_message(stderr_writer, union_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Not a union type: ");
-        pWriter__write__checked_type(stderr_writer, union_expression->type);
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    if (union_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
-        pWriter__begin_location_message(stderr_writer, union_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in union switch statements");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    Checked_Union_Type *union_type = (Checked_Union_Type *)union_expression->type;
+Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement, Checked_Expression *union_expression, Checked_Union_Type *union_type) {
     bool *variants_with_case = malloc(union_type->variant_count * sizeof(bool));
-    Parsed_Union_Switch_Case *parsed_union_switch_case = parsed_statement->first_case;
+    Parsed_Switch_Case *parsed_switch_case = parsed_statement->first_case;
     Checked_Union_Switch_Case *first_union_switch_case = NULL;
     Checked_Union_Switch_Case *last_union_switch_case = NULL;
-    for (; parsed_union_switch_case != NULL; parsed_union_switch_case = parsed_union_switch_case->next_case) {
-        Checked_Type *variant_type = Checker__resolve_type(self, parsed_union_switch_case->type);
+    Checked_Switch_Else *switch_else = NULL;
+    for (; parsed_switch_case != NULL; parsed_switch_case = parsed_switch_case->next_case) {
+        switch (parsed_switch_case->kind) {
+        case PARSED_SWITCH_CASE_KIND__ELSE: {
+            if (switch_else != NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_switch_case->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Switch statement already has an else case");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            switch_else = Checked_Switch_Else__create(parsed_switch_case->location, Checker__check_statement(self, parsed_switch_case->statement));
+            break;
+        }
+        case PARSED_SWITCH_CASE_KIND__VARIANT: {
+            if (switch_else != NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_switch_case->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Switch case cannot follow else case");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            Checked_Type *variant_type = Checker__resolve_type(self, parsed_switch_case->variant.type);
+            Checked_Union_Variant *union_variant = union_type->first_variant;
+            for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+                if (Checked_Type__equals(union_variant->type, variant_type)) {
+                    break;
+                }
+            }
+            if (union_variant == NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_switch_case->variant.type->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "No ");
+                pWriter__write__checked_type(stderr_writer, variant_type);
+                pWriter__write__cstring(stderr_writer, " variant in ");
+                pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
+                pWriter__write__cstring(stderr_writer, " union");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            if (variants_with_case[union_variant->index]) {
+                pWriter__begin_location_message(stderr_writer, parsed_switch_case->variant.type->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Duplicate case");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            variants_with_case[union_variant->index] = true;
+
+            // Create and push switch case symbols
+            self->symbols = Checked_Symbols__create(self->symbols);
+
+            if (parsed_switch_case->variant.alias != NULL) {
+                // Create a symbol for the union variant
+                Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, union_expression, union_variant);
+                Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
+            }
+
+            Checked_Statement *union_switch_case_statement = Checker__check_statement(self, parsed_switch_case->statement);
+
+            // Pop switch case symbols
+            self->symbols = self->symbols->parent;
+
+            Checked_Union_Switch_Case *union_switch_case = Checked_Union_Switch_Case__create(parsed_switch_case->variant.type->location, union_type, union_variant, union_switch_case_statement);
+            if (first_union_switch_case == NULL) {
+                first_union_switch_case = union_switch_case;
+            } else {
+                last_union_switch_case->next_union_switch_case = union_switch_case;
+            }
+            last_union_switch_case = union_switch_case;
+            break;
+        }
+        default:
+            pWriter__begin_location_message(stderr_writer, parsed_switch_case->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Swicth case not supported with union type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+            break;
+        }
+    }
+    if (switch_else == NULL) {
         Checked_Union_Variant *union_variant = union_type->first_variant;
         for (; union_variant != NULL; union_variant = union_variant->next_variant) {
-            if (Checked_Type__equals(union_variant->type, variant_type)) {
-                break;
+            if (!variants_with_case[union_variant->index]) {
+                pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Missing case for ");
+                pWriter__write__checked_type(stderr_writer, union_variant->type);
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
-        }
-        if (union_variant == NULL) {
-            pWriter__begin_location_message(stderr_writer, parsed_union_switch_case->type->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "No ");
-            pWriter__write__checked_type(stderr_writer, variant_type);
-            pWriter__write__cstring(stderr_writer, " variant in ");
-            pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
-            pWriter__write__cstring(stderr_writer, " union");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        if (variants_with_case[union_variant->index]) {
-            pWriter__begin_location_message(stderr_writer, parsed_union_switch_case->type->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Duplicate case");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        variants_with_case[union_variant->index] = true;
-
-        // Create and push switch case symbols
-        self->symbols = Checked_Symbols__create(self->symbols);
-
-        // TODO: create a symbol for the union variant
-        Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, union_expression, union_variant);
-        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
-
-        Checked_Statement *union_switch_case_statement = Checker__check_statement(self, parsed_union_switch_case->statement);
-
-        // Pop switch case symbols
-        self->symbols = self->symbols->parent;
-
-        Checked_Union_Switch_Case *union_switch_case = Checked_Union_Switch_Case__create(parsed_union_switch_case->type->location, union_type, union_variant, union_switch_case_statement);
-        if (first_union_switch_case == NULL) {
-            first_union_switch_case = union_switch_case;
-        } else {
-            last_union_switch_case->next_union_switch_case = union_switch_case;
-        }
-        last_union_switch_case = union_switch_case;
-    }
-    Checked_Union_Variant *union_variant = union_type->first_variant;
-    for (; union_variant != NULL; union_variant = union_variant->next_variant) {
-        if (!variants_with_case[union_variant->index]) {
-            pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Missing case for ");
-            pWriter__write__checked_type(stderr_writer, union_variant->type);
-            pWriter__end_location_message(stderr_writer);
-            panic();
         }
     }
     free(variants_with_case);
-    return Checked_Union_Switch_Statement__create(parsed_statement->super.location, union_expression, first_union_switch_case, NULL);
+    return Checked_Union_Switch_Statement__create(parsed_statement->super.location, union_expression, first_union_switch_case, switch_else);
 }
 
 Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Parsed_Variable_Statement *parsed_statement) {
@@ -1696,10 +1740,10 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return (Checked_Statement *)Checker__check_loop_statement(self, (Parsed_Loop_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RETURN:
         return (Checked_Statement *)Checker__check_return_statement(self, (Parsed_Return_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__SWITCH:
+        return Checker__check_switch_statement(self, (Parsed_Switch_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__UNION_IF:
         return (Checked_Statement *)Checker__check_union_if_statement(self, (Parsed_Union_If_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__UNION_SWITCH:
-        return (Checked_Statement *)Checker__check_union_switch_statement(self, (Parsed_Union_Switch_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__VARIABLE:
         return (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__WHILE:

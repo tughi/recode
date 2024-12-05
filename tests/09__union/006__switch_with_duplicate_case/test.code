@@ -7,10 +7,10 @@ union Value {
 func main() -> i32 {
     let value: Value = true
 
-    switch variant in value {
-        case i32 {
+    switch value {
+        is i32 {
         }
-        case i32 {
+        is i32 {
         }
     }
 }

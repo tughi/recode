@@ -12,7 +12,7 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
 
     while tokenizer.peek_token() is not Stop {
         let token = tokenizer.next_token()
-        stdout_writer.write(token: token).end_line()
+        stdout_writer.write(token: @token).end_line()
     }
 
     let parser = Parser(tokenizer: Tokenizer(
@@ -29,27 +29,23 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
 \ ------------------------------------------------------------------------------ Evaluator
 
 func evaluate(expression: @Expression) -> i32 {
-    let expression_value = expression.@
-    switch expression_kind in expression_value {
-        case Number {
-            return expression_kind.value
+    switch expression {
+        is Number as number {
+            return number.value
         }
-        case Addition {
-            return evaluate(expression: expression_kind.left) + evaluate(expression: expression_kind.right)
+        is Addition as addition {
+            return evaluate(expression: addition.left) + evaluate(expression: addition.right)
         }
-        case Division {
-            return evaluate(expression: expression_kind.left) / evaluate(expression: expression_kind.right)
+        is Division as division {
+            return evaluate(expression: division.left) / evaluate(expression: division.right)
         }
-        case Multiplication {
-            return evaluate(expression: expression_kind.left) * evaluate(expression: expression_kind.right)
+        is Multiplication as multiplication {
+            return evaluate(expression: multiplication.left) * evaluate(expression: multiplication.right)
         }
-        case Subtraction {
-            return evaluate(expression: expression_kind.left) - evaluate(expression: expression_kind.right)
+        is Subtraction as subtraction {
+            return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
-        case Error {
-            exit(1)
-        }
-        case nil {
+        else {
             exit(1)
         }
     }
@@ -166,54 +162,52 @@ struct Subtraction {
 }
 
 func @Expression.span(self) -> Span {
-    let expression = self.@
-    switch variant in expression {
-        case Number {
+    switch self {
+        is Number as variant {
             return variant.span
         }
-        case Addition {
+        is Addition as variant {
             return variant.span
         }
-        case Division {
+        is Division as variant {
             return variant.span
         }
-        case Multiplication {
+        is Multiplication as variant {
             return variant.span
         }
-        case Subtraction {
+        is Subtraction as variant {
             return variant.span
         }
-        case Error {
+        is Error as variant {
             return variant.span
         }
-        case nil {
+        is nil {
             return Span(start: 0, end: 0)
         }
     }
 }
 
 func @Writer.write(self, expression: @Expression) -> @Writer {
-    let expression_value = expression.@
-    switch expression_kind in expression_value {
-        case Number {
-            return self.write(signed: expression_kind.value)
+    switch expression {
+        is Number as number {
+            return self.write(signed: number.value)
         }
-        case Addition {
-            return self.write("(").write(expression: expression_kind.left).write(" + ").write(expression: expression_kind.right).write(")")
+        is Addition as addition {
+            return self.write("(").write(expression: addition.left).write(" + ").write(expression: addition.right).write(")")
         }
-        case Division {
-            return self.write("(").write(expression: expression_kind.left).write(" / ").write(expression: expression_kind.right).write(")")
+        is Division as division {
+            return self.write("(").write(expression: division.left).write(" / ").write(expression: division.right).write(")")
         }
-        case Multiplication {
-            return self.write("(").write(expression: expression_kind.left).write(" * ").write(expression: expression_kind.right).write(")")
+        is Multiplication as multiplication {
+            return self.write("(").write(expression: multiplication.left).write(" * ").write(expression: multiplication.right).write(")")
         }
-        case Subtraction {
-            return self.write("(").write(expression: expression_kind.left).write(" - ").write(expression: expression_kind.right).write(")")
+        is Subtraction as subtraction {
+            return self.write("(").write(expression: subtraction.left).write(" - ").write(expression: subtraction.right).write(")")
         }
-        case Error {
-            return self.write("Error: ").write(expression_kind.message)
+        is Error as error {
+            return self.write("Error: ").write(error.message)
         }
-        case nil {
+        is nil {
             return self.write("Nil!")
         }
     }
@@ -340,59 +334,58 @@ union Token {
 }
 
 func @Token.span(self) -> Span {
-    let token = self.@
-    switch token_kind in token {
-        case Number {
-            return token_kind.span
+    switch self {
+        is Number as variant {
+            return variant.span
         }
-        case Plus {
-            return token_kind.span
+        is Plus as variant {
+            return variant.span
         }
-        case Minus {
-            return token_kind.span
+        is Minus as variant {
+            return variant.span
         }
-        case Multiply {
-            return token_kind.span
+        is Multiply as variant {
+            return variant.span
         }
-        case Divide {
-            return token_kind.span
+        is Divide as variant {
+            return variant.span
         }
-        case Stop {
-            return token_kind.span
+        is Stop as variant {
+            return variant.span
         }
-        case Error {
-            return token_kind.span
+        is Error as variant {
+            return variant.span
         }
-        case nil {
+        is nil {
             return Span(start: 0, end: 0)
         }
     }
 }
 
-func @Writer.write(self, token: Token) -> @Writer {
-    switch token_kind in token {
-        case Number {
-            return self.write("Number: ").write(signed: token_kind.value)
+func @Writer.write(self, token: @Token) -> @Writer {
+    switch token {
+        is Number as number {
+            return self.write("Number: ").write(signed: number.value)
         }
-        case Plus {
+        is Plus {
             return self.write("Plus")
         }
-        case Minus {
+        is Minus {
             return self.write("Minus")
         }
-        case Multiply {
+        is Multiply {
             return self.write("Multiply")
         }
-        case Divide {
+        is Divide {
             return self.write("Divide")
         }
-        case Stop {
+        is Stop {
             return self.write("Stop")
         }
-        case Error {
-            return self.write("Error: ").write(token_kind.message)
+        is Error as error {
+            return self.write("Error: ").write(error.message)
         }
-        case nil {
+        is nil {
             return self.write("Nil!")
         }
     }

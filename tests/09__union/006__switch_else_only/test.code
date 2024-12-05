@@ -1,0 +1,21 @@
+union Integer {
+    i8
+    i32
+}
+
+union Value {
+    bool
+    Integer
+}
+
+func main() -> i32 {
+    let value: Value = Integer(42)
+
+    switch value {
+        else {
+            return 0
+        }
+    }
+
+    return 1
+}

@@ -651,6 +651,13 @@ typedef struct Checked_Union_If_Statement {
 
 Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location *location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement);
 
+typedef struct Checked_Switch_Else {
+    Source_Location *location;
+    Checked_Statement *statement;
+} Checked_Switch_Else;
+
+Checked_Switch_Else *Checked_Switch_Else__create(Source_Location *location, Checked_Statement *statement);
+
 typedef struct Checked_Union_Switch_Case {
     Source_Location *location;
     Checked_Union_Type *union_type;
@@ -665,10 +672,10 @@ typedef struct Checked_Union_Switch_Statement {
     Checked_Statement super;
     Checked_Expression *expression;
     Checked_Union_Switch_Case *first_union_switch_case;
-    Checked_Statement *else_statement;
+    Checked_Switch_Else *switch_else;
 } Checked_Union_Switch_Statement;
 
-Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Statement *else_statement);
+Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Switch_Else *switch_else);
 
 typedef struct Checked_Variable_Statement {
     Checked_Statement super;
