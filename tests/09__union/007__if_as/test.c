@@ -14,16 +14,16 @@ struct Value {
 
 int32_t main();
 
-#line 6 "tests/09__union/007__if_in/test.code"
+#line 6 "tests/09__union/007__if_as/test.code"
 int32_t main() {
-#line 7 "tests/09__union/007__if_in/test.code"
+#line 7 "tests/09__union/007__if_as/test.code"
     struct Value value = (struct Value){.variant = 2, .variant_2 = 42};
-#line 9 "tests/09__union/007__if_in/test.code"
+#line 9 "tests/09__union/007__if_as/test.code"
     if (value.variant == 2) {
-#line 10 "tests/09__union/007__if_in/test.code"
+#line 10 "tests/09__union/007__if_as/test.code"
         return value.variant_2 - 42;
     }
-#line 13 "tests/09__union/007__if_in/test.code"
+#line 13 "tests/09__union/007__if_as/test.code"
     return 1;
 }
 

@@ -1,8 +1,0 @@
-{
-    "compile": {
-        "error": 1,
-        "stderr": [
-            "tests/09__union/007__if_in_unexpected_expression/test.code:13:25: Only symbol expressions are currently supported in union if statements"
-        ]
-    }
-}

@@ -1,7 +1,7 @@
 func main() -> i32 {
     let value = 13
 
-    if value_variant in value is i32 {
+    if value is i32 {
         return 1
     }
 

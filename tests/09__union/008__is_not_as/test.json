@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__union/008__is_not_as/test.code:9:8: If condition cannot have a variant alias"
+        ]
+    }
+}

@@ -305,9 +305,10 @@ Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, T
     return (Parsed_Statement *)statement;
 }
 
-Parsed_Statement *Parsed_If_Statement__create(Source_Location *location, Parsed_Expression *condition_expression, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
+Parsed_Statement *Parsed_If_Statement__create(Source_Location *location, Parsed_Expression *condition_expression, Identifier_Token *variant_alias, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
     Parsed_If_Statement *statement = (Parsed_If_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IF, sizeof(Parsed_If_Statement), location);
     statement->condition_expression = condition_expression;
+    statement->variant_alias = variant_alias;
     statement->true_statement = true_statement;
     statement->false_statement = false_statement;
     return (Parsed_Statement *)statement;
@@ -402,16 +403,6 @@ Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type) {
 Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location, Token *name) {
     Parsed_Union_Statement *statement = (Parsed_Union_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__UNION, sizeof(Parsed_Union_Statement), location, name);
     statement->first_variant = NULL;
-    return statement;
-}
-
-Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Type *variant_type, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
-    Parsed_Union_If_Statement *statement = (Parsed_Union_If_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__UNION_IF, sizeof(Parsed_Union_If_Statement), location);
-    statement->variant_alias = variant_alias;
-    statement->expression = expression;
-    statement->variant_type = variant_type;
-    statement->true_statement = true_statement;
-    statement->false_statement = false_statement;
     return statement;
 }
 

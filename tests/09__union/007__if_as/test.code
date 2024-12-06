@@ -6,8 +6,8 @@ union Value {
 func main() -> i32 {
     let value: Value = 42
 
-    if value_variant in value is i32 {
-        return value_variant - 42
+    if value is i32 as integer {
+        return integer - 42
     }
 
     return 1

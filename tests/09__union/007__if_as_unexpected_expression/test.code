@@ -10,7 +10,7 @@ struct Item {
 func main() -> i32 {
     let item = Item(value: Value(42))
 
-    if value_variant in item.value is i32 {
+    if item.value is i32 as integer {
         return 1
     }
 

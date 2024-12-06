@@ -65,7 +65,7 @@ func @Parser.parse_additive_expression(self) -> Expression {
     let expression = self.parse_multiplicative_expression()
     loop {
         let token = self.tokenizer.peek_token()
-        if plus in token is Plus {
+        if token is Plus as plus {
             self.tokenizer.next_token()
             let other_expression = self.parse_multiplicative_expression()
             expression = Addition(
@@ -73,7 +73,7 @@ func @Parser.parse_additive_expression(self) -> Expression {
                 left: alloc(expression)
                 right: alloc(other_expression)
             )
-        } else if minus in token is Minus {
+        } else if token is Minus as minus {
             self.tokenizer.next_token()
             let other_expression = self.parse_multiplicative_expression()
             expression = Subtraction(
@@ -92,7 +92,7 @@ func @Parser.parse_multiplicative_expression(self) -> Expression {
     let expression = self.parse_primary_expression()
     loop {
         let token = self.tokenizer.peek_token()
-        if multiply in token is Multiply {
+        if token is Multiply as multiply {
             self.tokenizer.next_token()
             let other_expression = self.parse_primary_expression()
             expression = Multiplication(
@@ -100,7 +100,7 @@ func @Parser.parse_multiplicative_expression(self) -> Expression {
                 left: alloc(expression)
                 right: alloc(other_expression)
             )
-        } else if divide in token is Divide {
+        } else if token is Divide as divide {
             self.tokenizer.next_token()
             let other_expression = self.parse_primary_expression()
             expression = Division(
@@ -117,7 +117,7 @@ func @Parser.parse_multiplicative_expression(self) -> Expression {
 
 func @Parser.parse_primary_expression(self) -> Expression {
     let token = self.tokenizer.next_token()
-    if number in token is Number {
+    if token is Number as number {
         return number
     }
     return Error(

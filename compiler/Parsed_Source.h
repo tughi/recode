@@ -362,7 +362,6 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__SWITCH,
     PARSED_STATEMENT_KIND__TRAIT,
     PARSED_STATEMENT_KIND__UNION,
-    PARSED_STATEMENT_KIND__UNION_IF,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
 } Parsed_Statement_Kind;
@@ -442,11 +441,12 @@ Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, T
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
     Parsed_Expression *condition_expression;
+    Identifier_Token *variant_alias;
     Parsed_Statement *true_statement;
     Parsed_Statement *false_statement;
 } Parsed_If_Statement;
 
-Parsed_Statement *Parsed_If_Statement__create(Source_Location *location, Parsed_Expression *condition_expression, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
+Parsed_Statement *Parsed_If_Statement__create(Source_Location *location, Parsed_Expression *condition_expression, Identifier_Token *variant_alias, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
 
 typedef struct Parsed_Loop_Statement {
     Parsed_Statement super;
@@ -541,17 +541,6 @@ typedef struct Parsed_Union_Statement {
 } Parsed_Union_Statement;
 
 Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location *location, Token *name);
-
-typedef struct Parsed_Union_If_Statement {
-    Parsed_Statement super;
-    Identifier_Token *variant_alias;
-    Parsed_Expression *expression;
-    Parsed_Type *variant_type;
-    Parsed_Statement *true_statement;
-    Parsed_Statement *false_statement;
-} Parsed_Union_If_Statement;
-
-Parsed_Union_If_Statement *Parsed_Union_If_Statement__create(Source_Location *location, Identifier_Token *variant_alias, Parsed_Expression *expression, Parsed_Type *variant_type, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
 
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;

@@ -1411,7 +1411,35 @@ Checked_Expression_Statement *Checker__check_expression_statement(Checker *self,
 Checked_If_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statement *parsed_statement) {
     Checked_Expression *considition_expression = Checker__check_expression(self, parsed_statement->condition_expression, (Checked_Type *)self->bool_type);
     Checker__require_same_type(self, (Checked_Type *)self->bool_type, considition_expression->type, considition_expression->location);
-    Checked_Statement *true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+    Checked_Statement *true_statement;
+    if (parsed_statement->variant_alias) {
+        if (considition_expression->kind != CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT) {
+            pWriter__begin_location_message(stderr_writer, considition_expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Is_Union_Variant_Expression *is_union_variant_expression = (Checked_Is_Union_Variant_Expression *)considition_expression;
+        if (is_union_variant_expression->is_not) {
+            pWriter__begin_location_message(stderr_writer, is_union_variant_expression->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        if (is_union_variant_expression->union_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
+            pWriter__begin_location_message(stderr_writer, is_union_variant_expression->union_expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in if-as statements");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        self->symbols = Checked_Symbols__create(self->symbols);
+        Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_union_variant_expression->union_expression, is_union_variant_expression->union_variant);
+        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+        self->symbols = self->symbols->parent;
+    } else {
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+    }
     Checked_Statement *false_statement = NULL;
     if (parsed_statement->false_statement != NULL) {
         false_statement = Checker__check_statement(self, parsed_statement->false_statement);
@@ -1466,55 +1494,6 @@ Checked_Statement *Checker__check_switch_statement(Checker *self, Parsed_Switch_
     pWriter__write__cstring(stderr_writer, " expressions yet");
     pWriter__end_location_message(stderr_writer);
     panic();
-}
-
-Checked_Union_If_Statement *Checker__check_union_if_statement(Checker *self, Parsed_Union_If_Statement *parsed_statement) {
-    Checked_Expression *union_expression = Checker__check_expression(self, parsed_statement->expression, NULL);
-    if (union_expression->type->kind != CHECKED_TYPE_KIND__UNION) {
-        pWriter__begin_location_message(stderr_writer, union_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Not a union type: ");
-        pWriter__write__checked_type(stderr_writer, union_expression->type);
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    if (union_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
-        pWriter__begin_location_message(stderr_writer, union_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in union if statements");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    Checked_Union_Type *union_type = (Checked_Union_Type *)union_expression->type;
-    Checked_Type *variant_type = Checker__resolve_type(self, parsed_statement->variant_type);
-    Checked_Union_Variant *union_variant = union_type->first_variant;
-    for (; union_variant != NULL; union_variant = union_variant->next_variant) {
-        if (Checked_Type__equals(union_variant->type, variant_type)) {
-            break;
-        }
-    }
-    if (union_variant == NULL) {
-        pWriter__begin_location_message(stderr_writer, parsed_statement->variant_type->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "No ");
-        pWriter__write__checked_type(stderr_writer, variant_type);
-        pWriter__write__cstring(stderr_writer, " variant in ");
-        pWriter__write__checked_type(stderr_writer, (Checked_Type *)union_type);
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-
-    // True branch
-    self->symbols = Checked_Symbols__create(self->symbols);
-    Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, union_expression, union_variant);
-    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
-    Checked_Statement *true_statement = Checker__check_statement(self, parsed_statement->true_statement);
-    self->symbols = self->symbols->parent;
-
-    // False branch
-    Checked_Statement *false_statement = NULL;
-    if (parsed_statement->false_statement != NULL) {
-        false_statement = Checker__check_statement(self, parsed_statement->false_statement);
-    }
-
-    return Checked_Union_If_Statement__create(parsed_statement->super.location, union_expression, union_variant, true_statement, false_statement);
 }
 
 Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement, Checked_Expression *union_expression, Checked_Union_Type *union_type) {
@@ -1742,8 +1721,6 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return (Checked_Statement *)Checker__check_return_statement(self, (Parsed_Return_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__SWITCH:
         return Checker__check_switch_statement(self, (Parsed_Switch_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__UNION_IF:
-        return (Checked_Statement *)Checker__check_union_if_statement(self, (Parsed_Union_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__VARIABLE:
         return (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__WHILE:

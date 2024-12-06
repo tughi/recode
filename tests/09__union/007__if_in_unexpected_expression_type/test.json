@@ -1,8 +1,0 @@
-{
-    "compile": {
-        "error": 1,
-        "stderr": [
-            "tests/09__union/007__if_in_unexpected_expression_type/test.code:4:25: Not a union type: i32"
-        ]
-    }
-}
