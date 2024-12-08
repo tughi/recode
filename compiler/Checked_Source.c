@@ -433,6 +433,7 @@ Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind
     expression->kind = kind;
     expression->location = location;
     expression->type = type;
+    expression->temp_variable_name = NULL;
     return expression;
 }
 

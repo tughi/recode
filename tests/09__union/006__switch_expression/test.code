@@ -1,0 +1,21 @@
+union Value {
+    bool
+    i8
+    i32
+}
+
+struct Literal {
+    value: Value
+}
+
+func main() -> i32 {
+    let literal = Literal(value: Value(42))
+    switch literal.value {
+        is i32 as value {
+            return value - 42
+        }
+        else {
+            return 1
+        }
+    }
+}

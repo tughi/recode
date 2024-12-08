@@ -313,7 +313,11 @@ void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_E
 void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expression *expression) {
     if (expression->symbol->kind == CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT) {
         Checked_Union_Switch_Variant_Symbol *variant_symbol = (Checked_Union_Switch_Variant_Symbol *)expression->symbol;
-        Generator__generate_expression(self, variant_symbol->union_expression);
+        if (variant_symbol->union_expression->temp_variable_name == NULL) {
+            Generator__generate_expression(self, variant_symbol->union_expression);
+        } else {
+            pWriter__write__string(self->writer, variant_symbol->union_expression->temp_variable_name);
+        }
         if (variant_symbol->union_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
             pWriter__write__cstring(self->writer, "->");
         } else {
@@ -513,11 +517,14 @@ void Generator__generate_union_if_statement(Generator *self, Checked_Union_If_St
 void Generator__generate_union_switch_statement(Generator *self, Checked_Union_Switch_Statement *statement) {
     // The switch statement is generated as if-else statements to allow the use of break statements within the cases.
 
-    // This is a trick for debuggers to stop at the beginning of the switch statement.
-    pWriter__write__cstring(self->writer, "while (false) {");
-    pWriter__end_line(self->writer);
-    Generator__write_identation(self);
-    pWriter__write__cstring(self->writer, "}");
+    // Store the expression in a variable to avoid evaluating it multiple times.
+    statement->expression->temp_variable_name = String__create_from("__switch_");
+    String__append_int16_t(statement->expression->temp_variable_name, statement->super.location->line);
+    String__append_cstring(statement->expression->temp_variable_name, "_value__");
+    pWriter__write__cdecl(self->writer, statement->expression->temp_variable_name, statement->expression->type);
+    pWriter__write__cstring(self->writer, " = ");
+    Generator__generate_expression(self, statement->expression);
+    pWriter__write__char(self->writer, ';');
 
     Checked_Union_Switch_Case *union_switch_case = statement->first_union_switch_case;
     for (; union_switch_case != NULL; union_switch_case = union_switch_case->next_union_switch_case) {
@@ -528,7 +535,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
             pWriter__write__cstring(self->writer, "else ");
         }
         pWriter__write__cstring(self->writer, "if (");
-        Generator__generate_expression(self, statement->expression);
+        pWriter__write__string(self->writer, statement->expression->temp_variable_name);
         if (statement->expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
             pWriter__write__cstring(self->writer, "->");
         } else {
@@ -545,7 +552,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
         Generator__write_source_location(self, statement->switch_else->location);
         Generator__write_identation(self);
         if (statement->first_union_switch_case != NULL) {
-            pWriter__write__cstring(self->writer, " else ");
+            pWriter__write__cstring(self->writer, "else ");
         }
         Generator__generate_statement(self, statement->switch_else->statement);
     }

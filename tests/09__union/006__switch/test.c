@@ -31,27 +31,25 @@ int32_t main() {
 #line 14 "tests/09__union/006__switch/test.code"
     for (;;) {
 #line 15 "tests/09__union/006__switch/test.code"
-        while (false) {
-        }
+        struct Value __switch_15_value__ = value;
 #line 16 "tests/09__union/006__switch/test.code"
-        if (value.variant == 1) {
+        if (__switch_15_value__.variant == 1) {
 #line 17 "tests/09__union/006__switch/test.code"
             return 1;
         }
 #line 19 "tests/09__union/006__switch/test.code"
-        else if (value.variant == 2) {
+        else if (__switch_15_value__.variant == 2) {
 #line 20 "tests/09__union/006__switch/test.code"
-            while (false) {
-            }
+            struct Integer __switch_20_value__ = __switch_15_value__.variant_2;
 #line 21 "tests/09__union/006__switch/test.code"
-            if (value.variant_2.variant == 1) {
+            if (__switch_20_value__.variant == 1) {
 #line 22 "tests/09__union/006__switch/test.code"
                 return 2;
             }
 #line 24 "tests/09__union/006__switch/test.code"
-            else if (value.variant_2.variant == 2) {
+            else if (__switch_20_value__.variant == 2) {
 #line 25 "tests/09__union/006__switch/test.code"
-                if (value.variant_2.variant_2 != 42) {
+                if (__switch_20_value__.variant_2 != 42) {
 #line 26 "tests/09__union/006__switch/test.code"
                     return 3;
                 }
@@ -59,13 +57,13 @@ int32_t main() {
                 break;
             }
 #line 30 "tests/09__union/006__switch/test.code"
-            else if (value.variant_2.variant == 0) {
+            else if (__switch_20_value__.variant == 0) {
 #line 31 "tests/09__union/006__switch/test.code"
                 return 4;
             }
         }
 #line 35 "tests/09__union/006__switch/test.code"
-        else if (value.variant == 0) {
+        else if (__switch_15_value__.variant == 0) {
 #line 36 "tests/09__union/006__switch/test.code"
             return 5;
         }

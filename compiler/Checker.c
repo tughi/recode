@@ -1473,12 +1473,6 @@ Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *s
 
 Checked_Statement *Checker__check_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement) {
     Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, NULL);
-    if (expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
-        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in switch statements");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
     if (expression->type->kind == CHECKED_TYPE_KIND__UNION) {
         return (Checked_Statement *)Checker__check_union_switch_statement(self, parsed_statement, expression, (Checked_Union_Type *)expression->type);
     }

@@ -97,6 +97,8 @@ typedef struct Checked_Expression {
     Checked_Expression_Kind kind;
     Source_Location *location;
     Checked_Type *type;
+
+    String *temp_variable_name; // Used by the generator to store the result of the expression
 } Checked_Expression;
 
 bool Checked_Expression__is_mutable(Checked_Expression *self);

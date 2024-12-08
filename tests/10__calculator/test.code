@@ -64,25 +64,28 @@ func @Parser.parse_expression(self) -> Expression {
 func @Parser.parse_additive_expression(self) -> Expression {
     let expression = self.parse_multiplicative_expression()
     loop {
-        let token = self.tokenizer.peek_token()
-        if token is Plus as plus {
-            self.tokenizer.next_token()
-            let other_expression = self.parse_multiplicative_expression()
-            expression = Addition(
-                span: Span(start: expression.span().start, end: other_expression.span().end)
-                left: alloc(expression)
-                right: alloc(other_expression)
-            )
-        } else if token is Minus as minus {
-            self.tokenizer.next_token()
-            let other_expression = self.parse_multiplicative_expression()
-            expression = Subtraction(
-                span: Span(start: expression.span().start, end: other_expression.span().end)
-                left: alloc(expression)
-                right: alloc(other_expression)
-            )
-        } else {
-            break
+        switch self.tokenizer.peek_token() {
+            is Plus as plus {
+                self.tokenizer.next_token()
+                let other_expression = self.parse_multiplicative_expression()
+                expression = Addition(
+                    span: Span(start: expression.span().start, end: other_expression.span().end)
+                    left: alloc(expression)
+                    right: alloc(other_expression)
+                )
+            }
+            is Minus as minus {
+                self.tokenizer.next_token()
+                let other_expression = self.parse_multiplicative_expression()
+                expression = Subtraction(
+                    span: Span(start: expression.span().start, end: other_expression.span().end)
+                    left: alloc(expression)
+                    right: alloc(other_expression)
+                )
+            }
+            else {
+                break
+            }
         }
     }
     return expression

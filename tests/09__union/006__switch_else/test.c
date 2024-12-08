@@ -29,15 +29,14 @@ int32_t main() {
 #line 12 "tests/09__union/006__switch_else/test.code"
     struct Value value = (struct Value){.variant = 2, .variant_2 = (struct Integer){.variant = 2, .variant_2 = 42}};
 #line 14 "tests/09__union/006__switch_else/test.code"
-    while (false) {
-    }
+    struct Value __switch_14_value__ = value;
 #line 15 "tests/09__union/006__switch_else/test.code"
-    if (value.variant == 2) {
+    if (__switch_14_value__.variant == 2) {
 #line 16 "tests/09__union/006__switch_else/test.code"
         return 0;
     }
 #line 18 "tests/09__union/006__switch_else/test.code"
-     else {
+    else {
 #line 19 "tests/09__union/006__switch_else/test.code"
         return 1;
     }

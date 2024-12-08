@@ -29,8 +29,7 @@ int32_t main() {
 #line 12 "tests/09__union/006__switch_else_only/test.code"
     struct Value value = (struct Value){.variant = 2, .variant_2 = (struct Integer){.variant = 2, .variant_2 = 42}};
 #line 14 "tests/09__union/006__switch_else_only/test.code"
-    while (false) {
-    }
+    struct Value __switch_14_value__ = value;
 #line 15 "tests/09__union/006__switch_else_only/test.code"
     {
 #line 16 "tests/09__union/006__switch_else_only/test.code"
