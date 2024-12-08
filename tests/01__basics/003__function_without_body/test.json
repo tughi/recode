@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/003__function_without_body/test.code:1:6: Missing function body"
+            "tests/01__basics/003__function_without_body/test.code:1:6-10: Missing function body"
         ]
     }
 }

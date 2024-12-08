@@ -1,12 +1,12 @@
 {
     "compile": {
         "stderr": [
-            "tests/01__basics/003__calling_coding_style/test.code:13:10: Consumed 9 spaces where 8 were expected",
-            "tests/01__basics/003__calling_coding_style/test.code:19:11: Consumed 1 spaces where 0 were expected",
-            "tests/01__basics/003__calling_coding_style/test.code:19:13: Consumed 0 spaces where 1 were expected",
-            "tests/01__basics/003__calling_coding_style/test.code:19:24: Consumed 1 spaces where 0 were expected",
-            "tests/01__basics/003__calling_coding_style/test.code:21:10: Multi-line argument list must start on a new line",
-            "tests/01__basics/003__calling_coding_style/test.code:28:10: Multi-line argument list must end on a new line"
+            "tests/01__basics/003__calling_coding_style/test.code:13:10-11: Consumed 9 spaces where 8 were expected",
+            "tests/01__basics/003__calling_coding_style/test.code:19:11-12: Consumed 1 spaces where 0 were expected",
+            "tests/01__basics/003__calling_coding_style/test.code:19:13-14: Consumed 0 spaces where 1 were expected",
+            "tests/01__basics/003__calling_coding_style/test.code:19:24-25: Consumed 1 spaces where 0 were expected",
+            "tests/01__basics/003__calling_coding_style/test.code:21:10-11: Multi-line argument list must start on a new line",
+            "tests/01__basics/003__calling_coding_style/test.code:28:10-11: Multi-line argument list must end on a new line"
         ]
     }
 }

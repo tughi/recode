@@ -8,6 +8,7 @@ typedef struct Scanner {
     size_t current_char_index;
     uint16_t current_line;
     uint16_t current_column;
+    Source_Location current_location;
     Token *current_token;
 } Scanner;
 

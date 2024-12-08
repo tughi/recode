@@ -7,11 +7,11 @@ typedef struct Generator {
     uint16_t identation;
 } Generator;
 
-void Generator__write_source_location(Generator *self, Source_Location *location) {
+void Generator__write_source_location(Generator *self, Source_Location location) {
     pWriter__write__cstring(self->writer, "#line ");
-    pWriter__write__int64(self->writer, (int64_t)location->line);
+    pWriter__write__int64(self->writer, location.start_line);
     pWriter__write__cstring(self->writer, " \"");
-    pWriter__write__string(self->writer, location->source->file_path);
+    pWriter__write__string(self->writer, location.source->file_path);
     pWriter__write__cstring(self->writer, "\"\n");
 }
 
@@ -519,7 +519,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
 
     // Store the expression in a variable to avoid evaluating it multiple times.
     statement->expression->temp_variable_name = String__create_from("__switch_");
-    String__append_int16_t(statement->expression->temp_variable_name, statement->super.location->line);
+    String__append_int16_t(statement->expression->temp_variable_name, statement->super.location.start_line);
     String__append_cstring(statement->expression->temp_variable_name, "_value__");
     pWriter__write__cdecl(self->writer, statement->expression->temp_variable_name, statement->expression->type);
     pWriter__write__cstring(self->writer, " = ");
@@ -831,7 +831,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source)) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
             switch (named_type->super.kind) {
             case CHECKED_TYPE_KIND__EXTERNAL:
@@ -857,7 +857,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source)) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
             Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
             if (!type->has_generated_definition) {
                 Generator__define_type(&generator, type);
@@ -869,7 +869,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all global variables */
     Checked_Statement *checked_statement = checked_source->statements->first_statement;
     while (checked_statement != NULL) {
-        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location != NULL && checked_statement->location->source == checked_source->first_source) {
+        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location.source == checked_source->first_source) {
             Generator__generate_variable_statement(&generator, (Checked_Variable_Statement *)checked_statement);
             pWriter__end_line(generator.writer);
         } else {
@@ -884,7 +884,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->location.source == checked_source->first_source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
                 Generator__declare_function(&generator, (Checked_Function_Symbol *)checked_symbol);
                 pWriter__end_line(generator.writer);
@@ -908,7 +908,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->location.source == checked_source->first_source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
                 Generator__generate_function(&generator, (Checked_Function_Symbol *)checked_symbol);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {

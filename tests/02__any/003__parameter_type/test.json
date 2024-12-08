@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/02__any/003__parameter_type/test.code:1:18: Cannot use Any as parameter type"
+            "tests/02__any/003__parameter_type/test.code:1:18-21: Cannot use Any as parameter type"
         ]
     }
 }

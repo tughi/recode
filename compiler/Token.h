@@ -20,76 +20,76 @@ typedef enum Token_Kind {
 
 typedef struct Token {
     Token_Kind kind;
-    Source_Location *location;
+    Source_Location location;
     String *lexeme;
     struct Token *next_token;
 } Token;
 
-Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location *location, String *lexeme);
+Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location location, String *lexeme);
 
 typedef struct Character_Token {
     Token super;
     char value;
 } Character_Token;
 
-Character_Token *Character_Token__create(Source_Location *location, String *lexeme, char value);
+Character_Token *Character_Token__create(Source_Location location, String *lexeme, char value);
 
 typedef struct Comment_Token {
     Token super;
 } Comment_Token;
 
-Comment_Token *Comment_Token__create(Source_Location *location, String *lexeme);
+Comment_Token *Comment_Token__create(Source_Location location, String *lexeme);
 
 typedef struct End_Of_File_Token {
     Token super;
 } End_Of_File_Token;
 
-End_Of_File_Token *End_Of_File_Token__create(Source_Location *location, String *lexeme);
+End_Of_File_Token *End_Of_File_Token__create(Source_Location location, String *lexeme);
 
 typedef struct End_Of_Line_Token {
     Token super;
 } End_Of_Line_Token;
 
-End_Of_Line_Token *End_Of_Line_Token__create(Source_Location *location, String *lexeme);
+End_Of_Line_Token *End_Of_Line_Token__create(Source_Location location, String *lexeme);
 
 typedef struct Error_Token {
     Token super;
 } Error_Token;
 
-Error_Token *Error_Token__create(Source_Location *location, String *lexeme);
+Error_Token *Error_Token__create(Source_Location location, String *lexeme);
 
 typedef struct Identifier_Token {
     Token super;
 } Identifier_Token;
 
-Identifier_Token *Identifier_Token__create(Source_Location *location, String *lexeme);
+Identifier_Token *Identifier_Token__create(Source_Location location, String *lexeme);
 
 typedef struct Integer_Token {
     Token super;
     uint64_t value;
 } Integer_Token;
 
-Integer_Token *Integer_Token__create(Source_Location *location, String *lexeme, uint64_t value);
+Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value);
 
 typedef struct Other_Token {
     Token super;
 } Other_Token;
 
-Other_Token *Other_Token__create(Source_Location *location, String *lexeme);
+Other_Token *Other_Token__create(Source_Location location, String *lexeme);
 
 typedef struct Space_Token {
     Token super;
     uint16_t count;
 } Space_Token;
 
-Space_Token *Space_Token__create(Source_Location *location, String *lexeme, uint16_t count);
+Space_Token *Space_Token__create(Source_Location location, String *lexeme, uint16_t count);
 
 typedef struct String_Token {
     Token super;
     String *value;
 } String_Token;
 
-String_Token *String_Token__create(Source_Location *location, String *lexeme, String *value);
+String_Token *String_Token__create(Source_Location location, String *lexeme, String *value);
 
 bool Token__is_alloc(Token *self);
 bool Token__is_ampersand(Token *self);

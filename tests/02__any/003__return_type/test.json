@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/02__any/003__return_type/test.code:1:26: Cannot use Any as return type"
+            "tests/02__any/003__return_type/test.code:1:26-29: Cannot use Any as return type"
         ]
     }
 }

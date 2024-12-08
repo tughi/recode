@@ -1,6 +1,6 @@
 #include "Token.h"
 
-Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location *location, String *lexeme) {
+Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location location, String *lexeme) {
     Token *token = (Token *)malloc(kind_size);
     token->kind = kind;
     token->location = location;
@@ -9,49 +9,49 @@ Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location *lo
     return token;
 }
 
-Character_Token *Character_Token__create(Source_Location *location, String *lexeme, char value) {
+Character_Token *Character_Token__create(Source_Location location, String *lexeme, char value) {
     Character_Token *token = (Character_Token *)Token__create_kind(TOKEN_KIND__CHARACTER, sizeof(Character_Token), location, lexeme);
     token->value = value;
     return token;
 }
 
-Comment_Token *Comment_Token__create(Source_Location *location, String *lexeme) {
+Comment_Token *Comment_Token__create(Source_Location location, String *lexeme) {
     return (Comment_Token *)Token__create_kind(TOKEN_KIND__COMMENT, sizeof(Comment_Token), location, lexeme);
 }
 
-End_Of_File_Token *End_Of_File_Token__create(Source_Location *location, String *lexeme) {
+End_Of_File_Token *End_Of_File_Token__create(Source_Location location, String *lexeme) {
     return (End_Of_File_Token *)Token__create_kind(TOKEN_KIND__END_OF_FILE, sizeof(End_Of_File_Token), location, lexeme);
 }
 
-End_Of_Line_Token *End_Of_Line_Token__create(Source_Location *location, String *lexeme) {
+End_Of_Line_Token *End_Of_Line_Token__create(Source_Location location, String *lexeme) {
     return (End_Of_Line_Token *)Token__create_kind(TOKEN_KIND__END_OF_LINE, sizeof(End_Of_Line_Token), location, lexeme);
 }
 
-Error_Token *Error_Token__create(Source_Location *location, String *lexeme) {
+Error_Token *Error_Token__create(Source_Location location, String *lexeme) {
     return (Error_Token *)Token__create_kind(TOKEN_KIND__ERROR, sizeof(Error_Token), location, lexeme);
 }
 
-Identifier_Token *Identifier_Token__create(Source_Location *location, String *lexeme) {
+Identifier_Token *Identifier_Token__create(Source_Location location, String *lexeme) {
     return (Identifier_Token *)Token__create_kind(TOKEN_KIND__IDENTIFIER, sizeof(Identifier_Token), location, lexeme);
 }
 
-Integer_Token *Integer_Token__create(Source_Location *location, String *lexeme, uint64_t value) {
+Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value) {
     Integer_Token *token = (Integer_Token *)Token__create_kind(TOKEN_KIND__INTEGER, sizeof(Integer_Token), location, lexeme);
     token->value = value;
     return token;
 }
 
-Other_Token *Other_Token__create(Source_Location *location, String *lexeme) {
+Other_Token *Other_Token__create(Source_Location location, String *lexeme) {
     return (Other_Token *)Token__create_kind(TOKEN_KIND__OTHER, sizeof(Other_Token), location, lexeme);
 }
 
-Space_Token *Space_Token__create(Source_Location *location, String *lexeme, uint16_t count) {
+Space_Token *Space_Token__create(Source_Location location, String *lexeme, uint16_t count) {
     Space_Token *token = (Space_Token *)Token__create_kind(TOKEN_KIND__SPACE, sizeof(Space_Token), location, lexeme);
     token->count = count;
     return token;
 }
 
-String_Token *String_Token__create(Source_Location *location, String *lexeme, String *value) {
+String_Token *String_Token__create(Source_Location location, String *lexeme, String *value) {
     String_Token *token = (String_Token *)Token__create_kind(TOKEN_KIND__STRING, sizeof(String_Token), location, lexeme);
     token->value = value;
     return token;

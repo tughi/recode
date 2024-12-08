@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/029__assign_function_parameter/test.code:2:5: Cannot assign to immutable expression"
+            "tests/01__basics/029__assign_function_parameter/test.code:2:5-9: Cannot assign to immutable expression"
         ]
     }
 }

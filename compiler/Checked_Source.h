@@ -40,7 +40,7 @@ struct Checked_Type_Dependency;
 
 typedef struct Checked_Type {
     Checked_Type_Kind kind;
-    Source_Location *location;
+    Source_Location location;
     struct Checked_Type *next_type;
     struct Checked_Type_Dependency *first_dependency;
 
@@ -52,7 +52,7 @@ struct Checked_Type_Dependency {
     struct Checked_Type_Dependency *next_dependency;
 };
 
-Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location);
+Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location);
 
 bool Checked_Type__is_numeric_type(Checked_Type *self);
 
@@ -95,7 +95,7 @@ typedef enum Checked_Expression_Kind {
 
 typedef struct Checked_Expression {
     Checked_Expression_Kind kind;
-    Source_Location *location;
+    Source_Location location;
     Checked_Type *type;
 
     String *temp_variable_name; // Used by the generator to store the result of the expression
@@ -109,30 +109,30 @@ typedef struct Checked_Array_Type {
     Checked_Expression *size_expression;
 } Checked_Array_Type;
 
-Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, Checked_Expression *size_expression);
+Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression);
 
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
 } Checked_Named_Type;
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location, String *name);
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
 } Checked_External_Type;
 
-Checked_External_Type *Checked_External_Type__create(Source_Location *location, String *name);
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name);
 
 typedef struct Checked_Function_Parameter {
-    Source_Location *location;
+    Source_Location location;
     String *label;
     String *name;
     Checked_Type *type;
     struct Checked_Function_Parameter *next_parameter;
 } Checked_Function_Parameter;
 
-Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location *location, String *label, String *name, Checked_Type *type);
+Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type);
 
 typedef struct Checked_Function_Type {
     Checked_Type super;
@@ -140,7 +140,7 @@ typedef struct Checked_Function_Type {
     Checked_Function_Parameter *first_parameter;
 } Checked_Function_Type;
 
-Checked_Function_Type *Checked_Function_Type__create(Source_Location *location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type);
+Checked_Function_Type *Checked_Function_Type__create(Source_Location location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type);
 
 bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function_Type *other);
 
@@ -149,49 +149,49 @@ typedef struct Checked_Function_Pointer_Type {
     Checked_Function_Type *function_type;
 } Checked_Function_Pointer_Type;
 
-Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location *location, Checked_Function_Type *function_type);
+Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location location, Checked_Function_Type *function_type);
 
 typedef struct Checked_Multi_Pointer_Type {
     Checked_Type super;
     Checked_Type *item_type;
 } Checked_Multi_Pointer_Type;
 
-Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location *location, Checked_Type *item_type);
+Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location location, Checked_Type *item_type);
 
 typedef struct Checked_Pointer_Type {
     Checked_Type super;
     Checked_Type *other_type;
 } Checked_Pointer_Type;
 
-Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location *location, Checked_Type *other_type);
+Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location location, Checked_Type *other_type);
 
 typedef struct Checked_Struct_Member {
-    Source_Location *location;
+    Source_Location location;
     String *name;
     Checked_Type *type;
     struct Checked_Struct_Member *next_member;
 } Checked_Struct_Member;
 
-Checked_Struct_Member *Checked_Struct_Member__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Struct_Type {
     Checked_Named_Type super;
     Checked_Struct_Member *first_member;
 } Checked_Struct_Type;
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location *location, String *name);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 
 typedef struct Checked_Trait_Method {
-    Source_Location *location;
+    Source_Location location;
     String *name;
     Checked_Function_Type *function_type;
     Checked_Struct_Member *struct_member;
     struct Checked_Trait_Method *next_method;
 } Checked_Trait_Method;
 
-Checked_Trait_Method *Checked_Trait_Method__create(Source_Location *location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member);
+Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member);
 
 typedef struct Checked_Trait_Type {
     Checked_Named_Type super;
@@ -200,7 +200,7 @@ typedef struct Checked_Trait_Type {
     Checked_Trait_Method *first_method;
 } Checked_Trait_Type;
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name);
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name);
 
 typedef struct Checked_Union_Variant {
     Checked_Type *type;
@@ -208,7 +208,7 @@ typedef struct Checked_Union_Variant {
     struct Checked_Union_Variant *next_variant;
 } Checked_Union_Variant;
 
-Checked_Union_Variant *Checked_Union_Variant__create(Source_Location *location, Checked_Type *type, int32_t index);
+Checked_Union_Variant *Checked_Union_Variant__create(Source_Location location, Checked_Type *type, int32_t index);
 
 typedef struct Checked_Union_Type {
     Checked_Named_Type super;
@@ -216,7 +216,7 @@ typedef struct Checked_Union_Type {
     int32_t variant_count;
 } Checked_Union_Type;
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location *location, String *name);
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -233,20 +233,20 @@ typedef enum Checked_Symbol_Kind {
 
 typedef struct Checked_Symbol {
     Checked_Symbol_Kind kind;
-    Source_Location *location;
+    Source_Location location;
     String *name;
     Checked_Type *type;
     struct Checked_Symbol *prev_symbol;
     struct Checked_Symbol *next_symbol;
 } Checked_Symbol;
 
-Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location *location, String *name, Checked_Type *type);
+Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Enum_Member_Symbol {
     Checked_Symbol super;
 } Checked_Enum_Member_Symbol;
 
-Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
@@ -264,11 +264,11 @@ typedef enum Checked_Statement_Kind {
 
 typedef struct Checked_Statement {
     Checked_Statement_Kind kind;
-    Source_Location *location;
+    Source_Location location;
     struct Checked_Statement *next_statement;
 } Checked_Statement;
 
-Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location *location);
+Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location location);
 
 typedef struct Checked_Statements {
     Checked_Statement *first_statement;
@@ -281,13 +281,14 @@ void Checked_Statements__append(Checked_Statements *self, Checked_Statement *sta
 
 typedef struct Checked_Function_Symbol {
     Checked_Symbol super;
+    Source_Location function_location;
     String *function_name;
     Checked_Function_Type *function_type;
     Checked_Type *receiver_type;
     Checked_Statements *checked_statements;
 } Checked_Function_Symbol;
 
-Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *symbol_name, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type);
+Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location location, String *symbol_name, Source_Location function_location, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type);
 
 void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol);
 
@@ -295,20 +296,20 @@ typedef struct Checked_Function_Parameter_Symbol {
     Checked_Symbol super;
 } Checked_Function_Parameter_Symbol;
 
-Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Type_Symbol {
     Checked_Symbol super;
     Checked_Named_Type *named_type;
 } Checked_Type_Symbol;
 
-Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
+Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
 
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
 } Checked_Variable_Symbol;
 
-Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Union_Switch_Variant_Symbol {
     Checked_Symbol super;
@@ -316,7 +317,7 @@ typedef struct Checked_Union_Switch_Variant_Symbol {
     Checked_Union_Variant *union_variant;
 } Checked_Union_Switch_Variant_Symbol;
 
-Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Source_Location *location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
+Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -332,14 +333,14 @@ void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbo
 
 Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, String *name);
 
-Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location *location, Checked_Type *type);
+Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location location, Checked_Type *type);
 
 typedef struct Checked_Alloc_Expression {
     Checked_Expression super;
     Checked_Expression *value_expression;
 } Checked_Alloc_Expression;
 
-Checked_Alloc_Expression *Checked_Alloc_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *value_expression);
+Checked_Alloc_Expression *Checked_Alloc_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *value_expression);
 
 typedef struct Checked_Binary_Expression {
     Checked_Expression super;
@@ -347,26 +348,26 @@ typedef struct Checked_Binary_Expression {
     Checked_Expression *right_expression;
 } Checked_Binary_Expression;
 
-Checked_Binary_Expression *Checked_Binary_Expression__create_kind(Checked_Expression_Kind kind, Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Binary_Expression *Checked_Binary_Expression__create_kind(Checked_Expression_Kind kind, Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Unary_Expression {
     Checked_Expression super;
     Checked_Expression *other_expression;
 } Checked_Unary_Expression;
 
-Checked_Unary_Expression *Checked_Unary_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Unary_Expression *Checked_Unary_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Add_Expression {
     Checked_Binary_Expression super;
 } Checked_Add_Expression;
 
-Checked_Add_Expression *Checked_Add_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Add_Expression *Checked_Add_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Address_Of_Expression {
     Checked_Unary_Expression super;
 } Checked_Address_Of_Expression;
 
-Checked_Address_Of_Expression *Checked_Address_Of_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Address_Of_Expression *Checked_Address_Of_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Array_Access_Expression {
     Checked_Expression super;
@@ -374,14 +375,14 @@ typedef struct Checked_Array_Access_Expression {
     Checked_Expression *index_expression;
 } Checked_Array_Access_Expression;
 
-Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *array_expression, Checked_Expression *index_expression);
+Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *array_expression, Checked_Expression *index_expression);
 
 typedef struct Checked_Bool_Expression {
     Checked_Expression super;
     bool value;
 } Checked_Bool_Expression;
 
-Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location *location, Checked_Type *type, bool value);
+Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location location, Checked_Type *type, bool value);
 
 typedef struct Checked_Call_Argument {
     Checked_Expression *expression;
@@ -396,65 +397,65 @@ typedef struct Checked_Call_Expression {
     Checked_Call_Argument *first_argument;
 } Checked_Call_Expression;
 
-Checked_Call_Expression *Checked_Call_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *callee_expression, Checked_Call_Argument *first_argument);
+Checked_Call_Expression *Checked_Call_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *callee_expression, Checked_Call_Argument *first_argument);
 
 typedef struct Checked_Cast_Expression {
     Checked_Expression super;
     Checked_Expression *other_expression;
 } Checked_Cast_Expression;
 
-Checked_Cast_Expression *Checked_Cast_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Cast_Expression *Checked_Cast_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Character_Expression {
     Checked_Expression super;
     char value;
 } Checked_Character_Expression;
 
-Checked_Character_Expression *Checked_Character_Expression__create(Source_Location *location, Checked_Type *type, char value);
+Checked_Character_Expression *Checked_Character_Expression__create(Source_Location location, Checked_Type *type, char value);
 
 typedef struct Checked_Dereference_Expression {
     Checked_Unary_Expression super;
 } Checked_Dereference_Expression;
 
-Checked_Dereference_Expression *Checked_Dereference_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Dereference_Expression *Checked_Dereference_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Divide_Expression {
     Checked_Binary_Expression super;
 } Checked_Divide_Expression;
 
-Checked_Divide_Expression *Checked_Divide_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Divide_Expression *Checked_Divide_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Equals_Expression {
     Checked_Binary_Expression super;
 } Checked_Equals_Expression;
 
-Checked_Equals_Expression *Checked_Equals_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Equals_Expression *Checked_Equals_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Greater_Expression {
     Checked_Binary_Expression super;
 } Checked_Greater_Expression;
 
-Checked_Greater_Expression *Checked_Greater_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Greater_Expression *Checked_Greater_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Greater_Or_Equals_Expression {
     Checked_Binary_Expression super;
 } Checked_Greater_Or_Equals_Expression;
 
-Checked_Greater_Or_Equals_Expression *Checked_Greater_Or_Equals_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Greater_Or_Equals_Expression *Checked_Greater_Or_Equals_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Group_Expression {
     Checked_Expression super;
     Checked_Expression *other_expression;
 } Checked_Group_Expression;
 
-Checked_Group_Expression *Checked_Group_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Group_Expression *Checked_Group_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Integer_Expression {
     Checked_Expression super;
     uint64_t value;
 } Checked_Integer_Expression;
 
-Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location *location, Checked_Type *type, uint64_t value);
+Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value);
 
 typedef struct Checked_Is_Union_Variant_Expression {
     Checked_Expression super;
@@ -463,31 +464,31 @@ typedef struct Checked_Is_Union_Variant_Expression {
     bool is_not;
 } Checked_Is_Union_Variant_Expression;
 
-Checked_Is_Union_Variant_Expression *Checked_Is_Union_Variant_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, bool is_not);
+Checked_Is_Union_Variant_Expression *Checked_Is_Union_Variant_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, bool is_not);
 
 typedef struct Checked_Less_Expression {
     Checked_Binary_Expression super;
 } Checked_Less_Expression;
 
-Checked_Less_Expression *Checked_Less_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Less_Expression *Checked_Less_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Less_Or_Equals_Expression {
     Checked_Binary_Expression super;
 } Checked_Less_Or_Equals_Expression;
 
-Checked_Less_Or_Equals_Expression *Checked_Less_Or_Equals_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Less_Or_Equals_Expression *Checked_Less_Or_Equals_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Logic_And_Expression {
     Checked_Binary_Expression super;
 } Checked_Logic_And_Expression;
 
-Checked_Logic_And_Expression *Checked_Logic_And_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Logic_And_Expression *Checked_Logic_And_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Logic_Or_Expression {
     Checked_Binary_Expression super;
 } Checked_Logic_Or_Expression;
 
-Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Make_Struct_Argument {
     Checked_Struct_Member *struct_member;
@@ -503,7 +504,7 @@ typedef struct Checked_Make_Struct_Expression {
     Checked_Make_Struct_Argument *first_argument;
 } Checked_Make_Struct_Expression;
 
-Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location *location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument);
+Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument);
 
 typedef struct Checked_Make_Union_Expression {
     Checked_Expression super;
@@ -512,7 +513,7 @@ typedef struct Checked_Make_Union_Expression {
     Checked_Expression *expression;
 } Checked_Make_Union_Expression;
 
-Checked_Make_Union_Expression *Checked_Make_Union_Expression__create(Source_Location *location, Checked_Type *type, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Expression *expression);
+Checked_Make_Union_Expression *Checked_Make_Union_Expression__create(Source_Location location, Checked_Type *type, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Expression *expression);
 
 typedef struct Checked_Member_Access_Expression {
     Checked_Expression super;
@@ -520,77 +521,77 @@ typedef struct Checked_Member_Access_Expression {
     Checked_Struct_Member *member;
 } Checked_Member_Access_Expression;
 
-Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
+Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
 
 typedef struct Checked_Minus_Expression {
     Checked_Unary_Expression super;
 } Checked_Minus_Expression;
 
-Checked_Minus_Expression *Checked_Minus_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Minus_Expression *Checked_Minus_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Modulo_Expression {
     Checked_Binary_Expression super;
 } Checked_Modulo_Expression;
 
-Checked_Modulo_Expression *Checked_Modulo_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Modulo_Expression *Checked_Modulo_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Multiply_Expression {
     Checked_Binary_Expression super;
 } Checked_Multiply_Expression;
 
-Checked_Multiply_Expression *Checked_Multiply_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Multiply_Expression *Checked_Multiply_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Not_Expression {
     Checked_Unary_Expression super;
 } Checked_Not_Expression;
 
-Checked_Not_Expression *Checked_Not_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *other_expression);
+Checked_Not_Expression *Checked_Not_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *other_expression);
 
 typedef struct Checked_Not_Equals_Expression {
     Checked_Binary_Expression super;
 } Checked_Not_Equals_Expression;
 
-Checked_Not_Equals_Expression *Checked_Not_Equals_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Not_Equals_Expression *Checked_Not_Equals_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Null_Expression {
     Checked_Expression super;
 } Checked_Null_Expression;
 
-Checked_Null_Expression *Checked_Null_Expression__create(Source_Location *location, Checked_Type *type);
+Checked_Null_Expression *Checked_Null_Expression__create(Source_Location location, Checked_Type *type);
 
 typedef struct Checked_Sizeof_Expression {
     Checked_Expression super;
     Checked_Type *sized_type;
 } Checked_Sizeof_Expression;
 
-Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location *location, Checked_Type *type, Checked_Type *sized_type);
+Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type);
 
 typedef struct Checked_String_Expression {
     Checked_Expression super;
     String *value;
 } Checked_String_Expression;
 
-Checked_String_Expression *Checked_String_Expression__create(Source_Location *location, Checked_Type *type, String *value);
+Checked_String_Expression *Checked_String_Expression__create(Source_Location location, Checked_Type *type, String *value);
 
 typedef struct Checked_String_Length_Expression {
     Checked_Expression super;
     Checked_Expression *string_expression;
 } Checked_String_Length_Expression;
 
-Checked_String_Length_Expression *Checked_String_Length_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *string_expression);
+Checked_String_Length_Expression *Checked_String_Length_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *string_expression);
 
 typedef struct Checked_Subtract_Expression {
     Checked_Binary_Expression super;
 } Checked_Subtract_Expression;
 
-Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Symbol_Expression {
     Checked_Expression super;
     Checked_Symbol *symbol;
 } Checked_Symbol_Expression;
 
-Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location *location, Checked_Type *type, Checked_Symbol *symbol);
+Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location location, Checked_Type *type, Checked_Symbol *symbol);
 
 typedef struct Checked_Assignment_Statement {
     Checked_Statement super;
@@ -598,27 +599,27 @@ typedef struct Checked_Assignment_Statement {
     Checked_Expression *value_expression;
 } Checked_Assignment_Statement;
 
-Checked_Assignment_Statement *Checked_Assignment_Statement__create(Source_Location *location, Checked_Expression *object_expression, Checked_Expression *value_expression);
+Checked_Assignment_Statement *Checked_Assignment_Statement__create(Source_Location location, Checked_Expression *object_expression, Checked_Expression *value_expression);
 
 typedef struct Checked_Block_Statement {
     Checked_Statement super;
     Checked_Statements *statements;
 } Checked_Block_Statement;
 
-Checked_Block_Statement *Checked_Block_Statement__create(Source_Location *location, Checked_Statements *statements);
+Checked_Block_Statement *Checked_Block_Statement__create(Source_Location location, Checked_Statements *statements);
 
 typedef struct Checked_Break_Statement {
     Checked_Statement super;
 } Checked_Break_Statement;
 
-Checked_Break_Statement *Checked_Break_Statement__create(Source_Location *location);
+Checked_Break_Statement *Checked_Break_Statement__create(Source_Location location);
 
 typedef struct Checked_Expression_Statement {
     Checked_Statement super;
     Checked_Expression *expression;
 } Checked_Expression_Statement;
 
-Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location *location, Checked_Expression *expression);
+Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location location, Checked_Expression *expression);
 
 typedef struct Checked_If_Statement {
     Checked_Statement super;
@@ -627,21 +628,21 @@ typedef struct Checked_If_Statement {
     Checked_Statement *false_statement;
 } Checked_If_Statement;
 
-Checked_If_Statement *Checked_If_Statement__create(Source_Location *location, Checked_Expression *condition_expression, Checked_Statement *true_statement, Checked_Statement *false_statement);
+Checked_If_Statement *Checked_If_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *true_statement, Checked_Statement *false_statement);
 
 typedef struct Checked_Loop_Statement {
     Checked_Statement super;
     Checked_Statement *body_statement;
 } Checked_Loop_Statement;
 
-Checked_Loop_Statement *Checked_Loop_Statement__create(Source_Location *location, Checked_Statement *body_statement);
+Checked_Loop_Statement *Checked_Loop_Statement__create(Source_Location location, Checked_Statement *body_statement);
 
 typedef struct Checked_Return_Statement {
     Checked_Statement super;
     Checked_Expression *expression;
 } Checked_Return_Statement;
 
-Checked_Return_Statement *Checked_Return_Statement__create(Source_Location *location, Checked_Expression *expression);
+Checked_Return_Statement *Checked_Return_Statement__create(Source_Location location, Checked_Expression *expression);
 
 typedef struct Checked_Union_If_Statement {
     Checked_Statement super;
@@ -651,24 +652,24 @@ typedef struct Checked_Union_If_Statement {
     Checked_Statement *false_statement;
 } Checked_Union_If_Statement;
 
-Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location *location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement);
+Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement);
 
 typedef struct Checked_Switch_Else {
-    Source_Location *location;
+    Source_Location location;
     Checked_Statement *statement;
 } Checked_Switch_Else;
 
-Checked_Switch_Else *Checked_Switch_Else__create(Source_Location *location, Checked_Statement *statement);
+Checked_Switch_Else *Checked_Switch_Else__create(Source_Location location, Checked_Statement *statement);
 
 typedef struct Checked_Union_Switch_Case {
-    Source_Location *location;
+    Source_Location location;
     Checked_Union_Type *union_type;
     Checked_Union_Variant *union_variant;
     Checked_Statement *statement;
     struct Checked_Union_Switch_Case *next_union_switch_case;
 } Checked_Union_Switch_Case;
 
-Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location *location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement);
+Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement);
 
 typedef struct Checked_Union_Switch_Statement {
     Checked_Statement super;
@@ -677,7 +678,7 @@ typedef struct Checked_Union_Switch_Statement {
     Checked_Switch_Else *switch_else;
 } Checked_Union_Switch_Statement;
 
-Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location *location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Switch_Else *switch_else);
+Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Switch_Else *switch_else);
 
 typedef struct Checked_Variable_Statement {
     Checked_Statement super;
@@ -686,7 +687,7 @@ typedef struct Checked_Variable_Statement {
     bool is_external;
 } Checked_Variable_Statement;
 
-Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location *location, Checked_Variable_Symbol *variable, Checked_Expression *expression, bool is_external);
+Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location location, Checked_Variable_Symbol *variable, Checked_Expression *expression, bool is_external);
 
 typedef struct Checked_While_Statement {
     Checked_Statement super;
@@ -694,7 +695,7 @@ typedef struct Checked_While_Statement {
     Checked_Statement *body_statement;
 } Checked_While_Statement;
 
-Checked_While_Statement *Checked_While_Statement__create(Source_Location *location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
+Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
 
 typedef struct Checked_Source {
     Source *first_source;

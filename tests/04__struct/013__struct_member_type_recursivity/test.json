@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/04__struct/013__struct_member_type_recursivity/test.code:2:11: Struct member cannot be of its own type"
+            "tests/04__struct/013__struct_member_type_recursivity/test.code:2:11-15: Struct member cannot be of its own type"
         ]
     }
 }

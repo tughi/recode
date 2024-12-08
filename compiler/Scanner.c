@@ -1,6 +1,6 @@
 #include "Scanner.h"
-#include "File.h"
 #include "Char.h"
+#include "File.h"
 
 char Scanner__peek_char(Scanner *self) {
     return self->source->content[self->current_char_index];
@@ -11,18 +11,18 @@ char Scanner__next_char(Scanner *self) {
     if (next_char != '\0') {
         self->current_char_index = self->current_char_index + 1;
         if (next_char == '\n') {
-            self->current_line = self->current_line + 1;
-            self->current_column = 1;
+            self->current_line = self->current_location.end_line = self->current_line + 1;
+            self->current_column = self->current_location.end_column = 1;
         } else {
-            self->current_column = self->current_column + 1;
+            self->current_column = self->current_location.end_column = self->current_column + 1;
         }
     }
     return next_char;
 }
 
-Token *Scanner__scan_character_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_character_token(Scanner *self, String *token_lexeme) {
     if (Scanner__next_char(self) != '\'') {
-        pWriter__begin_location_message(stderr_writer, source_location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, self->current_location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unexpected char");
         pWriter__end_location_message(stderr_writer);
         panic();
@@ -31,53 +31,53 @@ Token *Scanner__scan_character_token(Scanner *self, Source_Location *source_loca
 
     char next_char = Scanner__peek_char(self);
     if (char_is_end_of_line(next_char) || next_char == '\t') {
-        return (Token *)Error_Token__create(source_location, token_lexeme);
+        return (Token *)Error_Token__create(self->current_location, token_lexeme);
     }
 
     String__append_char(token_lexeme, Scanner__next_char(self));
     char value = next_char;
 
     if (value == '\'') {
-        return (Token *)Error_Token__create(source_location, token_lexeme);
+        return (Token *)Error_Token__create(self->current_location, token_lexeme);
     }
 
     if (value == '\\') {
         next_char = Scanner__peek_char(self);
         if (char_is_end_of_line(next_char) || next_char == '\t') {
-            return (Token *)Error_Token__create(source_location, token_lexeme);
+            return (Token *)Error_Token__create(self->current_location, token_lexeme);
         }
 
         String__append_char(token_lexeme, Scanner__next_char(self));
 
         value = escape_char_value(next_char);
         if (value == (char)-1) {
-            return (Token *)Error_Token__create(source_location, token_lexeme);
+            return (Token *)Error_Token__create(self->current_location, token_lexeme);
         }
     }
 
     if (Scanner__peek_char(self) != '\'') {
-        return (Token *)Error_Token__create(source_location, token_lexeme);
+        return (Token *)Error_Token__create(self->current_location, token_lexeme);
     }
 
     String__append_char(token_lexeme, Scanner__next_char(self));
-    return (Token *)Character_Token__create(source_location, token_lexeme, value);
+    return (Token *)Character_Token__create(self->current_location, token_lexeme, value);
 }
 
-Token *Scanner__scan_comment_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_comment_token(Scanner *self, String *token_lexeme) {
     do {
         String__append_char(token_lexeme, Scanner__next_char(self));
     } while (Scanner__peek_char(self) != '\n');
-    return (Token *)Comment_Token__create(source_location, token_lexeme);
+    return (Token *)Comment_Token__create(self->current_location, token_lexeme);
 }
 
-Token *Scanner__scan_identifier_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_identifier_token(Scanner *self, String *token_lexeme) {
     while (char_is_identifier_letter(Scanner__peek_char(self))) {
         String__append_char(token_lexeme, Scanner__next_char(self));
     }
-    return (Token *)Identifier_Token__create(source_location, token_lexeme);
+    return (Token *)Identifier_Token__create(self->current_location, token_lexeme);
 }
 
-Token *Scanner__scan_integer_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_integer_token(Scanner *self, String *token_lexeme) {
     uint64_t value = 0;
     if (Scanner__peek_char(self) == '0') {
         String__append_char(token_lexeme, Scanner__next_char(self));
@@ -108,21 +108,21 @@ Token *Scanner__scan_integer_token(Scanner *self, Source_Location *source_locati
             String__append_char(token_lexeme, c);
         }
     }
-    return (Token *)Integer_Token__create(source_location, token_lexeme, value);
+    return (Token *)Integer_Token__create(self->current_location, token_lexeme, value);
 }
 
-Token *Scanner__scan_space_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_space_token(Scanner *self, String *token_lexeme) {
     uint16_t count = 0;
     while (char_is_space(Scanner__peek_char(self))) {
         count = count + 1;
         String__append_char(token_lexeme, Scanner__next_char(self));
     }
-    return (Token *)Space_Token__create(source_location, token_lexeme, count);
+    return (Token *)Space_Token__create(self->current_location, token_lexeme, count);
 }
 
-Token *Scanner__scan_string_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
+Token *Scanner__scan_string_token(Scanner *self, String *token_lexeme) {
     if (Scanner__next_char(self) != '"') {
-        pWriter__begin_location_message(stderr_writer, source_location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, self->current_location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unexpected char");
         pWriter__end_location_message(stderr_writer);
         panic();
@@ -134,26 +134,26 @@ Token *Scanner__scan_string_token(Scanner *self, Source_Location *source_locatio
     while (true) {
         char next_char = Scanner__peek_char(self);
         if (char_is_end_of_line(next_char) || next_char == '\t') {
-            return (Token *)Error_Token__create(source_location, token_lexeme);
+            return (Token *)Error_Token__create(self->current_location, token_lexeme);
         }
 
         String__append_char(token_lexeme, Scanner__next_char(self));
 
         if (next_char == '"') {
-            return (Token *)String_Token__create(source_location, token_lexeme, value);
+            return (Token *)String_Token__create(self->current_location, token_lexeme, value);
         }
 
         if (next_char == '\\') {
             next_char = Scanner__peek_char(self);
             if (char_is_end_of_line(next_char) || next_char == '\t') {
-                return (Token *)Error_Token__create(source_location, token_lexeme);
+                return (Token *)Error_Token__create(self->current_location, token_lexeme);
             }
 
             String__append_char(token_lexeme, Scanner__next_char(self));
 
             next_char = escape_char_value(next_char);
             if (next_char == ((char)-1)) {
-                return (Token *)Error_Token__create(source_location, token_lexeme);
+                return (Token *)Error_Token__create(self->current_location, token_lexeme);
             }
         }
 
@@ -162,46 +162,48 @@ Token *Scanner__scan_string_token(Scanner *self, Source_Location *source_locatio
 }
 
 Token *Scanner__scan_token(Scanner *self) {
-    Source_Location *source_location = Source_Location__create(self->source, self->current_line, self->current_column);
+    self->current_location.start_line = self->current_location.end_line = self->current_line;
+    self->current_location.start_column = self->current_location.end_column = self->current_column;
+
     String *token_lexeme = String__create();
 
     char next_char = Scanner__peek_char(self);
 
     if (char_is_identifier_start(next_char)) {
-        return Scanner__scan_identifier_token(self, source_location, token_lexeme);
+        return Scanner__scan_identifier_token(self, token_lexeme);
     }
 
     if (char_is_digit(next_char)) {
-        return Scanner__scan_integer_token(self, source_location, token_lexeme);
+        return Scanner__scan_integer_token(self, token_lexeme);
     }
 
     if (char_is_space(next_char)) {
-        return Scanner__scan_space_token(self, source_location, token_lexeme);
+        return Scanner__scan_space_token(self, token_lexeme);
     }
 
     if (next_char == '\'') {
-        return Scanner__scan_character_token(self, source_location, token_lexeme);
+        return Scanner__scan_character_token(self, token_lexeme);
     }
 
     if (next_char == '\"') {
-        return Scanner__scan_string_token(self, source_location, token_lexeme);
+        return Scanner__scan_string_token(self, token_lexeme);
     }
 
     if (next_char == '\\') {
-        return Scanner__scan_comment_token(self, source_location, token_lexeme);
+        return Scanner__scan_comment_token(self, token_lexeme);
     }
 
     if (next_char == '\n') {
         String__append_char(token_lexeme, Scanner__next_char(self));
-        return (Token *)End_Of_Line_Token__create(source_location, token_lexeme);
+        return (Token *)End_Of_Line_Token__create(self->current_location, token_lexeme);
     }
 
     if (next_char == '\0') {
-        return (Token *)End_Of_File_Token__create(source_location, token_lexeme);
+        return (Token *)End_Of_File_Token__create(self->current_location, token_lexeme);
     }
 
     String__append_char(token_lexeme, Scanner__next_char(self));
-    return (Token *)Other_Token__create(source_location, token_lexeme);
+    return (Token *)Other_Token__create(self->current_location, token_lexeme);
 }
 
 Token *Scanner__next_token(Scanner *self) {
@@ -230,6 +232,14 @@ Scanner *Scanner__create(Source *source) {
     scanner->current_char_index = 0;
     scanner->current_line = 1;
     scanner->current_column = 1;
+
+    scanner->current_location = (Source_Location){
+        .source = source,
+        .start_line = 1,
+        .start_column = 1,
+        .end_line = 1,
+        .end_column = 1,
+    };
 
     scanner->current_token = Scanner__scan_token(scanner);
 
