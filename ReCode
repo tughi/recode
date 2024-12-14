@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 from typing import List, Optional
 
@@ -80,29 +81,42 @@ def build_stage(n):
 
 
 def assemble(source_file, output_file, sdl=False, **kwargs):
-    if source_file is None:
-        run(['gcc', '-x', 'assembler', '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else []), '-'], **kwargs)
-    elif not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
-        run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
+    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
+        run(['cc', source_file, '-o', output_file, '-g', *(['-lSDL2'] if sdl else [])], **kwargs)
 
 
 def trace(*command, ignore_output=True):
     logger.info(f"Tracing: {' '.join(command)}")
-    subprocess.run(
-        ' '.join([
-            'gdb',
-            command[0],
-            '-batch',
-            '-ex=\'set confirm off\'',
-            '-ex=\'set style enabled on\'',
-            '-ex=\'set print thread-events off\'',
-            '-ex=\'b exit\'',
-            f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\'',
-            '-ex=backtrace',
-            '-ex=quit',
-        ]),
-        shell=True,
-    )
+    if sys.platform.startswith('darwin'):
+        subprocess.run(
+            ' '.join([
+                'lldb',
+                command[0],
+                '-batch',
+                '-Q',
+                '-o \'b exit\'',
+                f'-o \'r {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-o \'run {" ".join(command[1:])}\'',
+                '-o bt',
+                '-o q',
+            ]),
+            shell=True,
+        )
+    else:
+        subprocess.run(
+            ' '.join([
+                'gdb',
+                command[0],
+                '-batch',
+                '-ex=\'set confirm off\'',
+                '-ex=\'set style enabled on\'',
+                '-ex=\'set print thread-events off\'',
+                '-ex=\'b exit\'',
+                f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\'',
+                '-ex=backtrace',
+                '-ex=quit',
+            ]),
+            shell=True,
+        )
 
 
 @dataclasses.dataclass
