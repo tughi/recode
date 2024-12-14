@@ -8,7 +8,7 @@ BIN_FILE = $(BUILD_DIR)/ReCode
 
 .PHONY: all
 all: $(BIN_FILE)
-	@echo -n ""
+	@true
 
 $(BIN_FILE): $(OBJECT_FILES)
 	cc -g -o $@ $^
