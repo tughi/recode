@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/09__union/007__if_as_unexpected_expression/test.code:13:8-18: Only symbol expressions are currently supported in if-is-as statements"
+            "tests/09__union/007__if_as_unexpected_expression/test.code:15:8-18: Only symbol expressions are currently supported in if-is-as statements"
         ]
     }
 }

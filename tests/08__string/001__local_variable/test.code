@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     let string: str
     return 0

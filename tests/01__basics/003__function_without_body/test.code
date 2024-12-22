@@ -1,1 +1,3 @@
+package test
+
 func main() -> i32

@@ -159,6 +159,9 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
     case CHECKED_TYPE_KIND__I64:
         pWriter__write__cstring(self->writer, "l");
         break;
+    default:
+        // ingore
+        break;
     }
 }
 void Generator__generate_is_union_variant_expression(Generator *self, Checked_Is_Union_Variant_Expression *expression) {
@@ -795,6 +798,10 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__UNION:
         Generator__generate_union(self, (Checked_Union_Type *)type);
         break;
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        break;
+    default:
+        panic();
     }
     type->has_generated_definition = true;
 }
@@ -806,27 +813,22 @@ void generate(Writer *writer, Checked_Source *checked_source) {
 
     Checked_Symbol *checked_symbol;
 
-    pWriter__write__cstring(generator.writer, "#include <inttypes.h>");
-    pWriter__end_line(generator.writer);
-    pWriter__write__cstring(generator.writer, "#include <stdbool.h>");
-    pWriter__end_line(generator.writer);
-    pWriter__write__cstring(generator.writer, "#include <stddef.h>");
-    pWriter__end_line(generator.writer);
-    pWriter__end_line(generator.writer);
+    pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
+    pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
+    pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
 
     Source *source = checked_source->first_source->next;
     while (source != NULL) {
         if (source->file_path->data[source->file_path->length - 1] == 'h') {
             pWriter__write__cstring(generator.writer, "#include \"");
             pWriter__write__string(generator.writer, source->file_path);
-            pWriter__write__char(generator.writer, '"');
-            pWriter__end_line(generator.writer);
-            pWriter__end_line(generator.writer);
+            pWriter__write__cstring(generator.writer, "\"\n\n");
         }
         source = source->next;
     }
 
     Checked_Function_Symbol *malloc_function = NULL;
+    Checked_Function_Symbol *main_function = NULL;
 
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
@@ -846,6 +848,8 @@ void generate(Writer *writer, Checked_Source *checked_source) {
             case CHECKED_TYPE_KIND__UNION:
                 Generator__declare_union(&generator, (Checked_Union_Type *)named_type);
                 break;
+            default:
+                panic();
             }
             pWriter__end_line(generator.writer);
         } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_cstring(checked_symbol->name, "malloc")) {
@@ -886,7 +890,11 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     while (checked_symbol != NULL) {
         if (checked_symbol->location.source == checked_source->first_source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-                Generator__declare_function(&generator, (Checked_Function_Symbol *)checked_symbol);
+                Checked_Function_Symbol *checked_function = (Checked_Function_Symbol *)checked_symbol;
+                if (String__equals_cstring(checked_function->function_name, "main")) {
+                    main_function = checked_function;
+                }
+                Generator__declare_function(&generator, checked_function);
                 pWriter__end_line(generator.writer);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
@@ -903,6 +911,19 @@ void generate(Writer *writer, Checked_Source *checked_source) {
             }
         }
         checked_symbol = checked_symbol->next_symbol;
+    }
+
+    /* Generate main function */
+    if (main_function != NULL) {
+        pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
+        pWriter__write__cstring(generator.writer, "    return ");
+        pWriter__write__string(generator.writer, main_function->super.name);
+        if (main_function->function_type->first_parameter != NULL) {
+            pWriter__write__cstring(generator.writer, "(argc, (uint8_t **)argv);\n");
+        } else {
+            pWriter__write__cstring(generator.writer, "();\n");
+        }
+        pWriter__write__cstring(generator.writer, "}\n\n");
     }
 
     /* Generate all defined functions */

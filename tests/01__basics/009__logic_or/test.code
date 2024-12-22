@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     let t = echo(true)
     let f = echo(false)

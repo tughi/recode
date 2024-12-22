@@ -2,131 +2,135 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t main();
+int32_t test__main();
 
-#line 1 "tests/01__basics/010__boolean_logic/test.code"
-int32_t main() {
-#line 2 "tests/01__basics/010__boolean_logic/test.code"
-    bool check1 = true;
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 3 "tests/01__basics/010__boolean_logic/test.code"
-    bool check2 = false;
+int32_t test__main() {
 #line 4 "tests/01__basics/010__boolean_logic/test.code"
-    bool check3 = true;
+    bool check1 = true;
 #line 5 "tests/01__basics/010__boolean_logic/test.code"
-    bool check4 = false;
+    bool check2 = false;
 #line 6 "tests/01__basics/010__boolean_logic/test.code"
-    bool check5 = true;
+    bool check3 = true;
 #line 7 "tests/01__basics/010__boolean_logic/test.code"
-    bool check6 = false;
+    bool check4 = false;
+#line 8 "tests/01__basics/010__boolean_logic/test.code"
+    bool check5 = true;
 #line 9 "tests/01__basics/010__boolean_logic/test.code"
+    bool check6 = false;
+#line 11 "tests/01__basics/010__boolean_logic/test.code"
     if (check1) {
     } else {
-#line 12 "tests/01__basics/010__boolean_logic/test.code"
+#line 14 "tests/01__basics/010__boolean_logic/test.code"
         return 1;
     }
-#line 15 "tests/01__basics/010__boolean_logic/test.code"
+#line 17 "tests/01__basics/010__boolean_logic/test.code"
     if (!check1) {
-#line 16 "tests/01__basics/010__boolean_logic/test.code"
+#line 18 "tests/01__basics/010__boolean_logic/test.code"
         return 2;
     }
-#line 19 "tests/01__basics/010__boolean_logic/test.code"
+#line 21 "tests/01__basics/010__boolean_logic/test.code"
     if (check2) {
-#line 20 "tests/01__basics/010__boolean_logic/test.code"
+#line 22 "tests/01__basics/010__boolean_logic/test.code"
         return 3;
     }
-#line 23 "tests/01__basics/010__boolean_logic/test.code"
+#line 25 "tests/01__basics/010__boolean_logic/test.code"
     if (!check2) {
     } else {
-#line 26 "tests/01__basics/010__boolean_logic/test.code"
+#line 28 "tests/01__basics/010__boolean_logic/test.code"
         return 4;
     }
-#line 29 "tests/01__basics/010__boolean_logic/test.code"
+#line 31 "tests/01__basics/010__boolean_logic/test.code"
     if (check1 && check2) {
-#line 30 "tests/01__basics/010__boolean_logic/test.code"
+#line 32 "tests/01__basics/010__boolean_logic/test.code"
         return 5;
     }
-#line 33 "tests/01__basics/010__boolean_logic/test.code"
+#line 35 "tests/01__basics/010__boolean_logic/test.code"
     if (!(check1 && check2)) {
     } else {
-#line 36 "tests/01__basics/010__boolean_logic/test.code"
+#line 38 "tests/01__basics/010__boolean_logic/test.code"
         return 6;
     }
-#line 39 "tests/01__basics/010__boolean_logic/test.code"
+#line 41 "tests/01__basics/010__boolean_logic/test.code"
     if (!!(check1 && check2)) {
-#line 40 "tests/01__basics/010__boolean_logic/test.code"
+#line 42 "tests/01__basics/010__boolean_logic/test.code"
         return 7;
     } else {
     }
-#line 45 "tests/01__basics/010__boolean_logic/test.code"
+#line 47 "tests/01__basics/010__boolean_logic/test.code"
     if (check1 || check2) {
     } else {
-#line 48 "tests/01__basics/010__boolean_logic/test.code"
+#line 50 "tests/01__basics/010__boolean_logic/test.code"
         return 8;
     }
-#line 51 "tests/01__basics/010__boolean_logic/test.code"
+#line 53 "tests/01__basics/010__boolean_logic/test.code"
     if (!(check1 || check2)) {
-#line 52 "tests/01__basics/010__boolean_logic/test.code"
+#line 54 "tests/01__basics/010__boolean_logic/test.code"
         return 9;
     } else {
     }
-#line 57 "tests/01__basics/010__boolean_logic/test.code"
+#line 59 "tests/01__basics/010__boolean_logic/test.code"
     if ((check1 && check2) || (check3 && check4)) {
-#line 58 "tests/01__basics/010__boolean_logic/test.code"
+#line 60 "tests/01__basics/010__boolean_logic/test.code"
         return 10;
     }
-#line 61 "tests/01__basics/010__boolean_logic/test.code"
+#line 63 "tests/01__basics/010__boolean_logic/test.code"
     if ((check2 && check4) || (check1 && check3)) {
     } else {
-#line 64 "tests/01__basics/010__boolean_logic/test.code"
+#line 66 "tests/01__basics/010__boolean_logic/test.code"
         return 11;
     }
-#line 67 "tests/01__basics/010__boolean_logic/test.code"
+#line 69 "tests/01__basics/010__boolean_logic/test.code"
     if (check1 && (check2 || check3) && check4) {
-#line 68 "tests/01__basics/010__boolean_logic/test.code"
+#line 70 "tests/01__basics/010__boolean_logic/test.code"
         return 12;
     } else {
     }
-#line 73 "tests/01__basics/010__boolean_logic/test.code"
+#line 75 "tests/01__basics/010__boolean_logic/test.code"
     if ((check1 || check2) && (check3 || check4)) {
     } else {
-#line 76 "tests/01__basics/010__boolean_logic/test.code"
+#line 78 "tests/01__basics/010__boolean_logic/test.code"
         return 13;
     }
-#line 79 "tests/01__basics/010__boolean_logic/test.code"
+#line 81 "tests/01__basics/010__boolean_logic/test.code"
     if ((check1 || check4) && (check2 || check3)) {
     } else {
-#line 82 "tests/01__basics/010__boolean_logic/test.code"
+#line 84 "tests/01__basics/010__boolean_logic/test.code"
         return 14;
     }
-#line 85 "tests/01__basics/010__boolean_logic/test.code"
+#line 87 "tests/01__basics/010__boolean_logic/test.code"
     if (check2 || (check3 && check4) || check5) {
     } else {
-#line 88 "tests/01__basics/010__boolean_logic/test.code"
+#line 90 "tests/01__basics/010__boolean_logic/test.code"
         return 15;
     }
-#line 91 "tests/01__basics/010__boolean_logic/test.code"
+#line 93 "tests/01__basics/010__boolean_logic/test.code"
     if ((((check1 && check2) || (check3 && check4)) && check5) || check6) {
-#line 92 "tests/01__basics/010__boolean_logic/test.code"
+#line 94 "tests/01__basics/010__boolean_logic/test.code"
         return 16;
     } else {
     }
-#line 97 "tests/01__basics/010__boolean_logic/test.code"
+#line 99 "tests/01__basics/010__boolean_logic/test.code"
     if ((check1 && check2) || (((check3 && check4) || check6) && check5)) {
-#line 98 "tests/01__basics/010__boolean_logic/test.code"
+#line 100 "tests/01__basics/010__boolean_logic/test.code"
         return 17;
     }
-#line 101 "tests/01__basics/010__boolean_logic/test.code"
+#line 103 "tests/01__basics/010__boolean_logic/test.code"
     if (check1 && !check2) {
     } else {
-#line 104 "tests/01__basics/010__boolean_logic/test.code"
+#line 106 "tests/01__basics/010__boolean_logic/test.code"
         return 18;
     }
-#line 107 "tests/01__basics/010__boolean_logic/test.code"
+#line 109 "tests/01__basics/010__boolean_logic/test.code"
     if (!check1 || check2) {
-#line 108 "tests/01__basics/010__boolean_logic/test.code"
+#line 110 "tests/01__basics/010__boolean_logic/test.code"
         return 19;
     }
-#line 111 "tests/01__basics/010__boolean_logic/test.code"
+#line 113 "tests/01__basics/010__boolean_logic/test.code"
     return 0;
 }
 

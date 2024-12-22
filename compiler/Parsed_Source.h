@@ -561,6 +561,7 @@ Parsed_Statement *Parsed_While_Statement__create(Source_Location location, Parse
 
 typedef struct Parsed_Source {
     Source *first_source;
+    String *package_name;
     Parsed_Statements *statements;
 } Parsed_Source;
 

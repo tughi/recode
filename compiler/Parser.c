@@ -1178,10 +1178,32 @@ void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
     }
 }
 
+// package
+//  : "package" IDENTIFIER
+void Parser__parse_package(Parser *self) {
+    while (Parser__consume_empty_line(self)) {
+        /* ignored */
+    }
+    if (!Parser__matches_two(self, Token__is_space, false, Token__is_package)) {
+        pWriter__begin_location_message(stderr_writer, Parser__peek_token(self, 0)->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected package declaration");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Parser__consume_space(self, 0);
+    Parser__consume_token(self, Token__is_package);
+    Parser__consume_space(self, 1);
+    Token *package_name = Parser__consume_token(self, Token__is_identifier);
+    Parser__consume_end_of_line(self);
+    self->parsed_source->package_name = package_name->lexeme;
+}
+
 void Parser__parse_source(Parser *self, Source *source) {
     Scanner *other_scanner = self->scanner;
 
     self->scanner = Scanner__create(source);
+
+    Parser__parse_package(self);
 
     Parser__parse_statements(self, self->parsed_source->statements);
 

@@ -12,13 +12,17 @@ struct Integer {
     };
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 6 "tests/09__union/001__define_union_variable/test.code"
-int32_t main() {
-#line 7 "tests/09__union/001__define_union_variable/test.code"
-    struct Integer integer;
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 8 "tests/09__union/001__define_union_variable/test.code"
+int32_t test__main() {
+#line 9 "tests/09__union/001__define_union_variable/test.code"
+    struct Integer integer;
+#line 10 "tests/09__union/001__define_union_variable/test.code"
     return 0;
 }
 

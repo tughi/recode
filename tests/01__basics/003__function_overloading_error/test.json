@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/003__function_overloading_error/test.code:4:6-10: Symbol already defined here: tests/01__basics/003__function_overloading_error/test.code:1:6-10"
+            "tests/01__basics/003__function_overloading_error/test.code:6:6-10: Symbol already defined here: tests/01__basics/003__function_overloading_error/test.code:3:6-10"
         ]
     }
 }

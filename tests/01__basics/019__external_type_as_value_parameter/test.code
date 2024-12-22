@@ -1,3 +1,5 @@
+package test
+
 external type Value
 
 func check(value: Value) -> i32 {

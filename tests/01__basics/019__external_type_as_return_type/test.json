@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/019__external_type_as_return_type/test.code:3:44-49: Cannot use external type as return type"
+            "tests/01__basics/019__external_type_as_return_type/test.code:5:44-49: Cannot use external type as return type"
         ]
     }
 }

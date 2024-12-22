@@ -9,13 +9,17 @@ struct Point {
     int32_t y;
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 6 "tests/04__struct/001__local_struct_variable/test.code"
-int32_t main() {
-#line 7 "tests/04__struct/001__local_struct_variable/test.code"
-    struct Point point;
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 8 "tests/04__struct/001__local_struct_variable/test.code"
+int32_t test__main() {
+#line 9 "tests/04__struct/001__local_struct_variable/test.code"
+    struct Point point;
+#line 10 "tests/04__struct/001__local_struct_variable/test.code"
     return 0;
 }
 

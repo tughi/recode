@@ -1,3 +1,5 @@
+package test
+
 func [@]u8.length(self) -> i32 {
     let length = 0
     while self[length] != 0 {

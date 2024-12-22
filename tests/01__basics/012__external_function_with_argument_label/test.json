@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/012__external_function_with_argument_label/test.code:1:20-24: External functions can have only anonymous parameters"
+            "tests/01__basics/012__external_function_with_argument_label/test.code:3:20-24: External functions can have only anonymous parameters"
         ]
     }
 }

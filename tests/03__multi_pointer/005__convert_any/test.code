@@ -1,3 +1,5 @@
+package test
+
 func main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
     let any = argv[0].as(@Any)
     let name = any.as([@]u8)

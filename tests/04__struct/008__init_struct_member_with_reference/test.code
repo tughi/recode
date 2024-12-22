@@ -1,3 +1,5 @@
+package test
+
 struct Number {
     value: i32
     next: @Number

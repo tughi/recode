@@ -19,22 +19,26 @@ struct Literal {
     struct Value value;
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 11 "tests/09__union/006__switch_expression/test.code"
-int32_t main() {
-#line 12 "tests/09__union/006__switch_expression/test.code"
-    struct Literal literal = (struct Literal){.value = (struct Value){.variant = 3, .variant_3 = 42}};
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 13 "tests/09__union/006__switch_expression/test.code"
-    struct Value __switch_13_value__ = literal.value;
+int32_t test__main() {
 #line 14 "tests/09__union/006__switch_expression/test.code"
-    if (__switch_13_value__.variant == 3) {
+    struct Literal literal = (struct Literal){.value = (struct Value){.variant = 3, .variant_3 = 42}};
 #line 15 "tests/09__union/006__switch_expression/test.code"
-        return __switch_13_value__.variant_3 - 42;
-    }
+    struct Value __switch_15_value__ = literal.value;
+#line 16 "tests/09__union/006__switch_expression/test.code"
+    if (__switch_15_value__.variant == 3) {
 #line 17 "tests/09__union/006__switch_expression/test.code"
+        return __switch_15_value__.variant_3 - 42;
+    }
+#line 19 "tests/09__union/006__switch_expression/test.code"
     else {
-#line 18 "tests/09__union/006__switch_expression/test.code"
+#line 20 "tests/09__union/006__switch_expression/test.code"
         return 1;
     }
 }

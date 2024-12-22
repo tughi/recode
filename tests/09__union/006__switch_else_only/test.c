@@ -22,20 +22,24 @@ struct Value {
     };
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 11 "tests/09__union/006__switch_else_only/test.code"
-int32_t main() {
-#line 12 "tests/09__union/006__switch_else_only/test.code"
-    struct Value value = (struct Value){.variant = 2, .variant_2 = (struct Integer){.variant = 2, .variant_2 = 42}};
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
+#line 13 "tests/09__union/006__switch_else_only/test.code"
+int32_t test__main() {
 #line 14 "tests/09__union/006__switch_else_only/test.code"
-    struct Value __switch_14_value__ = value;
-#line 15 "tests/09__union/006__switch_else_only/test.code"
-    {
+    struct Value value = (struct Value){.variant = 2, .variant_2 = (struct Integer){.variant = 2, .variant_2 = 42}};
 #line 16 "tests/09__union/006__switch_else_only/test.code"
+    struct Value __switch_16_value__ = value;
+#line 17 "tests/09__union/006__switch_else_only/test.code"
+    {
+#line 18 "tests/09__union/006__switch_else_only/test.code"
         return 0;
     }
-#line 20 "tests/09__union/006__switch_else_only/test.code"
+#line 22 "tests/09__union/006__switch_else_only/test.code"
     return 1;
 }
 

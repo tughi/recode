@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/005__init_local_variable_with_null/test.code:2:18-22: Expected type i32 but got null"
+            "tests/01__basics/005__init_local_variable_with_null/test.code:4:18-22: Expected type i32 but got null"
         ]
     }
 }

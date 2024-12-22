@@ -1,1 +1,3 @@
+package test
+
 external func exit(code: i32)

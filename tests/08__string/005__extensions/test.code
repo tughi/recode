@@ -1,3 +1,5 @@
+package test
+
 struct String {
     data: [@]u8
     length: usize

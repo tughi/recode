@@ -216,6 +216,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     case CHECKED_TYPE_KIND__UNION:
         return Checked_Union_Type__equals((Checked_Union_Type *)self, (Checked_Union_Type *)other);
+    default:
+        break;
     }
     todo("Handle unexpected Checked_Type_Kind");
 }

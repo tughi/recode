@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/001__missing_return_expression/test.code:2:5-11: Missing return expression"
+            "tests/01__basics/001__missing_return_expression/test.code:4:5-11: Missing return expression"
         ]
     }
 }

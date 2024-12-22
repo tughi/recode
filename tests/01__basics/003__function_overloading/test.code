@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     return fallback() - fallback(value: 42)
 }

@@ -169,6 +169,10 @@ bool Token__is_or(Token *self) {
     return Token__is_keyword(self, "or");
 }
 
+bool Token__is_package(Token *self) {
+    return Token__is_keyword(self, "package");
+}
+
 bool Token__is_return(Token *self) {
     return Token__is_keyword(self, "return");
 }

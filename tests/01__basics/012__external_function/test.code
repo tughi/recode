@@ -1,3 +1,5 @@
+package test
+
 external func exit(anon status: i32)
 
 func main() -> i32 {

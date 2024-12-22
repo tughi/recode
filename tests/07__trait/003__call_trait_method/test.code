@@ -1,3 +1,5 @@
+package test
+
 trait Shape {
     func area(self) -> i32
 }

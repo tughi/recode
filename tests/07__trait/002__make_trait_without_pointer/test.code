@@ -1,3 +1,5 @@
+package test
+
 trait Animal {
     func legs(self) -> i32
 }

@@ -1,2 +1,4 @@
+package test
+
 func test(value: i32) -> Any {
 }

@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     if cast(255) != 255i32 {
         return 1

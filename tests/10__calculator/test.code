@@ -1,4 +1,6 @@
-func main(anon argc: i32, anon argv: [@][@]u8) {
+package test
+
+func main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
     if argc != 2 {
         exit(1)
     }
@@ -8,7 +10,7 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
         index: 0
     )
 
-    let stdout_writer = Writer(stdout)
+    let stdout_writer = Writer(__stdoutp)
 
     while tokenizer.peek_token() is not Stop {
         let token = tokenizer.next_token()
@@ -24,6 +26,8 @@ func main(anon argc: i32, anon argv: [@][@]u8) {
 
     let result = evaluate(expression: @expression)
     stdout_writer.write("Result: ").write(signed: result).end_line()
+
+    return 0
 }
 
 \ ------------------------------------------------------------------------------ Evaluator
@@ -493,13 +497,13 @@ func @Writer.write(self, anon string: str) -> @Writer {
 external type FILE
 
 external stdin: @FILE
-external stdout: @FILE
+external __stdoutp: @FILE
 external stderr: @FILE
 
 external func fputc(anon c: i32, anon file: @FILE) -> i32
 
 func @FILE.write_char(self, anon c: u8) {
-    fputc(c.as(i32), stdout)
+    fputc(c.as(i32), __stdoutp)
 }
 
 external func malloc(anon size: u64) -> @Any

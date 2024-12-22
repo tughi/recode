@@ -2,9 +2,9 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/003__call_function_with_wrong_label/test.code:2:12-27: Unknown callable: echo(number: i32)",
+            "tests/01__basics/003__call_function_with_wrong_label/test.code:4:12-27: Unknown callable: echo(number: i32)",
             "Similar callables:",
-            "tests/01__basics/003__call_function_with_wrong_label/test.code:5:1: func echo(value: i32) -> i32"
+            "tests/01__basics/003__call_function_with_wrong_label/test.code:7:1: func echo(value: i32) -> i32"
         ]
     }
 }

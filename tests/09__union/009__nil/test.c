@@ -12,25 +12,29 @@ struct Value {
     };
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 6 "tests/09__union/009__nil/test.code"
-int32_t main() {
-#line 7 "tests/09__union/009__nil/test.code"
-    struct Value value = (struct Value){.variant = 0};
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
+#line 8 "tests/09__union/009__nil/test.code"
+int32_t test__main() {
 #line 9 "tests/09__union/009__nil/test.code"
+    struct Value value = (struct Value){.variant = 0};
+#line 11 "tests/09__union/009__nil/test.code"
     if (value.variant != 0) {
-#line 10 "tests/09__union/009__nil/test.code"
+#line 12 "tests/09__union/009__nil/test.code"
         return 1;
     }
-#line 13 "tests/09__union/009__nil/test.code"
-    value = (struct Value){.variant = 2, .variant_2 = 42};
 #line 15 "tests/09__union/009__nil/test.code"
+    value = (struct Value){.variant = 2, .variant_2 = 42};
+#line 17 "tests/09__union/009__nil/test.code"
     if (value.variant == 0) {
-#line 16 "tests/09__union/009__nil/test.code"
+#line 18 "tests/09__union/009__nil/test.code"
         return 2;
     }
-#line 19 "tests/09__union/009__nil/test.code"
+#line 21 "tests/09__union/009__nil/test.code"
     return 0;
 }
 

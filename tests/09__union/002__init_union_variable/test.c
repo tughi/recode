@@ -22,17 +22,21 @@ struct Value {
     };
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 11 "tests/09__union/002__init_union_variable/test.code"
-int32_t main() {
-#line 12 "tests/09__union/002__init_union_variable/test.code"
-    struct Value value = (struct Value){.variant = 1, .variant_1 = false};
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 13 "tests/09__union/002__init_union_variable/test.code"
-    struct Value other_value = value;
+int32_t test__main() {
 #line 14 "tests/09__union/002__init_union_variable/test.code"
-    struct Value another_value = other_value;
+    struct Value value = (struct Value){.variant = 1, .variant_1 = false};
 #line 15 "tests/09__union/002__init_union_variable/test.code"
+    struct Value other_value = value;
+#line 16 "tests/09__union/002__init_union_variable/test.code"
+    struct Value another_value = other_value;
+#line 17 "tests/09__union/002__init_union_variable/test.code"
     return 0;
 }
 

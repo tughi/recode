@@ -1,3 +1,5 @@
+package test
+
 union Integer {
     i8
     i32

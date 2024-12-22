@@ -27,13 +27,17 @@ struct Square *__alloc_Square_value(struct Square value);
 
 struct Circle *__alloc_Circle_value(struct Circle value);
 
-int32_t pSquare__area(struct Square *self);
+int32_t test__pSquare__area(struct Square *self);
 
-int32_t pCircle__area(struct Circle *self);
+int32_t test__pCircle__area(struct Circle *self);
 
-int32_t main();
+int32_t test__main();
 
 void *malloc(uint64_t size);
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
 
 struct Shape *__alloc_Shape_value(struct Shape value) {
     struct Shape *result = (struct Shape *)malloc(sizeof(struct Shape));
@@ -53,39 +57,39 @@ struct Circle *__alloc_Circle_value(struct Circle value) {
     return result;
 }
 
-#line 9 "tests/07__trait/004__make_heap_trait_variable/test.code"
-int32_t pSquare__area(struct Square *self) {
-#line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 11 "tests/07__trait/004__make_heap_trait_variable/test.code"
+int32_t test__pSquare__area(struct Square *self) {
+#line 12 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return self->side * self->side;
 }
 
-#line 17 "tests/07__trait/004__make_heap_trait_variable/test.code"
-int32_t pCircle__area(struct Circle *self) {
-#line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 19 "tests/07__trait/004__make_heap_trait_variable/test.code"
+int32_t test__pCircle__area(struct Circle *self) {
+#line 20 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 312 * self->radius * self->radius / 100;
 }
 
-#line 21 "tests/07__trait/004__make_heap_trait_variable/test.code"
-int32_t main() {
-#line 22 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Square *square = __alloc_Square_value((struct Square){.side = 10});
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *square_shape = __alloc_Shape_value((struct Shape){.self = square, .area = ((int32_t (*)(void *self)) pSquare__area)});
+int32_t test__main() {
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Circle *circle = __alloc_Circle_value((struct Circle){.radius = 10});
+    struct Square *square = __alloc_Square_value((struct Square){.side = 10});
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *circle_shape = __alloc_Shape_value((struct Shape){.self = circle, .area = ((int32_t (*)(void *self)) pCircle__area)});
+    struct Shape *square_shape = __alloc_Shape_value((struct Shape){.self = square, .area = ((int32_t (*)(void *self)) test__pSquare__area)});
+#line 26 "tests/07__trait/004__make_heap_trait_variable/test.code"
+    struct Circle *circle = __alloc_Circle_value((struct Circle){.radius = 10});
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
+    struct Shape *circle_shape = __alloc_Shape_value((struct Shape){.self = circle, .area = ((int32_t (*)(void *self)) test__pCircle__area)});
+#line 29 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (square_shape->area(square_shape->self) != 100) {
-#line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 30 "tests/07__trait/004__make_heap_trait_variable/test.code"
         return 1;
     }
-#line 31 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 33 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (circle_shape->area(circle_shape->self) != 312) {
-#line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 34 "tests/07__trait/004__make_heap_trait_variable/test.code"
         return 2;
     }
-#line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
+#line 37 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 0;
 }
 

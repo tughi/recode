@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     let unexpected_expression = 13
     switch unexpected_expression {

@@ -9,15 +9,19 @@ struct String {
     uintmax_t length;
 };
 
-int32_t main();
+int32_t test__main();
 
-#line 1 "tests/08__string/002__init_variable/test.code"
-int32_t main() {
-#line 2 "tests/08__string/002__init_variable/test.code"
-    struct String empty = (struct String){.data = 0, .length = 0};
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
 #line 3 "tests/08__string/002__init_variable/test.code"
-    struct String quote = (struct String){.data = "Answer to the Ultimate Question of Life, the Universe, and Everything", .length = 69};
+int32_t test__main() {
 #line 4 "tests/08__string/002__init_variable/test.code"
+    struct String empty = (struct String){.data = 0, .length = 0};
+#line 5 "tests/08__string/002__init_variable/test.code"
+    struct String quote = (struct String){.data = "Answer to the Ultimate Question of Life, the Universe, and Everything", .length = 69};
+#line 6 "tests/08__string/002__init_variable/test.code"
     return 0;
 }
 

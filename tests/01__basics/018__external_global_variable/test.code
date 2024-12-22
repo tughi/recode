@@ -1,3 +1,5 @@
+package test
+
 external optind: i32
 
 func main() -> i32 {

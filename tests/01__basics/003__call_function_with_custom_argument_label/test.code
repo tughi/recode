@@ -1,3 +1,5 @@
+package test
+
 func main() -> i32 {
     return echo(number: 0)
 }

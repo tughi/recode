@@ -1,13 +1,15 @@
+package test
+
 func main() -> i32 {
-    stdout.write(char: '4').write(char: '2').write(char: '\n')
+    __stdoutp.write(char: '4').write(char: '2').write(char: '\n')
     return 0
 }
 
 func @FILE.write(self, char ch: u8) -> @FILE {
-    fputc(ch.as(i32), stdout)
+    fputc(ch.as(i32), __stdoutp)
     return self
 }
 
 external type FILE
-external stdout: @FILE
+external __stdoutp: @FILE
 external func fputc(anon c: i32, anon stream: @FILE) -> i32

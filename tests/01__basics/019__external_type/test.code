@@ -1,12 +1,14 @@
+package test
+
 external type FILE
 
-external stdout: @FILE
+external __stdoutp: @FILE
 
 external func fputc(anon ch: i32, anon file: @FILE) -> i32
 
 func main() -> i32 {
-    fputc(52, stdout) \\ '4'
-    fputc(50, stdout) \\ '2'
-    fputc(10, stdout) \\ '\n'
+    fputc(52, __stdoutp) \\ '4'
+    fputc(50, __stdoutp) \\ '2'
+    fputc(10, __stdoutp) \\ '\n'
     return 0
 }

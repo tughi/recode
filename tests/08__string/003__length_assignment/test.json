@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/08__string/003__length_assignment/test.code:3:5-18: Cannot assign to immutable expression"
+            "tests/08__string/003__length_assignment/test.code:1:1-5: Expected package declaration"
         ]
     }
 }
