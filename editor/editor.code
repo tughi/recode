@@ -1,0 +1,85 @@
+package editor
+
+\ ----------------------------------------------------------------------------- String
+
+struct String {
+    data: [@]u8
+    length: usize
+}
+
+\ ----------------------------------------------------------------------------- SDL2
+
+external type SDL_Window
+external type SDL_Surface
+
+struct SDL_Event {
+    type: u32
+    timestamp: u32
+    window_id: u32
+    _data_1: u64
+    _data_2: u64
+    _data_3: u64
+    _data_4: u64
+    _data_5: u64
+    _data_6: u64
+    _data_7: u64
+}
+
+external func SDL_Init(anon flags: u32) -> i32
+external func SDL_Quit()
+external func SDL_GetError() -> @u8
+external func SDL_Delay(anon ms: u32)
+external func SDL_CreateWindow(anon title: [@]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> @SDL_Window
+external func SDL_GetWindowSurface(anon window: @SDL_Window) -> @SDL_Surface
+external func SDL_UpdateWindowSurface(anon window: @SDL_Window) -> i32
+external func SDL_DestroyWindow(anon window: @SDL_Window)
+external func SDL_PollEvent(anon event: @SDL_Event) -> i32
+
+func create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> @SDL_Window {
+    let title_copy = title
+    let title_data = (@title_copy).as(@String).data
+    return SDL_CreateWindow(title_data, x, y, w, h, flags)
+}
+
+func @SDL_Window.destroy(self) {
+    SDL_DestroyWindow(self)
+}
+
+\ ----------------------------------------------------------------------------- LibC
+
+external func exit(anon status: i32)
+
+\ ----------------------------------------------------------------------------- Main
+
+func main() -> i32 {
+    if SDL_Init(0x20) != 0 {
+        return 1
+    }
+
+    let window = create_window(title: "Hello, World!", x: 100, y: 100, w: 640, h: 480, flags: 0)
+    if window == null {
+        return 1
+    }
+
+    let surface = SDL_GetWindowSurface(window)
+    if surface == null {
+        return 1
+    }
+
+    let event = SDL_Event()
+    let running = true
+    while running {
+        while SDL_PollEvent(@event) != 0 {
+            if event.type == 0x100 {
+                running = false
+            }
+        }
+        SDL_UpdateWindowSurface(window)
+    }
+
+    window.destroy()
+
+    SDL_Quit()
+
+    return 0
+}

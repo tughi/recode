@@ -36,8 +36,8 @@ def run(command, **kwargs):
         kwargs['check'] = True
     try:
         return subprocess.run(command, **kwargs)
-    except subprocess.CalledProcessError:
-        exit(1)
+    except subprocess.CalledProcessError as error:
+        exit(error.returncode)
 
 
 def build_stage(n):
@@ -82,7 +82,7 @@ def build_stage(n):
 
 def assemble(source_file, output_file, sdl=False, **kwargs):
     if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
-        run(['cc', source_file, '-o', output_file, '-g', *(['-lSDL2'] if sdl else [])], **kwargs)
+        run(['cc', source_file, '-o', output_file, '-g', '-Wno-incompatible-library-redeclaration', '-Wno-pointer-sign', *(['-L/opt/homebrew/lib', '-lSDL2'] if sdl else [])], **kwargs)
 
 
 def trace(*command, ignore_output=True):
@@ -392,18 +392,18 @@ def stage():
 
 
 def editor():
-    build_stage(0)
-    build_stage(1)
+    build()
 
     if not os.path.exists(f'build/editor'):
         run(f'mkdir build/editor')
 
-    compiler_command = ['build/stage1/ReCode', 'editor/Editor.code', 'build/editor/Editor.s', 'build/editor/Editor.ir']
-    if run(compiler_command, check=False).returncode != 0:
-        trace(*compiler_command[:2], '-')
-        exit(1)
-    assemble('build/editor/Editor.s', 'build/editor/Editor', sdl=True)
-    trace('build/editor/Editor', ignore_output=False)
+    compiler_command = ['build/stage1/ReCode', 'code', 'editor/editor.code']
+    with open('build/editor/editor.c', 'w') as f:
+        if run(compiler_command, check=False, stdout=f).returncode != 0:
+            trace(*compiler_command)
+            exit(1)
+    assemble('build/editor/editor.c', 'build/editor/editor', sdl=True)
+    run('build/editor/editor')
 
 
 def time():
@@ -436,6 +436,9 @@ if __name__ == '__main__':
     test_args_parser.add_argument('--clean', action='store_true', help='clean before testing')
     test_args_parser.add_argument('--save', action='store_true', help='save the first unexpected compiler output')
 
+    editor_args_parser = args_command_parser.add_parser('editor', help='run the editor')
+    editor_args_parser.add_argument('--clean', action='store_true', help='clean before running')
+
     args = args_parsers.parse_args()
     if args.command == 'clean':
         clean()
@@ -448,5 +451,7 @@ if __name__ == '__main__':
             stage()
         elif args.command == 'test':
             test(args.path, save=args.save, stage=1)
+        elif args.command == 'editor':
+            editor()
         else:
             args_parsers.print_help()
