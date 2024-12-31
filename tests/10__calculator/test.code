@@ -251,28 +251,26 @@ func @Tokenizer.scan_token(self) -> Token {
     if ch == 0 {
         return Stop(span: Span(start: self.index, end: self.index))
     }
-    if ch != ' ' {
-        if ch >= '0' and ch <= '9' {
-            return self.scan_number_token()
-        }
-        self.index = self.index + 1
-        if ch == '+' {
-            return Plus(span: Span(start: self.index - 1, end: self.index))
-        }
-        if ch == '-' {
-            return Minus(span: Span(start: self.index - 1, end: self.index))
-        }
-        if ch == '*' {
-            return Multiply(span: Span(start: self.index - 1, end: self.index))
-        }
-        if ch == '/' {
-            return Divide(span: Span(start: self.index - 1, end: self.index))
-        }
-        return Error(
-            span: Span(start: self.index - 1, end: self.index)
-            message: "Unexpected character"
-        )
+    if ch >= '0' and ch <= '9' {
+        return self.scan_number_token()
     }
+    self.index = self.index + 1
+    if ch == '+' {
+        return Plus(span: Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '-' {
+        return Minus(span: Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '*' {
+        return Multiply(span: Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '/' {
+        return Divide(span: Span(start: self.index - 1, end: self.index))
+    }
+    return Error(
+        span: Span(start: self.index - 1, end: self.index)
+        message: "Unexpected character"
+    )
 }
 
 func @Tokenizer.scan_number_token(self) -> Token {

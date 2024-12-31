@@ -82,7 +82,20 @@ def build_stage(n):
 
 def assemble(source_file, output_file, sdl=False, **kwargs):
     if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
-        run(['cc', source_file, '-o', output_file, '-g', '-Wno-incompatible-library-redeclaration', '-Wno-pointer-sign', *(['-L/opt/homebrew/lib', '-lSDL2'] if sdl else [])], **kwargs)
+        run(
+            [
+                'cc',
+                source_file, 
+                '-o', 
+                output_file, 
+                '-g', 
+                '-Wno-incompatible-library-redeclaration', 
+                '-Wno-pointer-sign', 
+                '-Wno-return-type',
+                *(['-L/opt/homebrew/lib', '-lSDL2'] if sdl else []),
+            ],
+            **kwargs,
+        )
 
 
 def trace(*command, ignore_output=True):
