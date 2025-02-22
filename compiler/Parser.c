@@ -118,7 +118,7 @@ Parsed_Type *Parser__parse_type(Parser *self);
 
 /*
 primary_expression
-    | "alloc" "(" expression ")"
+    | "alloc" expression
     | "false"
     | "null"
     | "true"
@@ -130,12 +130,9 @@ primary_expression
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_alloc)) {
         Token *first_token = Parser__consume_token(self, Token__is_alloc);
-        Parser__consume_space(self, 0);
-        Parser__consume_token(self, Token__is_opening_paren);
+        Parser__consume_space(self, 1);
         Parsed_Expression *expression = Parser__parse_expression(self);
-        Parser__consume_space(self, 0);
-        Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Alloc_Expression__create(Source_Location__union(first_token->location, last_token->location), expression);
+        return (Parsed_Expression *)Parsed_Alloc_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
     }
     if (Parser__matches_one(self, Token__is_null)) {
         return (Parsed_Expression *)Parsed_Null_Expression__create(Parser__consume_token(self, Token__is_null));

@@ -60,14 +60,14 @@ There will be a fixed set of float types:
 Newly created structs can be initializated using named arguments, which can replace default values.
 
     let node = Node()                   \ initializes a stack Node
-    let node = alloc(Node(type: 13))    \ allocates and initializes a heap Node
+    let node = alloc Node(type: 13)     \ allocates and initializes a heap Node
 
 Initilization arguments can be declared also on separate lines.
 
-    let node = alloc(Extended_Node(
+    let node = alloc Extended_Node(
         parent: null
         type: 6
-    ))
+    )
 
 Structs are passed by value.
 
@@ -212,7 +212,7 @@ Strings can be created at runtime using builtin functions...
 
     let text = "123"                    \ text holds address and length of "123"
     let number = text.length + 1        \ number holds the usize result of the provided expression
-    let root_node = alloc(Node())       \ root_node holds the address of a new Node
+    let root_node = alloc Node()        \ root_node holds the address of a new Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
@@ -220,7 +220,7 @@ The variable names are symbols used by the compiler to know where the value are 
 
 The `Any` type can be used only as reference to data of unknown type.
 
-    let node = alloc(Node())
+    let node = alloc Node()
     let data: @Any = node       \ auto-casting to @Any
     let token = data.as(@Token) \ unsafe, but this is the way
 

@@ -74,8 +74,8 @@ func @Parser.parse_additive_expression(self) -> Expression {
                 let other_expression = self.parse_multiplicative_expression()
                 expression = Addition(
                     span: Span(start: expression.span().start, end: other_expression.span().end)
-                    left: alloc(expression)
-                    right: alloc(other_expression)
+                    left: alloc expression
+                    right: alloc other_expression
                 )
             }
             is Minus as minus {
@@ -83,8 +83,8 @@ func @Parser.parse_additive_expression(self) -> Expression {
                 let other_expression = self.parse_multiplicative_expression()
                 expression = Subtraction(
                     span: Span(start: expression.span().start, end: other_expression.span().end)
-                    left: alloc(expression)
-                    right: alloc(other_expression)
+                    left: alloc expression
+                    right: alloc other_expression
                 )
             }
             else {
@@ -104,16 +104,16 @@ func @Parser.parse_multiplicative_expression(self) -> Expression {
             let other_expression = self.parse_primary_expression()
             expression = Multiplication(
                 span: Span(start: expression.span().start, end: other_expression.span().end)
-                left: alloc(expression)
-                right: alloc(other_expression)
+                left: alloc expression
+                right: alloc other_expression
             )
         } else if token is Divide as divide {
             self.tokenizer.next_token()
             let other_expression = self.parse_primary_expression()
             expression = Division(
                 span: Span(start: expression.span().start, end: other_expression.span().end)
-                left: alloc(expression)
-                right: alloc(other_expression)
+                left: alloc expression
+                right: alloc other_expression
             )
         } else {
             break
