@@ -97,13 +97,13 @@ main:
   call malloc
   # %square.1: ptr<Square> = load %square.ptr
   movq 24(%rsp), %rcx
-  # %8: ptr<func (self: ptr<Square>) -> i32> = address $pSquare__area
+  # %8: ptr<proc (self: ptr<Square>) -> i32> = address $pSquare__area
   # %9: Shape = struct { Shape.self: %square.1, Shape.area: %8 }
   # %10: ptr<ptr<Any>> = offset %7 Shape.self
   movq %rax, %rdx
   # store %10 %square.1
   movq %rcx, 0(%rdx)
-  # %11: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %7 Shape.area
+  # %11: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %7 Shape.area
   movq %rax, %rcx
   # store %11 %8
   lea pSquare__area, %rdx
@@ -125,9 +125,9 @@ main:
   movq %rax, 8(%rsp)
   # %square_shape.1: ptr<Shape> = load %square_shape.ptr
   movq 16(%rsp), %rax
-  # %17: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.1 Shape.area
+  # %17: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %square_shape.1 Shape.area
   movq %rax, %rcx
-  # %18: ptr<func (self: ptr<Any>) -> i32> = load %17
+  # %18: ptr<proc (self: ptr<Any>) -> i32> = load %17
   movq 8(%rcx), %rdx
   # %19: ptr<ptr<Any>> = offset %square_shape.1 Shape.self
   movq %rax, %rcx
@@ -156,20 +156,20 @@ main:
   call malloc
   # %circle.1: ptr<Circle> = load %circle.ptr
   movq 8(%rsp), %rcx
-  # %27: ptr<func (self: ptr<Circle>) -> i32> = address $pCircle__area
+  # %27: ptr<proc (self: ptr<Circle>) -> i32> = address $pCircle__area
   # %28: Shape = struct { Shape.self: %circle.1, Shape.area: %27 }
   # %29: ptr<ptr<Any>> = offset %26 Shape.self
   movq %rax, %rdx
   # store %29 %circle.1
   movq %rcx, 0(%rdx)
-  # %30: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %26 Shape.area
+  # %30: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %26 Shape.area
   movq %rax, %rcx
   # store %30 %27
   lea pCircle__area, %rdx
   movq %rdx, 8(%rcx)
-  # %31: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %26 Shape.area
+  # %31: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %26 Shape.area
   movq %rax, %rcx
-  # %32: ptr<func (self: ptr<Any>) -> i32> = load %31
+  # %32: ptr<proc (self: ptr<Any>) -> i32> = load %31
   movq 8(%rcx), %rdx
   # %33: ptr<ptr<Any>> = offset %26 Shape.self
   movq %rax, %rcx

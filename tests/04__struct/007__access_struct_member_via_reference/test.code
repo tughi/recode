@@ -10,7 +10,7 @@ struct Line {
     p2: Point
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let line = Line(
         p1: Point(x: 16, y: 32)
         p2: Point(x: 48, y: 64)

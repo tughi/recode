@@ -14,8 +14,8 @@ Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Ty
     return type;
 }
 
-Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *label, Token *name, Parsed_Type *type) {
-    Parsed_Function_Parameter *parameter = (Parsed_Function_Parameter *)malloc(sizeof(Parsed_Function_Parameter));
+Parsed_Procedure_Parameter *Parsed_Procedure_Parameter__create(Token *label, Token *name, Parsed_Type *type) {
+    Parsed_Procedure_Parameter *parameter = (Parsed_Procedure_Parameter *)malloc(sizeof(Parsed_Procedure_Parameter));
     parameter->label = label;
     parameter->name = name;
     parameter->type = type;
@@ -23,8 +23,8 @@ Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *label, Token
     return parameter;
 }
 
-Parsed_Type *Parsed_Function_Type__create(Source_Location location, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type) {
-    Parsed_Function_Type *type = (Parsed_Function_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__FUNCTION, sizeof(Parsed_Function_Type), location);
+Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
+    Parsed_Procedure_Type *type = (Parsed_Procedure_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__PROCEDURE, sizeof(Parsed_Procedure_Type), location);
     type->first_parameter = first_parameter;
     type->return_type = return_type;
     return (Parsed_Type *)type;
@@ -297,8 +297,8 @@ Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Lo
     return (Parsed_External_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__EXTERNAL_TYPE, sizeof(Parsed_External_Type_Statement), location, name);
 }
 
-Parsed_Statement *Parsed_Function_Statement__create(Source_Location location, Token *name, Parsed_Type *receiver_type, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, Parsed_Statements *statements, bool is_external) {
-    Parsed_Function_Statement *statement = (Parsed_Function_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION, sizeof(Parsed_Function_Statement), location, name);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type *receiver_type, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *resturn_type, Parsed_Statements *statements, bool is_external) {
+    Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
     statement->receiver_type = receiver_type;
     statement->first_parameter = first_parameter;
     statement->return_type = resturn_type;
@@ -379,7 +379,7 @@ Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location locatio
     return statement;
 }
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type) {
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
     Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
     method->location = location;
     method->name = name;

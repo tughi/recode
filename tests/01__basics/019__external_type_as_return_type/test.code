@@ -2,4 +2,4 @@ package test
 
 external type Value
 
-external func convert(anon number: i32) -> Value
+external proc convert(anon number: i32) -> Value

@@ -1,6 +1,6 @@
 package test
 
-func [@]u8.length(self) -> i32 {
+proc [@]u8.length(self) -> i32 {
     let length = 0
     while self[length] != 0 {
         length = length + 1
@@ -8,7 +8,7 @@ func [@]u8.length(self) -> i32 {
     return length
 }
 
-func main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
+proc main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
     if argc != 2 {
         return 1
     }

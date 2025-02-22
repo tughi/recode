@@ -4,7 +4,7 @@ type Dog = struct {
 
 type Animal = struct {
   self: ptr<Any>
-  legs: ptr<func (self: ptr<Any>) -> i32>
+  legs: ptr<proc (self: ptr<Any>) -> i32>
 }
 
 $pDog__legs(%self: ptr<Dog>): i32 {
@@ -35,7 +35,7 @@ $main() {
   [ %dog.ptr ]
   %animal.ptr: ptr<Animal> = alloc Animal
   [ %animal.ptr %dog.ptr ]
-  %4: ptr<func (self: ptr<Dog>) -> i32> = address $pDog__legs
+  %4: ptr<proc (self: ptr<Dog>) -> i32> = address $pDog__legs
   [ %4 %animal.ptr %dog.ptr ]
   %5: Animal = struct { Animal.self: %dog.ptr, Animal.legs: %4 }
   [ %4 %animal.ptr %dog.ptr ]
@@ -43,7 +43,7 @@ $main() {
   [ %4 %animal.ptr %6 %dog.ptr ]
   store %6 %dog.ptr
   [ %4 %animal.ptr ]
-  %7: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %animal.ptr Animal.legs
+  %7: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %animal.ptr Animal.legs
   [ %7 %4 ]
   store %7 %4
   [ ]

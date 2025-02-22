@@ -5,9 +5,9 @@ struct String {
     length: usize
 }
 
-external func malloc(anon size: usize) -> @Any
+external proc malloc(anon size: usize) -> @Any
 
-func str.concat(self, anon other: str) -> str {
+proc str.concat(self, anon other: str) -> str {
     if self.length == 0 {
         return other
     }
@@ -36,7 +36,7 @@ func str.concat(self, anon other: str) -> str {
     return (@result).as(@str).@
 }
 
-func str.equals(self, anon other: str) -> bool {
+proc str.equals(self, anon other: str) -> bool {
     if self.length != other.length {
         return false
     }
@@ -57,7 +57,7 @@ func str.equals(self, anon other: str) -> bool {
     return true
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let message = "Hello".concat(" world!")
     if not message.equals("Hello world!") {
         return 1

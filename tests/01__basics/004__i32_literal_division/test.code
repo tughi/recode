@@ -1,9 +1,9 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     return forty_two() / 42 - 1
 }
 
-func forty_two() -> i32 {
+proc forty_two() -> i32 {
     return 42
 }

@@ -2,5 +2,5 @@ package test
 
 external type Value
 
-func check(value: Value) -> i32 {
+proc check(value: Value) -> i32 {
 }

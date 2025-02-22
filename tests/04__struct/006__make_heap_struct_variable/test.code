@@ -10,7 +10,7 @@ struct Line {
     p2: Point
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let line = alloc Line(
         p1: Point(x: 16, y: 32)
         p2: Point(x: 48, y: 64)
@@ -18,4 +18,4 @@ func main() -> i32 {
     return line.p1.x + line.p1.y + line.p2.x + line.p2.y - 160
 }
 
-external func malloc(anon size: u64) -> @Any
+external proc malloc(anon size: u64) -> @Any

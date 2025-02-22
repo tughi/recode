@@ -4,9 +4,9 @@ external type FILE
 
 external __stdoutp: @FILE
 
-external func fputc(anon ch: i32, anon file: @FILE) -> i32
+external proc fputc(anon ch: i32, anon file: @FILE) -> i32
 
-func main() -> i32 {
+proc main() -> i32 {
     fputc(52, __stdoutp) \\ '4'
     fputc(50, __stdoutp) \\ '2'
     fputc(10, __stdoutp) \\ '\n'

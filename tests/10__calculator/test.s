@@ -54,13 +54,13 @@ main:
   call malloc
   # %13: ptr<FILE> = load $stdout
   movq stdout, %rcx
-  # %14: ptr<func (self: ptr<FILE>, char: u8)> = address $pFILE__write_char
+  # %14: ptr<proc (self: ptr<FILE>, char: u8)> = address $pFILE__write_char
   # %15: Writer = struct { Writer.self: %13, Writer.write_char: %14 }
   # %16: ptr<ptr<Any>> = offset %12 Writer.self
   movq %rax, %rdx
   # store %16 %13
   movq %rcx, 0(%rdx)
-  # %17: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %12 Writer.write_char
+  # %17: ptr<ptr<proc (self: ptr<Any>, char: u8)>> = offset %12 Writer.write_char
   movq %rax, %rcx
   # store %17 %14
   lea pFILE__write_char, %rdx
@@ -734,9 +734,9 @@ pWriter__write__char:
   movb %sil, 7(%rsp)
   # %self.1: ptr<Writer> = load %self.ptr
   movq 8(%rsp), %rax
-  # %1: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %self.1 Writer.write_char
+  # %1: ptr<ptr<proc (self: ptr<Any>, char: u8)>> = offset %self.1 Writer.write_char
   movq %rax, %rcx
-  # %2: ptr<func (self: ptr<Any>, char: u8)> = load %1
+  # %2: ptr<proc (self: ptr<Any>, char: u8)> = load %1
   movq 8(%rcx), %rdx
   # %3: ptr<ptr<Any>> = offset %self.1 Writer.self
   movq %rax, %rcx

@@ -1,7 +1,0 @@
-package test
-
-func test() {
-}
-
-func test(anon value: i32) {
-}

@@ -1,9 +1,0 @@
-package test
-
-func main() -> i32 {
-    return zero()
-}
-
-func zero() -> i32 {
-    return 0
-}

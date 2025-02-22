@@ -10,7 +10,7 @@ struct Line {
     p2: Point
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let line: Line
     line.p2.y = 64
     return line.p2.y - 64

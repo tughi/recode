@@ -1,6 +1,6 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     return sub(
         mul(
             add(
@@ -16,22 +16,22 @@ func main() -> i32 {
     )
 }
 
-func add(anon v1: i32, anon v2: i32) -> i32 {
+proc add(anon v1: i32, anon v2: i32) -> i32 {
     return v1 + v2
 }
 
-func sub(anon v1: i32, anon v2: i32) -> i32 {
+proc sub(anon v1: i32, anon v2: i32) -> i32 {
     return v1 - v2
 }
 
-func mul(anon v1: i32, anon v2: i32) -> i32 {
+proc mul(anon v1: i32, anon v2: i32) -> i32 {
     return v1 * v2
 }
 
-func div(anon v1: i32, anon v2: i32) -> i32 {
+proc div(anon v1: i32, anon v2: i32) -> i32 {
     return v1 / v2
 }
 
-func mod(anon v1: i32, anon v2: i32) -> i32 {
+proc mod(anon v1: i32, anon v2: i32) -> i32 {
     return v1 // v2
 }

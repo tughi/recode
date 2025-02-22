@@ -61,8 +61,8 @@ Checked_External_Type *Checked_External_Type__create(Source_Location location, S
     return type;
 }
 
-Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
-    Checked_Function_Parameter *parameter = (Checked_Function_Parameter *)malloc(sizeof(Checked_Function_Parameter));
+Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
+    Checked_Procedure_Parameter *parameter = (Checked_Procedure_Parameter *)malloc(sizeof(Checked_Procedure_Parameter));
     parameter->location = location;
     parameter->label = label;
     parameter->name = name;
@@ -71,19 +71,19 @@ Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location l
     return parameter;
 }
 
-Checked_Function_Type *Checked_Function_Type__create(Source_Location location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type) {
-    Checked_Function_Type *type = (Checked_Function_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION, sizeof(Checked_Function_Type), location);
+Checked_Procedure_Type *Checked_Procedure_Type__create(Source_Location location, Checked_Procedure_Parameter *first_parameter, Checked_Type *return_type) {
+    Checked_Procedure_Type *type = (Checked_Procedure_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__PROCEDURE, sizeof(Checked_Procedure_Type), location);
     type->first_parameter = first_parameter;
     type->return_type = return_type;
     return type;
 }
 
-bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function_Type *other) {
+bool Checked_Procedure_Type__equals(Checked_Procedure_Type *self, Checked_Procedure_Type *other) {
     if (!Checked_Type__equals(self->return_type, other->return_type)) {
         return false;
     }
-    Checked_Function_Parameter *self_parameter = self->first_parameter;
-    Checked_Function_Parameter *other_parameter = other->first_parameter;
+    Checked_Procedure_Parameter *self_parameter = self->first_parameter;
+    Checked_Procedure_Parameter *other_parameter = other->first_parameter;
     while (self_parameter != NULL && other_parameter != NULL) {
         if (!Checked_Type__equals(self_parameter->type, other_parameter->type)) {
             return false;
@@ -97,14 +97,14 @@ bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function
     return true;
 }
 
-Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location location, Checked_Function_Type *function_type) {
-    Checked_Function_Pointer_Type *type = (Checked_Function_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION_POINTER, sizeof(Checked_Function_Pointer_Type), location);
-    type->function_type = function_type;
+Checked_Procedure_Pointer_Type *Checked_Procedure_Pointer_Type__create(Source_Location location, Checked_Procedure_Type *procedure_type) {
+    Checked_Procedure_Pointer_Type *type = (Checked_Procedure_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__PROCEDURE_POINTER, sizeof(Checked_Procedure_Pointer_Type), location);
+    type->procedure_type = procedure_type;
     return type;
 }
 
-bool Checked_Function_Pointer_Type__equals(Checked_Function_Pointer_Type *self, Checked_Function_Pointer_Type *other) {
-    return Checked_Function_Type__equals(self->function_type, other->function_type);
+bool Checked_Procedure_Pointer_Type__equals(Checked_Procedure_Pointer_Type *self, Checked_Procedure_Pointer_Type *other) {
+    return Checked_Procedure_Type__equals(self->procedure_type, other->procedure_type);
 }
 
 Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location location, Checked_Type *item_type) {
@@ -161,11 +161,11 @@ bool Checked_Union_Type__equals(Checked_Union_Type *self, Checked_Union_Type *ot
     return String__equals_string(self->super.name, other->super.name);
 }
 
-Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member) {
+Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Procedure_Type *procedure_type, Checked_Struct_Member *struct_member) {
     Checked_Trait_Method *method = (Checked_Trait_Method *)malloc(sizeof(Checked_Trait_Method));
     method->location = location;
     method->name = name;
-    method->function_type = function_type;
+    method->procedure_type = procedure_type;
     method->struct_member = struct_member;
     method->next_method = NULL;
     return method;
@@ -204,10 +204,10 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
-    case CHECKED_TYPE_KIND__FUNCTION:
-        return Checked_Function_Type__equals((Checked_Function_Type *)self, (Checked_Function_Type *)other);
-    case CHECKED_TYPE_KIND__FUNCTION_POINTER:
-        return Checked_Function_Pointer_Type__equals((Checked_Function_Pointer_Type *)self, (Checked_Function_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__PROCEDURE:
+        return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
+        return Checked_Procedure_Pointer_Type__equals((Checked_Procedure_Pointer_Type *)self, (Checked_Procedure_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__MULTI_POINTER:
         return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
@@ -244,25 +244,25 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         pWriter__write__string(self, named_type->name);
         break;
     }
-    case CHECKED_TYPE_KIND__FUNCTION: {
+    case CHECKED_TYPE_KIND__PROCEDURE: {
         panic();
         break;
     }
-    case CHECKED_TYPE_KIND__FUNCTION_POINTER: {
-        Checked_Function_Pointer_Type *function_pointer_type = (Checked_Function_Pointer_Type *)type;
-        pWriter__write__cstring(self, "func (");
-        Checked_Function_Parameter *function_parameter = function_pointer_type->function_type->first_parameter;
-        while (function_parameter != NULL) {
-            pWriter__write__string(self, function_parameter->name);
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+        Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type;
+        pWriter__write__cstring(self, "proc (");
+        Checked_Procedure_Parameter *procedure_parameter = procedure_pointer_type->procedure_type->first_parameter;
+        while (procedure_parameter != NULL) {
+            pWriter__write__string(self, procedure_parameter->name);
             pWriter__write__cstring(self, ": ");
-            pWriter__write__checked_type(self, function_parameter->type);
-            function_parameter = function_parameter->next_parameter;
-            if (function_parameter != NULL) {
+            pWriter__write__checked_type(self, procedure_parameter->type);
+            procedure_parameter = procedure_parameter->next_parameter;
+            if (procedure_parameter != NULL) {
                 pWriter__write__cstring(self, ", ");
             }
         }
         pWriter__write__cstring(self, ") -> ");
-        pWriter__write__checked_type(self, function_pointer_type->function_type->return_type);
+        pWriter__write__checked_type(self, procedure_pointer_type->procedure_type->return_type);
         break;
     }
     case CHECKED_TYPE_KIND__MULTI_POINTER: {
@@ -309,23 +309,23 @@ Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location l
     return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), location, name, type);
 }
 
-Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location location, String *symbol_name, Source_Location function_location, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type) {
-    Checked_Function_Symbol *symbol = (Checked_Function_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION, sizeof(Checked_Function_Symbol), location, symbol_name, (Checked_Type *)Checked_Function_Pointer_Type__create(function_type->super.location, function_type));
-    symbol->function_location = function_location;
-    symbol->function_name = function_name;
-    symbol->function_type = function_type;
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
+    Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type));
+    symbol->procedure_location = procedure_location;
+    symbol->procedure_name = procedure_name;
+    symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
     symbol->checked_statements = NULL;
     return symbol;
 }
 
-void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol) {
-    pWriter__write__cstring(writer, "func ");
-    Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
-    if (function_symbol->receiver_type != NULL) {
-        pWriter__write__checked_type(writer, function_symbol->receiver_type);
+void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_Symbol *procedure_symbol) {
+    pWriter__write__cstring(writer, "proc ");
+    Checked_Procedure_Parameter *parameter = procedure_symbol->procedure_type->first_parameter;
+    if (procedure_symbol->receiver_type != NULL) {
+        pWriter__write__checked_type(writer, procedure_symbol->receiver_type);
         pWriter__write__char(writer, '.');
-        pWriter__write__string(writer, function_symbol->function_name);
+        pWriter__write__string(writer, procedure_symbol->procedure_name);
         pWriter__write__char(writer, '(');
         if (parameter != NULL) {
             pWriter__write__string(writer, parameter->name);
@@ -335,7 +335,7 @@ void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Sy
             }
         }
     } else {
-        pWriter__write__string(writer, function_symbol->function_name);
+        pWriter__write__string(writer, procedure_symbol->procedure_name);
         pWriter__write__char(writer, '(');
     }
     while (parameter != NULL) {
@@ -352,14 +352,14 @@ void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Sy
         }
     }
     pWriter__write__char(writer, ')');
-    if (function_symbol->function_type->return_type != NULL) {
+    if (procedure_symbol->procedure_type->return_type != NULL) {
         pWriter__write__cstring(writer, " -> ");
-        pWriter__write__checked_type(writer, function_symbol->function_type->return_type);
+        pWriter__write__checked_type(writer, procedure_symbol->procedure_type->return_type);
     }
 }
 
-Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type) {
-    return (Checked_Function_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION_PARAMETER, sizeof(Checked_Function_Parameter_Symbol), location, name, type);
+Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type) {
+    return (Checked_Procedure_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER, sizeof(Checked_Procedure_Parameter_Symbol), location, name, type);
 }
 
 Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {

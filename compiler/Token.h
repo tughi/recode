@@ -118,7 +118,7 @@ bool Token__is_exclamation_mark(Token *self);
 bool Token__is_extern(Token *self);
 bool Token__is_external(Token *self);
 bool Token__is_false(Token *self);
-bool Token__is_func(Token *self);
+bool Token__is_proc(Token *self);
 bool Token__is_greater_than(Token *self);
 bool Token__is_hash(Token *self);
 bool Token__is_identifier(Token *self);

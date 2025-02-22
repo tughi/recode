@@ -10,7 +10,7 @@ struct Literal {
     value: Value
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let literal = Literal(value: Value(42))
     switch literal.value {
         is i32 as value {

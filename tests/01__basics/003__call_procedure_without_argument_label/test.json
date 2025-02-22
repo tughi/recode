@@ -1,0 +1,10 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/003__call_procedure_without_argument_label/test.code:4:12-19: Unknown callable: echo(i32)",
+            "Similar callables:",
+            "tests/01__basics/003__call_procedure_without_argument_label/test.code:7:1: proc echo(value: i32) -> i32"
+        ]
+    }
+}

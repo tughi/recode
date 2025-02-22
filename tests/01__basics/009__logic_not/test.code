@@ -1,6 +1,6 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     if test_not(true) {
         return 1
     }
@@ -18,6 +18,6 @@ func main() -> i32 {
     return 0
 }
 
-func test_not(anon v: bool) -> bool {
+proc test_not(anon v: bool) -> bool {
     return not v
 }

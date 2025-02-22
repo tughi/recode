@@ -1,9 +1,9 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     let mem = malloc(42)
 
     return 0
 }
 
-external func malloc(anon size: u64) -> @Any
+external proc malloc(anon size: u64) -> @Any

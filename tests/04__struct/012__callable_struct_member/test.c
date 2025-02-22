@@ -25,8 +25,8 @@ int32_t test__forty_two() {
 #line 11 "tests/04__struct/012__callable_struct_member/test.code"
 int32_t test__main() {
 #line 12 "tests/04__struct/012__callable_struct_member/test.code"
-    struct Function function = (struct Function){.run = test__forty_two};
+    struct Function procedure = (struct Function){.run = test__forty_two};
 #line 14 "tests/04__struct/012__callable_struct_member/test.code"
-    return function.run() - 42;
+    return procedure.run() - 42;
 }
 

@@ -1,4 +1,0 @@
-package test
-
-external func test() -> i32 {
-}

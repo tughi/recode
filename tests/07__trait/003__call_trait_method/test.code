@@ -1,14 +1,14 @@
 package test
 
 trait Shape {
-    func area(self) -> i32
+    proc area(self) -> i32
 }
 
 struct Square {
     side: i32
 }
 
-func @Square.area(self) -> i32 {
+proc @Square.area(self) -> i32 {
     return self.side * self.side
 }
 
@@ -16,11 +16,11 @@ struct Circle {
     radius: i32
 }
 
-func @Circle.area(self) -> i32 {
+proc @Circle.area(self) -> i32 {
     return 312 * self.radius * self.radius / 100
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let square = Square(side: 10)
     let square_shape = Shape(@square)
     let circle = Circle(radius: 10)

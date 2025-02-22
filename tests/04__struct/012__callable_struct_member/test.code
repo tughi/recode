@@ -1,15 +1,15 @@
 package test
 
 struct Function {
-    run: func () -> i32
+    run: proc () -> i32
 }
 
-func forty_two() -> i32 {
+proc forty_two() -> i32 {
     return 42
 }
 
-func main() -> i32 {
-    let function = Function(run: forty_two)
+proc main() -> i32 {
+    let procedure = Function(run: forty_two)
 
-    return function.run() - 42
+    return procedure.run() - 42
 }

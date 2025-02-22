@@ -19,7 +19,7 @@ type StringBuilder = struct {
 
 type Writer = struct {
   self: ptr<Any>
-  write_char: ptr<func (self: ptr<Any>, char: u8)>
+  write_char: ptr<proc (self: ptr<Any>, char: u8)>
 }
 
 external $stdin: ptr<FILE>
@@ -83,7 +83,7 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   [ %stdout_writer.ptr %12 $stdout %tokenizer.ptr ]
   %13: ptr<FILE> = load $stdout
   [ %stdout_writer.ptr %12 %13 %tokenizer.ptr ]
-  %14: ptr<func (self: ptr<FILE>, char: u8)> = address $pFILE__write_char
+  %14: ptr<proc (self: ptr<FILE>, char: u8)> = address $pFILE__write_char
   [ %stdout_writer.ptr %12 %14 %13 %tokenizer.ptr ]
   %15: Writer = struct { Writer.self: %13, Writer.write_char: %14 }
   [ %stdout_writer.ptr %12 %14 %13 %tokenizer.ptr ]
@@ -91,7 +91,7 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   [ %stdout_writer.ptr %12 %14 %16 %13 %tokenizer.ptr ]
   store %16 %13
   [ %stdout_writer.ptr %12 %14 %tokenizer.ptr ]
-  %17: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %12 Writer.write_char
+  %17: ptr<ptr<proc (self: ptr<Any>, char: u8)>> = offset %12 Writer.write_char
   [ %stdout_writer.ptr %12 %17 %14 %tokenizer.ptr ]
   store %17 %14
   [ %stdout_writer.ptr %12 %tokenizer.ptr ]
@@ -693,9 +693,9 @@ $pWriter__write__char(%self: ptr<Writer>, %char: u8): ptr<Writer> {
   [ %self.ptr %char.ptr ]
   %self.1: ptr<Writer> = load %self.ptr
   [ %self.ptr %char.ptr %self.1 ]
-  %1: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %self.1 Writer.write_char
+  %1: ptr<ptr<proc (self: ptr<Any>, char: u8)>> = offset %self.1 Writer.write_char
   [ %self.ptr %char.ptr %self.1 %1 ]
-  %2: ptr<func (self: ptr<Any>, char: u8)> = load %1
+  %2: ptr<proc (self: ptr<Any>, char: u8)> = load %1
   [ %self.ptr %2 %char.ptr %self.1 ]
   %3: ptr<ptr<Any>> = offset %self.1 Writer.self
   [ %self.ptr %2 %char.ptr %3 ]

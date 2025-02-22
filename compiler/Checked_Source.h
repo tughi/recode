@@ -26,12 +26,12 @@ typedef enum Checked_Type_Kind {
     /* Defined */
     CHECKED_TYPE_KIND__ARRAY,
     CHECKED_TYPE_KIND__EXTERNAL,
-    CHECKED_TYPE_KIND__FUNCTION,
+    CHECKED_TYPE_KIND__PROCEDURE,
     CHECKED_TYPE_KIND__STRUCT,
     CHECKED_TYPE_KIND__TRAIT,
     CHECKED_TYPE_KIND__UNION,
     /* Dynamic */
-    CHECKED_TYPE_KIND__FUNCTION_POINTER,
+    CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
@@ -124,32 +124,32 @@ typedef struct Checked_External_Type {
 
 Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name);
 
-typedef struct Checked_Function_Parameter {
+typedef struct Checked_Procedure_Parameter {
     Source_Location location;
     String *label;
     String *name;
     Checked_Type *type;
-    struct Checked_Function_Parameter *next_parameter;
-} Checked_Function_Parameter;
+    struct Checked_Procedure_Parameter *next_parameter;
+} Checked_Procedure_Parameter;
 
-Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type);
+Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type);
 
-typedef struct Checked_Function_Type {
+typedef struct Checked_Procedure_Type {
     Checked_Type super;
     Checked_Type *return_type;
-    Checked_Function_Parameter *first_parameter;
-} Checked_Function_Type;
+    Checked_Procedure_Parameter *first_parameter;
+} Checked_Procedure_Type;
 
-Checked_Function_Type *Checked_Function_Type__create(Source_Location location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type);
+Checked_Procedure_Type *Checked_Procedure_Type__create(Source_Location location, Checked_Procedure_Parameter *first_parameter, Checked_Type *return_type);
 
-bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function_Type *other);
+bool Checked_Procedure_Type__equals(Checked_Procedure_Type *self, Checked_Procedure_Type *other);
 
-typedef struct Checked_Function_Pointer_Type {
+typedef struct Checked_Procedure_Pointer_Type {
     Checked_Type super;
-    Checked_Function_Type *function_type;
-} Checked_Function_Pointer_Type;
+    Checked_Procedure_Type *procedure_type;
+} Checked_Procedure_Pointer_Type;
 
-Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location location, Checked_Function_Type *function_type);
+Checked_Procedure_Pointer_Type *Checked_Procedure_Pointer_Type__create(Source_Location location, Checked_Procedure_Type *procedure_type);
 
 typedef struct Checked_Multi_Pointer_Type {
     Checked_Type super;
@@ -186,12 +186,12 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
 typedef struct Checked_Trait_Method {
     Source_Location location;
     String *name;
-    Checked_Function_Type *function_type;
+    Checked_Procedure_Type *procedure_type;
     Checked_Struct_Member *struct_member;
     struct Checked_Trait_Method *next_method;
 } Checked_Trait_Method;
 
-Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member);
+Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Procedure_Type *procedure_type, Checked_Struct_Member *struct_member);
 
 typedef struct Checked_Trait_Type {
     Checked_Named_Type super;
@@ -224,8 +224,8 @@ void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
-    CHECKED_SYMBOL_KIND__FUNCTION,
-    CHECKED_SYMBOL_KIND__FUNCTION_PARAMETER,
+    CHECKED_SYMBOL_KIND__PROCEDURE,
+    CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__VARIABLE,
     CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT
@@ -279,24 +279,24 @@ Checked_Statements *Checked_Statements__create();
 
 void Checked_Statements__append(Checked_Statements *self, Checked_Statement *statement);
 
-typedef struct Checked_Function_Symbol {
+typedef struct Checked_Procedure_Symbol {
     Checked_Symbol super;
-    Source_Location function_location;
-    String *function_name;
-    Checked_Function_Type *function_type;
+    Source_Location procedure_location;
+    String *procedure_name;
+    Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
     Checked_Statements *checked_statements;
-} Checked_Function_Symbol;
+} Checked_Procedure_Symbol;
 
-Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location location, String *symbol_name, Source_Location function_location, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type);
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
 
-void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol);
+void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_Symbol *procedure_symbol);
 
-typedef struct Checked_Function_Parameter_Symbol {
+typedef struct Checked_Procedure_Parameter_Symbol {
     Checked_Symbol super;
-} Checked_Function_Parameter_Symbol;
+} Checked_Procedure_Parameter_Symbol;
 
-Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type);
+Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Type_Symbol {
     Checked_Symbol super;

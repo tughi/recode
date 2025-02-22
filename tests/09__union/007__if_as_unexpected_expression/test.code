@@ -9,7 +9,7 @@ struct Item {
     value: Value
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let item = Item(value: Value(42))
 
     if item.value is i32 as integer {

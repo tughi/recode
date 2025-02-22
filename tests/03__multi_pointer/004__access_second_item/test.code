@@ -1,6 +1,6 @@
 package test
 
-func main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
+proc main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
     if argc < 2 {
         return 1
     }

@@ -1,17 +1,17 @@
 package test
 
 trait Animal {
-    func legs(self) -> i32
+    proc legs(self) -> i32
 }
 
 struct Dog {
 }
 
-func @Dog.legs(self) -> i32 {
+proc @Dog.legs(self) -> i32 {
     return 4
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let dog = Dog()
     let animal = Animal(dog)
     return 0

@@ -1,0 +1,16 @@
+package test
+
+external proc exit(anon status: i32)
+
+proc main() -> i32 {
+    finish()
+    return 1
+}
+
+proc finish() {
+    nothing()
+    exit(0)
+}
+
+proc nothing() {
+}

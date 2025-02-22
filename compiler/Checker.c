@@ -120,29 +120,29 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         }
         return (Checked_Type *)Checked_Array_Type__create(parsed_type->location, checked_item_type, checked_size_expression);
     }
-    case PARSED_TYPE_KIND__FUNCTION: {
-        Parsed_Function_Type *parsed_function_type = (Parsed_Function_Type *)parsed_type;
-        Checked_Function_Parameter *function_first_parameter = NULL;
-        Parsed_Function_Parameter *parsed_parameter = parsed_function_type->first_parameter;
+    case PARSED_TYPE_KIND__PROCEDURE: {
+        Parsed_Procedure_Type *parsed_procedure_type = (Parsed_Procedure_Type *)parsed_type;
+        Checked_Procedure_Parameter *procedure_first_parameter = NULL;
+        Parsed_Procedure_Parameter *parsed_parameter = parsed_procedure_type->first_parameter;
         if (parsed_parameter != NULL) {
-            function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
-            Checked_Function_Parameter *function_last_parameter = function_first_parameter;
+            procedure_first_parameter = Checked_Procedure_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+            Checked_Procedure_Parameter *procedure_last_parameter = procedure_first_parameter;
             parsed_parameter = parsed_parameter->next_parameter;
             while (parsed_parameter != NULL) {
-                Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
-                function_last_parameter->next_parameter = function_parameter;
-                function_last_parameter = function_parameter;
+                Checked_Procedure_Parameter *procedure_parameter = Checked_Procedure_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+                procedure_last_parameter->next_parameter = procedure_parameter;
+                procedure_last_parameter = procedure_parameter;
                 parsed_parameter = parsed_parameter->next_parameter;
             }
         }
-        Checked_Type *function_return_type;
-        if (parsed_function_type->return_type == NULL) {
-            function_return_type = (Checked_Type *)self->nothing_type;
+        Checked_Type *procedure_return_type;
+        if (parsed_procedure_type->return_type == NULL) {
+            procedure_return_type = (Checked_Type *)self->nothing_type;
         } else {
-            function_return_type = Checker__resolve_type(self, parsed_function_type->return_type);
+            procedure_return_type = Checker__resolve_type(self, parsed_procedure_type->return_type);
         }
-        Checked_Function_Type *function_type = Checked_Function_Type__create(parsed_function_type->super.location, function_first_parameter, function_return_type);
-        return (Checked_Type *)Checked_Function_Pointer_Type__create(parsed_type->location, function_type);
+        Checked_Procedure_Type *procedure_type = Checked_Procedure_Type__create(parsed_procedure_type->super.location, procedure_first_parameter, procedure_return_type);
+        return (Checked_Type *)Checked_Procedure_Pointer_Type__create(parsed_type->location, procedure_type);
     }
     case PARSED_TYPE_KIND__MULTI_POINTER:
         return (Checked_Type *)Checked_Multi_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Multi_Pointer_Type *)parsed_type)->item_type));
@@ -260,37 +260,37 @@ Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Ex
     return (Checked_Expression *)Checked_Bool_Expression__create(parsed_expression->super.super.location, expression_type, value);
 }
 
-Checked_Function_Symbol *Checker__find_function_symbol(Checker *self, String *function_name, Parsed_Call_Argument *first_call_argument, Checked_Type *receiver_type, int *similars) {
+Checked_Procedure_Symbol *Checker__find_procedure_symbol(Checker *self, String *procedure_name, Parsed_Call_Argument *first_call_argument, Checked_Type *receiver_type, int *similars) {
     Checked_Symbol *symbol = self->global_symbols->first_symbol;
     for (; symbol != NULL; symbol = symbol->next_symbol) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-            Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
-            if (String__equals_string(function_symbol->function_name, function_name)) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            if (String__equals_string(procedure_symbol->procedure_name, procedure_name)) {
                 (*similars)++;
-                Checked_Function_Parameter *function_parameter = function_symbol->function_type->first_parameter;
+                Checked_Procedure_Parameter *procedure_parameter = procedure_symbol->procedure_type->first_parameter;
                 if (receiver_type != NULL) {
-                    if (function_symbol->receiver_type == NULL || !Checked_Type__equals(function_symbol->receiver_type, receiver_type)) {
+                    if (procedure_symbol->receiver_type == NULL || !Checked_Type__equals(procedure_symbol->receiver_type, receiver_type)) {
                         continue;
                     }
-                    if (function_parameter == NULL || !Checked_Type__equals(function_parameter->type, receiver_type)) {
+                    if (procedure_parameter == NULL || !Checked_Type__equals(procedure_parameter->type, receiver_type)) {
                         panic();
                     }
-                    function_parameter = function_parameter->next_parameter;
+                    procedure_parameter = procedure_parameter->next_parameter;
                 }
                 Parsed_Call_Argument *call_argument = first_call_argument;
-                while (function_parameter != NULL && call_argument != NULL) {
-                    if (function_parameter->label == NULL) {
+                while (procedure_parameter != NULL && call_argument != NULL) {
+                    if (procedure_parameter->label == NULL) {
                         if (call_argument->name != NULL) {
                             break;
                         }
-                    } else if (call_argument->name == NULL || !String__equals_string(function_parameter->label, call_argument->name->super.lexeme)) {
+                    } else if (call_argument->name == NULL || !String__equals_string(procedure_parameter->label, call_argument->name->super.lexeme)) {
                         break;
                     }
-                    function_parameter = function_parameter->next_parameter;
+                    procedure_parameter = procedure_parameter->next_parameter;
                     call_argument = call_argument->next_argument;
                 }
-                if (function_parameter == NULL && call_argument == NULL) {
-                    return function_symbol;
+                if (procedure_parameter == NULL && call_argument == NULL) {
+                    return procedure_symbol;
                 }
             }
         }
@@ -298,15 +298,15 @@ Checked_Function_Symbol *Checker__find_function_symbol(Checker *self, String *fu
     return NULL;
 }
 
-Checked_Function_Symbol *Checker__find_function_symbol_by_type(Checker *self, String *function_name, Checked_Function_Type *function_type, int *similars) {
+Checked_Procedure_Symbol *Checker__find_procedure_symbol_by_type(Checker *self, String *procedure_name, Checked_Procedure_Type *procedure_type, int *similars) {
     Checked_Symbol *symbol = self->global_symbols->first_symbol;
     for (; symbol != NULL; symbol = symbol->next_symbol) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-            Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
-            if (String__equals_string(function_symbol->function_name, function_name)) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            if (String__equals_string(procedure_symbol->procedure_name, procedure_name)) {
                 (*similars)++;
-                if (Checked_Function_Type__equals(function_symbol->function_type, function_type)) {
-                    return function_symbol;
+                if (Checked_Procedure_Type__equals(procedure_symbol->procedure_type, procedure_type)) {
+                    return procedure_symbol;
                 }
             }
         }
@@ -315,7 +315,7 @@ Checked_Function_Symbol *Checker__find_function_symbol_by_type(Checker *self, St
 }
 
 typedef struct Checked_Callable {
-    Checked_Function_Type *function_type;
+    Checked_Procedure_Type *procedure_type;
     Checked_Expression *callee_expression;
     Checked_Expression *receiver_expression;
 } Checked_Callable;
@@ -323,24 +323,24 @@ typedef struct Checked_Callable {
 Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_name, Parsed_Call_Argument *first_parsed_argument, Checked_Expression *receiver_expression, Source_Location location) {
     if (receiver_expression == NULL) {
         Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, symbol_name->lexeme);
-        if (symbol != NULL && symbol->kind != CHECKED_SYMBOL_KIND__FUNCTION) {
-            if (symbol->type->kind != CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+        if (symbol != NULL && symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE) {
+            if (symbol->type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
                 pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "Not a function pointer");
+                pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
             return (Checked_Callable){
-                .function_type = ((Checked_Function_Pointer_Type *)symbol->type)->function_type,
+                .procedure_type = ((Checked_Procedure_Pointer_Type *)symbol->type)->procedure_type,
                 .callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(symbol_name->location, symbol->type, (Checked_Symbol *)symbol),
                 .receiver_expression = NULL,
             };
         }
     }
 
-    int similar_function_symbols = 0;
-    Checked_Function_Symbol *function_symbol = Checker__find_function_symbol(self, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_function_symbols);
-    if (function_symbol == NULL) {
+    int similar_procedure_symbols = 0;
+    Checked_Procedure_Symbol *procedure_symbol = Checker__find_procedure_symbol(self, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_procedure_symbols);
+    if (procedure_symbol == NULL) {
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unknown callable: ");
         if (receiver_expression != NULL) {
@@ -366,16 +366,16 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         }
         pWriter__write__char(stderr_writer, ')');
         pWriter__end_location_message(stderr_writer);
-        if (similar_function_symbols > 0) {
+        if (similar_procedure_symbols > 0) {
             pWriter__write__cstring(stderr_writer, "Similar callables:");
             pWriter__end_line(stderr_writer);
             Checked_Symbol *symbol = self->global_symbols->first_symbol;
             for (; symbol != NULL; symbol = symbol->next_symbol) {
-                if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-                    function_symbol = (Checked_Function_Symbol *)symbol;
-                    if (String__equals_string(function_symbol->function_name, symbol_name->lexeme)) {
-                        pWriter__begin_location_message(stderr_writer, function_symbol->function_location, WRITER_STYLE__WARNING);
-                        pWriter__write__checked_function_symbol(stderr_writer, function_symbol);
+                if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                    procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+                    if (String__equals_string(procedure_symbol->procedure_name, symbol_name->lexeme)) {
+                        pWriter__begin_location_message(stderr_writer, procedure_symbol->procedure_location, WRITER_STYLE__WARNING);
+                        pWriter__write__checked_procedure_symbol(stderr_writer, procedure_symbol);
                         pWriter__end_location_message(stderr_writer);
                     }
                 }
@@ -385,8 +385,8 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         panic();
     }
     return (Checked_Callable){
-        .function_type = function_symbol->function_type,
-        .callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(symbol_name->location, function_symbol->super.type, (Checked_Symbol *)function_symbol),
+        .procedure_type = procedure_symbol->procedure_type,
+        .callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(symbol_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol),
         .receiver_expression = receiver_expression,
     };
 }
@@ -403,14 +403,14 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
         }
         Checked_Struct_Member *struct_member = Checked_Struct_Type__find_member(struct_type, parsed_callee_expression->member_name->lexeme);
         if (struct_member != NULL) {
-            if (struct_member->type->kind != CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+            if (struct_member->type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
                 pWriter__begin_location_message(stderr_writer, parsed_callee_expression->member_name->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "Not a function pointer");
+                pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
             return (Checked_Callable){
-                .function_type = ((Checked_Function_Pointer_Type *)struct_member->type)->function_type,
+                .procedure_type = ((Checked_Procedure_Pointer_Type *)struct_member->type)->procedure_type,
                 .callee_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_callee_expression->super.location, struct_member->type, object_expression, struct_member),
                 .receiver_expression = NULL,
             };
@@ -431,7 +431,7 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
         for (; trait_method != NULL; trait_method = trait_method->next_method) {
             if (String__equals_string(trait_method->name, parsed_callee_expression->member_name->lexeme)) {
                 return (Checked_Callable){
-                    .function_type = trait_method->function_type,
+                    .procedure_type = trait_method->procedure_type,
                     .callee_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_callee_expression->super.location, trait_method->struct_member->type, object_expression, trait_method->struct_member),
                     .receiver_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_callee_expression->super.location, trait_type->self_struct_member->type, object_expression, trait_type->self_struct_member),
                 };
@@ -505,25 +505,25 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
     Checked_Call_Argument *first_argument = NULL;
     if (parsed_expression->first_argument != NULL || checked_callable.receiver_expression != NULL) {
         Checked_Call_Argument *last_argument = NULL;
-        Checked_Function_Parameter *function_parameter = checked_callable.function_type->first_parameter;
-        if (function_parameter == NULL) {
+        Checked_Procedure_Parameter *procedure_parameter = checked_callable.procedure_type->first_parameter;
+        if (procedure_parameter == NULL) {
             pWriter__begin_location_message(stderr_writer, checked_callable.callee_expression->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Function has no parameters");
+            pWriter__write__cstring(stderr_writer, "Procedure has no parameters");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
         if (checked_callable.receiver_expression != NULL) {
-            Checker__require_same_type(self, function_parameter->type, checked_callable.receiver_expression->type, checked_callable.receiver_expression->location);
+            Checker__require_same_type(self, procedure_parameter->type, checked_callable.receiver_expression->type, checked_callable.receiver_expression->location);
             first_argument = last_argument = Checked_Call_Argument__create(checked_callable.receiver_expression);
-            function_parameter = function_parameter->next_parameter;
+            procedure_parameter = procedure_parameter->next_parameter;
         }
         Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument;
-        while (function_parameter != NULL && parsed_argument != NULL) {
-            Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, function_parameter->type);
-            if (function_parameter->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(function_parameter->type, argument_expression->type)) {
-                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, argument_expression->location, (Checked_Union_Type *)function_parameter->type, argument_expression);
+        while (procedure_parameter != NULL && parsed_argument != NULL) {
+            Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, procedure_parameter->type);
+            if (procedure_parameter->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(procedure_parameter->type, argument_expression->type)) {
+                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, argument_expression->location, (Checked_Union_Type *)procedure_parameter->type, argument_expression);
             }
-            Checker__require_same_type(self, function_parameter->type, argument_expression->type, argument_expression->location);
+            Checker__require_same_type(self, procedure_parameter->type, argument_expression->type, argument_expression->location);
             Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression);
             if (last_argument == NULL) {
                 first_argument = argument;
@@ -531,17 +531,17 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
                 last_argument->next_argument = argument;
             }
             last_argument = argument;
-            function_parameter = function_parameter->next_parameter;
+            procedure_parameter = procedure_parameter->next_parameter;
             parsed_argument = parsed_argument->next_argument;
         }
-        if (function_parameter != NULL) {
+        if (procedure_parameter != NULL) {
             todo("Report too few arguments");
         }
         if (parsed_argument != NULL) {
             todo("Report too many arguments");
         }
     }
-    return (Checked_Expression *)Checked_Call_Expression__create(parsed_expression->super.location, checked_callable.function_type->return_type, checked_callable.callee_expression, first_argument);
+    return (Checked_Expression *)Checked_Call_Expression__create(parsed_expression->super.location, checked_callable.procedure_type->return_type, checked_callable.callee_expression, first_argument);
 }
 
 Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Expression *parsed_expression) {
@@ -719,18 +719,18 @@ Checked_Expression *Checker__check_init_trait_expression(Checker *self, Checked_
     Checked_Make_Struct_Argument *last_make_struct_argument = first_make_struct_argument;
     Checked_Trait_Method *trait_method;
     for (trait_method = trait_type->first_method; trait_method != NULL; trait_method = trait_method->next_method) {
-        int32_t function_symbol_similars = 0;
-        Checked_Type *saved_first_parameter_type = trait_method->function_type->first_parameter->type;
-        trait_method->function_type->first_parameter->type = self_expression->type;
-        Checked_Function_Symbol *function_symbol = Checker__find_function_symbol_by_type(self, trait_method->name, trait_method->function_type, &function_symbol_similars);
-        trait_method->function_type->first_parameter->type = saved_first_parameter_type;
-        if (function_symbol != NULL) {
-            Checked_Symbol_Expression *function_symbol_expression = Checked_Symbol_Expression__create(location, function_symbol->super.type, (Checked_Symbol *)function_symbol);
-            Checked_Cast_Expression *trait_struct_member_argument_expression = Checked_Cast_Expression__create(location, trait_method->struct_member->type, (Checked_Expression *)function_symbol_expression);
+        int32_t procedure_symbol_similars = 0;
+        Checked_Type *saved_first_parameter_type = trait_method->procedure_type->first_parameter->type;
+        trait_method->procedure_type->first_parameter->type = self_expression->type;
+        Checked_Procedure_Symbol *procedure_symbol = Checker__find_procedure_symbol_by_type(self, trait_method->name, trait_method->procedure_type, &procedure_symbol_similars);
+        trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
+        if (procedure_symbol != NULL) {
+            Checked_Symbol_Expression *procedure_symbol_expression = Checked_Symbol_Expression__create(location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+            Checked_Cast_Expression *trait_struct_member_argument_expression = Checked_Cast_Expression__create(location, trait_method->struct_member->type, (Checked_Expression *)procedure_symbol_expression);
             last_make_struct_argument = last_make_struct_argument->next_argument = Checked_Make_Struct_Argument__create(trait_method->struct_member, (Checked_Expression *)trait_struct_member_argument_expression);
-        } else if (function_symbol_similars > 1) {
+        } else if (procedure_symbol_similars > 1) {
             pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Ambiguous function symbol: ");
+            pWriter__write__cstring(stderr_writer, "Ambiguous procedure symbol: ");
             pWriter__write__string(stderr_writer, trait_method->name);
             pWriter__end_location_message(stderr_writer);
             panic();
@@ -743,11 +743,11 @@ Checked_Expression *Checker__check_init_trait_expression(Checker *self, Checked_
             pWriter__write__cstring(stderr_writer, " trait.");
             pWriter__end_location_message(stderr_writer);
             pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Missing function: ");
-            Checked_Function_Symbol missing_function_symbol = {.function_name = trait_method->name, .function_type = trait_method->function_type};
-            trait_method->function_type->first_parameter->type = self_expression->type;
-            pWriter__write__checked_function_symbol(stderr_writer, &missing_function_symbol);
-            trait_method->function_type->first_parameter->type = saved_first_parameter_type;
+            pWriter__write__cstring(stderr_writer, "Missing procedure: ");
+            Checked_Procedure_Symbol missing_procedure_symbol = {.procedure_name = trait_method->name, .procedure_type = trait_method->procedure_type};
+            trait_method->procedure_type->first_parameter->type = self_expression->type;
+            pWriter__write__checked_procedure_symbol(stderr_writer, &missing_procedure_symbol);
+            trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
             pWriter__end_location_message(stderr_writer);
             panic();
         }
@@ -999,18 +999,18 @@ Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Sub
 }
 
 Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression, Checked_Type *expected_type) {
-    if (expected_type != NULL && expected_type->kind == CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+    if (expected_type != NULL && expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
         Checked_Symbol *symbol = self->global_symbols->first_symbol;
         for (; symbol != NULL; symbol = symbol->next_symbol) {
-            if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-                Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
-                if (String__equals_string(function_symbol->function_name, parsed_expression->name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+                if (String__equals_string(procedure_symbol->procedure_name, parsed_expression->name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
                     return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, expected_type, symbol);
                 }
             }
         }
         pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Undefined function: ");
+        pWriter__write__cstring(stderr_writer, "Undefined procedure: ");
         pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
         pWriter__end_location_message(stderr_writer);
         panic();
@@ -1018,22 +1018,22 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
     Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_expression->name->lexeme);
     if (symbol == NULL) {
         if (expected_type == NULL) {
-            Checked_Symbol *function_symbol = NULL;
-            int function_simbols = 0;
+            Checked_Symbol *procedure_symbol = NULL;
+            int procedure_simbols = 0;
             symbol = self->global_symbols->first_symbol;
             for (; symbol != NULL; symbol = symbol->next_symbol) {
-                if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_string(((Checked_Function_Symbol *)symbol)->function_name, parsed_expression->name->lexeme)) {
-                    function_symbol = symbol;
-                    function_simbols++;
+                if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_string(((Checked_Procedure_Symbol *)symbol)->procedure_name, parsed_expression->name->lexeme)) {
+                    procedure_symbol = symbol;
+                    procedure_simbols++;
                 }
             }
-            if (function_simbols == 1) {
-                return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, function_symbol->type, function_symbol);
-            } else if (function_simbols > 1) {
+            if (procedure_simbols == 1) {
+                return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, procedure_symbol->type, procedure_symbol);
+            } else if (procedure_simbols > 1) {
                 pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Found ");
-                pWriter__write__int64(stderr_writer, function_simbols);
-                pWriter__write__cstring(stderr_writer, " functions named: ");
+                pWriter__write__int64(stderr_writer, procedure_simbols);
+                pWriter__write__cstring(stderr_writer, " procedures named: ");
                 pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
                 pWriter__end_location_message(stderr_writer);
                 panic();
@@ -1246,11 +1246,11 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
     return (Checked_Type *)struct_type;
 }
 
-Checked_Function_Type *Checker__check_function_type(Checker *self, Source_Location location, Parsed_Function_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
-    Checked_Type *function_return_type;
+Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
+    Checked_Type *procedure_return_type;
     if (parsed_return_type != NULL) {
-        function_return_type = Checker__resolve_type(self, parsed_return_type);
-        switch (function_return_type->kind) {
+        procedure_return_type = Checker__resolve_type(self, parsed_return_type);
+        switch (procedure_return_type->kind) {
         case CHECKED_TYPE_KIND__ANY:
             pWriter__begin_location_message(stderr_writer, parsed_return_type->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Cannot use Any as return type");
@@ -1265,14 +1265,14 @@ Checked_Function_Type *Checker__check_function_type(Checker *self, Source_Locati
             break;
         }
     } else {
-        function_return_type = (Checked_Type *)self->nothing_type;
+        procedure_return_type = (Checked_Type *)self->nothing_type;
     }
-    Checked_Function_Parameter *function_first_parameter = NULL;
-    Checked_Function_Parameter *function_last_parameter = NULL;
-    Parsed_Function_Parameter *parsed_parameter = first_parsed_parameter;
+    Checked_Procedure_Parameter *procedure_first_parameter = NULL;
+    Checked_Procedure_Parameter *procedure_last_parameter = NULL;
+    Parsed_Procedure_Parameter *parsed_parameter = first_parsed_parameter;
     while (parsed_parameter != NULL) {
-        Checked_Type *function_parameter_type = Checker__resolve_type(self, parsed_parameter->type);
-        switch (function_parameter_type->kind) {
+        Checked_Type *procedure_parameter_type = Checker__resolve_type(self, parsed_parameter->type);
+        switch (procedure_parameter_type->kind) {
         case CHECKED_TYPE_KIND__ANY:
             pWriter__begin_location_message(stderr_writer, parsed_parameter->type->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Cannot use Any as parameter type");
@@ -1280,22 +1280,22 @@ Checked_Function_Type *Checker__check_function_type(Checker *self, Source_Locati
             panic();
         case CHECKED_TYPE_KIND__EXTERNAL:
             pWriter__begin_location_message(stderr_writer, parsed_parameter->type->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Cannot use external types as function parameters");
+            pWriter__write__cstring(stderr_writer, "Cannot use external types as procedure parameters");
             pWriter__end_location_message(stderr_writer);
             panic();
         default:
             break;
         }
-        Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, function_parameter_type);
-        if (function_first_parameter == NULL) {
-            function_first_parameter = function_parameter;
+        Checked_Procedure_Parameter *procedure_parameter = Checked_Procedure_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, procedure_parameter_type);
+        if (procedure_first_parameter == NULL) {
+            procedure_first_parameter = procedure_parameter;
         } else {
-            function_last_parameter->next_parameter = function_parameter;
+            procedure_last_parameter->next_parameter = procedure_parameter;
         }
-        function_last_parameter = function_parameter;
+        procedure_last_parameter = procedure_parameter;
         parsed_parameter = parsed_parameter->next_parameter;
     }
-    return Checked_Function_Type__create(location, function_first_parameter, function_return_type);
+    return Checked_Procedure_Type__create(location, procedure_first_parameter, procedure_return_type);
 }
 
 Checked_Type *Checker__check_trait_statement(Checker *self, Parsed_Trait_Statement *parsed_statement) {
@@ -1321,10 +1321,10 @@ Checked_Type *Checker__check_trait_statement(Checker *self, Parsed_Trait_Stateme
         Checked_Struct_Member *last_struct_member = trait_type->struct_type->first_member;
         Checked_Trait_Method *last_trait_method = NULL;
         for (; parsed_method != NULL; parsed_method = parsed_method->next_method) {
-            Checked_Function_Type *function_type = Checker__check_function_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type);
-            Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Function_Pointer_Type__create((Source_Location){}, function_type));
+            Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type);
+            Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
-            Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, function_type, trait_method_struct_member);
+            Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
             if (last_trait_method == NULL) {
                 trait_type->first_method = trait_method;
             } else {
@@ -1670,10 +1670,10 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
     }
 }
 
-void Checker__check_function_declaration(Checker *self, Parsed_Function_Statement *parsed_statement) {
-    Checked_Function_Type *function_type = Checker__check_function_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
+void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
+    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
 
-    String *function_name = parsed_statement->super.name->lexeme;
+    String *procedure_name = parsed_statement->super.name->lexeme;
 
     String *symbol_name;
     if (!parsed_statement->is_external) {
@@ -1686,7 +1686,7 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     if (parsed_statement->receiver_type != NULL) {
         if (parsed_statement->is_external) {
             pWriter__begin_location_message(stderr_writer, parsed_statement->receiver_type->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "External functions cannot have a receiver type");
+            pWriter__write__cstring(stderr_writer, "External procedures cannot have a receiver type");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
@@ -1694,27 +1694,27 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
         String__append_receiver_type(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
     }
-    String__append_string(symbol_name, function_name);
-    Checked_Function_Parameter *function_parameter = function_type->first_parameter;
-    int function_parameter_index = 0;
-    while (function_parameter != NULL) {
-        if (function_parameter->label != NULL) {
+    String__append_string(symbol_name, procedure_name);
+    Checked_Procedure_Parameter *procedure_parameter = procedure_type->first_parameter;
+    int procedure_parameter_index = 0;
+    while (procedure_parameter != NULL) {
+        if (procedure_parameter->label != NULL) {
             if (parsed_statement->is_external) {
-                pWriter__begin_location_message(stderr_writer, function_parameter->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "External functions can have only anonymous parameters");
+                pWriter__begin_location_message(stderr_writer, procedure_parameter->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External procedures can have only anonymous parameters");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
             String__append_cstring(symbol_name, "__");
-            String__append_int16_t(symbol_name, function_parameter_index);
+            String__append_int16_t(symbol_name, procedure_parameter_index);
             String__append_cstring(symbol_name, "_");
-            String__append_string(symbol_name, function_parameter->label);
+            String__append_string(symbol_name, procedure_parameter->label);
         }
-        function_parameter = function_parameter->next_parameter;
-        function_parameter_index++;
+        procedure_parameter = procedure_parameter->next_parameter;
+        procedure_parameter_index++;
     }
 
-    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Function_Symbol__create(parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, function_name, function_type, receiver_type));
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Symbol__create(parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, procedure_name, procedure_type, receiver_type));
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
@@ -1766,41 +1766,41 @@ Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *
     return checked_statements;
 }
 
-void Checker__check_function_definition(Checker *self, Parsed_Function_Statement *parsed_statement) {
+void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
     Checked_Symbol *symbol = self->symbols->first_symbol;
     while (symbol != NULL) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-            Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
-            if (function_symbol->function_name == parsed_statement->super.name->lexeme) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            if (procedure_symbol->procedure_name == parsed_statement->super.name->lexeme) {
                 break;
             }
         }
         symbol = symbol->next_symbol;
     }
     if (symbol == NULL) {
-        // Function symbol should exist
+        // Procedure symbol should exist
         panic();
     }
-    Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
-    Checked_Function_Type *function_type = function_symbol->function_type;
-    self->return_type = function_type->return_type;
+    Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+    Checked_Procedure_Type *procedure_type = procedure_symbol->procedure_type;
+    self->return_type = procedure_type->return_type;
 
-    /* Create and push function symbols */
+    /* Create and push procedure symbols */
     self->symbols = Checked_Symbols__create(self->symbols);
 
-    if (function_type->first_parameter != NULL) {
-        /* Create a symbol for each function parameter */
-        Checked_Function_Parameter *parameter = function_type->first_parameter;
+    if (procedure_type->first_parameter != NULL) {
+        /* Create a symbol for each procedure parameter */
+        Checked_Procedure_Parameter *parameter = procedure_type->first_parameter;
         while (parameter != NULL) {
-            Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Function_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type));
+            Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type));
             parameter = parameter->next_parameter;
         }
     }
 
     /* Check statements */
-    function_symbol->checked_statements = Checker__check_statements(self, parsed_statement->statements);
+    procedure_symbol->checked_statements = Checker__check_statements(self, parsed_statement->statements);
 
-    /* Pop function symbols */
+    /* Pop procedure symbols */
     self->symbols = self->symbols->parent;
 }
 
@@ -1847,8 +1847,8 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__UNION:
             /* ignored */
             break;
-        case PARSED_STATEMENT_KIND__FUNCTION:
-            Checker__check_function_declaration(self, (Parsed_Function_Statement *)parsed_statement);
+        case PARSED_STATEMENT_KIND__PROCEDURE:
+            Checker__check_procedure_declaration(self, (Parsed_Procedure_Statement *)parsed_statement);
             break;
         case PARSED_STATEMENT_KIND__VARIABLE:
             checked_statement = (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
@@ -1865,7 +1865,7 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         parsed_statement = parsed_statement->next_statement;
     }
 
-    /* Check function definitions */
+    /* Check procedure definitions */
     parsed_statement = parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         switch (parsed_statement->kind) {
@@ -1876,19 +1876,19 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__VARIABLE:
             /* ignored */
             break;
-        case PARSED_STATEMENT_KIND__FUNCTION: {
-            Parsed_Function_Statement *function_statement = (Parsed_Function_Statement *)parsed_statement;
-            if (!function_statement->is_external) {
-                if (function_statement->statements == NULL) {
-                    pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
-                    pWriter__write__cstring(stderr_writer, "Missing function body");
+        case PARSED_STATEMENT_KIND__PROCEDURE: {
+            Parsed_Procedure_Statement *procedure_statement = (Parsed_Procedure_Statement *)parsed_statement;
+            if (!procedure_statement->is_external) {
+                if (procedure_statement->statements == NULL) {
+                    pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Missing procedure body");
                     pWriter__end_location_message(stderr_writer);
                     panic();
                 }
-                Checker__check_function_definition(self, function_statement);
-            } else if (function_statement->statements != NULL) {
-                pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "External function with body");
+                Checker__check_procedure_definition(self, procedure_statement);
+            } else if (procedure_statement->statements != NULL) {
+                pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External procedure with body");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }

@@ -4,15 +4,15 @@ struct Number {
     value: i32
 }
 
-func @Number.get_value(self) -> i32 {
+proc @Number.get_value(self) -> i32 {
     return self.value
 }
 
-func @Number.set_value(self, anon value: i32) {
+proc @Number.set_value(self, anon value: i32) {
     self.value = value
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let number = Number(value: 0)
 
     number.set_value(42)

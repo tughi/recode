@@ -1,10 +1,10 @@
 package test
 
 trait Animal {
-    func legs(self) -> i32
+    proc legs(self) -> i32
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let animal: Animal
     return 0
 }

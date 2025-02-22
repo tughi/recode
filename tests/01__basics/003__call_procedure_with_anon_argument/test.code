@@ -1,0 +1,9 @@
+package test
+
+proc main() -> i32 {
+    return echo(0)
+}
+
+proc echo(anon value: i32) -> i32 {
+    return value
+}

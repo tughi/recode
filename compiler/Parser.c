@@ -554,7 +554,7 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
     return Parser__parse_logic_or_expression(self);
 }
 
-Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_type);
+Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_type);
 
 /*
 struct
@@ -596,7 +596,7 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     return (Parsed_Statement *)struct_statement;
 }
 
-Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self, Parsed_Type *receiver_type);
+Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Parsed_Type *receiver_type);
 
 /*
 trait
@@ -615,12 +615,12 @@ Parsed_Statement *Parser__parse_trait(Parser *self) {
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
             Parser__consume_space(self, self->current_identation * 4);
-            Source_Location method_location = Parser__consume_token(self, Token__is_func)->location;
+            Source_Location method_location = Parser__consume_token(self, Token__is_proc)->location;
             Parser__consume_space(self, 1);
             Token *method_name = Parser__consume_token(self, Token__is_identifier);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_opening_paren);
-            Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, (Parsed_Type *)Parsed_Receiver_Type__create(trait_name->location));
+            Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, (Parsed_Type *)Parsed_Receiver_Type__create(trait_name->location));
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_closing_paren);
             Parsed_Type *return_type = NULL;
@@ -697,10 +697,10 @@ Parsed_Statement *Parser__parse_external_type(Parser *self) {
 }
 
 /*
-function_parameter
+procedure_parameter
     | ( "anon" | IDENTIFIER )? IDENTIFIER ":" type
 */
-Parsed_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
+Parsed_Procedure_Parameter *Parser__parse_procedure_parameter(Parser *self) {
     bool anonymous = false;
     Token *label = NULL;
     Token *name = NULL;
@@ -719,29 +719,29 @@ Parsed_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
     Parser__consume_token(self, Token__is_colon);
     Parser__consume_space(self, 1);
     Parsed_Type *type = Parser__parse_type(self);
-    return Parsed_Function_Parameter__create(label, name, type);
+    return Parsed_Procedure_Parameter__create(label, name, type);
 }
 
 /*
-function_parameters
-    | function_parameter ( "," function_parameter )*
+procedure_parameters
+    | procedure_parameter ( "," procedure_parameter )*
 */
-Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self, Parsed_Type *receiver_type) {
-    Parsed_Function_Parameter *first_parameter = NULL;
+Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Parsed_Type *receiver_type) {
+    Parsed_Procedure_Parameter *first_parameter = NULL;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, 0);
         if (receiver_type != NULL) {
             Token *parameter_name = Parser__consume_token(self, Token__is_identifier);
-            first_parameter = Parsed_Function_Parameter__create(NULL, parameter_name, receiver_type);
+            first_parameter = Parsed_Procedure_Parameter__create(NULL, parameter_name, receiver_type);
         } else {
-            first_parameter = Parser__parse_function_parameter(self);
+            first_parameter = Parser__parse_procedure_parameter(self);
         }
-        Parsed_Function_Parameter *last_parameter = first_parameter;
+        Parsed_Procedure_Parameter *last_parameter = first_parameter;
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_comma);
             Parser__consume_space(self, 1);
-            last_parameter->next_parameter = Parser__parse_function_parameter(self);
+            last_parameter->next_parameter = Parser__parse_procedure_parameter(self);
             last_parameter = last_parameter->next_parameter;
         }
     }
@@ -753,7 +753,7 @@ type
     | "@" type
     | "[" ( expression | "@" ) "]" type
     | IDENTIFIER
-    | func "(" function_parameters? ")" ( "->" type )?
+    | proc "(" procedure_parameters? ")" ( "->" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
     if (Parser__matches_one(self, Token__is_at)) {
@@ -780,11 +780,11 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         Parsed_Type *item_type = Parser__parse_type(self);
         return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__union(first_token->location, item_type->location), item_type, size_expression);
     }
-    if (Parser__matches_one(self, Token__is_func)) {
-        Token *first_token = Parser__consume_token(self, Token__is_func);
+    if (Parser__matches_one(self, Token__is_proc)) {
+        Token *first_token = Parser__consume_token(self, Token__is_proc);
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_opening_paren);
-        Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, NULL);
+        Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, NULL);
         Parser__consume_space(self, 0);
         Token *closing_paren = Parser__consume_token(self, Token__is_closing_paren);
         Parsed_Type *return_type = NULL;
@@ -795,7 +795,7 @@ Parsed_Type *Parser__parse_type(Parser *self) {
             Parser__consume_space(self, 1);
             return_type = Parser__parse_type(self);
         }
-        return Parsed_Function_Type__create(Source_Location__union(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
+        return Parsed_Procedure_Type__create(Source_Location__union(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
     }
     Token *name = Parser__consume_token(self, Token__is_identifier);
     return Parsed_Named_Type__create(name);
@@ -856,20 +856,20 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
 }
 
 /*
-function
-    | "external"? "func" ( type "." )? IDENTIFIER "(" function_parameter* ")" "->" type block?
+procedure
+    | "external"? "proc" ( type "." )? IDENTIFIER "(" procedure_parameter* ")" "->" type block?
 */
-Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_type) {
+Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_type) {
     Source_Location location;
     bool is_external;
     if (Parser__matches_one(self, Token__is_external)) {
         is_external = true;
         location = Parser__consume_token(self, Token__is_external)->location;
         Parser__consume_space(self, 1);
-        Parser__consume_token(self, Token__is_func);
+        Parser__consume_token(self, Token__is_proc);
     } else {
         is_external = false;
-        location = Parser__consume_token(self, Token__is_func)->location;
+        location = Parser__consume_token(self, Token__is_proc)->location;
     }
     Parser__consume_space(self, 1);
     Token *name = NULL;
@@ -883,7 +883,7 @@ Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_typ
         name = Parser__consume_token(self, Token__is_identifier);
         if (receiver_type != NULL) {
             pWriter__begin_location_message(stderr_writer, name->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Function already has a receiver type");
+            pWriter__write__cstring(stderr_writer, "Procedure already has a receiver type");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
@@ -891,7 +891,7 @@ Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_typ
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
-    Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, receiver_type);
+    Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, receiver_type);
     Parser__consume_space(self, 0);
     Token *closing_paren = Parser__consume_token(self, Token__is_closing_paren);
     location = Source_Location__union(location, closing_paren->location);
@@ -917,7 +917,7 @@ Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_typ
         Token *closing_paren = Parser__consume_token(self, Token__is_closing_brace);
         location = Source_Location__union(location, closing_paren->location);
     }
-    return Parsed_Function_Statement__create(location, name, receiver_type, first_parameter, return_type, statements, is_external);
+    return Parsed_Procedure_Statement__create(location, name, receiver_type, first_parameter, return_type, statements, is_external);
 }
 
 /*
@@ -1067,9 +1067,9 @@ statement
     | break
     | expression
     | external_type
-    | function
     | if
     | loop
+    | procedure
     | return
     | struct
     | variable
@@ -1079,8 +1079,8 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
     Parser__consume_space(self, self->current_identation * 4);
 
     if (Parser__matches_two(self, Token__is_external, true, Token__is_space)) {
-        if (Token__is_func(Parser__peek_token(self, 2))) {
-            return Parser__parse_function(self, NULL);
+        if (Token__is_proc(Parser__peek_token(self, 2))) {
+            return Parser__parse_procedure(self, NULL);
         }
 
         if (Token__is_type(Parser__peek_token(self, 2))) {
@@ -1090,8 +1090,8 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
         return Parser__parse_variable(self);
     }
 
-    if (Parser__matches_one(self, Token__is_func)) {
-        return Parser__parse_function(self, NULL);
+    if (Parser__matches_one(self, Token__is_proc)) {
+        return Parser__parse_procedure(self, NULL);
     }
 
     if (Parser__matches_one(self, Token__is_let)) {

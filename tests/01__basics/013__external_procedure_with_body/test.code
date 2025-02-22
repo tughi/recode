@@ -1,0 +1,4 @@
+package test
+
+external proc test() -> i32 {
+}

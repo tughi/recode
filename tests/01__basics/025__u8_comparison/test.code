@@ -1,6 +1,6 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     let min = 0u8
     let max = 255u8
 
@@ -38,6 +38,6 @@ func main() -> i32 {
     return errors
 }
 
-func forty_two() -> u8 {
+proc forty_two() -> u8 {
     return 42
 }

@@ -1,5 +1,0 @@
-package test
-
-func demo(parameter: i32) {
-    let parameter_ref = @parameter
-}

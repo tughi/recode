@@ -41,13 +41,13 @@ There will be a fixed set of float types:
     }
 
     \ a method that returns @Node
-    func @Node.add(self, child: @Node) -> @Self {   \ Self is a placeholder for the struct name
+    proc @Node.add(self, child: @Node) -> @Self {   \ Self is a placeholder for the struct name
         self.children.append(child)
         return self
     }
 
     \ custom constructor
-    func @Node.init(self) {
+    proc @Node.init(self) {
         self.name = ""
         self.parent = null
     }
@@ -80,25 +80,25 @@ Generic structs have one or more other types as parameters.
         data: T
     }
 
-    func @Item[T].append(self, item: @Self) -> @Self {
+    proc @Item[T].append(self, item: @Self) -> @Self {
         self.next_item = item
         return self
     }
 
 ## Traits
 
-A trait defines common functions implemented by different types and allows their invocation in a
+A trait defines common procedures implemented by different types and allows their invocation in a
 polymorphic way, enabling code to operate on objects of different types through a common interface.
 
     trait Visitable {
-        func accept(self, visitor: @Visitor)
+        proc accept(self, visitor: @Visitor)
     }
 
-    func @Expression.accept(self, visitor: @Visitor) {
+    proc @Expression.accept(self, visitor: @Visitor) {
         ...
     }
 
-    func @Statement.accept(self, visitor: @Visitor) {
+    proc @Statement.accept(self, visitor: @Visitor) {
         ...
     }
 
@@ -106,7 +106,7 @@ The compiler generates trait objects that could be modeled like this:
 
     struct VisitableTrait[T] {
         object: @T
-        accept: func (self: @T, visitor: @Visitor)
+        accept: proc (self: @T, visitor: @Visitor)
     }
 
 ## Pointers
@@ -160,7 +160,7 @@ Nullable types have a similar in-memory structure with the following struct:
 
 The compiler will complain of missing null-checks.
 
-    func length(self: @String?) -> i32 {
+    proc length(self: @String?) -> i32 {
         if self != null {
             return self.length  \ the compiler treats self as @String at this point
         }
@@ -182,10 +182,10 @@ An `[7]i32` array has the following in-memory structure:
         _6: i32
     }
 
-Arrays are value types but are passed by reference for performance reasons. A function can modify an
+Arrays are value types but are passed by reference for performance reasons. A procedure can modify an
 array only if it was explicitly passed as a pointer to the array.
 
-    func change(a1: [42]Data, a2: @[42]Data) {
+    proc change(a1: [42]Data, a2: @[42]Data) {
         a1[0].value = 13        \ raises a compiler error
         a2[0].value = 42        \ this is the way
     }
@@ -206,7 +206,7 @@ String literals are converted to `str` values.
     let text = "Hello"      \ text uses 16 bytes on the stack and 2 bytes in the data section
     text = "42"             \ this assignment changes the data pointer and sets len to 2
 
-Strings can be created at runtime using builtin functions...
+Strings can be created at runtime using builtin procedures...
 
 ## Variables
 
@@ -224,16 +224,16 @@ The `Any` type can be used only as reference to data of unknown type.
     let data: @Any = node       \ auto-casting to @Any
     let token = data.as(@Token) \ unsafe, but this is the way
 
-## Functions
+## Procedures
 
-    func max(v1: i32, v2: i32) -> i32 {
+    proc max(v1: i32, v2: i32) -> i32 {
         if v1 > v2 {
             return v1
         }
         return v2
     }
 
-Functions that don't return a value are missing the `-> type` part.
+Procedures that don't return a value are missing the `-> type` part.
 
 Call arguments are separated by `,` or new lines.
 
@@ -242,49 +242,49 @@ Call arguments are separated by `,` or new lines.
         first_parameter, second_parameter, third_parameter
     )
 
-The function parameters order must be respected and parameter labels are mandatory, unless
+The procedure parameters order must be respected and parameter labels are mandatory, unless
 paramaters are marked as anonymous with the `anon` modifier.
 
-    func panic() {}
-    func panic(at location: @Location, anon message: str) {}
-    func panic(at location: @Location, unexpected_keyword: @Token) {}
-    func panic(at location: @Location, unexpected_token: @Token) {}
+    proc panic() {}
+    proc panic(at location: @Location, anon message: str) {}
+    proc panic(at location: @Location, unexpected_keyword: @Token) {}
+    proc panic(at location: @Location, unexpected_token: @Token) {}
 
-    panic(at: token.location, unexpected_token: token)  \ function call with labels 
+    panic(at: token.location, unexpected_token: token)  \ procedure call with labels 
 
-> **NOTE**: Parameter labels are part of the generated function name, like: *panic*, *panic__at*,
-*panic__at__unexpected_keyword* and *panic__at__unexpected_token*. There cannot be two functions
+> **NOTE**: Parameter labels are part of the generated procedure name, like: *panic*, *panic__at*,
+*panic__at__unexpected_keyword* and *panic__at__unexpected_token*. There cannot be two procedures
 having the same name and the same sequence of parameter labels.
 
-## Extension functions
+## Extension procedures
 
-Extension functions are functions that require a receiver. The first parameter is anonymous and has
+Extension procedures are procedures that require a receiver. The first parameter is anonymous and has
 the receiver type.
 
-    func @Binary_Expression.accept(self, visitor: @Visitor) {
+    proc @Binary_Expression.accept(self, visitor: @Visitor) {
         visitor.visit_binary_expression(self)
     }
 
 Receivers can be of any type.
 
-    func str.concat(self, other: str) -> str {
+    proc str.concat(self, other: str) -> str {
         ...
     }
 
-## Generic functions
+## Generic procedures
 
-    func max[T](v1: T, v2: T) -> T {
+    proc max[T](v1: T, v2: T) -> T {
         if v1 > v2 {
             return v1
         }
         return v2
     }
 
-The compiler will generate dedicated code for each specialization of a generic function.
+The compiler will generate dedicated code for each specialization of a generic procedure.
 
 ## Macros
 
-Macros look like functions but they are always inlined where _invoked_, and have no return type.
+Macros look like procedures but they are always inlined where _invoked_, and have no return type.
 
     define for_each = macro (list: @List, block: macro (item: @Any, index: i32)) {
         let index = 0

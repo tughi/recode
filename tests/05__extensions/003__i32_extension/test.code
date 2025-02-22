@@ -4,15 +4,15 @@ struct Number {
     value: i32
 }
 
-func @Number.get_value(self) -> i32 {
+proc @Number.get_value(self) -> i32 {
     return self.value
 }
 
-func i32.get_value(self) -> i32 {
+proc i32.get_value(self) -> i32 {
     return self
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let number = Number(value: 42)
     return number.get_value() - 42.get_value()
 }

@@ -27,14 +27,14 @@ main:
   # store %3 %1
   movl $0xa, 0(%rax)
   # %animal.ptr: ptr<Animal> = alloc Animal
-  # %4: ptr<func (self: ptr<Dog>) -> i32> = address $pDog__legs
+  # %4: ptr<proc (self: ptr<Dog>) -> i32> = address $pDog__legs
   # %5: Animal = struct { Animal.self: %dog.ptr, Animal.legs: %4 }
   # %6: ptr<ptr<Any>> = offset %animal.ptr Animal.self
   lea 12(%rsp), %rax
   # store %6 %dog.ptr
   lea 28(%rsp), %rcx
   movq %rcx, 0(%rax)
-  # %7: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %animal.ptr Animal.legs
+  # %7: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %animal.ptr Animal.legs
   lea 12(%rsp), %rax
   # store %7 %4
   lea pDog__legs, %rcx

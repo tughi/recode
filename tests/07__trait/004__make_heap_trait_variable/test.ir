@@ -8,7 +8,7 @@ type Circle = struct {
 
 type Shape = struct {
   self: ptr<Any>
-  area: ptr<func (self: ptr<Any>) -> i32>
+  area: ptr<proc (self: ptr<Any>) -> i32>
 }
 
 $pSquare__area(%self: ptr<Square>): i32 {
@@ -96,7 +96,7 @@ $main(): i32 {
   [ %square_shape.ptr %7 %square.ptr ]
   %square.1: ptr<Square> = load %square.ptr
   [ %square_shape.ptr %7 %square.1 ]
-  %8: ptr<func (self: ptr<Square>) -> i32> = address $pSquare__area
+  %8: ptr<proc (self: ptr<Square>) -> i32> = address $pSquare__area
   [ %square_shape.ptr %7 %8 %square.1 ]
   %9: Shape = struct { Shape.self: %square.1, Shape.area: %8 }
   [ %square_shape.ptr %7 %8 %square.1 ]
@@ -104,7 +104,7 @@ $main(): i32 {
   [ %square_shape.ptr %7 %8 %10 %square.1 ]
   store %10 %square.1
   [ %square_shape.ptr %7 %8 ]
-  %11: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %7 Shape.area
+  %11: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %7 Shape.area
   [ %square_shape.ptr %7 %11 %8 ]
   store %11 %8
   [ %square_shape.ptr %7 ]
@@ -128,9 +128,9 @@ $main(): i32 {
   [ %square_shape.ptr %circle.ptr ]
   %square_shape.1: ptr<Shape> = load %square_shape.ptr
   [ %square_shape.1 %circle.ptr ]
-  %17: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.1 Shape.area
+  %17: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %square_shape.1 Shape.area
   [ %square_shape.1 %17 %circle.ptr ]
-  %18: ptr<func (self: ptr<Any>) -> i32> = load %17
+  %18: ptr<proc (self: ptr<Any>) -> i32> = load %17
   [ %18 %square_shape.1 %circle.ptr ]
   %19: ptr<ptr<Any>> = offset %square_shape.1 Shape.self
   [ %18 %19 %circle.ptr ]
@@ -158,7 +158,7 @@ $main(): i32 {
   [ %26 %circle.ptr ]
   %circle.1: ptr<Circle> = load %circle.ptr
   [ %26 %circle.1 ]
-  %27: ptr<func (self: ptr<Circle>) -> i32> = address $pCircle__area
+  %27: ptr<proc (self: ptr<Circle>) -> i32> = address $pCircle__area
   [ %26 %27 %circle.1 ]
   %28: Shape = struct { Shape.self: %circle.1, Shape.area: %27 }
   [ %26 %27 %circle.1 ]
@@ -166,13 +166,13 @@ $main(): i32 {
   [ %26 %27 %29 %circle.1 ]
   store %29 %circle.1
   [ %26 %27 ]
-  %30: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %26 Shape.area
+  %30: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %26 Shape.area
   [ %26 %30 %27 ]
   store %30 %27
   [ %26 ]
-  %31: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %26 Shape.area
+  %31: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %26 Shape.area
   [ %26 %31 ]
-  %32: ptr<func (self: ptr<Any>) -> i32> = load %31
+  %32: ptr<proc (self: ptr<Any>) -> i32> = load %31
   [ %32 %26 ]
   %33: ptr<ptr<Any>> = offset %26 Shape.self
   [ %32 %33 ]

@@ -1,4 +1,4 @@
 package test
 
-func test(value: Any) {
+proc test(value: Any) {
 }

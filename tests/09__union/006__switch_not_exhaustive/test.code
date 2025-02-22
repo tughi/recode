@@ -6,7 +6,7 @@ union Value {
     i32
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let value: Value = true
 
     switch value {

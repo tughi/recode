@@ -1,6 +1,6 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     let result = 2
     if true {
         result = 0

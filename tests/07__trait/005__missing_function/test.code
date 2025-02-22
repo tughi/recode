@@ -4,10 +4,10 @@ struct Dog {
 }
 
 trait Animal {
-    func make_sound(self) -> u8
+    proc make_sound(self) -> u8
 }
 
-func main() {
+proc main() {
     let dog = Dog()
     let animal = Animal(@dog)
 }

@@ -3,7 +3,7 @@
         "error": 1,
         "stderr": [
             "tests/07__trait/005__missing_function/test.code:12:18-30: The Dog type does not implement Animal trait.",
-            "tests/07__trait/005__missing_function/test.code:12:18-30: Missing function: func make_sound(self: @Dog) -> u8"
+            "tests/07__trait/005__missing_function/test.code:12:18-30: Missing procedure: proc make_sound(self: @Dog) -> u8"
         ]
     }
 }

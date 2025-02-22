@@ -650,19 +650,19 @@ void Generator__declare_external_type(Generator *self, Checked_External_Type *ex
     pWriter__write__cstring(self->writer, ";\n");
 }
 
-void Generator__declare_function(Generator *self, Checked_Function_Symbol *function_symbol) {
-    pWriter__write__cdecl(self->writer, function_symbol->super.name, (Checked_Type *)function_symbol->function_type);
+void Generator__declare_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
+    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
-void Generator__generate_function(Generator *self, Checked_Function_Symbol *function_symbol) {
-    if (function_symbol->checked_statements == NULL) {
+void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
+    if (procedure_symbol->checked_statements == NULL) {
         return;
     }
-    Generator__write_source_location(self, function_symbol->super.location);
-    pWriter__write__cdecl(self->writer, function_symbol->super.name, (Checked_Type *)function_symbol->function_type);
+    Generator__write_source_location(self, procedure_symbol->super.location);
+    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, " {\n");
-    Generator__generate_statements(self, function_symbol->checked_statements);
+    Generator__generate_statements(self, procedure_symbol->checked_statements);
     pWriter__write__cstring(self->writer, "}\n\n");
 }
 
@@ -687,7 +687,7 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
-void Generator__declare_alloc_struct_function(Generator *self, Checked_Struct_Type *struct_type) {
+void Generator__declare_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, " *__alloc_");
     pWriter__write__string(self->writer, struct_type->super.name);
@@ -696,7 +696,7 @@ void Generator__declare_alloc_struct_function(Generator *self, Checked_Struct_Ty
     pWriter__write__cstring(self->writer, " value);\n");
 }
 
-void Generator__generate_alloc_struct_function(Generator *self, Checked_Struct_Type *struct_type) {
+void Generator__generate_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, " *__alloc_");
     pWriter__write__string(self->writer, struct_type->super.name);
@@ -753,7 +753,7 @@ void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) 
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
-void Generator__declare_alloc_union_function(Generator *self, Checked_Union_Type *union_type) {
+void Generator__declare_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " *__alloc_");
     pWriter__write__string(self->writer, union_type->super.name);
@@ -762,7 +762,7 @@ void Generator__declare_alloc_union_function(Generator *self, Checked_Union_Type
     pWriter__write__cstring(self->writer, " value);\n");
 }
 
-void Generator__define_alloc_union_function(Generator *self, Checked_Union_Type *union_type) {
+void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " *__alloc_");
     pWriter__write__string(self->writer, union_type->super.name);
@@ -827,8 +827,8 @@ void generate(Writer *writer, Checked_Source *checked_source) {
         source = source->next;
     }
 
-    Checked_Function_Symbol *malloc_function = NULL;
-    Checked_Function_Symbol *main_function = NULL;
+    Checked_Procedure_Symbol *malloc_procedure = NULL;
+    Checked_Procedure_Symbol *main_procedure = NULL;
 
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
@@ -852,8 +852,8 @@ void generate(Writer *writer, Checked_Source *checked_source) {
                 panic();
             }
             pWriter__end_line(generator.writer);
-        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_cstring(checked_symbol->name, "malloc")) {
-            malloc_function = (Checked_Function_Symbol *)checked_symbol;
+        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
+            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
         }
         checked_symbol = checked_symbol->next_symbol;
     }
@@ -885,27 +885,27 @@ void generate(Writer *writer, Checked_Source *checked_source) {
         checked_statement = checked_statement->next_statement;
     }
 
-    /* Declare all defined functions */
+    /* Declare all defined procedures */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
         if (checked_symbol->location.source == checked_source->first_source) {
-            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-                Checked_Function_Symbol *checked_function = (Checked_Function_Symbol *)checked_symbol;
-                if (String__equals_cstring(checked_function->function_name, "main")) {
-                    main_function = checked_function;
+            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                Checked_Procedure_Symbol *checked_procedure = (Checked_Procedure_Symbol *)checked_symbol;
+                if (String__equals_cstring(checked_procedure->procedure_name, "main")) {
+                    main_procedure = checked_procedure;
                 }
-                Generator__declare_function(&generator, checked_function);
+                Generator__declare_procedure(&generator, checked_procedure);
                 pWriter__end_line(generator.writer);
-            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
+            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
                 if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
-                    Generator__declare_alloc_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                    Generator__declare_alloc_struct_procedure(&generator, (Checked_Struct_Type *)named_type);
                     pWriter__end_line(generator.writer);
                 } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
-                    Generator__declare_alloc_struct_function(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
+                    Generator__declare_alloc_struct_procedure(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
                     pWriter__end_line(generator.writer);
                 } else if (named_type->super.kind == CHECKED_TYPE_KIND__UNION) {
-                    Generator__declare_alloc_union_function(&generator, (Checked_Union_Type *)named_type);
+                    Generator__declare_alloc_union_procedure(&generator, (Checked_Union_Type *)named_type);
                     pWriter__end_line(generator.writer);
                 }
             }
@@ -913,12 +913,12 @@ void generate(Writer *writer, Checked_Source *checked_source) {
         checked_symbol = checked_symbol->next_symbol;
     }
 
-    /* Generate main function */
-    if (main_function != NULL) {
+    /* Generate main procedure */
+    if (main_procedure != NULL) {
         pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
         pWriter__write__cstring(generator.writer, "    return ");
-        pWriter__write__string(generator.writer, main_function->super.name);
-        if (main_function->function_type->first_parameter != NULL) {
+        pWriter__write__string(generator.writer, main_procedure->super.name);
+        if (main_procedure->procedure_type->first_parameter != NULL) {
             pWriter__write__cstring(generator.writer, "(argc, (uint8_t **)argv);\n");
         } else {
             pWriter__write__cstring(generator.writer, "();\n");
@@ -926,20 +926,20 @@ void generate(Writer *writer, Checked_Source *checked_source) {
         pWriter__write__cstring(generator.writer, "}\n\n");
     }
 
-    /* Generate all defined functions */
+    /* Generate all defined procedures */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
         if (checked_symbol->location.source == checked_source->first_source) {
-            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
-                Generator__generate_function(&generator, (Checked_Function_Symbol *)checked_symbol);
-            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
+            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                Generator__generate_procedure(&generator, (Checked_Procedure_Symbol *)checked_symbol);
+            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
                 if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
-                    Generator__generate_alloc_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                    Generator__generate_alloc_struct_procedure(&generator, (Checked_Struct_Type *)named_type);
                 } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
-                    Generator__generate_alloc_struct_function(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
+                    Generator__generate_alloc_struct_procedure(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
                 } else if (named_type->super.kind == CHECKED_TYPE_KIND__UNION) {
-                    Generator__define_alloc_union_function(&generator, (Checked_Union_Type *)named_type);
+                    Generator__define_alloc_union_procedure(&generator, (Checked_Union_Type *)named_type);
                 }
             }
         }

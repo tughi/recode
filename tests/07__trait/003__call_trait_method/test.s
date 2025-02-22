@@ -85,14 +85,14 @@ main:
   # store %3 %1
   movl $0xa, 0(%rax)
   # %square_shape.ptr: ptr<Shape> = alloc Shape
-  # %4: ptr<func (self: ptr<Square>) -> i32> = address $pSquare__area
+  # %4: ptr<proc (self: ptr<Square>) -> i32> = address $pSquare__area
   # %5: Shape = struct { Shape.self: %square.ptr, Shape.area: %4 }
   # %6: ptr<ptr<Any>> = offset %square_shape.ptr Shape.self
   lea 28(%rsp), %rax
   # store %6 %square.ptr
   lea 44(%rsp), %rcx
   movq %rcx, 0(%rax)
-  # %7: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
+  # %7: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
   lea 28(%rsp), %rax
   # store %7 %4
   lea pSquare__area, %rcx
@@ -105,21 +105,21 @@ main:
   # store %10 %8
   movl $0xa, 0(%rax)
   # %circle_shape.ptr: ptr<Shape> = alloc Shape
-  # %11: ptr<func (self: ptr<Circle>) -> i32> = address $pCircle__area
+  # %11: ptr<proc (self: ptr<Circle>) -> i32> = address $pCircle__area
   # %12: Shape = struct { Shape.self: %circle.ptr, Shape.area: %11 }
   # %13: ptr<ptr<Any>> = offset %circle_shape.ptr Shape.self
   lea 8(%rsp), %rax
   # store %13 %circle.ptr
   lea 24(%rsp), %rcx
   movq %rcx, 0(%rax)
-  # %14: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
+  # %14: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
   lea 8(%rsp), %rax
   # store %14 %11
   lea pCircle__area, %rcx
   movq %rcx, 8(%rax)
-  # %15: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
+  # %15: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
   lea 28(%rsp), %rax
-  # %16: ptr<func (self: ptr<Any>) -> i32> = load %15
+  # %16: ptr<proc (self: ptr<Any>) -> i32> = load %15
   movq 8(%rax), %rcx
   # %17: ptr<ptr<Any>> = offset %square_shape.ptr Shape.self
   lea 28(%rsp), %rax
@@ -142,9 +142,9 @@ main:
   movl $0x1, %eax
   jmp .L__main__E
 .L__main__3:
-  # %23: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
+  # %23: ptr<ptr<proc (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
   lea 8(%rsp), %rax
-  # %24: ptr<func (self: ptr<Any>) -> i32> = load %23
+  # %24: ptr<proc (self: ptr<Any>) -> i32> = load %23
   movq 8(%rax), %rcx
   # %25: ptr<ptr<Any>> = offset %circle_shape.ptr Shape.self
   lea 8(%rsp), %rax

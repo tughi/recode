@@ -44,7 +44,7 @@ typedef struct Parsed_Expression {
 
 typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__ARRAY,
-    PARSED_TYPE_KIND__FUNCTION,
+    PARSED_TYPE_KIND__PROCEDURE,
     PARSED_TYPE_KIND__MULTI_POINTER,
     PARSED_TYPE_KIND__NAMED,
     PARSED_TYPE_KIND__POINTER,
@@ -66,22 +66,22 @@ typedef struct Parsed_Array_Type {
 
 Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Type *item_type, Parsed_Expression *size_expression);
 
-typedef struct Parsed_Function_Parameter {
+typedef struct Parsed_Procedure_Parameter {
     Token *label;
     Token *name;
     Parsed_Type *type;
-    struct Parsed_Function_Parameter *next_parameter;
-} Parsed_Function_Parameter;
+    struct Parsed_Procedure_Parameter *next_parameter;
+} Parsed_Procedure_Parameter;
 
-Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *label, Token *name, Parsed_Type *type);
+Parsed_Procedure_Parameter *Parsed_Procedure_Parameter__create(Token *label, Token *name, Parsed_Type *type);
 
-typedef struct Parsed_Function_Type {
+typedef struct Parsed_Procedure_Type {
     Parsed_Type super;
-    Parsed_Function_Parameter *first_parameter;
+    Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
-} Parsed_Function_Type;
+} Parsed_Procedure_Type;
 
-Parsed_Type *Parsed_Function_Type__create(Source_Location location, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
+Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
 
 typedef struct Parsed_Multi_Pointer_Type {
     Parsed_Type super;
@@ -354,7 +354,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__BREAK,
     PARSED_STATEMENT_KIND__EXPRESSION,
     PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
-    PARSED_STATEMENT_KIND__FUNCTION,
+    PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__IF,
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
@@ -427,16 +427,16 @@ typedef struct Parsed_External_Type_Statement {
 
 Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Location location, Token *name);
 
-typedef struct Parsed_Function_Statement {
+typedef struct Parsed_Procedure_Statement {
     Parsed_Named_Statement super;
     Parsed_Type *receiver_type;
-    Parsed_Function_Parameter *first_parameter;
+    Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
     struct Parsed_Statements *statements;
     bool is_external;
-} Parsed_Function_Statement;
+} Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Function_Statement__create(Source_Location location, Token *name, Parsed_Type *receiver_type, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, struct Parsed_Statements *statements, bool is_external);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type *receiver_type, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *resturn_type, struct Parsed_Statements *statements, bool is_external);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
@@ -514,12 +514,12 @@ Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location locatio
 typedef struct Parsed_Trait_Method {
     Source_Location location;
     Token *name;
-    Parsed_Function_Parameter *first_parameter;
+    Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
     struct Parsed_Trait_Method *next_method;
 } Parsed_Trait_Method;
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
 
 typedef struct Parsed_Trait_Statement {
     Parsed_Named_Statement super;

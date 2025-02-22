@@ -1,5 +1,5 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     return 0u8
 }

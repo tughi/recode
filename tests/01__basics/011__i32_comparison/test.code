@@ -1,6 +1,6 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     let errors = 6
     if echo(42) == 42 {
         errors = errors - 1
@@ -27,6 +27,6 @@ func main() -> i32 {
     return errors
 }
 
-func echo(anon v: i32) -> i32 {
+proc echo(anon v: i32) -> i32 {
     return v
 }

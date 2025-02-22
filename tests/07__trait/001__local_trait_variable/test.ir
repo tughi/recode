@@ -1,6 +1,6 @@
 type Animal = struct {
   self: ptr<Any>
-  legs: ptr<func (self: ptr<Any>) -> i32>
+  legs: ptr<proc (self: ptr<Any>) -> i32>
 }
 
 $main() {

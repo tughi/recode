@@ -133,10 +133,6 @@ bool Token__is_false(Token *self) {
     return Token__is_keyword(self, "false");
 }
 
-bool Token__is_func(Token *self) {
-    return Token__is_keyword(self, "func");
-}
-
 bool Token__is_if(Token *self) {
     return Token__is_keyword(self, "if");
 }
@@ -171,6 +167,10 @@ bool Token__is_or(Token *self) {
 
 bool Token__is_package(Token *self) {
     return Token__is_keyword(self, "package");
+}
+
+bool Token__is_proc(Token *self) {
+    return Token__is_keyword(self, "proc");
 }
 
 bool Token__is_return(Token *self) {

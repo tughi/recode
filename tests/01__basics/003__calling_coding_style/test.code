@@ -1,9 +1,9 @@
 package test
 
-func test(anon one: i32, anon two: i32, anon three: i32, anon four: i32, anon five: i32) {
+proc test(anon one: i32, anon two: i32, anon three: i32, anon four: i32, anon five: i32) {
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     test(1, 2, 3, 4, 5)
 
     test(

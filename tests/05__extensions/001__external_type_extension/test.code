@@ -1,15 +1,15 @@
 package test
 
-func main() -> i32 {
+proc main() -> i32 {
     __stdoutp.write(char: '4').write(char: '2').write(char: '\n')
     return 0
 }
 
-func @FILE.write(self, char ch: u8) -> @FILE {
+proc @FILE.write(self, char ch: u8) -> @FILE {
     fputc(ch.as(i32), __stdoutp)
     return self
 }
 
 external type FILE
 external __stdoutp: @FILE
-external func fputc(anon c: i32, anon stream: @FILE) -> i32
+external proc fputc(anon c: i32, anon stream: @FILE) -> i32

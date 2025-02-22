@@ -5,7 +5,7 @@ struct Point {
     y: i32
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let point = Point(x: 16, y: 32)
     return point.x - 16
 }

@@ -4,11 +4,11 @@ struct Number {
     value: i32
 }
 
-func @Number.get_value(self) -> i32 {
+proc @Number.get_value(self) -> i32 {
     return self.value
 }
 
-func @Number.set_value(self, anon value: i32) {
+proc @Number.set_value(self, anon value: i32) {
     self.value = value
 }
 
@@ -16,11 +16,11 @@ struct Boolean {
     value: bool
 }
 
-func @Boolean.get_value(self) -> bool {
+proc @Boolean.get_value(self) -> bool {
     return self.value
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let number = Number(value: 0)
 
     number.set_value(42)

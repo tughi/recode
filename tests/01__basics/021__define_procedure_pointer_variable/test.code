@@ -1,0 +1,6 @@
+package test
+
+proc main() -> i32 {
+    let procedure_pointer: proc (value: i32) -> i32
+    return 0
+}

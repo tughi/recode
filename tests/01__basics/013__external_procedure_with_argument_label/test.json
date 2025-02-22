@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/013__external_procedure_with_argument_label/test.code:3:20-24: External procedures can have only anonymous parameters"
+        ]
+    }
+}

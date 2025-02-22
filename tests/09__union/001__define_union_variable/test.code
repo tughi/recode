@@ -5,7 +5,7 @@ union Integer {
     i32
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let integer: Integer
     return 0
 }

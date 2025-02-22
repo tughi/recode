@@ -1,3 +1,0 @@
-external type Test
-
-let test: Test = undefined

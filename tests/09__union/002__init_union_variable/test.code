@@ -10,7 +10,7 @@ union Value {
     Integer
 }
 
-func main() -> i32 {
+proc main() -> i32 {
     let value: Value = false
     let other_value: Value = value
     let another_value = other_value

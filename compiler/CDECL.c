@@ -61,14 +61,14 @@ void declare_array(CDECL *cdecl, Checked_Array_Type *array_type) {
     todo("Declare checked array");
 }
 
-void declare_function(CDECL *cdecl, Checked_Function_Type *function_type) {
+void declare_procedure(CDECL *cdecl, Checked_Procedure_Type *procedure_type) {
     CDECL return_cdecl = {NULL, NULL, NULL};
-    declare(&return_cdecl, function_type->return_type);
+    declare(&return_cdecl, procedure_type->return_type);
     cdecl->type = return_cdecl.type;
     cdecl->left = return_cdecl.left;
     cdecl->right = String__create();
     String__append_char(cdecl->right, '(');
-    Checked_Function_Parameter *parameter = function_type->first_parameter;
+    Checked_Procedure_Parameter *parameter = procedure_type->first_parameter;
     while (parameter != NULL) {
         String__append_cdecl(cdecl->right, parameter->name, parameter->type);
         parameter = parameter->next_parameter;
@@ -83,17 +83,17 @@ void declare_function(CDECL *cdecl, Checked_Function_Type *function_type) {
     }
 }
 
-void declare_function_pointer(CDECL *cdecl, Checked_Function_Pointer_Type *function_pointer_type) {
-    CDECL function_cdecl = {NULL, NULL, NULL};
-    declare_function(&function_cdecl, function_pointer_type->function_type);
-    cdecl->type = function_cdecl.type;
+void declare_procedure_pointer(CDECL *cdecl, Checked_Procedure_Pointer_Type *procedure_pointer_type) {
+    CDECL procedure_cdecl = {NULL, NULL, NULL};
+    declare_procedure(&procedure_cdecl, procedure_pointer_type->procedure_type);
+    cdecl->type = procedure_cdecl.type;
     cdecl->left = String__create_from("(*");
-    if (function_cdecl.left != NULL) {
+    if (procedure_cdecl.left != NULL) {
         panic();
     }
     cdecl->right = String__create_from(")");
-    String__append_string(cdecl->right, function_cdecl.right);
-    String__delete(function_cdecl.right);
+    String__append_string(cdecl->right, procedure_cdecl.right);
+    String__delete(procedure_cdecl.right);
 }
 
 void declare_multi_pointer(CDECL *cdecl, Checked_Multi_Pointer_Type *multi_pointer_type) {
@@ -105,7 +105,7 @@ void declare_multi_pointer(CDECL *cdecl, Checked_Multi_Pointer_Type *multi_point
         String__append_string(cdecl->left, type_cdecl.left);
         String__delete(type_cdecl.left);
     }
-    bool needs_parentheses = multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY || multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION;
+    bool needs_parentheses = multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY || multi_pointer_type->item_type->kind == CHECKED_TYPE_KIND__PROCEDURE;
     if (needs_parentheses) {
         String__append_char(cdecl->left, '(');
     }
@@ -129,7 +129,7 @@ void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
         String__append_string(cdecl->left, type_cdecl.left);
         String__delete(type_cdecl.left);
     }
-    bool needs_parentheses = pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION;
+    bool needs_parentheses = pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY || pointer_type->other_type->kind == CHECKED_TYPE_KIND__PROCEDURE;
     if (needs_parentheses) {
         String__append_char(cdecl->left, '(');
     }
@@ -189,11 +189,11 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__EXTERNAL:
         cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
         break;
-    case CHECKED_TYPE_KIND__FUNCTION:
-        declare_function(cdecl, (Checked_Function_Type *)symbol_type);
+    case CHECKED_TYPE_KIND__PROCEDURE:
+        declare_procedure(cdecl, (Checked_Procedure_Type *)symbol_type);
         break;
-    case CHECKED_TYPE_KIND__FUNCTION_POINTER:
-        declare_function_pointer(cdecl, (Checked_Function_Pointer_Type *)symbol_type);
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
+        declare_procedure_pointer(cdecl, (Checked_Procedure_Pointer_Type *)symbol_type);
         break;
     case CHECKED_TYPE_KIND__STRING:
         cdecl->type = String__create_from("struct String");
