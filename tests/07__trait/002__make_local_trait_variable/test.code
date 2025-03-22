@@ -4,7 +4,7 @@ struct Dog {
     age: i32
 }
 
-proc @Dog.legs(self) -> i32 {
+proc ^Dog.legs(self) -> i32 {
     return 4
 }
 
@@ -14,6 +14,6 @@ trait Animal {
 
 proc main() -> i32 {
     let dog = Dog(age: 10)
-    let animal = Animal(@dog)
+    let animal = Animal(^dog)
     return 0
 }

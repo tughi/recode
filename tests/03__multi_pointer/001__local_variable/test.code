@@ -1,6 +1,6 @@
 package test
 
 proc main() -> i32 {
-    let array: [@]i32
+    let array: [^]i32
     return 0
 }

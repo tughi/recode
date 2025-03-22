@@ -8,7 +8,7 @@ struct Square {
     side: i32
 }
 
-proc @Square.area(self) -> i32 {
+proc ^Square.area(self) -> i32 {
     return self.side * self.side
 }
 
@@ -16,15 +16,15 @@ struct Circle {
     radius: i32
 }
 
-proc @Circle.area(self) -> i32 {
+proc ^Circle.area(self) -> i32 {
     return 312 * self.radius * self.radius / 100
 }
 
 proc main() -> i32 {
     let square = Square(side: 10)
-    let square_shape = Shape(@square)
+    let square_shape = Shape(^square)
     let circle = Circle(radius: 10)
-    let circle_shape = Shape(@circle)
+    let circle_shape = Shape(^circle)
 
     if square_shape.area() != 100 {
         return 1

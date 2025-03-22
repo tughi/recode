@@ -9,5 +9,5 @@ trait Animal {
 
 proc main() {
     let dog = Dog()
-    let animal = Animal(@dog)
+    let animal = Animal(^dog)
 }

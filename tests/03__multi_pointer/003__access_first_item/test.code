@@ -1,6 +1,6 @@
 package test
 
-proc main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
+proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     let arg = argv[0]
     let ch = arg[0]
     if ch != 'b' {

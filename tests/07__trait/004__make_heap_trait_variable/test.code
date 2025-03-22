@@ -8,7 +8,7 @@ struct Square {
     side: i32
 }
 
-proc @Square.area(self) -> i32 {
+proc ^Square.area(self) -> i32 {
     return self.side * self.side
 }
 
@@ -16,7 +16,7 @@ struct Circle {
     radius: i32
 }
 
-proc @Circle.area(self) -> i32 {
+proc ^Circle.area(self) -> i32 {
     return 312 * self.radius * self.radius / 100
 }
 
@@ -37,4 +37,4 @@ proc main() -> i32 {
     return 0
 }
 
-external proc malloc(anon size: u64) -> @Any
+external proc malloc(anon size: u64) -> ^Any

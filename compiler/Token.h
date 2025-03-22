@@ -100,6 +100,7 @@ bool Token__is_as(Token *self);
 bool Token__is_asterisk(Token *self);
 bool Token__is_at(Token *self);
 bool Token__is_break(Token *self);
+bool Token__is_caret(Token *self);
 bool Token__is_case(Token *self);
 bool Token__is_character(Token *self);
 bool Token__is_closing_brace(Token *self);

@@ -2,6 +2,6 @@ package test
 
 proc main() -> i32 {
     let value = 42
-    let value_ref = @value
-    return value_ref.@ - 42
+    let value_ref = ^value
+    return value_ref.^ - 42
 }

@@ -3,7 +3,7 @@ package editor
 \ ----------------------------------------------------------------------------- String
 
 struct String {
-    data: [@]u8
+    data: [^]u8
     length: usize
 }
 
@@ -27,21 +27,21 @@ struct SDL_Event {
 
 external proc SDL_Init(anon flags: u32) -> i32
 external proc SDL_Quit()
-external proc SDL_GetError() -> @u8
+external proc SDL_GetError() -> ^u8
 external proc SDL_Delay(anon ms: u32)
-external proc SDL_CreateWindow(anon title: [@]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> @SDL_Window
-external proc SDL_GetWindowSurface(anon window: @SDL_Window) -> @SDL_Surface
-external proc SDL_UpdateWindowSurface(anon window: @SDL_Window) -> i32
-external proc SDL_DestroyWindow(anon window: @SDL_Window)
-external proc SDL_PollEvent(anon event: @SDL_Event) -> i32
+external proc SDL_CreateWindow(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^SDL_Window
+external proc SDL_GetWindowSurface(anon window: ^SDL_Window) -> ^SDL_Surface
+external proc SDL_UpdateWindowSurface(anon window: ^SDL_Window) -> i32
+external proc SDL_DestroyWindow(anon window: ^SDL_Window)
+external proc SDL_PollEvent(anon event: ^SDL_Event) -> i32
 
-proc create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> @SDL_Window {
+proc create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> ^SDL_Window {
     let title_copy = title
-    let title_data = (@title_copy).as(@String).data
+    let title_data = (^title_copy).as(^String).data
     return SDL_CreateWindow(title_data, x, y, w, h, flags)
 }
 
-proc @SDL_Window.destroy(self) {
+proc ^SDL_Window.destroy(self) {
     SDL_DestroyWindow(self)
 }
 
@@ -69,7 +69,7 @@ proc main() -> i32 {
     let event = SDL_Event()
     let running = true
     while running {
-        while SDL_PollEvent(@event) != 0 {
+        while SDL_PollEvent(^event) != 0 {
             if event.type == 0x100 {
                 running = false
             }

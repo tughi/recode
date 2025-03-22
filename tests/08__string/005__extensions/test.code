@@ -1,23 +1,23 @@
 package test
 
 struct String {
-    data: [@]u8
+    data: [^]u8
     length: usize
 }
 
-external proc malloc(anon size: usize) -> @Any
+external proc malloc(anon size: usize) -> ^Any
 
 proc str.concat(self, anon other: str) -> str {
     if self.length == 0 {
         return other
     }
     let result = String(
-        data: malloc(self.length + other.length).as([@]u8)
+        data: malloc(self.length + other.length).as([^]u8)
         length: self.length + other.length
     )
     if self.length > 0 {
         let self_copy = self
-        let self_data = (@self_copy).as(@String).data
+        let self_data = (^self_copy).as(^String).data
         let index: usize = 0
         while index < self.length {
             result.data[index] = self_data[index]
@@ -26,14 +26,14 @@ proc str.concat(self, anon other: str) -> str {
     }
     if other.length > 0 {
         let other_copy = other
-        let other_data = (@other_copy).as(@String).data
+        let other_data = (^other_copy).as(^String).data
         let index: usize = 0
         while index < other.length {
             result.data[self.length + index] = other_data[index]
             index = index + 1
         }
     }
-    return (@result).as(@str).@
+    return (^result).as(^str).^
 }
 
 proc str.equals(self, anon other: str) -> bool {
@@ -41,9 +41,9 @@ proc str.equals(self, anon other: str) -> bool {
         return false
     }
     let self_copy = self
-    let self_data = (@self_copy).as(@String).data
+    let self_data = (^self_copy).as(^String).data
     let other_copy = other
-    let other_data = (@other_copy).as(@String).data
+    let other_data = (^other_copy).as(^String).data
     if self_data == other_data {
         return true
     }

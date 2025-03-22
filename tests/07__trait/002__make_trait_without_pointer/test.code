@@ -7,7 +7,7 @@ trait Animal {
 struct Dog {
 }
 
-proc @Dog.legs(self) -> i32 {
+proc ^Dog.legs(self) -> i32 {
     return 4
 }
 

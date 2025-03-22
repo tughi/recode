@@ -7,6 +7,6 @@ proc main() -> i32 {
 }
 
 struct String {
-    data: [@]u8
+    data: [^]u8
     length: usize
 }

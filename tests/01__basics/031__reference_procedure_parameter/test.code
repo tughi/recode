@@ -1,5 +1,5 @@
 package test
 
 proc demo(parameter: i32) {
-    let parameter_ref = @parameter
+    let parameter_ref = ^parameter
 }

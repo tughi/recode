@@ -267,7 +267,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__MULTI_POINTER: {
         Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)type;
-        pWriter__write__cstring(self, "[@]");
+        pWriter__write__cstring(self, "[^]");
         pWriter__write__checked_type(self, multi_pointer_type->item_type);
         break;
     }
@@ -277,7 +277,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__POINTER: {
         Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
-        pWriter__write__char(self, '@');
+        pWriter__write__char(self, '^');
         pWriter__write__checked_type(self, pointer_type->other_type);
         break;
     }

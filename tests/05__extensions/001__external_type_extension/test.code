@@ -5,11 +5,11 @@ proc main() -> i32 {
     return 0
 }
 
-proc @FILE.write(self, char ch: u8) -> @FILE {
+proc ^FILE.write(self, char ch: u8) -> ^FILE {
     fputc(ch.as(i32), __stdoutp)
     return self
 }
 
 external type FILE
-external __stdoutp: @FILE
-external proc fputc(anon c: i32, anon stream: @FILE) -> i32
+external __stdoutp: ^FILE
+external proc fputc(anon c: i32, anon stream: ^FILE) -> i32

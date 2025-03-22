@@ -291,7 +291,7 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
 access_expression
     | primary_expression (
         "." (
-            "@" |
+            "^" |
             "as" "(" type ")" |
             IDENTIFIER
         ) |
@@ -307,8 +307,8 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_dot);
             Parser__consume_space(self, 0);
-            if (Parser__matches_one(self, Token__is_at)) {
-                Token *last_token = Parser__consume_token(self, Token__is_at);
+            if (Parser__matches_one(self, Token__is_caret)) {
+                Token *last_token = Parser__consume_token(self, Token__is_caret);
                 expression = (Parsed_Expression *)Parsed_Dereference_Expression__create(Source_Location__union(expression->location, last_token->location), expression);
             } else if (Parser__matches_one(self, Token__is_as)) {
                 Parser__consume_token(self, Token__is_as);
@@ -352,7 +352,7 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
 unary_expression
     | "-" unary_expression
     | "not" unary_expression
-    | "@" unary_expression
+    | "^" unary_expression
     | "sizeof" "(" type ")"
     | access_expression
 */
@@ -369,8 +369,8 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
         return (Parsed_Expression *)Parsed_Not_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
     }
-    if (Parser__matches_one(self, Token__is_at)) {
-        Token *first_token = Parser__consume_token(self, Token__is_at);
+    if (Parser__matches_one(self, Token__is_caret)) {
+        Token *first_token = Parser__consume_token(self, Token__is_caret);
         Parser__consume_space(self, 0);
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
         return (Parsed_Expression *)Parsed_Address_Of_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
@@ -750,14 +750,14 @@ Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Par
 
 /*
 type
-    | "@" type
-    | "[" ( expression | "@" ) "]" type
+    | "^" type
+    | "[" ( expression | "^" ) "]" type
     | IDENTIFIER
     | proc "(" procedure_parameters? ")" ( "->" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
-    if (Parser__matches_one(self, Token__is_at)) {
-        Token *first_token = Parser__consume_token(self, Token__is_at);
+    if (Parser__matches_one(self, Token__is_caret)) {
+        Token *first_token = Parser__consume_token(self, Token__is_caret);
         Parser__consume_space(self, 0);
         Parsed_Type *type = Parser__parse_type(self);
         return Parsed_Pointer_Type__create(Source_Location__union(first_token->location, type->location), type);
@@ -765,8 +765,8 @@ Parsed_Type *Parser__parse_type(Parser *self) {
     if (Parser__matches_one(self, Token__is_opening_bracket)) {
         Token *first_token = Parser__consume_token(self, Token__is_opening_bracket);
         Parser__consume_space(self, 0);
-        if (Parser__matches_one(self, Token__is_at)) {
-            Parser__consume_token(self, Token__is_at);
+        if (Parser__matches_one(self, Token__is_caret)) {
+            Parser__consume_token(self, Token__is_caret);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_closing_bracket);
             Parser__consume_space(self, 0);

@@ -1,5 +1,5 @@
 package test
 
-proc main(anon argc: i32, anon argv: [@][@]u8) -> i32 {
+proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     return 0
 }

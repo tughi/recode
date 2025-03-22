@@ -229,6 +229,10 @@ bool Token__is_at(Token *self) {
     return Token__is_other(self, "@");
 }
 
+bool Token__is_caret(Token *self) {
+    return Token__is_other(self, "^");
+}
+
 bool Token__is_closing_brace(Token *self) {
     return Token__is_other(self, "}");
 }

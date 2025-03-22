@@ -2,9 +2,9 @@ package test
 
 external type FILE
 
-external __stdoutp: @FILE
+external __stdoutp: ^FILE
 
-external proc fputc(anon ch: i32, anon file: @FILE) -> i32
+external proc fputc(anon ch: i32, anon file: ^FILE) -> i32
 
 proc main() -> i32 {
     fputc(52, __stdoutp) \\ '4'

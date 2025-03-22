@@ -5,11 +5,11 @@ proc main() -> i32 {
     if message.length != 16 {
         return 1
     }
-    let message_ptr = @message
+    let message_ptr = ^message
     return message_ptr.length.as(i32) - 16
 }
 
 struct String {
-    data: [@]u8
+    data: [^]u8
     length: usize
 }

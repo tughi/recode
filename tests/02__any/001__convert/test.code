@@ -2,6 +2,6 @@ package test
 
 proc main() -> i32 {
     let value = 42
-    let any = (@value).as(@Any)
-    return any.as(@i32).@ - 42
+    let any = (^value).as(^Any)
+    return any.as(^i32).^ - 42
 }
