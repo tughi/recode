@@ -1,5 +1,5 @@
 package test
 
-struct Shape {
+type Shape = struct {
     points
 }

@@ -1,5 +1,5 @@
 package test
 
-struct Test {
+type Test = struct {
     test: Test
 }

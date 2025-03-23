@@ -558,12 +558,10 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
 
 /*
 struct
-    | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type )* "}"
+    | "struct" "{" ( IDENTIFIER ":" type )* "}"
 */
-Parsed_Statement *Parser__parse_struct(Parser *self) {
-    Token *first_token = Parser__consume_token(self, Token__is_struct);
-    Parser__consume_space(self, 1);
-    Token *struct_name = Parser__consume_token(self, Token__is_identifier);
+Parsed_Statement *Parser__parse_struct(Parser *self, Source_Location type_location, Token *struct_name) {
+    Parser__consume_token(self, Token__is_struct);
     Parsed_Struct_Statement *struct_statement = Parsed_Struct_Statement__create(struct_name->location, struct_name);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
@@ -592,7 +590,7 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    struct_statement->super.super.location = Source_Location__union(first_token->location, last_token->location);
+    struct_statement->super.super.location = Source_Location__union(type_location, last_token->location);
     return (Parsed_Statement *)struct_statement;
 }
 
@@ -600,12 +598,10 @@ Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Par
 
 /*
 trait
-    | "trait" IDENTIFIER "{" trait_method* "}"
+    | "trait" "{" trait_method* "}"
 */
-Parsed_Statement *Parser__parse_trait(Parser *self) {
-    Token *first_token = Parser__consume_token(self, Token__is_trait);
-    Parser__consume_space(self, 1);
-    Token *trait_name = Parser__consume_token(self, Token__is_identifier);
+Parsed_Statement *Parser__parse_trait(Parser *self, Source_Location type_location, Token *trait_name) {
+    Parser__consume_token(self, Token__is_trait);
     Parsed_Trait_Statement *trait_statement = Parsed_Trait_Statement__create(trait_name->location, trait_name);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
@@ -644,18 +640,16 @@ Parsed_Statement *Parser__parse_trait(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    trait_statement->super.super.location = Source_Location__union(first_token->location, last_token->location);
+    trait_statement->super.super.location = Source_Location__union(type_location, last_token->location);
     return (Parsed_Statement *)trait_statement;
 }
 
 /*
 union
-    | "union" IDENTIFIER "{" ( type )* "}"
+    | "union" "{" ( type )* "}"
 */
-Parsed_Statement *Parser__parse_union(Parser *self) {
-    Token *first_token = Parser__consume_token(self, Token__is_union);
-    Parser__consume_space(self, 1);
-    Token *union_name = Parser__consume_token(self, Token__is_identifier);
+Parsed_Statement *Parser__parse_union(Parser *self, Source_Location type_location, Token *union_name) {
+    Parser__consume_token(self, Token__is_union);
     Parsed_Union_Statement *union_statement = Parsed_Union_Statement__create(union_name->location, union_name);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
@@ -679,21 +673,46 @@ Parsed_Statement *Parser__parse_union(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    union_statement->super.super.location = Source_Location__union(first_token->location, last_token->location);
+    union_statement->super.super.location = Source_Location__union(type_location, last_token->location);
     return (Parsed_Statement *)union_statement;
 }
 
 /*
 external_type
-    | "external" "type" IDENTIFIER
+    | "external"
 */
-Parsed_Statement *Parser__parse_external_type(Parser *self) {
-    Token *first_token = Parser__consume_token(self, Token__is_external);
-    Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_type);
+Parsed_Statement *Parser__parse_external_type(Parser *self, Source_Location type_location, Token *name) {
+    Token *last_token = Parser__consume_token(self, Token__is_external);
+    return (Parsed_Statement *)Parsed_External_Type_Statement__create(Source_Location__union(type_location, last_token->location), name);
+}
+
+/*
+type_definition
+    | "type" IDENTIFIER "=" (struct | union | trait | external_type)
+*/
+Parsed_Statement *Parser__parse_type_statement(Parser *self) {
+    Source_Location type_location = Parser__consume_token(self, Token__is_type)->location;
     Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
-    return (Parsed_Statement *)Parsed_External_Type_Statement__create(Source_Location__union(first_token->location, name->location), name);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_equals);
+    Parser__consume_space(self, 1);
+    if (Parser__matches_one(self, Token__is_struct)) {
+        return Parser__parse_struct(self, type_location, name);
+    }
+    if (Parser__matches_one(self, Token__is_union)) {
+        return Parser__parse_union(self, type_location, name);
+    }
+    if (Parser__matches_one(self, Token__is_trait)) {
+        return Parser__parse_trait(self, type_location, name);
+    }
+    if (Parser__matches_one(self, Token__is_external)) {
+        return Parser__parse_external_type(self, type_location, name);
+    }
+    pWriter__begin_location_message(stderr_writer, type_location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Unsupported type");
+    pWriter__end_location_message(stderr_writer);
+    panic();
 }
 
 /*
@@ -1066,12 +1085,11 @@ statement
     | assignment
     | break
     | expression
-    | external_type
     | if
     | loop
     | procedure
     | return
-    | struct
+    | type
     | variable
     | while
 */
@@ -1079,10 +1097,6 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
     Parser__consume_space(self, self->current_identation * 4);
 
     if (Parser__matches_two(self, Token__is_external, true, Token__is_space)) {
-        if (Token__is_type(Parser__peek_token(self, 2))) {
-            return Parser__parse_external_type(self);
-        }
-
         return Parser__parse_variable(self);
     }
 
@@ -1094,16 +1108,8 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
         return Parser__parse_variable(self);
     }
 
-    if (Parser__matches_one(self, Token__is_struct)) {
-        return Parser__parse_struct(self);
-    }
-
-    if (Parser__matches_one(self, Token__is_trait)) {
-        return Parser__parse_trait(self);
-    }
-
-    if (Parser__matches_one(self, Token__is_union)) {
-        return Parser__parse_union(self);
+    if (Parser__matches_one(self, Token__is_type)) {
+        return Parser__parse_type_statement(self);
     }
 
     if (Parser__matches_one(self, Token__is_if)) {

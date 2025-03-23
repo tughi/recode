@@ -57,7 +57,7 @@ proc evaluate(expression: ^Expression) -> i32 {
 
 \ ------------------------------------------------------------------------------ Parser
 
-struct Parser {
+type Parser = struct {
     tokenizer: Tokenizer
 }
 
@@ -135,7 +135,7 @@ proc ^Parser.parse_primary_expression(self) -> Expression {
 
 \ ------------------------------------------------------------------------------ Parsed_Expression
 
-union Expression {
+type Expression = union {
     Number
     Addition
     Division
@@ -144,25 +144,25 @@ union Expression {
     Error
 }
 
-struct Addition {
+type Addition = struct {
     span: Span
     left: ^Expression
     right: ^Expression
 }
 
-struct Division {
+type Division = struct {
     span: Span
     left: ^Expression
     right: ^Expression
 }
 
-struct Multiplication {
+type Multiplication = struct {
     span: Span
     left: ^Expression
     right: ^Expression
 }
 
-struct Subtraction {
+type Subtraction = struct {
     span: Span
     left: ^Expression
     right: ^Expression
@@ -223,7 +223,7 @@ proc ^Writer.write(self, expression: ^Expression) -> ^Writer {
 
 \ ------------------------------------------------------------------------------ Tokenizer
 
-struct Tokenizer {
+type Tokenizer = struct {
     data: [^]u8
     index: i32
 
@@ -293,42 +293,42 @@ proc ^Tokenizer.scan_number_token(self) -> Token {
 \ ------------------------------------------------------------------------------ Token
 
 
-struct Span {
+type Span = struct {
     start: i32
     end: i32
 }
 
-struct Number {
+type Number = struct {
     span: Span
     value: i32
 }
 
-struct Plus {
+type Plus = struct {
     span: Span
 }
 
-struct Minus {
+type Minus = struct {
     span: Span
 }
 
-struct Multiply {
+type Multiply = struct {
     span: Span
 }
 
-struct Divide {
+type Divide = struct {
     span: Span
 }
 
-struct Stop {
+type Stop = struct {
     span: Span
 }
 
-struct Error {
+type Error = struct {
     span: Span
     message: str
 }
 
-union Token {
+type Token = union {
     Number
     Plus
     Minus
@@ -400,7 +400,7 @@ proc ^Writer.write(self, token: ^Token) -> ^Writer {
 
 \ ------------------------------------------------------------------------------ Writer
 
-trait Writer {
+type Writer = trait {
     proc write_char(self, anon c: u8)
 }
 
@@ -428,7 +428,7 @@ proc ^Writer.end_line(self) -> ^Writer {
 
 \ ------------------------------------------------------------------------------ String_Builder
 
-struct String_Builder {
+type String_Builder = struct {
     data: [^]u8
     data_size: i32
     length: i32
@@ -474,7 +474,7 @@ proc ^String_Builder.write_char(self, anon c: u8) {
 
 \ ------------------------------------------------------------------------------ String
 
-struct String {
+type String = struct {
     data: [^]u8
     length: i32
 }
@@ -492,7 +492,7 @@ proc ^Writer.write(self, anon string: str) -> ^Writer {
 
 \ ------------------------------------------------------------------------------ LibC
 
-external type FILE
+type FILE = external
 
 external stdin: ^FILE
 external __stdoutp: ^FILE

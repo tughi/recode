@@ -1,12 +1,12 @@
 package test
 
-union Value {
+type Value = union {
     bool
     i8
     i32
 }
 
-struct Literal {
+type Literal = struct {
     value: Value
 }
 

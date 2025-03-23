@@ -1,6 +1,6 @@
 package test
 
-trait Animal {
+type Animal = trait {
     proc legs(self) -> i32
 }
 

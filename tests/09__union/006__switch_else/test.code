@@ -1,11 +1,11 @@
 package test
 
-union Integer {
+type Integer = union {
     i8
     i32
 }
 
-union Value {
+type Value = union {
     bool
     Integer
 }

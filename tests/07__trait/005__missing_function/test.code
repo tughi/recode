@@ -1,9 +1,9 @@
 package test
 
-struct Dog {
+type Dog = struct {
 }
 
-trait Animal {
+type Animal = trait {
     proc make_sound(self) -> u8
 }
 

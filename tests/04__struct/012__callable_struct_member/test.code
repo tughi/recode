@@ -1,6 +1,6 @@
 package test
 
-struct Function {
+type Function = struct {
     run: proc () -> i32
 }
 

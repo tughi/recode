@@ -1,10 +1,10 @@
 package test
 
-trait Shape {
+type Shape = trait {
     proc area(self) -> i32
 }
 
-struct Square {
+type Square = struct {
     side: i32
 }
 
@@ -12,7 +12,7 @@ proc ^Square.area(self) -> i32 {
     return self.side * self.side
 }
 
-struct Circle {
+type Circle = struct {
     radius: i32
 }
 

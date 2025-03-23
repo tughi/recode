@@ -1,6 +1,6 @@
 package test
 
-struct Number {
+type Number = struct {
     value: i32
 }
 
@@ -12,7 +12,7 @@ proc ^Number.set_value(self, anon value: i32) {
     self.value = value
 }
 
-struct Boolean {
+type Boolean = struct {
     value: bool
 }
 

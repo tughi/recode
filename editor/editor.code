@@ -2,17 +2,17 @@ package editor
 
 \ ----------------------------------------------------------------------------- String
 
-struct String {
+type String = struct {
     data: [^]u8
     length: usize
 }
 
 \ ----------------------------------------------------------------------------- SDL2
 
-external type SDL_Window
-external type SDL_Surface
+type SDL_Window = external
+type SDL_Surface = external
 
-struct SDL_Event {
+type SDL_Event = struct {
     type: u32
     timestamp: u32
     window_id: u32

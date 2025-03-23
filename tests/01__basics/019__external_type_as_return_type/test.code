@@ -1,5 +1,5 @@
 package test
 
-external type Value
+type Value = external
 
 proc convert(anon number: i32) -> Value = external

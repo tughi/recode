@@ -1,6 +1,6 @@
 package test
 
-external type FILE
+type FILE = external
 
 external __stdoutp: ^FILE
 

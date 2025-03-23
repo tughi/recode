@@ -1,6 +1,6 @@
 package test
 
-struct Number {
+type Number = struct {
     value: i32
 }
 

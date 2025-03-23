@@ -1,6 +1,6 @@
 package test
 
-union Value {
+type Value = union {
     bool
     i32
 }

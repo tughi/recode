@@ -1,11 +1,11 @@
 package test
 
-struct Point {
+type Point = struct {
     x: i32
     y: i32
 }
 
-struct Line {
+type Line = struct {
     p1: Point
     p2: Point
 }

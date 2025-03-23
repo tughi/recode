@@ -1,6 +1,6 @@
 package test
 
-struct Dog {
+type Dog = struct {
     age: i32
 }
 
@@ -8,7 +8,7 @@ proc ^Dog.legs(self) -> i32 {
     return 4
 }
 
-trait Animal {
+type Animal = trait {
     proc legs(self) -> i32
 }
 

@@ -6,7 +6,7 @@ proc main() -> i32 {
     return 0
 }
 
-struct String {
+type String = struct {
     data: [^]u8
     length: usize
 }
