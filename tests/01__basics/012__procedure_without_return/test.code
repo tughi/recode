@@ -1,6 +1,6 @@
 package test
 
-external proc exit(anon status: i32)
+proc exit(anon status: i32) = external
 
 proc main() -> i32 {
     finish()

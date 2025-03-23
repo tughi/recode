@@ -25,15 +25,23 @@ struct SDL_Event {
     _data_7: u64
 }
 
-external proc SDL_Init(anon flags: u32) -> i32
-external proc SDL_Quit()
-external proc SDL_GetError() -> ^u8
-external proc SDL_Delay(anon ms: u32)
-external proc SDL_CreateWindow(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^SDL_Window
-external proc SDL_GetWindowSurface(anon window: ^SDL_Window) -> ^SDL_Surface
-external proc SDL_UpdateWindowSurface(anon window: ^SDL_Window) -> i32
-external proc SDL_DestroyWindow(anon window: ^SDL_Window)
-external proc SDL_PollEvent(anon event: ^SDL_Event) -> i32
+proc SDL_Init(anon flags: u32) -> i32 = external
+
+proc SDL_Quit() = external
+
+proc SDL_GetError() -> ^u8 = external
+
+proc SDL_Delay(anon ms: u32) = external
+
+proc SDL_CreateWindow(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^SDL_Window = external
+
+proc SDL_GetWindowSurface(anon window: ^SDL_Window) -> ^SDL_Surface = external
+
+proc SDL_UpdateWindowSurface(anon window: ^SDL_Window) -> i32 = external
+
+proc SDL_DestroyWindow(anon window: ^SDL_Window) = external
+
+proc SDL_PollEvent(anon event: ^SDL_Event) -> i32 = external
 
 proc create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> ^SDL_Window {
     let title_copy = title
@@ -47,7 +55,7 @@ proc ^SDL_Window.destroy(self) {
 
 \ ----------------------------------------------------------------------------- LibC
 
-external proc exit(anon status: i32)
+proc exit(anon status: i32) = external
 
 \ ----------------------------------------------------------------------------- Main
 

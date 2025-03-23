@@ -498,13 +498,13 @@ external stdin: ^FILE
 external __stdoutp: ^FILE
 external stderr: ^FILE
 
-external proc fputc(anon c: i32, anon file: ^FILE) -> i32
+proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external
 
 proc ^FILE.write_char(self, anon c: u8) {
     fputc(c.as(i32), __stdoutp)
 }
 
-external proc malloc(anon size: u64) -> ^Any
-external proc realloc(anon block: ^Any, anon size: u64) -> ^Any
+proc malloc(anon size: u64) -> ^Any = external
+proc realloc(anon block: ^Any, anon size: u64) -> ^Any = external
 
-external proc exit(anon code: i32)
+proc exit(anon code: i32) = external

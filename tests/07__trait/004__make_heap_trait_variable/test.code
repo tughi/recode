@@ -37,4 +37,4 @@ proc main() -> i32 {
     return 0
 }
 
-external proc malloc(anon size: u64) -> ^Any
+proc malloc(anon size: u64) -> ^Any = external

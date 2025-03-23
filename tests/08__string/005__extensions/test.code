@@ -5,7 +5,7 @@ struct String {
     length: usize
 }
 
-external proc malloc(anon size: usize) -> ^Any
+proc malloc(anon size: usize) -> ^Any = external
 
 proc str.concat(self, anon other: str) -> str {
     if self.length == 0 {

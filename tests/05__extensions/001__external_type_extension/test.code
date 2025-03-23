@@ -12,4 +12,4 @@ proc ^FILE.write(self, char ch: u8) -> ^FILE {
 
 external type FILE
 external __stdoutp: ^FILE
-external proc fputc(anon c: i32, anon stream: ^FILE) -> i32
+proc fputc(anon c: i32, anon stream: ^FILE) -> i32 = external
