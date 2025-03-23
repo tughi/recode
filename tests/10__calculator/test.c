@@ -152,9 +152,9 @@ struct String_Builder {
     int32_t length;
 };
 
-extern FILE *stdin;
+extern FILE *__stdinp;
 extern FILE *__stdoutp;
-extern FILE *stderr;
+extern FILE *__stderrp;
 struct Parser *__alloc_Parser_value(struct Parser value);
 
 struct Tokenizer *__alloc_Tokenizer_value(struct Tokenizer value);

@@ -822,19 +822,18 @@ Parsed_Type *Parser__parse_type(Parser *self) {
 
 /*
 variable
-    | ( "external" | "let") IDENTIFIER ( ":" type )? ( "=" expression )?
+    | "let" "external" IDENTIFIER ":" type
+    | "let" IDENTIFIER ( ":" type )? ( "=" expression )?
 */
 Parsed_Statement *Parser__parse_variable(Parser *self) {
-    bool is_external;
-    Source_Location location;
+    Source_Location location = Parser__consume_token(self, Token__is_let)->location;
+    Parser__consume_space(self, 1);
+    bool is_external = false;
     if (Parser__matches_one(self, Token__is_external)) {
         is_external = true;
-        location = Parser__consume_token(self, Token__is_external)->location;
-    } else {
-        is_external = false;
-        location = Parser__consume_token(self, Token__is_let)->location;
+        Parser__consume_token(self, Token__is_external);
+        Parser__consume_space(self, 1);
     }
-    Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
     location = Source_Location__union(location, name->location);
     Parsed_Type *type = NULL;
@@ -1095,10 +1094,6 @@ statement
 */
 Parsed_Statement *Parser__parse_statement(Parser *self) {
     Parser__consume_space(self, self->current_identation * 4);
-
-    if (Parser__matches_two(self, Token__is_external, true, Token__is_space)) {
-        return Parser__parse_variable(self);
-    }
 
     if (Parser__matches_one(self, Token__is_proc)) {
         return Parser__parse_procedure(self, NULL);

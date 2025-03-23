@@ -2,7 +2,7 @@ package test
 
 type FILE = external
 
-external __stdoutp: ^FILE
+let external __stdoutp: ^FILE
 
 proc fputc(anon ch: i32, anon file: ^FILE) -> i32 = external
 

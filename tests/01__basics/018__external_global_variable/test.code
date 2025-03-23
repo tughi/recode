@@ -1,6 +1,6 @@
 package test
 
-external optind: i32
+let external optind: i32
 
 proc main() -> i32 {
     return optind - 1
