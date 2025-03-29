@@ -86,10 +86,27 @@ String *String__append_string(String *self, String *other) {
     return self;
 }
 
-String *String__end_with_zero(String *self) {
+String *String__append_zero(String *self) {
     String__append_char(self, '\0');
     self->length = self->length - 1;
     return self;
+}
+
+bool String__ends_with_cstring(String *self, char *s) {
+    size_t length = cstring_length(s);
+    if (self->length < length) {
+        return false;
+    }
+
+    size_t index = 0;
+    while (index < length) {
+        if (self->data[self->length - length + index] != s[index]) {
+            return false;
+        }
+        index = index + 1;
+    }
+
+    return true;
 }
 
 bool String__equals_cstring(String *self, char *s) {

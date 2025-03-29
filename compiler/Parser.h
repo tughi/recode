@@ -2,8 +2,7 @@
 #define __PARSER_H__
 
 #include "Parsed_Source.h"
-#include "Scanner.h"
 
-Parsed_Source *parse(Source *source);
+Parsed_Source *parse(String *project_dir, String *file_path);
 
 #endif

@@ -278,12 +278,12 @@ def test(paths, save=False, stage=1):
     tester = Tester(apply_change=save)
 
     for test_dir in sorted(test_dirs(paths)):
-        if not os.path.exists(f'build/{test_dir}'):
-            run(f'mkdir -p build/{test_dir}')
+        if not os.path.exists(f'build/{test_dir}/generated'):
+            run(f'mkdir -p build/{test_dir}/generated')
 
         logger.info(f"Testing: {test_dir}")
 
-        compiler_command = [f'build/stage{stage}/ReCode', 'code', f'{test_dir}/test.code']
+        compiler_command = [f'build/stage{stage}/ReCode', '--output-dir', f'build/{test_dir}/generated', '--project-dir', test_dir, 'app', 'test.code']
 
         tester.load_test_data(test_dir)
 

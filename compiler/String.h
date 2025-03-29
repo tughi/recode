@@ -30,7 +30,9 @@ String *String__append_int16_t(String *self, int16_t value);
 
 String *String__append_string(String *self, String *other);
 
-String *String__end_with_zero(String *self);
+String *String__append_zero(String *self);
+
+bool String__ends_with_cstring(String *self, char *s);
 
 bool String__equals_cstring(String *self, char *s);
 

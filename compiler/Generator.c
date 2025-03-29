@@ -806,9 +806,9 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     type->has_generated_definition = true;
 }
 
-void generate(Writer *writer, Checked_Source *checked_source) {
+void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
     Generator generator;
-    generator.writer = writer;
+    generator.writer = stderr_writer;
     generator.identation = 0;
 
     Checked_Symbol *checked_symbol;
@@ -914,7 +914,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     }
 
     /* Generate main procedure */
-    if (main_procedure != NULL) {
+    if (generate_main && main_procedure != NULL) {
         pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
         pWriter__write__cstring(generator.writer, "    return ");
         pWriter__write__string(generator.writer, main_procedure->super.name);

@@ -3,6 +3,6 @@
 
 #include "Checker.h"
 
-void generate(Writer *writer, Checked_Source *checked_source);
+void generate(Checked_Source *checked_source, String *output_dir, bool generate_main);
 
 #endif
