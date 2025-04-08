@@ -1,5 +1,3 @@
-package test
-
 type String = struct {
     data: [^]u8
     length: usize

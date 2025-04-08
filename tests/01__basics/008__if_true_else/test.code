@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let result = 2
     if true {

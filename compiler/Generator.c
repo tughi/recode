@@ -807,8 +807,15 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
 }
 
 void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+    String *output_file_path = String__create_copy(output_dir);
+    if (!String__ends_with_cstring(output_file_path, "/")) {
+        String__append_char(output_file_path, '/');
+    }
+    String__append_string(output_file_path, checked_source->package_name);
+    String__append_cstring(output_file_path, ".c");
+
     Generator generator;
-    generator.writer = stderr_writer;
+    generator.writer = File__create_writer(output_file_path);
     generator.identation = 0;
 
     Checked_Symbol *checked_symbol;

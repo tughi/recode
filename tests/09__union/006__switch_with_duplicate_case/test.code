@@ -1,5 +1,3 @@
-package test
-
 type Value = union {
     bool
     i8

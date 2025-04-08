@@ -1,5 +1,3 @@
-package test
-
 type Dog = struct {
     age: i32
 }

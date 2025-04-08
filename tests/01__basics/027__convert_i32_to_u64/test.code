@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     if cast(255) != 0x0000_0000_0000_00ff {
         return 1

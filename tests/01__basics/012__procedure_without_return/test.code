@@ -1,5 +1,3 @@
-package test
-
 proc exit(anon status: i32) = external
 
 proc main() -> i32 {

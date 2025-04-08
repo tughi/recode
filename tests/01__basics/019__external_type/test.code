@@ -1,5 +1,3 @@
-package test
-
 type FILE = external
 
 let external __stdoutp: ^FILE

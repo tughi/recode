@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     return fibonacci(n: 12) - 144
 }

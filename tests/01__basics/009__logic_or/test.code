@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let t = echo(true)
     let f = echo(false)

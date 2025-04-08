@@ -1,5 +1,3 @@
-package test
-
 type Point = struct {
     x: i32
     y: i32

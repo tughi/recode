@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let empty: str = ""
     let quote: str = "Answer to the Ultimate Question of Life, the Universe, and Everything"

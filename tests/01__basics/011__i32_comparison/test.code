@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let errors = 6
     if echo(42) == 42 {

@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let check1 = true
     let check2 = false

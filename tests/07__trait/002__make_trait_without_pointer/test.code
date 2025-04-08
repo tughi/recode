@@ -1,5 +1,3 @@
-package test
-
 type Animal = trait {
     proc legs(self) -> i32
 }

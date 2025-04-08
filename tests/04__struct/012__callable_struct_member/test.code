@@ -1,5 +1,3 @@
-package test
-
 type Function = struct {
     run: proc () -> i32
 }

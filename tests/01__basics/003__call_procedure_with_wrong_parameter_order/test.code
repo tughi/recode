@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     return difference(v2: 1, v1: 1)
 }

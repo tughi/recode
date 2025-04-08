@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let mem = malloc(42)
 

@@ -700,6 +700,7 @@ Checked_While_Statement *Checked_While_Statement__create(Source_Location locatio
 typedef struct Checked_Source {
     Source *first_source;
     Checked_Symbol *first_symbol;
+    String *package_name;
     Checked_Statements *statements;
 } Checked_Source;
 

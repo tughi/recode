@@ -1,5 +1,3 @@
-package test
-
 proc test(anon one: i32, anon two: i32, anon three: i32, anon four: i32, anon five: i32) {
 }
 

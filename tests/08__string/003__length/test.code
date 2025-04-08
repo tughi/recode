@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let message = "I have a length!"
     if message.length != 16 {

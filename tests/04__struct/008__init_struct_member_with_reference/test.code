@@ -1,5 +1,3 @@
-package test
-
 type Number = struct {
     value: i32
     next: ^Number

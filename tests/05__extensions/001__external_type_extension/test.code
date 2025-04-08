@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     __stdoutp.write(char: '4').write(char: '2').write(char: '\n')
     return 0

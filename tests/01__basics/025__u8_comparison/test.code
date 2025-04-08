@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let min = 0u8
     let max = 255u8

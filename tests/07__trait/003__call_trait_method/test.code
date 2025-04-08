@@ -1,5 +1,3 @@
-package test
-
 type Shape = trait {
     proc area(self) -> i32
 }

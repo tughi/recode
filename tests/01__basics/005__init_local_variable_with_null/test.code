@@ -1,5 +1,3 @@
-package test
-
 proc test() {
     let x: i32 = null
 }

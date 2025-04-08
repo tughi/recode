@@ -1906,6 +1906,7 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
     checked_source->first_source = parsed_source->first_source;
     checked_source->first_symbol = self->symbols->first_symbol;
+    checked_source->package_name = parsed_source->package_name;
     checked_source->statements = checked_statements;
     return checked_source;
 }

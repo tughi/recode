@@ -1,5 +1,3 @@
-package test
-
 let external optind: i32
 
 proc main() -> i32 {

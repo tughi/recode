@@ -1,5 +1,3 @@
-package test
-
 proc main() -> i32 {
     let result = 42
     return result - 42
