@@ -3,6 +3,7 @@
 #include "Scanner.h"
 
 typedef struct Parser {
+    String *project_dir;
     Scanner *scanner;
     Parsed_Source *parsed_source;
     uint16_t current_identation;
@@ -1081,11 +1082,48 @@ Parsed_Statement *Parser__parse_while_statement(Parser *self) {
 }
 
 /*
+import
+    | "import" IDENTIFIER ( "." IDENTIFIER )* ( "as" IDENTIFIER )?
+*/
+Parsed_Statement *Parser__parse_import_statement(Parser *self) {
+    Source_Location first_location = Parser__consume_token(self, Token__is_import)->location;
+    Parser__consume_space(self, 1);
+    Token *token = Parser__consume_token(self, Token__is_identifier);
+    Source_Location last_location = token->location;
+    String *module_name = token->lexeme;
+    String *module_path = String__create_copy(token->lexeme);
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_dot);
+        Parser__consume_space(self, 0);
+        token = Parser__consume_token(self, Token__is_identifier);
+        last_location = token->location;
+        module_name = token->lexeme;
+        String__append_char(module_path, '/');
+        String__append_string(module_path, token->lexeme);
+    }
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_as)) {
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_as);
+        Parser__consume_space(self, 1);
+        token = Parser__consume_token(self, Token__is_identifier);
+        last_location = token->location;
+        module_name = token->lexeme;
+    }
+
+    String__append_cstring(module_path, ".code");
+    Parsed_Source *parsed_source = parse(self->project_dir, module_path);
+
+    return Parsed_Import_Statement__create(Source_Location__union(first_location, last_location), module_name, parsed_source);
+}
+
+/*
 statement
     | assignment
     | break
     | expression
     | if
+    | import
     | loop
     | procedure
     | return
@@ -1106,6 +1144,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_one(self, Token__is_type)) {
         return Parser__parse_type_statement(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_import)) {
+        return Parser__parse_import_statement(self);
     }
 
     if (Parser__matches_one(self, Token__is_if)) {
@@ -1213,9 +1255,11 @@ String *make_package_name(String *file_path) {
 }
 
 Parsed_Source *parse(String *project_dir, String *file_path) {
-    Source *source = Source__create(String__append_string(String__create_copy(project_dir), file_path));
+    String *source_path = String__append_string(String__create_copy(project_dir), file_path);
+    Source *source = Source__create(source_path);
 
     Parser parser;
+    parser.project_dir = project_dir;
     parser.scanner = NULL;
     parser.parsed_source = Parsed_Source__create();
     parser.parsed_source->package_name = make_package_name(file_path);

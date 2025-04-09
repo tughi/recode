@@ -137,6 +137,10 @@ bool Token__is_if(Token *self) {
     return Token__is_keyword(self, "if");
 }
 
+bool Token__is_import(Token *self) {
+    return Token__is_keyword(self, "import");
+}
+
 bool Token__is_in(Token *self) {
     return Token__is_keyword(self, "in");
 }

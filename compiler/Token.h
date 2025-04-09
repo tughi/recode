@@ -124,6 +124,7 @@ bool Token__is_greater_than(Token *self);
 bool Token__is_hash(Token *self);
 bool Token__is_identifier(Token *self);
 bool Token__is_if(Token *self);
+bool Token__is_import(Token *self);
 bool Token__is_in(Token *self);
 bool Token__is_integer(Token *self);
 bool Token__is_is(Token *self);

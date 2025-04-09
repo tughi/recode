@@ -356,6 +356,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
     PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__IF,
+    PARSED_STATEMENT_KIND__IMPORT,
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
@@ -566,5 +567,13 @@ typedef struct Parsed_Source {
 } Parsed_Source;
 
 Parsed_Source *Parsed_Source__create();
+
+typedef struct Parsed_Import_Statement {
+    Parsed_Statement super;
+    String *import_name;
+    Parsed_Source *parsed_source;
+} Parsed_Import_Statement;
+
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source);
 
 #endif

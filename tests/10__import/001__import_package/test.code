@@ -1,0 +1,5 @@
+import foo
+
+proc main() -> i32 {
+    return foo.bar()
+}

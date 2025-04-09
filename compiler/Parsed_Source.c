@@ -307,6 +307,13 @@ Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, T
     return (Parsed_Statement *)statement;
 }
 
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source) {
+    Parsed_Import_Statement *statement = (Parsed_Import_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IMPORT, sizeof(Parsed_Import_Statement), location);
+    statement->import_name = import_name;
+    statement->parsed_source = parsed_source;
+    return (Parsed_Statement *)statement;
+}
+
 Parsed_Statement *Parsed_If_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Identifier_Token *variant_alias, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
     Parsed_If_Statement *statement = (Parsed_If_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IF, sizeof(Parsed_If_Statement), location);
     statement->condition_expression = condition_expression;
