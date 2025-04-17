@@ -20,9 +20,6 @@ typedef struct Checker {
     Checked_Named_Type *u8_type;
     Checked_Named_Type *usize_type;
 
-    Checked_Named_Type *first_type;
-    Checked_Named_Type *last_type;
-
     Checked_Symbols *global_symbols;
     Checked_Symbols *symbols;
 
@@ -57,9 +54,6 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
     checker->u8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), location, String__create_from("u8"));
     checker->usize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), location, String__create_from("usize"));
 
-    checker->first_type = NULL;
-    checker->last_type = NULL;
-
     checker->global_symbols = checker->symbols = Checked_Symbols__create(NULL);
 
     Checker__append_type(checker, checker->any_type);
@@ -83,26 +77,26 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
 }
 
 void Checker__append_type(Checker *self, Checked_Named_Type *type) {
-    if (self->first_type == NULL) {
-        self->first_type = type;
-    } else {
-        self->last_type->super.next_type = (Checked_Type *)type;
-    }
-    self->last_type = type;
-
     Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, type->name, (Checked_Type *)self->type_type, type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_symbol);
 }
 
 Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
-    Checked_Named_Type *type = self->first_type;
-    while (type != NULL) {
-        if (String__equals_string(name, type->name)) {
-            break;
+    Checked_Symbols *symbols = self->symbols;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+                Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
+                if (String__equals_string(name, type_symbol->named_type->name)) {
+                    return type_symbol->named_type;
+                }
+            }
+            symbol = symbol->prev_symbol;
         }
-        type = (Checked_Named_Type *)type->super.next_type;
+        symbols = symbols->parent;
     }
-    return type;
+    return NULL;
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
@@ -1843,6 +1837,7 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__STRUCT:
         case PARSED_STATEMENT_KIND__TRAIT:
         case PARSED_STATEMENT_KIND__UNION:
+        case PARSED_STATEMENT_KIND__IMPORT:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__PROCEDURE:
@@ -1869,6 +1864,7 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
         case PARSED_STATEMENT_KIND__TRAIT:
         case PARSED_STATEMENT_KIND__UNION:
         case PARSED_STATEMENT_KIND__VARIABLE:
+        case PARSED_STATEMENT_KIND__IMPORT:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__PROCEDURE: {
