@@ -1823,8 +1823,6 @@ Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statem
 }
 
 Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_source) {
-    Checked_Statements *checked_statements = Checked_Statements__create();
-
     Parsed_Statement *parsed_statement;
 
     /* Check all declared types */
@@ -1858,9 +1856,6 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
             pWriter__write__cstring(stderr_writer, "Unsupported statement");
             pWriter__end_location_message(stderr_writer);
             panic();
-        }
-        if (checked_statement != NULL) {
-            Checked_Statements__append(checked_statements, checked_statement);
         }
         parsed_statement = parsed_statement->next_statement;
     }
@@ -1907,7 +1902,6 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
     checked_source->first_source = parsed_source->first_source;
     checked_source->first_symbol = self->symbols->first_symbol;
     checked_source->package_name = parsed_source->package_name;
-    checked_source->statements = checked_statements;
     return checked_source;
 }
 

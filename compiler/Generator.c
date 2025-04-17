@@ -878,18 +878,14 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     }
 
     /* Declare all global variables */
-    Checked_Statement *checked_statement = checked_source->statements->first_statement;
-    while (checked_statement != NULL) {
-        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location.source == checked_source->first_source) {
-            Generator__generate_variable_statement(&generator, (Checked_Variable_Statement *)checked_statement);
+    checked_symbol = checked_source->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->location.source == checked_source->first_source) {
+            Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
+            Generator__generate_variable_statement(&generator, variable_symbol->statement);
             pWriter__end_line(generator.writer);
-        } else {
-            pWriter__begin_location_message(stderr_writer, checked_statement->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Unsupported statement");
-            pWriter__end_location_message(stderr_writer);
-            panic();
         }
-        checked_statement = checked_statement->next_statement;
+        checked_symbol = checked_symbol->next_symbol;
     }
 
     /* Declare all defined procedures */

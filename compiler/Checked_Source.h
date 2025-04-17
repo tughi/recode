@@ -305,8 +305,11 @@ typedef struct Checked_Type_Symbol {
 
 Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
 
+struct Checked_Variable_Statement;
+
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
+    struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location location, String *name, Checked_Type *type);
@@ -701,7 +704,6 @@ typedef struct Checked_Source {
     Source *first_source;
     Checked_Symbol *first_symbol;
     String *package_name;
-    Checked_Statements *statements;
 } Checked_Source;
 
 #endif

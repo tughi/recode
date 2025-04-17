@@ -369,7 +369,9 @@ Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location location, Strin
 }
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location location, String *name, Checked_Type *type) {
-    return (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), location, name, type);
+    Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), location, name, type);
+    variable->statement = NULL;
+    return variable;
 }
 
 Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant) {
@@ -760,6 +762,7 @@ Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location l
     statement->variable = variable;
     statement->expression = expression;
     statement->is_external = is_external;
+    variable->statement = statement;
     return statement;
 }
 
