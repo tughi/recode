@@ -806,12 +806,12 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     type->has_generated_definition = true;
 }
 
-void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+void generate_module(Checked_Module *checked_module, String *output_dir, bool generate_main) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
     }
-    String__append_string(output_file_path, checked_source->package_name);
+    String__append_string(output_file_path, checked_module->name);
     String__append_cstring(output_file_path, ".c");
 
     Generator generator;
@@ -824,23 +824,13 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
     pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
 
-    Source *source = checked_source->first_source->next;
-    while (source != NULL) {
-        if (source->file_path->data[source->file_path->length - 1] == 'h') {
-            pWriter__write__cstring(generator.writer, "#include \"");
-            pWriter__write__string(generator.writer, source->file_path);
-            pWriter__write__cstring(generator.writer, "\"\n\n");
-        }
-        source = source->next;
-    }
-
     Checked_Procedure_Symbol *malloc_procedure = NULL;
     Checked_Procedure_Symbol *main_procedure = NULL;
 
     /* Declare all defined types */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_module->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_module->source) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
             switch (named_type->super.kind) {
             case CHECKED_TYPE_KIND__EXTERNAL:
@@ -866,9 +856,9 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     }
 
     /* Generate all defined types */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_module->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_module->source) {
             Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
             if (!type->has_generated_definition) {
                 Generator__define_type(&generator, type);
@@ -878,9 +868,9 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     }
 
     /* Declare all global variables */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_module->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->location.source == checked_module->source) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
             Generator__generate_variable_statement(&generator, variable_symbol->statement);
             pWriter__end_line(generator.writer);
@@ -889,9 +879,9 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     }
 
     /* Declare all defined procedures */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_module->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->location.source == checked_module->source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                 Checked_Procedure_Symbol *checked_procedure = (Checked_Procedure_Symbol *)checked_symbol;
                 if (String__equals_cstring(checked_procedure->procedure_name, "main")) {
@@ -930,9 +920,9 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     }
 
     /* Generate all defined procedures */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_module->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->location.source == checked_module->source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                 Generator__generate_procedure(&generator, (Checked_Procedure_Symbol *)checked_symbol);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
@@ -947,5 +937,13 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
             }
         }
         checked_symbol = checked_symbol->next_symbol;
+    }
+}
+
+void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+    Checked_Module *checked_module = checked_source->first_module;
+    while (checked_module != NULL) {
+        generate_module(checked_module, output_dir, generate_main);
+        checked_module = checked_module->next_module;
     }
 }

@@ -1822,7 +1822,7 @@ Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statem
     }
 }
 
-Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_source) {
+Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_source) {
     Parsed_Statement *parsed_statement;
 
     /* Check all declared types */
@@ -1898,10 +1898,16 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         parsed_statement = parsed_statement->next_statement;
     }
 
+    Checked_Module *checked_module = (Checked_Module *)malloc(sizeof(Checked_Module));
+    checked_module->name = parsed_source->package_name;
+    checked_module->source = parsed_source->first_source;
+    checked_module->symbols = self->symbols;
+    return checked_module;
+}
+
+Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_source) {
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
-    checked_source->first_source = parsed_source->first_source;
-    checked_source->first_symbol = self->symbols->first_symbol;
-    checked_source->package_name = parsed_source->package_name;
+    checked_source->first_module = Checker__check_module(self, parsed_source);
     return checked_source;
 }
 

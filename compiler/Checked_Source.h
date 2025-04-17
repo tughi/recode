@@ -700,10 +700,15 @@ typedef struct Checked_While_Statement {
 
 Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
 
+typedef struct Checked_Module {
+    String *name;
+    Source *source;
+    Checked_Symbols *symbols;
+    struct Checked_Module *next_module;
+} Checked_Module;
+
 typedef struct Checked_Source {
-    Source *first_source;
-    Checked_Symbol *first_symbol;
-    String *package_name;
+    Checked_Module *first_module;
 } Checked_Source;
 
 #endif
