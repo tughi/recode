@@ -13,6 +13,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__I64,
     CHECKED_TYPE_KIND__I8,
     CHECKED_TYPE_KIND__ISIZE,
+    CHECKED_TYPE_KIND__MODULE,  /* Pseudo type */
     CHECKED_TYPE_KIND__NIL,     /* Pseudo type */
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
@@ -224,11 +225,12 @@ void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
-    CHECKED_SYMBOL_KIND__PROCEDURE,
+    CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
+    CHECKED_SYMBOL_KIND__PROCEDURE,
     CHECKED_SYMBOL_KIND__TYPE,
+    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT,
     CHECKED_SYMBOL_KIND__VARIABLE,
-    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT
 } Checked_Symbol_Kind;
 
 typedef struct Checked_Symbol {
@@ -241,6 +243,22 @@ typedef struct Checked_Symbol {
 } Checked_Symbol;
 
 Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Type *type);
+
+struct Checked_Symbols;
+
+typedef struct Checked_Module {
+    String *name;
+    Source *source;
+    struct Checked_Symbols *symbols;
+    struct Checked_Module *next_module;
+} Checked_Module;
+
+typedef struct Checked_Import_Symbol {
+    Checked_Symbol super;
+    Checked_Module *module;
+} Checked_Import_Symbol;
+
+Checked_Import_Symbol *Checked_Import_Symbol__create(Source_Location location, String *name, Checked_Module *module);
 
 typedef struct Checked_Enum_Member_Symbol {
     Checked_Symbol super;
@@ -699,13 +717,6 @@ typedef struct Checked_While_Statement {
 } Checked_While_Statement;
 
 Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
-
-typedef struct Checked_Module {
-    String *name;
-    Source *source;
-    Checked_Symbols *symbols;
-    struct Checked_Module *next_module;
-} Checked_Module;
 
 typedef struct Checked_Source {
     Checked_Module *first_module;

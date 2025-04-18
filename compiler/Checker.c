@@ -1787,8 +1787,36 @@ Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statem
     }
 }
 
+Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_source);
+
+void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *parsed_statement) {
+    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_statement->import_name);
+    if (symbol != NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Import symbol conflicts with existing symbol");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    // TODO: Check if module was already checked
+    Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types);
+    Checked_Module *module = Checker__check_module(module_checker, parsed_statement->parsed_source);
+
+    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, module);
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)import_symbol);
+}
+
 Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_source) {
     Parsed_Statement *parsed_statement;
+
+    /* Check all imported modules */
+    parsed_statement = parsed_source->statements->first_statement;
+    while (parsed_statement != NULL) {
+        if (parsed_statement->kind == PARSED_STATEMENT_KIND__IMPORT) {
+            Checker__check_import_statement(self, (Parsed_Import_Statement *)parsed_statement);
+        }
+        parsed_statement = parsed_statement->next_statement;
+    }
 
     /* Check all declared types */
     parsed_statement = parsed_source->statements->first_statement;
