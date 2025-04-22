@@ -225,8 +225,8 @@ Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Ex
     return (Checked_Expression *)Checked_Bool_Expression__create(parsed_expression->super.super.location, expression_type, value);
 }
 
-Checked_Procedure_Symbol *Checker__find_procedure_symbol(Checker *self, String *procedure_name, Parsed_Call_Argument *first_call_argument, Checked_Type *receiver_type, int *similars) {
-    Checked_Symbol *symbol = self->global_symbols->first_symbol;
+Checked_Procedure_Symbol *Checked_Symbols__find_procedure_symbol(Checked_Symbols *symbols, String *procedure_name, Parsed_Call_Argument *first_call_argument, Checked_Type *receiver_type, int *similars) {
+    Checked_Symbol *symbol = symbols->first_symbol;
     for (; symbol != NULL; symbol = symbol->next_symbol) {
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
             Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
@@ -286,6 +286,7 @@ typedef struct Checked_Callable {
 } Checked_Callable;
 
 Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_name, Parsed_Call_Argument *first_parsed_argument, Checked_Expression *receiver_expression, Source_Location location) {
+    Checked_Symbols *global_symbols = self->global_symbols;
     if (receiver_expression == NULL) {
         Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, symbol_name->lexeme);
         if (symbol != NULL && symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE) {
@@ -301,10 +302,22 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
                 .receiver_expression = NULL,
             };
         }
+    } else if (receiver_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL && receiver_expression->type->kind == CHECKED_TYPE_KIND__MODULE) {
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)receiver_expression)->symbol;
+        if (symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
+            pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Not an import");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
+        Checked_Module *module = import_symbol->module;
+        global_symbols = module->symbols; // use module symbols for lookup
+        receiver_expression = NULL;       // clear receiver expression since it was used just to find the module
     }
 
     int similar_procedure_symbols = 0;
-    Checked_Procedure_Symbol *procedure_symbol = Checker__find_procedure_symbol(self, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_procedure_symbols);
+    Checked_Procedure_Symbol *procedure_symbol = Checked_Symbols__find_procedure_symbol(global_symbols, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_procedure_symbols);
     if (procedure_symbol == NULL) {
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unknown callable: ");
@@ -334,7 +347,7 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         if (similar_procedure_symbols > 0) {
             pWriter__write__cstring(stderr_writer, "Similar callables:");
             pWriter__end_line(stderr_writer);
-            Checked_Symbol *symbol = self->global_symbols->first_symbol;
+            Checked_Symbol *symbol = global_symbols->first_symbol;
             for (; symbol != NULL; symbol = symbol->next_symbol) {
                 if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                     procedure_symbol = (Checked_Procedure_Symbol *)symbol;
