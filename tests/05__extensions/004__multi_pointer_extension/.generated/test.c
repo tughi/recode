@@ -2,13 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__d_u8_b__length(uint8_t *self);
-
-int32_t test__main(int32_t argc, uint8_t **argv);
-
-int32_t main(int argc, const char **argv) {
-    return test__main(argc, (uint8_t **)argv);
-}
+#include "test.h"
 
 #line 1 "tests/05__extensions/004__multi_pointer_extension/test.code"
 int32_t test__d_u8_b__length(uint8_t *self) {
@@ -37,5 +31,9 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
     }
 #line 16 "tests/05__extensions/004__multi_pointer_extension/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main(argc, (uint8_t **)argv);
 }
 

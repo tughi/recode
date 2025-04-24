@@ -1263,7 +1263,7 @@ Parsed_Source *parse(String *project_dir, String *file_path) {
     parser.scanner = NULL;
     parser.parsed_source = Parsed_Source__create();
     parser.parsed_source->package_name = make_package_name(file_path);
-    parser.parsed_source->first_source = source;
+    parser.parsed_source->source = source;
     parser.current_identation = 0;
 
     Parser__parse_source(&parser, source);

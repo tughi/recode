@@ -2,11 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/010__boolean_logic/test.code"
 int32_t test__main() {
@@ -132,5 +128,9 @@ int32_t test__main() {
     }
 #line 111 "tests/01__basics/010__boolean_logic/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

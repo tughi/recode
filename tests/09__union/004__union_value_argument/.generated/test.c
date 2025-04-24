@@ -2,23 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Value;
-
-struct Value {
-    int32_t variant;
-    union {
-        bool variant_1;
-        int32_t variant_2;
-    };
-};
-
-int32_t test__main();
-
-struct Value test__demo__0_value(struct Value value);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 6 "tests/09__union/004__union_value_argument/test.code"
 int32_t test__main() {
@@ -40,5 +24,9 @@ int32_t test__main() {
 struct Value test__demo__0_value(struct Value value) {
 #line 16 "tests/09__union/004__union_value_argument/test.code"
     return value;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

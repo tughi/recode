@@ -2,21 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Number;
-
-struct Number {
-    int32_t value;
-};
-
-int32_t test__pNumber__get_value(struct Number *self);
-
-void test__pNumber__set_value(struct Number *self, int32_t value);
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 5 "tests/04__struct/010__struct_methods/test.code"
 int32_t test__pNumber__get_value(struct Number *self) {
@@ -38,5 +24,9 @@ int32_t test__main() {
     test__pNumber__set_value(&number, 42);
 #line 18 "tests/04__struct/010__struct_methods/test.code"
     return test__pNumber__get_value(&number) - 42;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

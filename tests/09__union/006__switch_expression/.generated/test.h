@@ -1,0 +1,28 @@
+#ifndef __test_H__
+#define __test_H__
+
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+struct Value;
+
+struct Literal;
+
+struct Value {
+    int32_t variant;
+    union {
+        bool variant_1;
+        int8_t variant_2;
+        int32_t variant_3;
+    };
+};
+
+struct Literal {
+    struct Value value;
+};
+
+int32_t test__main();
+
+#endif // __test_H__

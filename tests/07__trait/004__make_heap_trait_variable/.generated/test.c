@@ -2,42 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Shape;
-
-struct Square;
-
-struct Circle;
-
-struct Shape {
-    void *self;
-    int32_t (*area)(void *self);
-};
-
-struct Square {
-    int32_t side;
-};
-
-struct Circle {
-    int32_t radius;
-};
-
-struct Shape *__alloc_Shape_value(struct Shape value);
-
-struct Square *__alloc_Square_value(struct Square value);
-
-struct Circle *__alloc_Circle_value(struct Circle value);
-
-int32_t test__pSquare__area(struct Square *self);
-
-int32_t test__pCircle__area(struct Circle *self);
-
-int32_t test__main();
-
-void *malloc(uint64_t size);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 struct Shape *__alloc_Shape_value(struct Shape value) {
     struct Shape *result = (struct Shape *)malloc(sizeof(struct Shape));
@@ -91,5 +56,9 @@ int32_t test__main() {
     }
 #line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

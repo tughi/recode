@@ -2,18 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Number;
-
-struct Number {
-    int32_t value;
-    struct Number *next;
-};
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 6 "tests/04__struct/008__init_struct_member_with_reference/test.code"
 int32_t test__main() {
@@ -39,5 +28,9 @@ int32_t test__main() {
     }
 #line 22 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

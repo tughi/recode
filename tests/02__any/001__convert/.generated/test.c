@@ -2,11 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/02__any/001__convert/test.code"
 int32_t test__main() {
@@ -16,5 +12,9 @@ int32_t test__main() {
     void *any = ((void *) (&value));
 #line 4 "tests/02__any/001__convert/test.code"
     return *((int32_t *) any) - 42;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

@@ -2,13 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__main();
-
-int32_t test__fibonacci__0_n(int32_t n);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/015__break/test.code"
 int32_t test__main() {
@@ -47,5 +41,9 @@ int32_t test__fibonacci__0_n(int32_t n) {
     }
 #line 22 "tests/01__basics/015__break/test.code"
     return v2;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

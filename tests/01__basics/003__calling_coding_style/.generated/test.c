@@ -2,13 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void test__test(int32_t one, int32_t two, int32_t three, int32_t four, int32_t five);
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/003__calling_coding_style/test.code"
 void test__test(int32_t one, int32_t two, int32_t three, int32_t four, int32_t five) {
@@ -28,5 +22,9 @@ int32_t test__main() {
     test__test(1, 2, 3, 4, 5);
 #line 30 "tests/01__basics/003__calling_coding_style/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

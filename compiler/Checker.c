@@ -24,25 +24,33 @@ typedef struct Builtin_Types {
 } Builtin_Types;
 
 typedef struct Checker {
+    Parsed_Source *parsed_source;
+
     Builtin_Types *builtin_types;
     Checked_Symbols *global_symbols;
     Checked_Symbols *symbols;
 
+    Checked_Module *checked_module;
+
     Checked_Type *receiver_type;
     Checked_Type *return_type;
-
-    Parsed_Source *parsed_source;
 } Checker;
 
 Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_types) {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
 
-    Source_Location location = {};
+    checker->parsed_source = parsed_source;
 
     checker->builtin_types = builtin_types;
     checker->global_symbols = checker->symbols = Checked_Symbols__create(builtin_types->symbols);
 
-    checker->parsed_source = parsed_source;
+    checker->checked_module = (Checked_Module *)malloc(sizeof(Checked_Module));
+    checker->checked_module->name = parsed_source->package_name;
+    checker->checked_module->source = parsed_source->source;
+    checker->checked_module->symbols = checker->global_symbols;
+
+    checker->receiver_type = NULL;
+    checker->return_type = NULL;
 
     return checker;
 }
@@ -1800,7 +1808,7 @@ Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statem
     }
 }
 
-Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_source);
+void Checker__check_module(Checker *self);
 
 void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *parsed_statement) {
     Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_statement->import_name);
@@ -1813,17 +1821,24 @@ void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *par
 
     // TODO: Check if module was already checked
     Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types);
-    Checked_Module *module = Checker__check_module(module_checker, parsed_statement->parsed_source);
+    Checker__check_module(module_checker);
 
-    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, module);
+    /* Link imported module to current module */
+    Checked_Module *last_checked_module = self->checked_module;
+    while (last_checked_module->next_module != NULL) {
+        last_checked_module = last_checked_module->next_module;
+    }
+    last_checked_module->next_module = module_checker->checked_module;
+
+    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, module_checker->checked_module);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)import_symbol);
 }
 
-Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_source) {
+void Checker__check_module(Checker *self) {
     Parsed_Statement *parsed_statement;
 
     /* Check all imported modules */
-    parsed_statement = parsed_source->statements->first_statement;
+    parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         if (parsed_statement->kind == PARSED_STATEMENT_KIND__IMPORT) {
             Checker__check_import_statement(self, (Parsed_Import_Statement *)parsed_statement);
@@ -1832,7 +1847,7 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
     }
 
     /* Check all declared types */
-    parsed_statement = parsed_source->statements->first_statement;
+    parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         if (Parsed_Statement__is_type_statement(parsed_statement)) {
             Checker__check_type(self, parsed_statement);
@@ -1841,7 +1856,7 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
     }
 
     /* Collect other declarations */
-    parsed_statement = parsed_source->statements->first_statement;
+    parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         Checked_Statement *checked_statement = NULL;
         switch (parsed_statement->kind) {
@@ -1868,7 +1883,7 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
     }
 
     /* Check procedure definitions */
-    parsed_statement = parsed_source->statements->first_statement;
+    parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         switch (parsed_statement->kind) {
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
@@ -1905,18 +1920,6 @@ Checked_Module *Checker__check_module(Checker *self, Parsed_Source *parsed_sourc
         }
         parsed_statement = parsed_statement->next_statement;
     }
-
-    Checked_Module *checked_module = (Checked_Module *)malloc(sizeof(Checked_Module));
-    checked_module->name = parsed_source->package_name;
-    checked_module->source = parsed_source->first_source;
-    checked_module->symbols = self->symbols;
-    return checked_module;
-}
-
-Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_source) {
-    Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
-    checked_source->first_module = Checker__check_module(self, parsed_source);
-    return checked_source;
 }
 
 Builtin_Types *Builtin_Symbols__create() {
@@ -1982,5 +1985,9 @@ Builtin_Types *Builtin_Symbols__create() {
 Checked_Source *check(Parsed_Source *parsed_source) {
     Checker *type_checker = Checker__create(parsed_source, Builtin_Symbols__create());
 
-    return Checker__check_source(type_checker, parsed_source);
+    Checker__check_module(type_checker);
+
+    Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
+    checked_source->first_module = type_checker->checked_module;
+    return checked_source;
 }

@@ -2,17 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void exit(int32_t status);
-
-int32_t test__main();
-
-void test__finish();
-
-void test__nothing();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 3 "tests/01__basics/012__procedure_without_return/test.code"
 int32_t test__main() {
@@ -32,5 +22,9 @@ void test__finish() {
 
 #line 13 "tests/01__basics/012__procedure_without_return/test.code"
 void test__nothing() {
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

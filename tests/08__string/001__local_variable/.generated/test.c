@@ -2,18 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct String;
-
-struct String {
-    uint8_t *data;
-    uintmax_t length;
-};
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/08__string/001__local_variable/test.code"
 int32_t test__main() {
@@ -21,5 +10,9 @@ int32_t test__main() {
     struct String string;
 #line 3 "tests/08__string/001__local_variable/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

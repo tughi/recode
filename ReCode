@@ -81,22 +81,44 @@ def build_stage(n):
             raise
 
 
-def assemble(source_file, output_file, sdl=False, **kwargs):
-    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
-        run(
-            [
+def assemble(source_files, output_file, sdl=False, **kwargs):
+    if os.path.exists(output_file):
+        for source_file in source_files:
+            if os.path.getmtime(source_file) > os.path.getmtime(output_file):
+                break
+        else:
+            return False
+
+    object_files = []
+    for source_file in source_files:
+        if source_file.endswith('.c'):
+            object_file = os.path.dirname(output_file) + '/' + os.path.basename(source_file)[:-2] + '.o'
+            object_files.append(object_file)
+            run(
+                [
                 'cc',
-                source_file, 
-                '-o', 
-                output_file, 
-                '-g', 
-                '-Wno-incompatible-library-redeclaration', 
-                '-Wno-pointer-sign', 
+                '-c', source_file,
+                '-o', object_file,
+                '-g',
+                '-Wno-incompatible-library-redeclaration',
+                '-Wno-pointer-sign',
                 '-Wno-return-type',
-                *(['-L/opt/homebrew/lib', '-lSDL2'] if sdl else []),
-            ],
-            **kwargs,
-        )
+                ],
+                **kwargs
+            )
+
+    run(
+        [
+            'cc',
+            *object_files,
+            '-o', output_file,
+            '-g',
+            *(['-L/opt/homebrew/lib', '-lSDL2'] if sdl else []),
+        ],
+        **kwargs,
+    )
+
+    return True
 
 
 def trace(*command, ignore_output=True):
@@ -154,7 +176,6 @@ class TestData:
 
 class Tester:
     test_dir: str
-    test_file: str
     
     compile_panic: Optional[str]
 
@@ -169,7 +190,6 @@ class Tester:
 
     def load_test_data(self, test_dir: str) -> TestData:
         self.test_dir = test_dir
-        self.test_file = f'{test_dir}/.generated/test.c'
 
         test_data = json.loads(open(f'{test_dir}/test.json').read()) if os.path.exists(f'{test_dir}/test.json') else {}
         self.expect_test_data = TestData(
@@ -255,7 +275,7 @@ class Tester:
         return True
 
     def check_generated_files(self) -> bool:
-        result = run(f'diff -r build/{self.test_dir}/generated {self.test_dir}/.generated', capture_output=True, text=True, check=False)
+        result = run(f'diff -rN build/{self.test_dir}/generated {self.test_dir}/.generated', capture_output=True, text=True, check=False)
         if result.returncode != 0:
             if self.apply_change:
                 shutil.copytree(f'build/{self.test_dir}/generated', f'{self.test_dir}/.generated', dirs_exist_ok=True)
@@ -265,6 +285,8 @@ class Tester:
                 return False
         return True
 
+    def list_generated_files(self) -> List[str]:
+        return [f'{self.test_dir}/.generated/{file}' for file in os.listdir(f'{self.test_dir}/.generated')]
 
 def test(paths, save=False, stage=1):
     build()
@@ -314,13 +336,10 @@ def test(paths, save=False, stage=1):
                 run_test = os.path.exists(test_data_file) and os.path.exists(test_binary) and os.path.getmtime(test_data_file) > os.path.getmtime(test_binary)
 
                 test_binary = f'build/{test_dir}/test'
-                if not os.path.exists(test_binary) or os.path.getmtime(tester.test_file) > os.path.getmtime(test_binary):
-                    assemble(tester.test_file, test_binary, check=True)
+                if assemble(tester.list_generated_files(), test_binary, check=True):
                     run_test = True
 
                 if run_test:
-                    run(['touch', test_binary])
-
                     test_result = run(
                         [test_binary, *tester.actual_test_data.execute_args],
                         capture_output=True,

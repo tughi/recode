@@ -2,26 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct String;
-
-struct String {
-    uint8_t *data;
-    uintmax_t length;
-};
-
-struct String *__alloc_String_value(struct String value);
-
-void *malloc(uintmax_t size);
-
-struct String test__str__concat(struct String self, struct String other);
-
-bool test__str__equals(struct String self, struct String other);
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 struct String *__alloc_String_value(struct String value) {
     struct String *result = (struct String *)malloc(sizeof(struct String));
@@ -131,5 +112,9 @@ int32_t test__main() {
     }
 #line 69 "tests/08__string/005__extensions/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

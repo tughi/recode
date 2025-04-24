@@ -2,13 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__main();
-
-bool test__echo(bool v);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/009__logic_and/test.code"
 int32_t test__main() {
@@ -50,5 +44,9 @@ int32_t test__main() {
 bool test__echo(bool v) {
 #line 25 "tests/01__basics/009__logic_and/test.code"
     return v;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

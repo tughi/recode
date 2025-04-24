@@ -2,28 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct Value;
-
-struct Literal;
-
-struct Value {
-    int32_t variant;
-    union {
-        bool variant_1;
-        int8_t variant_2;
-        int32_t variant_3;
-    };
-};
-
-struct Literal {
-    struct Value value;
-};
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 11 "tests/09__union/006__switch_expression/test.code"
 int32_t test__main() {
@@ -41,5 +20,9 @@ int32_t test__main() {
 #line 18 "tests/09__union/006__switch_expression/test.code"
         return 1;
     }
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

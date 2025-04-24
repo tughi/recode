@@ -2,21 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t test__main();
-
-int32_t test__add(int32_t v1, int32_t v2);
-
-int32_t test__sub(int32_t v1, int32_t v2);
-
-int32_t test__mul(int32_t v1, int32_t v2);
-
-int32_t test__div(int32_t v1, int32_t v2);
-
-int32_t test__mod(int32_t v1, int32_t v2);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/004__i32_arithmetic/test.code"
 int32_t test__main() {
@@ -52,5 +38,9 @@ int32_t test__div(int32_t v1, int32_t v2) {
 int32_t test__mod(int32_t v1, int32_t v2) {
 #line 34 "tests/01__basics/004__i32_arithmetic/test.code"
     return v1 % v2;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

@@ -449,7 +449,7 @@ void Parsed_Statements__append(Parsed_Statements *self, Parsed_Statement *statem
 
 Parsed_Source *Parsed_Source__create() {
     Parsed_Source *parsed_source = (Parsed_Source *)malloc(sizeof(Parsed_Source));
-    parsed_source->first_source = NULL;
+    parsed_source->source = NULL;
     parsed_source->package_name = NULL;
     parsed_source->statements = Parsed_Statements__create(true);
     return parsed_source;
