@@ -1,4 +1,4 @@
-proc [^]u8.length(self) -> i32 {
+proc ([^]u8).length(self) -> i32 {
     let length = 0
     while self[length] != 0 {
         length = length + 1

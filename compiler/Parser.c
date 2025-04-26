@@ -877,28 +877,29 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
 
 /*
 procedure
-    | "proc" ( type "." )? IDENTIFIER "(" procedure_parameter* ")" "->" type ( "=" "external" | block )
+    | "proc" ( "(" type ")" "." )? IDENTIFIER "(" procedure_parameter* ")" "->" type ( "=" "external" | block )
 */
 Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_type) {
     Source_Location location = Parser__consume_token(self, Token__is_proc)->location;
     Parser__consume_space(self, 1);
     Token *name = NULL;
-    if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, false, Token__is_opening_paren)) {
-        name = Parser__consume_token(self, Token__is_identifier);
-    } else {
-        Parsed_Type *type = Parser__parse_type(self);
-        Parser__consume_space(self, 0);
-        Parser__consume_token(self, Token__is_dot);
-        Parser__consume_space(self, 0);
-        name = Parser__consume_token(self, Token__is_identifier);
+    if (Parser__matches_one(self, Token__is_opening_paren)) {
         if (receiver_type != NULL) {
             pWriter__begin_location_message(stderr_writer, name->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Procedure already has a receiver type");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
-        receiver_type = type;
+        Parser__consume_token(self, Token__is_opening_paren);
+        Parser__consume_space(self, 0);
+        receiver_type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_closing_paren);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_dot);
+        Parser__consume_space(self, 0);
     }
+    name = Parser__consume_token(self, Token__is_identifier);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
     Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, receiver_type);

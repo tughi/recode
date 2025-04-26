@@ -59,11 +59,11 @@ type Parser = struct {
     tokenizer: Tokenizer
 }
 
-proc ^Parser.parse_expression(self) -> Expression {
+proc (^Parser).parse_expression(self) -> Expression {
     return self.parse_additive_expression()
 }
 
-proc ^Parser.parse_additive_expression(self) -> Expression {
+proc (^Parser).parse_additive_expression(self) -> Expression {
     let expression = self.parse_multiplicative_expression()
     loop {
         switch self.tokenizer.peek_token() {
@@ -93,7 +93,7 @@ proc ^Parser.parse_additive_expression(self) -> Expression {
     return expression
 }
 
-proc ^Parser.parse_multiplicative_expression(self) -> Expression {
+proc (^Parser).parse_multiplicative_expression(self) -> Expression {
     let expression = self.parse_primary_expression()
     loop {
         let token = self.tokenizer.peek_token()
@@ -120,7 +120,7 @@ proc ^Parser.parse_multiplicative_expression(self) -> Expression {
     return expression
 }
 
-proc ^Parser.parse_primary_expression(self) -> Expression {
+proc (^Parser).parse_primary_expression(self) -> Expression {
     let token = self.tokenizer.next_token()
     if token is Number as number {
         return number
@@ -166,7 +166,7 @@ type Subtraction = struct {
     right: ^Expression
 }
 
-proc ^Expression.span(self) -> Span {
+proc (^Expression).span(self) -> Span {
     switch self {
         is Number as variant {
             return variant.span
@@ -192,7 +192,7 @@ proc ^Expression.span(self) -> Span {
     }
 }
 
-proc ^Writer.write(self, expression: ^Expression) -> ^Writer {
+proc (^Writer).write(self, expression: ^Expression) -> ^Writer {
     switch expression {
         is Number as number {
             return self.write(signed: number.value)
@@ -228,20 +228,20 @@ type Tokenizer = struct {
     current_token: Token
 }
 
-proc ^Tokenizer.peek_token(self) -> Token {
+proc (^Tokenizer).peek_token(self) -> Token {
     if self.current_token is nil {
         self.current_token = self.scan_token()
     }
     return self.current_token
 }
 
-proc ^Tokenizer.next_token(self) -> Token {
+proc (^Tokenizer).next_token(self) -> Token {
     let token = self.peek_token()
     self.current_token = nil
     return token
 }
 
-proc ^Tokenizer.scan_token(self) -> Token {
+proc (^Tokenizer).scan_token(self) -> Token {
     while self.data[self.index] == ' ' {
         self.index = self.index + 1
     }
@@ -271,7 +271,7 @@ proc ^Tokenizer.scan_token(self) -> Token {
     )
 }
 
-proc ^Tokenizer.scan_number_token(self) -> Token {
+proc (^Tokenizer).scan_number_token(self) -> Token {
     let start = self.index
     let value = 0
     loop {
@@ -289,7 +289,6 @@ proc ^Tokenizer.scan_number_token(self) -> Token {
 }
 
 \ ------------------------------------------------------------------------------ Token
-
 
 type Span = struct {
     start: i32
@@ -336,7 +335,7 @@ type Token = union {
     Error
 }
 
-proc ^Token.span(self) -> Span {
+proc (^Token).span(self) -> Span {
     switch self {
         is Number as variant {
             return variant.span
@@ -365,7 +364,7 @@ proc ^Token.span(self) -> Span {
     }
 }
 
-proc ^Writer.write(self, token: ^Token) -> ^Writer {
+proc (^Writer).write(self, token: ^Token) -> ^Writer {
     switch token {
         is Number as number {
             return self.write("Number: ").write(signed: number.value)
@@ -395,19 +394,18 @@ proc ^Writer.write(self, token: ^Token) -> ^Writer {
     return self
 }
 
-
 \ ------------------------------------------------------------------------------ Writer
 
 type Writer = trait {
     proc write_char(self, anon c: u8)
 }
 
-proc ^Writer.write(self, char c: u8) -> ^Writer {
+proc (^Writer).write(self, char c: u8) -> ^Writer {
     self.write_char(c)
     return self
 }
 
-proc ^Writer.write(self, signed value: i32) -> ^Writer {
+proc (^Writer).write(self, signed value: i32) -> ^Writer {
     \ TODO: Use a buffer to avoid recursion
     if value < 0 {
         self.write(char: '-')
@@ -419,7 +417,7 @@ proc ^Writer.write(self, signed value: i32) -> ^Writer {
     return self.write(char: (value // 10).as(u8) + '0')
 }
 
-proc ^Writer.end_line(self) -> ^Writer {
+proc (^Writer).end_line(self) -> ^Writer {
     self.write(char: '\n')
     return self
 }
@@ -432,7 +430,7 @@ type String_Builder = struct {
     length: i32
 }
 
-proc ^String_Builder.write(self, char c: u8) -> ^String_Builder {
+proc (^String_Builder).write(self, char c: u8) -> ^String_Builder {
     if self.length == self.data_size {
         self.data_size = self.data_size + 8
         self.data = realloc(
@@ -445,7 +443,7 @@ proc ^String_Builder.write(self, char c: u8) -> ^String_Builder {
     return self
 }
 
-proc ^String_Builder.build(self) -> str {
+proc (^String_Builder).build(self) -> str {
     self.write(char: 0)
     let string = String(
         data: self.data
@@ -466,7 +464,7 @@ proc make_string_builder(initial_data_size: i32) -> String_Builder {
     )
 }
 
-proc ^String_Builder.write_char(self, anon c: u8) {
+proc (^String_Builder).write_char(self, anon c: u8) {
     self.write(char: c)
 }
 
@@ -477,7 +475,7 @@ type String = struct {
     length: i32
 }
 
-proc ^Writer.write(self, anon string: str) -> ^Writer {
+proc (^Writer).write(self, anon string: str) -> ^Writer {
     let string_copy = string
     let string_data = (^string_copy).as(^String).data
     let index = 0usize
@@ -498,7 +496,7 @@ let external __stderrp: ^FILE
 
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external
 
-proc ^FILE.write_char(self, anon c: u8) {
+proc (^FILE).write_char(self, anon c: u8) {
     fputc(c.as(i32), __stdoutp)
 }
 

@@ -3,7 +3,7 @@ proc main() -> i32 {
     return 0
 }
 
-proc ^FILE.write(self, char ch: u8) -> ^FILE {
+proc (^FILE).write(self, char ch: u8) -> ^FILE {
     fputc(ch.as(i32), __stdoutp)
     return self
 }
