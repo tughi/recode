@@ -13,7 +13,7 @@ int32_t test__forty_two() {
 #line 9 "tests/04__struct/012__callable_struct_member/test.code"
 int32_t test__main() {
 #line 10 "tests/04__struct/012__callable_struct_member/test.code"
-    struct Function procedure = (struct Function){.run = test__forty_two};
+    struct test__Function procedure = (struct test__Function){.run = test__forty_two};
 #line 12 "tests/04__struct/012__callable_struct_member/test.code"
     return procedure.run() - 42;
 }

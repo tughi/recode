@@ -6,28 +6,28 @@
 #include <stddef.h>
 
 
-struct Shape;
+struct test__Shape;
 
-struct Square;
+struct test__Square;
 
-struct Circle;
+struct test__Circle;
 
-struct Shape {
+struct test__Shape {
     void *self;
     int32_t (*area)(void *self);
 };
 
-struct Square {
+struct test__Square {
     int32_t side;
 };
 
-struct Circle {
+struct test__Circle {
     int32_t radius;
 };
 
-int32_t test__pSquare__area(struct Square *self);
+int32_t test__ptest__Square__area(struct test__Square *self);
 
-int32_t test__pCircle__area(struct Circle *self);
+int32_t test__ptest__Circle__area(struct test__Circle *self);
 
 int32_t test__main();
 

@@ -6,11 +6,11 @@
 #include <stddef.h>
 
 
-struct Value;
+struct test__Value;
 
-struct Literal;
+struct test__Literal;
 
-struct Value {
+struct test__Value {
     int32_t variant;
     union {
         bool variant_1;
@@ -19,8 +19,8 @@ struct Value {
     };
 };
 
-struct Literal {
-    struct Value value;
+struct test__Literal {
+    struct test__Value value;
 };
 
 int32_t test__main();

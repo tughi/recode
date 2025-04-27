@@ -6,11 +6,11 @@
 #include <stddef.h>
 
 
-struct Number;
+struct test__Number;
 
-struct Number {
+struct test__Number {
     int32_t value;
-    struct Number *next;
+    struct test__Number *next;
 };
 
 int32_t test__main();

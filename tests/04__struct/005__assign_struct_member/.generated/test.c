@@ -7,7 +7,7 @@
 #line 11 "tests/04__struct/005__assign_struct_member/test.code"
 int32_t test__main() {
 #line 12 "tests/04__struct/005__assign_struct_member/test.code"
-    struct Line line;
+    struct test__Line line;
 #line 13 "tests/04__struct/005__assign_struct_member/test.code"
     line.p2.y = 64;
 #line 14 "tests/04__struct/005__assign_struct_member/test.code"

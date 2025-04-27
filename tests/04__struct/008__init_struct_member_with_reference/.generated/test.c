@@ -7,11 +7,11 @@
 #line 6 "tests/04__struct/008__init_struct_member_with_reference/test.code"
 int32_t test__main() {
 #line 7 "tests/04__struct/008__init_struct_member_with_reference/test.code"
-    struct Number third = (struct Number){.value = 43};
+    struct test__Number third = (struct test__Number){.value = 43};
 #line 8 "tests/04__struct/008__init_struct_member_with_reference/test.code"
-    struct Number second = (struct Number){.value = 42, .next = &third};
+    struct test__Number second = (struct test__Number){.value = 42, .next = &third};
 #line 9 "tests/04__struct/008__init_struct_member_with_reference/test.code"
-    struct Number first = (struct Number){.value = 41, .next = &second};
+    struct test__Number first = (struct test__Number){.value = 41, .next = &second};
 #line 11 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     int32_t second_value = first.next->value;
 #line 12 "tests/04__struct/008__init_struct_member_with_reference/test.code"

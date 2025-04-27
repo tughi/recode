@@ -7,9 +7,9 @@
 #line 11 "tests/09__union/006__switch_expression/test.code"
 int32_t test__main() {
 #line 12 "tests/09__union/006__switch_expression/test.code"
-    struct Literal literal = (struct Literal){.value = (struct Value){.variant = 3, .variant_3 = 42}};
+    struct test__Literal literal = (struct test__Literal){.value = (struct test__Value){.variant = 3, .variant_3 = 42}};
 #line 13 "tests/09__union/006__switch_expression/test.code"
-    struct Value __switch_13_value__ = literal.value;
+    struct test__Value __switch_13_value__ = literal.value;
 #line 14 "tests/09__union/006__switch_expression/test.code"
     if (__switch_13_value__.variant == 3) {
 #line 15 "tests/09__union/006__switch_expression/test.code"

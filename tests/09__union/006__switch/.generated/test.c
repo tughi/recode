@@ -7,11 +7,11 @@
 #line 11 "tests/09__union/006__switch/test.code"
 int32_t test__main() {
 #line 12 "tests/09__union/006__switch/test.code"
-    struct Value value = (struct Value){.variant = 2, .variant_2 = (struct Integer){.variant = 2, .variant_2 = 42}};
+    struct test__Value value = (struct test__Value){.variant = 2, .variant_2 = (struct test__Integer){.variant = 2, .variant_2 = 42}};
 #line 14 "tests/09__union/006__switch/test.code"
     for (;;) {
 #line 15 "tests/09__union/006__switch/test.code"
-        struct Value __switch_15_value__ = value;
+        struct test__Value __switch_15_value__ = value;
 #line 16 "tests/09__union/006__switch/test.code"
         if (__switch_15_value__.variant == 1) {
 #line 17 "tests/09__union/006__switch/test.code"
@@ -20,7 +20,7 @@ int32_t test__main() {
 #line 19 "tests/09__union/006__switch/test.code"
         else if (__switch_15_value__.variant == 2) {
 #line 20 "tests/09__union/006__switch/test.code"
-            struct Integer __switch_20_value__ = __switch_15_value__.variant_2;
+            struct test__Integer __switch_20_value__ = __switch_15_value__.variant_2;
 #line 21 "tests/09__union/006__switch/test.code"
             if (__switch_20_value__.variant == 1) {
 #line 22 "tests/09__union/006__switch/test.code"

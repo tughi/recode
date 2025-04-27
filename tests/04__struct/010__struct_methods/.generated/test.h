@@ -6,15 +6,15 @@
 #include <stddef.h>
 
 
-struct Number;
+struct test__Number;
 
-struct Number {
+struct test__Number {
     int32_t value;
 };
 
-int32_t test__pNumber__get_value(struct Number *self);
+int32_t test__ptest__Number__get_value(struct test__Number *self);
 
-void test__pNumber__set_value(struct Number *self, int32_t value);
+void test__ptest__Number__set_value(struct test__Number *self, int32_t value);
 
 int32_t test__main();
 

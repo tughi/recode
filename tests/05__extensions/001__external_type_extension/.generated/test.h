@@ -6,13 +6,13 @@
 #include <stddef.h>
 
 
-typedef struct FILE FILE;
+typedef struct test__FILE test__FILE;
 
-extern FILE *__stdoutp;
+extern test__FILE *__stdoutp;
 int32_t test__main();
 
-FILE *test__pFILE__write__1_char(FILE *self, uint8_t ch);
+test__FILE *test__ptest__FILE__write__1_char(test__FILE *self, uint8_t ch);
 
-int32_t fputc(int32_t c, FILE *stream);
+int32_t fputc(int32_t c, test__FILE *stream);
 
 #endif // __test_H__

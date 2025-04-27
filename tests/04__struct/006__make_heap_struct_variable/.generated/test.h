@@ -6,23 +6,23 @@
 #include <stddef.h>
 
 
-struct Point;
+struct test__Point;
 
-struct Line;
+struct test__Line;
 
-struct Point {
+struct test__Point {
     int32_t x;
     int32_t y;
 };
 
-struct Line {
-    struct Point p1;
-    struct Point p2;
+struct test__Line {
+    struct test__Point p1;
+    struct test__Point p2;
 };
 
-struct Point *__alloc_Point_value(struct Point value);
+struct test__Point *__alloc_test__Point_value(struct test__Point value);
 
-struct Line *__alloc_Line_value(struct Line value);
+struct test__Line *__alloc_test__Line_value(struct test__Line value);
 
 int32_t test__main();
 

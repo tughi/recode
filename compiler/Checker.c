@@ -55,8 +55,8 @@ Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_ty
     return checker;
 }
 
-void Checker__append_type(Checker *self, Checked_Named_Type *type) {
-    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, type->name, (Checked_Type *)self->builtin_types->type_type, type);
+void Checker__create_type_symbol(Checker *self, String *symbol_name, Checked_Named_Type *type) {
+    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, symbol_name, (Checked_Type *)self->builtin_types->type_type, type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_symbol);
 }
 
@@ -64,11 +64,8 @@ Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, String 
     while (symbols != NULL) {
         Checked_Symbol *symbol = symbols->last_symbol;
         while (symbol != NULL) {
-            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
-                Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
-                if (String__equals_string(name, type_symbol->named_type->name)) {
-                    return type_symbol->named_type;
-                }
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE && String__equals_string(name, symbol->name)) {
+                return ((Checked_Type_Symbol *)symbol)->named_type;
             }
             symbol = symbol->prev_symbol;
         }
@@ -1137,13 +1134,20 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     panic();
 }
 
+String *Checker__create_type_name(Checker *self, String *name) {
+    String *type_name = String__create_copy(self->checked_module->name);
+    String__append_cstring(type_name, "__");
+    String__append_string(type_name, name);
+    return type_name;
+}
+
 Checked_Type *Checker__check_external_type_statement(Checker *self, Parsed_External_Type_Statement *parsed_statement) {
     Checked_Named_Type *type = Checker__find_type(self, parsed_statement->super.name->lexeme);
     if (type != NULL) {
         todo("Report type redeclaration");
     }
-    Checked_External_Type *external_type = Checked_External_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-    Checker__append_type(self, (Checked_Named_Type *)external_type);
+    Checked_External_Type *external_type = Checked_External_Type__create(parsed_statement->super.name->location, Checker__create_type_name(self, parsed_statement->super.name->lexeme));
+    Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)external_type);
     return (Checked_Type *)external_type;
 }
 
@@ -1225,8 +1229,12 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
         panic();
     }
 
-    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-    Checker__append_type(self, (Checked_Named_Type *)struct_type);
+    String *struct_type_name = parsed_statement->super.name->lexeme;
+    if (!String__equals_cstring(struct_type_name, "String")) { /* TODO: Define String as a built-in type */
+        struct_type_name = Checker__create_type_name(self, struct_type_name);
+    }
+    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, struct_type_name);
+    Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)struct_type);
 
     if (parsed_statement->first_member != NULL) {
         Checked_Struct_Member *last_struct_member = NULL;
@@ -1319,8 +1327,8 @@ Checked_Type *Checker__check_trait_statement(Checker *self, Parsed_Trait_Stateme
         panic();
     }
 
-    Checked_Trait_Type *trait_type = Checked_Trait_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-    Checker__append_type(self, (Checked_Named_Type *)trait_type);
+    Checked_Trait_Type *trait_type = Checked_Trait_Type__create(parsed_statement->super.name->location, Checker__create_type_name(self, parsed_statement->super.name->lexeme));
+    Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)trait_type);
 
     trait_type->struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, trait_type->super.name);
 
@@ -1367,8 +1375,8 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
         panic();
     }
 
-    Checked_Union_Type *union_type = Checked_Union_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-    Checker__append_type(self, (Checked_Named_Type *)union_type);
+    Checked_Union_Type *union_type = Checked_Union_Type__create(parsed_statement->super.name->location, Checker__create_type_name(self, parsed_statement->super.name->lexeme));
+    Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)union_type);
 
     // Each union has the nil variant
     Checked_Union_Variant *nil_variant = Checked_Union_Variant__create(parsed_statement->super.super.location, (Checked_Type *)self->builtin_types->nil_type, 0);

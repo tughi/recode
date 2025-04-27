@@ -6,10 +6,10 @@
 #include <stddef.h>
 
 
-typedef struct FILE FILE;
+typedef struct test__FILE test__FILE;
 
-extern FILE *__stdoutp;
-int32_t fputc(int32_t ch, FILE *file);
+extern test__FILE *__stdoutp;
+int32_t fputc(int32_t ch, test__FILE *file);
 
 int32_t test__main();
 

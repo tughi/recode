@@ -7,7 +7,7 @@
 #line 6 "tests/09__union/007__if_as/test.code"
 int32_t test__main() {
 #line 7 "tests/09__union/007__if_as/test.code"
-    struct Value value = (struct Value){.variant = 2, .variant_2 = 42};
+    struct test__Value value = (struct test__Value){.variant = 2, .variant_2 = 42};
 #line 9 "tests/09__union/007__if_as/test.code"
     if (value.variant == 2) {
 #line 10 "tests/09__union/007__if_as/test.code"

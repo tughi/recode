@@ -7,7 +7,7 @@
 #line 3 "tests/10__import/002__module_type/test.code"
 int32_t test__main() {
 #line 4 "tests/10__import/002__module_type/test.code"
-    struct Foo foo;
+    struct foo__Foo foo;
 #line 5 "tests/10__import/002__module_type/test.code"
     return 0;
 }

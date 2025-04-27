@@ -4,14 +4,14 @@
 
 #include "test.h"
 
-struct Point *__alloc_Point_value(struct Point value) {
-    struct Point *result = (struct Point *)malloc(sizeof(struct Point));
+struct test__Point *__alloc_test__Point_value(struct test__Point value) {
+    struct test__Point *result = (struct test__Point *)malloc(sizeof(struct test__Point));
     *result = value;
     return result;
 }
 
-struct Line *__alloc_Line_value(struct Line value) {
-    struct Line *result = (struct Line *)malloc(sizeof(struct Line));
+struct test__Line *__alloc_test__Line_value(struct test__Line value) {
+    struct test__Line *result = (struct test__Line *)malloc(sizeof(struct test__Line));
     *result = value;
     return result;
 }
@@ -19,7 +19,7 @@ struct Line *__alloc_Line_value(struct Line value) {
 #line 11 "tests/04__struct/006__make_heap_struct_variable/test.code"
 int32_t test__main() {
 #line 12 "tests/04__struct/006__make_heap_struct_variable/test.code"
-    struct Line *line = __alloc_Line_value((struct Line){.p1 = (struct Point){.x = 16, .y = 32}, .p2 = (struct Point){.x = 48, .y = 64}});
+    struct test__Line *line = __alloc_test__Line_value((struct test__Line){.p1 = (struct test__Point){.x = 16, .y = 32}, .p2 = (struct test__Point){.x = 48, .y = 64}});
 #line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
     return line->p1.x + line->p1.y + line->p2.x + line->p2.y - 160;
 }

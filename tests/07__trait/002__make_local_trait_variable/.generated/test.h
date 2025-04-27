@@ -6,20 +6,20 @@
 #include <stddef.h>
 
 
-struct Dog;
+struct test__Dog;
 
-struct Animal;
+struct test__Animal;
 
-struct Dog {
+struct test__Dog {
     int32_t age;
 };
 
-struct Animal {
+struct test__Animal {
     void *self;
     int32_t (*legs)(void *self);
 };
 
-int32_t test__pDog__legs(struct Dog *self);
+int32_t test__ptest__Dog__legs(struct test__Dog *self);
 
 int32_t test__main();
 

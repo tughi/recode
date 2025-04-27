@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct Function;
+struct test__Function;
 
-struct Function {
+struct test__Function {
     int32_t (*run)();
 };
 

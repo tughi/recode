@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct Point;
+struct test__Point;
 
-struct Point {
+struct test__Point {
     int32_t x;
     int32_t y;
 };

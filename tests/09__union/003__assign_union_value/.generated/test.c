@@ -7,11 +7,11 @@
 #line 11 "tests/09__union/003__assign_union_value/test.code"
 int32_t test__main() {
 #line 12 "tests/09__union/003__assign_union_value/test.code"
-    struct Value value;
+    struct test__Value value;
 #line 13 "tests/09__union/003__assign_union_value/test.code"
-    value = (struct Value){.variant = 1, .variant_1 = true};
+    value = (struct test__Value){.variant = 1, .variant_1 = true};
 #line 14 "tests/09__union/003__assign_union_value/test.code"
-    struct Value other_value;
+    struct test__Value other_value;
 #line 15 "tests/09__union/003__assign_union_value/test.code"
     other_value = value;
 #line 16 "tests/09__union/003__assign_union_value/test.code"

@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct Animal;
+struct test__Animal;
 
-struct Animal {
+struct test__Animal {
     void *self;
     int32_t (*legs)(void *self);
 };

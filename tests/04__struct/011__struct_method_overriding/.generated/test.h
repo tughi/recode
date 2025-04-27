@@ -6,23 +6,23 @@
 #include <stddef.h>
 
 
-struct Number;
+struct test__Number;
 
-struct Boolean;
+struct test__Boolean;
 
-struct Number {
+struct test__Number {
     int32_t value;
 };
 
-struct Boolean {
+struct test__Boolean {
     bool value;
 };
 
-int32_t test__pNumber__get_value(struct Number *self);
+int32_t test__ptest__Number__get_value(struct test__Number *self);
 
-void test__pNumber__set_value(struct Number *self, int32_t value);
+void test__ptest__Number__set_value(struct test__Number *self, int32_t value);
 
-bool test__pBoolean__get_value(struct Boolean *self);
+bool test__ptest__Boolean__get_value(struct test__Boolean *self);
 
 int32_t test__main();
 
