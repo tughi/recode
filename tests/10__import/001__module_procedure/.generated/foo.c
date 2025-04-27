@@ -4,9 +4,9 @@
 
 #include "foo.h"
 
-#line 1 "tests/10__import/001__import_package/foo.code"
+#line 1 "tests/10__import/001__module_procedure/foo.code"
 int32_t foo__bar() {
-#line 2 "tests/10__import/001__import_package/foo.code"
+#line 2 "tests/10__import/001__module_procedure/foo.code"
     return 42;
 }
 

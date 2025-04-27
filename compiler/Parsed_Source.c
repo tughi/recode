@@ -36,9 +36,10 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
     return (Parsed_Type *)type;
 }
 
-Parsed_Type *Parsed_Named_Type__create(Token *name) {
+Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module) {
     Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
     type->name = name->lexeme;
+    type->module = module;
     return (Parsed_Type *)type;
 }
 

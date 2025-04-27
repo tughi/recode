@@ -60,8 +60,7 @@ void Checker__append_type(Checker *self, Checked_Named_Type *type) {
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_symbol);
 }
 
-Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
-    Checked_Symbols *symbols = self->symbols;
+Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, String *name) {
     while (symbols != NULL) {
         Checked_Symbol *symbol = symbols->last_symbol;
         while (symbol != NULL) {
@@ -76,6 +75,10 @@ Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
         symbols = symbols->parent;
     }
     return NULL;
+}
+
+Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
+    return Checked_Symbols__find_type(self->symbols, name);
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
@@ -121,11 +124,35 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         return (Checked_Type *)Checked_Multi_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Multi_Pointer_Type *)parsed_type)->item_type));
     case PARSED_TYPE_KIND__NAMED: {
         Parsed_Named_Type *parsed_named_type = (Parsed_Named_Type *)parsed_type;
+        if (parsed_named_type->module != NULL) {
+            Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_named_type->module->lexeme);
+            if (symbol == NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_named_type->module->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Undefined module");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            if (symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
+                pWriter__begin_location_message(stderr_writer, parsed_named_type->module->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Not a module");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
+            Checked_Module *module = import_symbol->module;
+            Checked_Named_Type *type = Checked_Symbols__find_type(module->symbols, parsed_named_type->name);
+            if (type == NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_named_type->super.location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Undefined type");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            return (Checked_Type *)type;
+        }
         Checked_Named_Type *type = Checker__find_type(self, parsed_named_type->name);
         if (type != NULL) {
             return (Checked_Type *)type;
         }
-
         Parsed_Statement *parsed_statement = self->parsed_source->statements->first_statement;
         for (; parsed_statement != NULL; parsed_statement = parsed_statement->next_statement) {
             if (Parsed_Statement__is_type_statement(parsed_statement)) {
@@ -135,7 +162,6 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
                 }
             }
         }
-
         pWriter__begin_location_message(stderr_writer, parsed_type->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined type: ");
         pWriter__write__string(stderr_writer, parsed_named_type->name);

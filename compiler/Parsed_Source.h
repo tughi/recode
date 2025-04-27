@@ -93,9 +93,10 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
 typedef struct Parsed_Named_Type {
     Parsed_Type super;
     String *name;
+    Token *module;
 } Parsed_Named_Type;
 
-Parsed_Type *Parsed_Named_Type__create(Token *name);
+Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module);
 
 typedef struct Parsed_Pointer_Type {
     Parsed_Type super;
