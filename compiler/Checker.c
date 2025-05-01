@@ -353,8 +353,9 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unknown callable: ");
         if (receiver_expression != NULL) {
+            pWriter__write__char(stderr_writer, '(');
             pWriter__write__checked_type(stderr_writer, receiver_expression->type);
-            pWriter__write__char(stderr_writer, '.');
+            pWriter__write__cstring(stderr_writer, ").");
         }
         pWriter__write__token(stderr_writer, symbol_name);
         pWriter__write__char(stderr_writer, '(');
@@ -459,8 +460,6 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
     return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression, location);
 }
 
-Checked_Expression *Checker__check_init_expression(Checker *self, Checked_Named_Type *type, Parsed_Call_Argument *first_parsed_argument, Source_Location location);
-
 Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Source_Location location, Checked_Union_Type *union_type, Checked_Expression *expression) {
     Checked_Union_Variant *union_variant = union_type->first_variant;
     if (expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
@@ -490,12 +489,34 @@ Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Sou
     return Checked_Make_Union_Expression__create(location, (Checked_Type *)union_type, union_type, union_variant, (Checked_Expression *)expression);
 }
 
+Checked_Expression *Checker__check_init_expression(Checker *self, Checked_Named_Type *type, Parsed_Call_Argument *first_parsed_argument, Source_Location location);
+
 Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
     Checked_Callable checked_callable;
     switch (parsed_expression->callee_expression->kind) {
-    case PARSED_EXPRESSION_KIND__MEMBER_ACCESS:
-        checked_callable = Checker__check_callable_member(self, (Parsed_Member_Access_Expression *)parsed_expression->callee_expression, parsed_expression->first_argument, parsed_expression->super.location);
+    case PARSED_EXPRESSION_KIND__MEMBER_ACCESS: {
+        Parsed_Member_Access_Expression *parsed_member_access_expression = (Parsed_Member_Access_Expression *)parsed_expression->callee_expression;
+        if (parsed_member_access_expression->object_expression->kind == PARSED_EXPRESSION_KIND__SYMBOL) {
+            Checked_Expression *object_expression = Checker__check_expression(self, parsed_member_access_expression->object_expression, NULL);
+            if (object_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL && object_expression->type->kind == CHECKED_TYPE_KIND__MODULE) {
+                Checked_Symbol *symbol = ((Checked_Symbol_Expression *)object_expression)->symbol;
+                if (symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
+                    pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Not an import");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
+                Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
+                Checked_Module *module = import_symbol->module;
+                Checked_Named_Type *named_type = Checked_Symbols__find_type(module->symbols, parsed_member_access_expression->member_name->lexeme);
+                if (named_type != NULL) {
+                    return Checker__check_init_expression(self, named_type, parsed_expression->first_argument, parsed_expression->super.location);
+                }
+            }
+        }
+        checked_callable = Checker__check_callable_member(self, parsed_member_access_expression, parsed_expression->first_argument, parsed_expression->super.location);
         break;
+    }
     case PARSED_EXPRESSION_KIND__SYMBOL: {
         Checked_Named_Type *named_type = Checker__find_type(self, ((Parsed_Symbol_Expression *)parsed_expression->callee_expression)->name->lexeme);
         if (named_type != NULL) {
