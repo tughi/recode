@@ -258,7 +258,7 @@ typedef struct Checked_Import_Symbol {
     Checked_Module *module;
 } Checked_Import_Symbol;
 
-Checked_Import_Symbol *Checked_Import_Symbol__create(Source_Location location, String *name, Checked_Module *module);
+Checked_Import_Symbol *Checked_Import_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Module *module);
 
 typedef struct Checked_Enum_Member_Symbol {
     Checked_Symbol super;

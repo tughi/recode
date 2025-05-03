@@ -310,9 +310,8 @@ Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location l
     return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), location, name, type);
 }
 
-Checked_Import_Symbol *Checked_Import_Symbol__create(Source_Location location, String *name, Checked_Module *module) {
-    Checked_Named_Type *module_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__MODULE, sizeof(Checked_Named_Type), location, module->name);
-    Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), location, name, (Checked_Type *)module_type);
+Checked_Import_Symbol *Checked_Import_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Module *module) {
+    Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), location, name, type);
     import_symbol->module = module;
     return import_symbol;
 }

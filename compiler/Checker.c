@@ -11,6 +11,7 @@ typedef struct Builtin_Types {
     Checked_Named_Type *i64_type;
     Checked_Named_Type *i8_type;
     Checked_Named_Type *isize_type;
+    Checked_Named_Type *module_type;
     Checked_Named_Type *nil_type;
     Checked_Named_Type *nothing_type;
     Checked_Named_Type *null_type;
@@ -1885,7 +1886,7 @@ void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *par
     }
     last_checked_module->next_module = module_checker->checked_module;
 
-    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, module_checker->checked_module);
+    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, (Checked_Type *)self->builtin_types->module_type, module_checker->checked_module);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)import_symbol);
 }
 
@@ -2006,6 +2007,9 @@ Builtin_Types *Builtin_Symbols__create() {
 
     builtin_types->isize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ISIZE, sizeof(Checked_Named_Type), location, String__create_from("isize"));
     Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->isize_type->super.location, builtin_types->isize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->isize_type));
+
+    builtin_types->module_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__MODULE, sizeof(Checked_Named_Type), location, String__create_from("Module"));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->module_type->super.location, builtin_types->module_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->module_type));
 
     builtin_types->nil_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NIL, sizeof(Checked_Named_Type), location, String__create_from("nil"));
     Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->nil_type->super.location, builtin_types->nil_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->nil_type));
