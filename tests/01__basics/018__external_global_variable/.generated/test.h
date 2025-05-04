@@ -7,6 +7,7 @@
 
 
 extern int32_t optind;
+
 int32_t test__main();
 
 #endif // __test_H__

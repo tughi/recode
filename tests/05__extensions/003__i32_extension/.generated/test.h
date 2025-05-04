@@ -6,13 +6,13 @@
 #include <stddef.h>
 
 
-struct test__Number;
+struct test_Number;
 
-struct test__Number {
+struct test_Number {
     int32_t value;
 };
 
-int32_t test__ptest__Number__get_value(struct test__Number *self);
+int32_t test__pNumber__get_value(struct test_Number *self);
 
 int32_t test__i32__get_value(int32_t self);
 

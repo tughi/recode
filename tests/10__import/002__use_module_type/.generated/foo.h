@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct foo__Foo;
+struct foo_Foo;
 
-struct foo__Foo {
+struct foo_Foo {
     int32_t value;
 };
 

@@ -115,15 +115,16 @@ Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
+    String *module;
 } Checked_Named_Type;
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name);
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
 } Checked_External_Type;
 
-Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name);
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, String *module);
 
 typedef struct Checked_Procedure_Parameter {
     Source_Location location;
@@ -180,7 +181,7 @@ typedef struct Checked_Struct_Type {
     Checked_Struct_Member *first_member;
 } Checked_Struct_Type;
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 
@@ -201,7 +202,7 @@ typedef struct Checked_Trait_Type {
     Checked_Trait_Method *first_method;
 } Checked_Trait_Type;
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name);
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, String *module);
 
 typedef struct Checked_Union_Variant {
     Checked_Type *type;
@@ -217,7 +218,7 @@ typedef struct Checked_Union_Type {
     int32_t variant_count;
 } Checked_Union_Type;
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name);
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, String *module);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 

@@ -6,11 +6,11 @@
 #include <stddef.h>
 
 
-struct test__Integer;
+struct test_Integer;
 
-struct test__Value;
+struct test_Value;
 
-struct test__Integer {
+struct test_Integer {
     int32_t variant;
     union {
         int8_t variant_1;
@@ -18,11 +18,11 @@ struct test__Integer {
     };
 };
 
-struct test__Value {
+struct test_Value {
     int32_t variant;
     union {
         bool variant_1;
-        struct test__Integer variant_2;
+        struct test_Integer variant_2;
     };
 };
 

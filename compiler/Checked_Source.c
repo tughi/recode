@@ -50,14 +50,15 @@ bool Checked_Array_Type__equals(Checked_Array_Type *self, Checked_Array_Type *ot
     panic();
 }
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name) {
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module) {
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
+    type->module = module;
     return type;
 }
 
-Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name) {
-    Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name);
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, String *module) {
+    Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, module);
     return type;
 }
 
@@ -136,8 +137,8 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, S
     return member;
 }
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name) {
-    Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module) {
+    Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name, module);
     type->first_member = NULL;
     return type;
 }
@@ -171,8 +172,8 @@ Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, Str
     return method;
 }
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name) {
-    Checked_Trait_Type *type = (Checked_Trait_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TRAIT, sizeof(Checked_Trait_Type), location, name);
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, String *module) {
+    Checked_Trait_Type *type = (Checked_Trait_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TRAIT, sizeof(Checked_Trait_Type), location, name, module);
     type->struct_type = NULL;
     type->self_struct_member = NULL;
     type->first_method = NULL;
@@ -187,8 +188,8 @@ Checked_Union_Variant *Checked_Union_Variant__create(Source_Location location, C
     return member;
 }
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name) {
-    Checked_Union_Type *type = (Checked_Union_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UNION, sizeof(Checked_Union_Type), location, name);
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, String *module) {
+    Checked_Union_Type *type = (Checked_Union_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UNION, sizeof(Checked_Union_Type), location, name, module);
     type->first_variant = NULL;
     type->variant_count = 0;
     return type;
@@ -242,6 +243,10 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
+        if (named_type->module != NULL) {
+            pWriter__write__string(self, named_type->module);
+            pWriter__write__char(self, '.');
+        }
         pWriter__write__string(self, named_type->name);
         break;
     }

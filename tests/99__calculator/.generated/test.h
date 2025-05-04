@@ -6,74 +6,74 @@
 #include <stddef.h>
 
 
-struct test__Parser;
+struct test_Parser;
 
-struct test__Tokenizer;
+struct test_Tokenizer;
 
-struct test__Token;
+struct test_Token;
 
-struct test__Number;
+struct test_Number;
 
-struct test__Span;
+struct test_Span;
 
-struct test__Plus;
+struct test_Plus;
 
-struct test__Minus;
+struct test_Minus;
 
-struct test__Multiply;
+struct test_Multiply;
 
-struct test__Divide;
+struct test_Divide;
 
-struct test__Stop;
+struct test_Stop;
 
-struct test__Error;
+struct test_Error;
 
 struct String;
 
-struct test__Expression;
+struct test_Expression;
 
-struct test__Addition;
+struct test_Addition;
 
-struct test__Division;
+struct test_Division;
 
-struct test__Multiplication;
+struct test_Multiplication;
 
-struct test__Subtraction;
+struct test_Subtraction;
 
-struct test__Writer;
+struct test_Writer;
 
-struct test__String_Builder;
+struct test_String_Builder;
 
-typedef struct test__FILE test__FILE;
+struct test_FILE;
 
-struct test__Span {
+struct test_Span {
     int32_t start;
     int32_t end;
 };
 
-struct test__Number {
-    struct test__Span span;
+struct test_Number {
+    struct test_Span span;
     int32_t value;
 };
 
-struct test__Plus {
-    struct test__Span span;
+struct test_Plus {
+    struct test_Span span;
 };
 
-struct test__Minus {
-    struct test__Span span;
+struct test_Minus {
+    struct test_Span span;
 };
 
-struct test__Multiply {
-    struct test__Span span;
+struct test_Multiply {
+    struct test_Span span;
 };
 
-struct test__Divide {
-    struct test__Span span;
+struct test_Divide {
+    struct test_Span span;
 };
 
-struct test__Stop {
-    struct test__Span span;
+struct test_Stop {
+    struct test_Span span;
 };
 
 struct String {
@@ -81,171 +81,174 @@ struct String {
     int32_t length;
 };
 
-struct test__Error {
-    struct test__Span span;
+struct test_Error {
+    struct test_Span span;
     struct String message;
 };
 
-struct test__Token {
+struct test_Token {
     int32_t variant;
     union {
-        struct test__Number variant_1;
-        struct test__Plus variant_2;
-        struct test__Minus variant_3;
-        struct test__Multiply variant_4;
-        struct test__Divide variant_5;
-        struct test__Stop variant_6;
-        struct test__Error variant_7;
+        struct test_Number variant_1;
+        struct test_Plus variant_2;
+        struct test_Minus variant_3;
+        struct test_Multiply variant_4;
+        struct test_Divide variant_5;
+        struct test_Stop variant_6;
+        struct test_Error variant_7;
     };
 };
 
-struct test__Tokenizer {
+struct test_Tokenizer {
     uint8_t *data;
     int32_t index;
-    struct test__Token current_token;
+    struct test_Token current_token;
 };
 
-struct test__Parser {
-    struct test__Tokenizer tokenizer;
+struct test_Parser {
+    struct test_Tokenizer tokenizer;
 };
 
-struct test__Addition {
-    struct test__Span span;
-    struct test__Expression *left;
-    struct test__Expression *right;
+struct test_Addition {
+    struct test_Span span;
+    struct test_Expression *left;
+    struct test_Expression *right;
 };
 
-struct test__Division {
-    struct test__Span span;
-    struct test__Expression *left;
-    struct test__Expression *right;
+struct test_Division {
+    struct test_Span span;
+    struct test_Expression *left;
+    struct test_Expression *right;
 };
 
-struct test__Multiplication {
-    struct test__Span span;
-    struct test__Expression *left;
-    struct test__Expression *right;
+struct test_Multiplication {
+    struct test_Span span;
+    struct test_Expression *left;
+    struct test_Expression *right;
 };
 
-struct test__Subtraction {
-    struct test__Span span;
-    struct test__Expression *left;
-    struct test__Expression *right;
+struct test_Subtraction {
+    struct test_Span span;
+    struct test_Expression *left;
+    struct test_Expression *right;
 };
 
-struct test__Expression {
+struct test_Expression {
     int32_t variant;
     union {
-        struct test__Number variant_1;
-        struct test__Addition variant_2;
-        struct test__Division variant_3;
-        struct test__Multiplication variant_4;
-        struct test__Subtraction variant_5;
-        struct test__Error variant_6;
+        struct test_Number variant_1;
+        struct test_Addition variant_2;
+        struct test_Division variant_3;
+        struct test_Multiplication variant_4;
+        struct test_Subtraction variant_5;
+        struct test_Error variant_6;
     };
 };
 
-struct test__Writer {
+struct test_Writer {
     void *self;
     void (*write_char)(void *self, uint8_t c);
 };
 
-struct test__String_Builder {
+struct test_String_Builder {
     uint8_t *data;
     int32_t data_size;
     int32_t length;
 };
 
-extern test__FILE *__stdinp;
-extern test__FILE *__stdoutp;
-extern test__FILE *__stderrp;
-struct test__Parser *__alloc_test__Parser_value(struct test__Parser value);
+extern struct test_FILE *__stdinp;
 
-struct test__Tokenizer *__alloc_test__Tokenizer_value(struct test__Tokenizer value);
+extern struct test_FILE *__stdoutp;
 
-struct test__Token *__alloc_test__Token_value(struct test__Token value);
+extern struct test_FILE *__stderrp;
 
-struct test__Number *__alloc_test__Number_value(struct test__Number value);
+struct test_Parser *__alloc__test_Parser__(struct test_Parser value);
 
-struct test__Span *__alloc_test__Span_value(struct test__Span value);
+struct test_Tokenizer *__alloc__test_Tokenizer__(struct test_Tokenizer value);
 
-struct test__Plus *__alloc_test__Plus_value(struct test__Plus value);
+struct test_Token *__alloc__test_Token__(struct test_Token value);
 
-struct test__Minus *__alloc_test__Minus_value(struct test__Minus value);
+struct test_Number *__alloc__test_Number__(struct test_Number value);
 
-struct test__Multiply *__alloc_test__Multiply_value(struct test__Multiply value);
+struct test_Span *__alloc__test_Span__(struct test_Span value);
 
-struct test__Divide *__alloc_test__Divide_value(struct test__Divide value);
+struct test_Plus *__alloc__test_Plus__(struct test_Plus value);
 
-struct test__Stop *__alloc_test__Stop_value(struct test__Stop value);
+struct test_Minus *__alloc__test_Minus__(struct test_Minus value);
 
-struct test__Error *__alloc_test__Error_value(struct test__Error value);
+struct test_Multiply *__alloc__test_Multiply__(struct test_Multiply value);
 
-struct String *__alloc_String_value(struct String value);
+struct test_Divide *__alloc__test_Divide__(struct test_Divide value);
 
-struct test__Expression *__alloc_test__Expression_value(struct test__Expression value);
+struct test_Stop *__alloc__test_Stop__(struct test_Stop value);
 
-struct test__Addition *__alloc_test__Addition_value(struct test__Addition value);
+struct test_Error *__alloc__test_Error__(struct test_Error value);
 
-struct test__Division *__alloc_test__Division_value(struct test__Division value);
+struct String *__alloc__String__(struct String value);
 
-struct test__Multiplication *__alloc_test__Multiplication_value(struct test__Multiplication value);
+struct test_Expression *__alloc__test_Expression__(struct test_Expression value);
 
-struct test__Subtraction *__alloc_test__Subtraction_value(struct test__Subtraction value);
+struct test_Addition *__alloc__test_Addition__(struct test_Addition value);
 
-struct test__Writer *__alloc_test__Writer_value(struct test__Writer value);
+struct test_Division *__alloc__test_Division__(struct test_Division value);
 
-struct test__String_Builder *__alloc_test__String_Builder_value(struct test__String_Builder value);
+struct test_Multiplication *__alloc__test_Multiplication__(struct test_Multiplication value);
+
+struct test_Subtraction *__alloc__test_Subtraction__(struct test_Subtraction value);
+
+struct test_Writer *__alloc__test_Writer__(struct test_Writer value);
+
+struct test_String_Builder *__alloc__test_String_Builder__(struct test_String_Builder value);
 
 int32_t test__main(int32_t argc, uint8_t **argv);
 
-int32_t test__evaluate__0_expression(struct test__Expression *expression);
+int32_t test__evaluate__0_expression(struct test_Expression *expression);
 
-struct test__Expression test__ptest__Parser__parse_expression(struct test__Parser *self);
+struct test_Expression test__pParser__parse_expression(struct test_Parser *self);
 
-struct test__Expression test__ptest__Parser__parse_additive_expression(struct test__Parser *self);
+struct test_Expression test__pParser__parse_additive_expression(struct test_Parser *self);
 
-struct test__Expression test__ptest__Parser__parse_multiplicative_expression(struct test__Parser *self);
+struct test_Expression test__pParser__parse_multiplicative_expression(struct test_Parser *self);
 
-struct test__Expression test__ptest__Parser__parse_primary_expression(struct test__Parser *self);
+struct test_Expression test__pParser__parse_primary_expression(struct test_Parser *self);
 
-struct test__Span test__ptest__Expression__span(struct test__Expression *self);
+struct test_Span test__pExpression__span(struct test_Expression *self);
 
-struct test__Writer *test__ptest__Writer__write__1_expression(struct test__Writer *self, struct test__Expression *expression);
+struct test_Writer *test__pWriter__write__1_expression(struct test_Writer *self, struct test_Expression *expression);
 
-struct test__Token test__ptest__Tokenizer__peek_token(struct test__Tokenizer *self);
+struct test_Token test__pTokenizer__peek_token(struct test_Tokenizer *self);
 
-struct test__Token test__ptest__Tokenizer__next_token(struct test__Tokenizer *self);
+struct test_Token test__pTokenizer__next_token(struct test_Tokenizer *self);
 
-struct test__Token test__ptest__Tokenizer__scan_token(struct test__Tokenizer *self);
+struct test_Token test__pTokenizer__scan_token(struct test_Tokenizer *self);
 
-struct test__Token test__ptest__Tokenizer__scan_number_token(struct test__Tokenizer *self);
+struct test_Token test__pTokenizer__scan_number_token(struct test_Tokenizer *self);
 
-struct test__Span test__ptest__Token__span(struct test__Token *self);
+struct test_Span test__pToken__span(struct test_Token *self);
 
-struct test__Writer *test__ptest__Writer__write__1_token(struct test__Writer *self, struct test__Token *token);
+struct test_Writer *test__pWriter__write__1_token(struct test_Writer *self, struct test_Token *token);
 
-struct test__Writer *test__ptest__Writer__write__1_char(struct test__Writer *self, uint8_t c);
+struct test_Writer *test__pWriter__write__1_char(struct test_Writer *self, uint8_t c);
 
-struct test__Writer *test__ptest__Writer__write__1_signed(struct test__Writer *self, int32_t value);
+struct test_Writer *test__pWriter__write__1_signed(struct test_Writer *self, int32_t value);
 
-struct test__Writer *test__ptest__Writer__end_line(struct test__Writer *self);
+struct test_Writer *test__pWriter__end_line(struct test_Writer *self);
 
-struct test__String_Builder *test__ptest__String_Builder__write__1_char(struct test__String_Builder *self, uint8_t c);
+struct test_String_Builder *test__pString_Builder__write__1_char(struct test_String_Builder *self, uint8_t c);
 
-struct String test__ptest__String_Builder__build(struct test__String_Builder *self);
+struct String test__pString_Builder__build(struct test_String_Builder *self);
 
-struct test__String_Builder test__make_string_builder();
+struct test_String_Builder test__make_string_builder();
 
-struct test__String_Builder test__make_string_builder__0_initial_data_size(int32_t initial_data_size);
+struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_t initial_data_size);
 
-void test__ptest__String_Builder__write_char(struct test__String_Builder *self, uint8_t c);
+void test__pString_Builder__write_char(struct test_String_Builder *self, uint8_t c);
 
-struct test__Writer *test__ptest__Writer__write(struct test__Writer *self, struct String string);
+struct test_Writer *test__pWriter__write(struct test_Writer *self, struct String string);
 
-int32_t fputc(int32_t c, test__FILE *file);
+int32_t fputc(int32_t c, struct test_FILE *file);
 
-void test__ptest__FILE__write_char(test__FILE *self, uint8_t c);
+void test__pFILE__write_char(struct test_FILE *self, uint8_t c);
 
 void *malloc(uint64_t size);
 

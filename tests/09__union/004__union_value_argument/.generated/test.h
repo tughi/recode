@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct test__Value;
+struct test_Value;
 
-struct test__Value {
+struct test_Value {
     int32_t variant;
     union {
         bool variant_1;
@@ -18,6 +18,6 @@ struct test__Value {
 
 int32_t test__main();
 
-struct test__Value test__demo__0_value(struct test__Value value);
+struct test_Value test__demo__0_value(struct test_Value value);
 
 #endif // __test_H__

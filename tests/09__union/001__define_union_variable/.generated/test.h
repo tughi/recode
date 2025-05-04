@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 
-struct test__Integer;
+struct test_Integer;
 
-struct test__Integer {
+struct test_Integer {
     int32_t variant;
     union {
         int8_t variant_1;

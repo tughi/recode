@@ -7,7 +7,7 @@
 #line 3 "tests/10__import/003__init_module_type/test.code"
 int32_t test__main() {
 #line 4 "tests/10__import/003__init_module_type/test.code"
-    struct foo__Foo bar = (struct foo__Foo){.value = 42};
+    struct foo_Foo bar = (struct foo_Foo){.value = 42};
 #line 6 "tests/10__import/003__init_module_type/test.code"
     return bar.value - 42;
 }

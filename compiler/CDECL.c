@@ -18,22 +18,9 @@ CDECL *CDECL__create() {
 void declare(CDECL *cdecl, Checked_Type *symbol_type);
 
 void String__append_cdecl(String *self, String *name, Checked_Type *type) {
-    CDECL cdecl = {NULL, NULL, NULL};
-    declare(&cdecl, type);
-    String__append_string(self, cdecl.type);
-    String__delete(cdecl.type);
-    String__append_char(self, ' ');
-    if (cdecl.left != NULL) {
-        String__append_string(self, cdecl.left);
-        String__delete(cdecl.left);
-    }
-    if (name != NULL) {
-        String__append_string(self, name);
-    }
-    if (cdecl.right != NULL) {
-        String__append_string(self, cdecl.right);
-        String__delete(cdecl.right);
-    }
+    Writer *writer = String__create_writer(self);
+    pWriter__write__cdecl(writer, name, type);
+    pWriter__destroy(writer);
 }
 
 void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
@@ -186,9 +173,6 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__ARRAY:
         declare_array(cdecl, (Checked_Array_Type *)symbol_type);
         break;
-    case CHECKED_TYPE_KIND__EXTERNAL:
-        cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
-        break;
     case CHECKED_TYPE_KIND__PROCEDURE:
         declare_procedure(cdecl, (Checked_Procedure_Type *)symbol_type);
         break;
@@ -198,10 +182,15 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__STRING:
         cdecl->type = String__create_from("struct String");
         break;
+    case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION:
         cdecl->type = String__create_from("struct ");
+        if (((Checked_Named_Type *)symbol_type)->module != NULL) {
+            String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->module);
+            String__append_char(cdecl->type, '_');
+        }
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
         break;
     case CHECKED_TYPE_KIND__MULTI_POINTER:

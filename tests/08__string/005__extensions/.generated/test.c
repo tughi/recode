@@ -4,7 +4,7 @@
 
 #include "test.h"
 
-struct String *__alloc_String_value(struct String value) {
+struct String *__alloc__String__(struct String value) {
     struct String *result = (struct String *)malloc(sizeof(struct String));
     *result = value;
     return result;

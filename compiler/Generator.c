@@ -28,12 +28,21 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
+void Generator__generate_alloc_procedure_name(Generator *self, Checked_Named_Type *type) {
+    pWriter__write__cstring(self->writer, "__alloc__");
+    if (type->module != NULL) {
+        pWriter__write__string(self->writer, type->module);
+        pWriter__write__char(self->writer, '_');
+    }
+    pWriter__write__string(self->writer, type->name);
+    pWriter__write__cstring(self->writer, "__");
+}
+
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
-    pWriter__write__cstring(self->writer, "__alloc_");
-    pWriter__write__string(self->writer, ((Checked_Named_Type *)expression->value_expression->type)->name);
-    pWriter__write__cstring(self->writer, "_value(");
+    Generator__generate_alloc_procedure_name(self, (Checked_Named_Type *)expression->value_expression->type);
+    pWriter__write__char(self->writer, '(');
     Generator__generate_expression(self, expression->value_expression);
-    pWriter__write__cstring(self->writer, ")");
+    pWriter__write__char(self->writer, ')');
 }
 
 void Generator__generate_array_access_expression(Generator *self, Checked_Array_Access_Expression *expression) {
@@ -643,10 +652,7 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
 }
 
 void Generator__declare_external_type(Generator *self, Checked_External_Type *external_type) {
-    pWriter__write__cstring(self->writer, "typedef struct ");
-    pWriter__write__string(self->writer, external_type->super.name);
-    pWriter__write__char(self->writer, ' ');
-    pWriter__write__string(self->writer, external_type->super.name);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)external_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
@@ -687,22 +693,28 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
+void Generator__generate_alloc_procedure_signature(Generator *self, Checked_Named_Type *type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)type);
+    pWriter__write__cstring(self->writer, " *");
+    Generator__generate_alloc_procedure_name(self, type);
+    pWriter__write__char(self->writer, '(');
+    String value = {
+        .data = "value",
+        .data_size = 5,
+        .length = 5,
+    };
+    pWriter__write__cdecl(self->writer, &value, (Checked_Type *)type);
+    pWriter__write__char(self->writer, ')');
+}
+
 void Generator__declare_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, struct_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " value);\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__generate_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, struct_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " value) {\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    ");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, " *result = (");
@@ -754,21 +766,13 @@ void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) 
 }
 
 void Generator__declare_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, union_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " value);\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, union_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " value) {\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
+    pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " *result = (");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
@@ -893,6 +897,7 @@ void generate_module_header(Checked_Module *checked_module, String *output_dir) 
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->location.source == checked_module->source) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
             Generator__generate_variable_statement(&generator, variable_symbol->statement);
+            pWriter__end_line(generator.writer);
             pWriter__end_line(generator.writer);
         }
         checked_symbol = checked_symbol->next_symbol;

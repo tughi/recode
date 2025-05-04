@@ -6,18 +6,18 @@
 #include <stddef.h>
 
 
-struct test__Point;
+struct test_Point;
 
-struct test__Line;
+struct test_Line;
 
-struct test__Point {
+struct test_Point {
     int32_t x;
     int32_t y;
 };
 
-struct test__Line {
-    struct test__Point p1;
-    struct test__Point p2;
+struct test_Line {
+    struct test_Point p1;
+    struct test_Point p2;
 };
 
 int32_t test__main();
