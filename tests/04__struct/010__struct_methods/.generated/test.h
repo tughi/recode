@@ -12,9 +12,9 @@ struct test_Number {
     int32_t value;
 };
 
-int32_t test__pNumber__get_value(struct test_Number *self);
+int32_t ptest_Number__get_value(struct test_Number *self);
 
-void test__pNumber__set_value(struct test_Number *self, int32_t value);
+void ptest_Number__set_value(struct test_Number *self, int32_t value);
 
 int32_t test__main();
 

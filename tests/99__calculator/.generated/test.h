@@ -204,51 +204,51 @@ int32_t test__main(int32_t argc, uint8_t **argv);
 
 int32_t test__evaluate__0_expression(struct test_Expression *expression);
 
-struct test_Expression test__pParser__parse_expression(struct test_Parser *self);
+struct test_Expression ptest_Parser__parse_expression(struct test_Parser *self);
 
-struct test_Expression test__pParser__parse_additive_expression(struct test_Parser *self);
+struct test_Expression ptest_Parser__parse_additive_expression(struct test_Parser *self);
 
-struct test_Expression test__pParser__parse_multiplicative_expression(struct test_Parser *self);
+struct test_Expression ptest_Parser__parse_multiplicative_expression(struct test_Parser *self);
 
-struct test_Expression test__pParser__parse_primary_expression(struct test_Parser *self);
+struct test_Expression ptest_Parser__parse_primary_expression(struct test_Parser *self);
 
-struct test_Span test__pExpression__span(struct test_Expression *self);
+struct test_Span ptest_Expression__span(struct test_Expression *self);
 
-struct test_Writer *test__pWriter__write__1_expression(struct test_Writer *self, struct test_Expression *expression);
+struct test_Writer *ptest_Writer__write__1_expression(struct test_Writer *self, struct test_Expression *expression);
 
-struct test_Token test__pTokenizer__peek_token(struct test_Tokenizer *self);
+struct test_Token ptest_Tokenizer__peek_token(struct test_Tokenizer *self);
 
-struct test_Token test__pTokenizer__next_token(struct test_Tokenizer *self);
+struct test_Token ptest_Tokenizer__next_token(struct test_Tokenizer *self);
 
-struct test_Token test__pTokenizer__scan_token(struct test_Tokenizer *self);
+struct test_Token ptest_Tokenizer__scan_token(struct test_Tokenizer *self);
 
-struct test_Token test__pTokenizer__scan_number_token(struct test_Tokenizer *self);
+struct test_Token ptest_Tokenizer__scan_number_token(struct test_Tokenizer *self);
 
-struct test_Span test__pToken__span(struct test_Token *self);
+struct test_Span ptest_Token__span(struct test_Token *self);
 
-struct test_Writer *test__pWriter__write__1_token(struct test_Writer *self, struct test_Token *token);
+struct test_Writer *ptest_Writer__write__1_token(struct test_Writer *self, struct test_Token *token);
 
-struct test_Writer *test__pWriter__write__1_char(struct test_Writer *self, uint8_t c);
+struct test_Writer *ptest_Writer__write__1_char(struct test_Writer *self, uint8_t c);
 
-struct test_Writer *test__pWriter__write__1_signed(struct test_Writer *self, int32_t value);
+struct test_Writer *ptest_Writer__write__1_signed(struct test_Writer *self, int32_t value);
 
-struct test_Writer *test__pWriter__end_line(struct test_Writer *self);
+struct test_Writer *ptest_Writer__end_line(struct test_Writer *self);
 
-struct test_String_Builder *test__pString_Builder__write__1_char(struct test_String_Builder *self, uint8_t c);
+struct test_String_Builder *ptest_String_Builder__write__1_char(struct test_String_Builder *self, uint8_t c);
 
-struct String test__pString_Builder__build(struct test_String_Builder *self);
+struct String ptest_String_Builder__build(struct test_String_Builder *self);
 
 struct test_String_Builder test__make_string_builder();
 
 struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_t initial_data_size);
 
-void test__pString_Builder__write_char(struct test_String_Builder *self, uint8_t c);
+void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c);
 
-struct test_Writer *test__pWriter__write(struct test_Writer *self, struct String string);
+struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct String string);
 
 int32_t fputc(int32_t c, struct test_FILE *file);
 
-void test__pFILE__write_char(struct test_FILE *self, uint8_t c);
+void ptest_FILE__write_char(struct test_FILE *self, uint8_t c);
 
 void *malloc(uint64_t size);
 

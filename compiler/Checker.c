@@ -1698,7 +1698,12 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__U8:
     case CHECKED_TYPE_KIND__UNION: {
-        String__append_string(symbol_name, ((Checked_Named_Type *)receiver_type)->name);
+        Checked_Named_Type *checked_named_type = (Checked_Named_Type *)receiver_type;
+        if (checked_named_type->module != NULL) {
+            String__append_string(symbol_name, checked_named_type->module);
+            String__append_char(symbol_name, '_');
+        }
+        String__append_string(symbol_name, checked_named_type->name);
         break;
     }
     default:
@@ -1727,6 +1732,7 @@ void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statem
             panic();
         }
         receiver_type = Checker__resolve_type(self, parsed_statement->receiver_type);
+        String__clear(symbol_name); // drop package name
         String__append_receiver_type(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
     }

@@ -128,24 +128,24 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 6 "tests/99__calculator/test.code"
     struct test_Tokenizer tokenizer = (struct test_Tokenizer){.data = argv[1], .index = 0};
 #line 11 "tests/99__calculator/test.code"
-    struct test_Writer stdout_writer = (struct test_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) test__pFILE__write_char)};
+    struct test_Writer stdout_writer = (struct test_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) ptest_FILE__write_char)};
 #line 13 "tests/99__calculator/test.code"
-    while (test__pTokenizer__peek_token(&tokenizer).variant != 6) {
+    while (ptest_Tokenizer__peek_token(&tokenizer).variant != 6) {
 #line 14 "tests/99__calculator/test.code"
-        struct test_Token token = test__pTokenizer__next_token(&tokenizer);
+        struct test_Token token = ptest_Tokenizer__next_token(&tokenizer);
 #line 15 "tests/99__calculator/test.code"
-        test__pWriter__end_line(test__pWriter__write__1_token(&stdout_writer, &token));
+        ptest_Writer__end_line(ptest_Writer__write__1_token(&stdout_writer, &token));
     }
 #line 18 "tests/99__calculator/test.code"
     struct test_Parser parser = (struct test_Parser){.tokenizer = (struct test_Tokenizer){.data = argv[1], .index = 0}};
 #line 22 "tests/99__calculator/test.code"
-    struct test_Expression expression = test__pParser__parse_expression(&parser);
+    struct test_Expression expression = ptest_Parser__parse_expression(&parser);
 #line 23 "tests/99__calculator/test.code"
-    test__pWriter__end_line(test__pWriter__write__1_expression(test__pWriter__write(&stdout_writer, (struct String){.data = "Expression: ", .length = 12}), &expression));
+    ptest_Writer__end_line(ptest_Writer__write__1_expression(ptest_Writer__write(&stdout_writer, (struct String){.data = "Expression: ", .length = 12}), &expression));
 #line 25 "tests/99__calculator/test.code"
     int32_t result = test__evaluate__0_expression(&expression);
 #line 26 "tests/99__calculator/test.code"
-    test__pWriter__end_line(test__pWriter__write__1_signed(test__pWriter__write(&stdout_writer, (struct String){.data = "Result: ", .length = 8}), result));
+    ptest_Writer__end_line(ptest_Writer__write__1_signed(ptest_Writer__write(&stdout_writer, (struct String){.data = "Result: ", .length = 8}), result));
 #line 28 "tests/99__calculator/test.code"
     return 0;
 }
@@ -187,36 +187,36 @@ int32_t test__evaluate__0_expression(struct test_Expression *expression) {
 }
 
 #line 62 "tests/99__calculator/test.code"
-struct test_Expression test__pParser__parse_expression(struct test_Parser *self) {
+struct test_Expression ptest_Parser__parse_expression(struct test_Parser *self) {
 #line 63 "tests/99__calculator/test.code"
-    return test__pParser__parse_additive_expression(self);
+    return ptest_Parser__parse_additive_expression(self);
 }
 
 #line 66 "tests/99__calculator/test.code"
-struct test_Expression test__pParser__parse_additive_expression(struct test_Parser *self) {
+struct test_Expression ptest_Parser__parse_additive_expression(struct test_Parser *self) {
 #line 67 "tests/99__calculator/test.code"
-    struct test_Expression expression = test__pParser__parse_multiplicative_expression(self);
+    struct test_Expression expression = ptest_Parser__parse_multiplicative_expression(self);
 #line 68 "tests/99__calculator/test.code"
     for (;;) {
 #line 69 "tests/99__calculator/test.code"
-        struct test_Token __switch_69_value__ = test__pTokenizer__peek_token(&self->tokenizer);
+        struct test_Token __switch_69_value__ = ptest_Tokenizer__peek_token(&self->tokenizer);
 #line 70 "tests/99__calculator/test.code"
         if (__switch_69_value__.variant == 2) {
 #line 71 "tests/99__calculator/test.code"
-            test__pTokenizer__next_token(&self->tokenizer);
+            ptest_Tokenizer__next_token(&self->tokenizer);
 #line 72 "tests/99__calculator/test.code"
-            struct test_Expression other_expression = test__pParser__parse_multiplicative_expression(self);
+            struct test_Expression other_expression = ptest_Parser__parse_multiplicative_expression(self);
 #line 73 "tests/99__calculator/test.code"
-            expression = (struct test_Expression){.variant = 2, .variant_2 = (struct test_Addition){.span = (struct test_Span){.start = test__pExpression__span(&expression).start, .end = test__pExpression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
+            expression = (struct test_Expression){.variant = 2, .variant_2 = (struct test_Addition){.span = (struct test_Span){.start = ptest_Expression__span(&expression).start, .end = ptest_Expression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
         }
 #line 79 "tests/99__calculator/test.code"
         else if (__switch_69_value__.variant == 3) {
 #line 80 "tests/99__calculator/test.code"
-            test__pTokenizer__next_token(&self->tokenizer);
+            ptest_Tokenizer__next_token(&self->tokenizer);
 #line 81 "tests/99__calculator/test.code"
-            struct test_Expression other_expression = test__pParser__parse_multiplicative_expression(self);
+            struct test_Expression other_expression = ptest_Parser__parse_multiplicative_expression(self);
 #line 82 "tests/99__calculator/test.code"
-            expression = (struct test_Expression){.variant = 5, .variant_5 = (struct test_Subtraction){.span = (struct test_Span){.start = test__pExpression__span(&expression).start, .end = test__pExpression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
+            expression = (struct test_Expression){.variant = 5, .variant_5 = (struct test_Subtraction){.span = (struct test_Span){.start = ptest_Expression__span(&expression).start, .end = ptest_Expression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
         }
 #line 88 "tests/99__calculator/test.code"
         else {
@@ -229,28 +229,28 @@ struct test_Expression test__pParser__parse_additive_expression(struct test_Pars
 }
 
 #line 96 "tests/99__calculator/test.code"
-struct test_Expression test__pParser__parse_multiplicative_expression(struct test_Parser *self) {
+struct test_Expression ptest_Parser__parse_multiplicative_expression(struct test_Parser *self) {
 #line 97 "tests/99__calculator/test.code"
-    struct test_Expression expression = test__pParser__parse_primary_expression(self);
+    struct test_Expression expression = ptest_Parser__parse_primary_expression(self);
 #line 98 "tests/99__calculator/test.code"
     for (;;) {
 #line 99 "tests/99__calculator/test.code"
-        struct test_Token token = test__pTokenizer__peek_token(&self->tokenizer);
+        struct test_Token token = ptest_Tokenizer__peek_token(&self->tokenizer);
 #line 100 "tests/99__calculator/test.code"
         if (token.variant == 4) {
 #line 101 "tests/99__calculator/test.code"
-            test__pTokenizer__next_token(&self->tokenizer);
+            ptest_Tokenizer__next_token(&self->tokenizer);
 #line 102 "tests/99__calculator/test.code"
-            struct test_Expression other_expression = test__pParser__parse_primary_expression(self);
+            struct test_Expression other_expression = ptest_Parser__parse_primary_expression(self);
 #line 103 "tests/99__calculator/test.code"
-            expression = (struct test_Expression){.variant = 4, .variant_4 = (struct test_Multiplication){.span = (struct test_Span){.start = test__pExpression__span(&expression).start, .end = test__pExpression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
+            expression = (struct test_Expression){.variant = 4, .variant_4 = (struct test_Multiplication){.span = (struct test_Span){.start = ptest_Expression__span(&expression).start, .end = ptest_Expression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
         } else if (token.variant == 5) {
 #line 109 "tests/99__calculator/test.code"
-            test__pTokenizer__next_token(&self->tokenizer);
+            ptest_Tokenizer__next_token(&self->tokenizer);
 #line 110 "tests/99__calculator/test.code"
-            struct test_Expression other_expression = test__pParser__parse_primary_expression(self);
+            struct test_Expression other_expression = ptest_Parser__parse_primary_expression(self);
 #line 111 "tests/99__calculator/test.code"
-            expression = (struct test_Expression){.variant = 3, .variant_3 = (struct test_Division){.span = (struct test_Span){.start = test__pExpression__span(&expression).start, .end = test__pExpression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
+            expression = (struct test_Expression){.variant = 3, .variant_3 = (struct test_Division){.span = (struct test_Span){.start = ptest_Expression__span(&expression).start, .end = ptest_Expression__span(&other_expression).end}, .left = __alloc__test_Expression__(expression), .right = __alloc__test_Expression__(other_expression)}};
         } else {
 #line 117 "tests/99__calculator/test.code"
             break;
@@ -261,20 +261,20 @@ struct test_Expression test__pParser__parse_multiplicative_expression(struct tes
 }
 
 #line 123 "tests/99__calculator/test.code"
-struct test_Expression test__pParser__parse_primary_expression(struct test_Parser *self) {
+struct test_Expression ptest_Parser__parse_primary_expression(struct test_Parser *self) {
 #line 124 "tests/99__calculator/test.code"
-    struct test_Token token = test__pTokenizer__next_token(&self->tokenizer);
+    struct test_Token token = ptest_Tokenizer__next_token(&self->tokenizer);
 #line 125 "tests/99__calculator/test.code"
     if (token.variant == 1) {
 #line 126 "tests/99__calculator/test.code"
         return (struct test_Expression){.variant = 1, .variant_1 = token.variant_1};
     }
 #line 128 "tests/99__calculator/test.code"
-    return (struct test_Expression){.variant = 6, .variant_6 = (struct test_Error){.span = test__pToken__span(&token), .message = (struct String){.data = "Expected number", .length = 15}}};
+    return (struct test_Expression){.variant = 6, .variant_6 = (struct test_Error){.span = ptest_Token__span(&token), .message = (struct String){.data = "Expected number", .length = 15}}};
 }
 
 #line 169 "tests/99__calculator/test.code"
-struct test_Span test__pExpression__span(struct test_Expression *self) {
+struct test_Span ptest_Expression__span(struct test_Expression *self) {
 #line 170 "tests/99__calculator/test.code"
     struct test_Expression *__switch_170_value__ = self;
 #line 171 "tests/99__calculator/test.code"
@@ -315,63 +315,63 @@ struct test_Span test__pExpression__span(struct test_Expression *self) {
 }
 
 #line 195 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__write__1_expression(struct test_Writer *self, struct test_Expression *expression) {
+struct test_Writer *ptest_Writer__write__1_expression(struct test_Writer *self, struct test_Expression *expression) {
 #line 196 "tests/99__calculator/test.code"
     struct test_Expression *__switch_196_value__ = expression;
 #line 197 "tests/99__calculator/test.code"
     if (__switch_196_value__->variant == 1) {
 #line 198 "tests/99__calculator/test.code"
-        return test__pWriter__write__1_signed(self, __switch_196_value__->variant_1.value);
+        return ptest_Writer__write__1_signed(self, __switch_196_value__->variant_1.value);
     }
 #line 200 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 2) {
 #line 201 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_196_value__->variant_2.right), (struct String){.data = ")", .length = 1});
+        return ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_196_value__->variant_2.right), (struct String){.data = ")", .length = 1});
     }
 #line 203 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 3) {
 #line 204 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_196_value__->variant_3.right), (struct String){.data = ")", .length = 1});
+        return ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_196_value__->variant_3.right), (struct String){.data = ")", .length = 1});
     }
 #line 206 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 4) {
 #line 207 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_196_value__->variant_4.right), (struct String){.data = ")", .length = 1});
+        return ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_196_value__->variant_4.right), (struct String){.data = ")", .length = 1});
     }
 #line 209 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 5) {
 #line 210 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(test__pWriter__write__1_expression(test__pWriter__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_196_value__->variant_5.right), (struct String){.data = ")", .length = 1});
+        return ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(ptest_Writer__write__1_expression(ptest_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_196_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_196_value__->variant_5.right), (struct String){.data = ")", .length = 1});
     }
 #line 212 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 6) {
 #line 213 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_196_value__->variant_6.message);
+        return ptest_Writer__write(ptest_Writer__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_196_value__->variant_6.message);
     }
 #line 215 "tests/99__calculator/test.code"
     else if (__switch_196_value__->variant == 0) {
 #line 216 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Nil!", .length = 4});
+        return ptest_Writer__write(self, (struct String){.data = "Nil!", .length = 4});
     }
 #line 219 "tests/99__calculator/test.code"
     return self;
 }
 
 #line 231 "tests/99__calculator/test.code"
-struct test_Token test__pTokenizer__peek_token(struct test_Tokenizer *self) {
+struct test_Token ptest_Tokenizer__peek_token(struct test_Tokenizer *self) {
 #line 232 "tests/99__calculator/test.code"
     if (self->current_token.variant == 0) {
 #line 233 "tests/99__calculator/test.code"
-        self->current_token = test__pTokenizer__scan_token(self);
+        self->current_token = ptest_Tokenizer__scan_token(self);
     }
 #line 235 "tests/99__calculator/test.code"
     return self->current_token;
 }
 
 #line 238 "tests/99__calculator/test.code"
-struct test_Token test__pTokenizer__next_token(struct test_Tokenizer *self) {
+struct test_Token ptest_Tokenizer__next_token(struct test_Tokenizer *self) {
 #line 239 "tests/99__calculator/test.code"
-    struct test_Token token = test__pTokenizer__peek_token(self);
+    struct test_Token token = ptest_Tokenizer__peek_token(self);
 #line 240 "tests/99__calculator/test.code"
     self->current_token = (struct test_Token){.variant = 0};
 #line 241 "tests/99__calculator/test.code"
@@ -379,7 +379,7 @@ struct test_Token test__pTokenizer__next_token(struct test_Tokenizer *self) {
 }
 
 #line 244 "tests/99__calculator/test.code"
-struct test_Token test__pTokenizer__scan_token(struct test_Tokenizer *self) {
+struct test_Token ptest_Tokenizer__scan_token(struct test_Tokenizer *self) {
 #line 245 "tests/99__calculator/test.code"
     while (self->data[self->index] == ' ') {
 #line 246 "tests/99__calculator/test.code"
@@ -395,7 +395,7 @@ struct test_Token test__pTokenizer__scan_token(struct test_Tokenizer *self) {
 #line 252 "tests/99__calculator/test.code"
     if (ch >= '0' && ch <= '9') {
 #line 253 "tests/99__calculator/test.code"
-        return test__pTokenizer__scan_number_token(self);
+        return ptest_Tokenizer__scan_number_token(self);
     }
 #line 255 "tests/99__calculator/test.code"
     self->index = self->index + 1;
@@ -424,7 +424,7 @@ struct test_Token test__pTokenizer__scan_token(struct test_Tokenizer *self) {
 }
 
 #line 274 "tests/99__calculator/test.code"
-struct test_Token test__pTokenizer__scan_number_token(struct test_Tokenizer *self) {
+struct test_Token ptest_Tokenizer__scan_number_token(struct test_Tokenizer *self) {
 #line 275 "tests/99__calculator/test.code"
     int32_t start = self->index;
 #line 276 "tests/99__calculator/test.code"
@@ -448,7 +448,7 @@ struct test_Token test__pTokenizer__scan_number_token(struct test_Tokenizer *sel
 }
 
 #line 338 "tests/99__calculator/test.code"
-struct test_Span test__pToken__span(struct test_Token *self) {
+struct test_Span ptest_Token__span(struct test_Token *self) {
 #line 339 "tests/99__calculator/test.code"
     struct test_Token *__switch_339_value__ = self;
 #line 340 "tests/99__calculator/test.code"
@@ -494,55 +494,55 @@ struct test_Span test__pToken__span(struct test_Token *self) {
 }
 
 #line 367 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__write__1_token(struct test_Writer *self, struct test_Token *token) {
+struct test_Writer *ptest_Writer__write__1_token(struct test_Writer *self, struct test_Token *token) {
 #line 368 "tests/99__calculator/test.code"
     struct test_Token *__switch_368_value__ = token;
 #line 369 "tests/99__calculator/test.code"
     if (__switch_368_value__->variant == 1) {
 #line 370 "tests/99__calculator/test.code"
-        return test__pWriter__write__1_signed(test__pWriter__write(self, (struct String){.data = "Number: ", .length = 8}), __switch_368_value__->variant_1.value);
+        return ptest_Writer__write__1_signed(ptest_Writer__write(self, (struct String){.data = "Number: ", .length = 8}), __switch_368_value__->variant_1.value);
     }
 #line 372 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 2) {
 #line 373 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Plus", .length = 4});
+        return ptest_Writer__write(self, (struct String){.data = "Plus", .length = 4});
     }
 #line 375 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 3) {
 #line 376 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Minus", .length = 5});
+        return ptest_Writer__write(self, (struct String){.data = "Minus", .length = 5});
     }
 #line 378 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 4) {
 #line 379 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Multiply", .length = 8});
+        return ptest_Writer__write(self, (struct String){.data = "Multiply", .length = 8});
     }
 #line 381 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 5) {
 #line 382 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Divide", .length = 6});
+        return ptest_Writer__write(self, (struct String){.data = "Divide", .length = 6});
     }
 #line 384 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 6) {
 #line 385 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Stop", .length = 4});
+        return ptest_Writer__write(self, (struct String){.data = "Stop", .length = 4});
     }
 #line 387 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 7) {
 #line 388 "tests/99__calculator/test.code"
-        return test__pWriter__write(test__pWriter__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_368_value__->variant_7.message);
+        return ptest_Writer__write(ptest_Writer__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_368_value__->variant_7.message);
     }
 #line 390 "tests/99__calculator/test.code"
     else if (__switch_368_value__->variant == 0) {
 #line 391 "tests/99__calculator/test.code"
-        return test__pWriter__write(self, (struct String){.data = "Nil!", .length = 4});
+        return ptest_Writer__write(self, (struct String){.data = "Nil!", .length = 4});
     }
 #line 394 "tests/99__calculator/test.code"
     return self;
 }
 
 #line 403 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__write__1_char(struct test_Writer *self, uint8_t c) {
+struct test_Writer *ptest_Writer__write__1_char(struct test_Writer *self, uint8_t c) {
 #line 404 "tests/99__calculator/test.code"
     self->write_char(self->self, c);
 #line 405 "tests/99__calculator/test.code"
@@ -550,33 +550,33 @@ struct test_Writer *test__pWriter__write__1_char(struct test_Writer *self, uint8
 }
 
 #line 408 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__write__1_signed(struct test_Writer *self, int32_t value) {
+struct test_Writer *ptest_Writer__write__1_signed(struct test_Writer *self, int32_t value) {
 #line 410 "tests/99__calculator/test.code"
     if (value < 0) {
 #line 411 "tests/99__calculator/test.code"
-        test__pWriter__write__1_char(self, '-');
+        ptest_Writer__write__1_char(self, '-');
 #line 412 "tests/99__calculator/test.code"
-        return test__pWriter__write__1_signed(self, -value);
+        return ptest_Writer__write__1_signed(self, -value);
     }
 #line 414 "tests/99__calculator/test.code"
     if (value >= 10) {
 #line 415 "tests/99__calculator/test.code"
-        test__pWriter__write__1_signed(self, value / 10);
+        ptest_Writer__write__1_signed(self, value / 10);
     }
 #line 417 "tests/99__calculator/test.code"
-    return test__pWriter__write__1_char(self, ((uint8_t) (value % 10)) + '0');
+    return ptest_Writer__write__1_char(self, ((uint8_t) (value % 10)) + '0');
 }
 
 #line 420 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__end_line(struct test_Writer *self) {
+struct test_Writer *ptest_Writer__end_line(struct test_Writer *self) {
 #line 421 "tests/99__calculator/test.code"
-    test__pWriter__write__1_char(self, '\n');
+    ptest_Writer__write__1_char(self, '\n');
 #line 422 "tests/99__calculator/test.code"
     return self;
 }
 
 #line 433 "tests/99__calculator/test.code"
-struct test_String_Builder *test__pString_Builder__write__1_char(struct test_String_Builder *self, uint8_t c) {
+struct test_String_Builder *ptest_String_Builder__write__1_char(struct test_String_Builder *self, uint8_t c) {
 #line 434 "tests/99__calculator/test.code"
     if (self->length == self->data_size) {
 #line 435 "tests/99__calculator/test.code"
@@ -593,9 +593,9 @@ struct test_String_Builder *test__pString_Builder__write__1_char(struct test_Str
 }
 
 #line 446 "tests/99__calculator/test.code"
-struct String test__pString_Builder__build(struct test_String_Builder *self) {
+struct String ptest_String_Builder__build(struct test_String_Builder *self) {
 #line 447 "tests/99__calculator/test.code"
-    test__pString_Builder__write__1_char(self, 0);
+    ptest_String_Builder__write__1_char(self, 0);
 #line 448 "tests/99__calculator/test.code"
     struct String string = (struct String){.data = self->data, .length = self->length - 1};
 #line 452 "tests/99__calculator/test.code"
@@ -615,13 +615,13 @@ struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_
 }
 
 #line 467 "tests/99__calculator/test.code"
-void test__pString_Builder__write_char(struct test_String_Builder *self, uint8_t c) {
+void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c) {
 #line 468 "tests/99__calculator/test.code"
-    test__pString_Builder__write__1_char(self, c);
+    ptest_String_Builder__write__1_char(self, c);
 }
 
 #line 478 "tests/99__calculator/test.code"
-struct test_Writer *test__pWriter__write(struct test_Writer *self, struct String string) {
+struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct String string) {
 #line 479 "tests/99__calculator/test.code"
     struct String string_copy = string;
 #line 480 "tests/99__calculator/test.code"
@@ -631,7 +631,7 @@ struct test_Writer *test__pWriter__write(struct test_Writer *self, struct String
 #line 482 "tests/99__calculator/test.code"
     while (index < string.length) {
 #line 483 "tests/99__calculator/test.code"
-        test__pWriter__write__1_char(self, string_data[index]);
+        ptest_Writer__write__1_char(self, string_data[index]);
 #line 484 "tests/99__calculator/test.code"
         index = index + 1;
     }
@@ -640,7 +640,7 @@ struct test_Writer *test__pWriter__write(struct test_Writer *self, struct String
 }
 
 #line 499 "tests/99__calculator/test.code"
-void test__pFILE__write_char(struct test_FILE *self, uint8_t c) {
+void ptest_FILE__write_char(struct test_FILE *self, uint8_t c) {
 #line 500 "tests/99__calculator/test.code"
     fputc(((int32_t) c), __stdoutp);
 }

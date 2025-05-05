@@ -25,9 +25,9 @@ struct test_Circle {
     int32_t radius;
 };
 
-int32_t test__pSquare__area(struct test_Square *self);
+int32_t ptest_Square__area(struct test_Square *self);
 
-int32_t test__pCircle__area(struct test_Circle *self);
+int32_t ptest_Circle__area(struct test_Circle *self);
 
 int32_t test__main();
 

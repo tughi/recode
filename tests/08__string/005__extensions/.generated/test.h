@@ -17,9 +17,9 @@ struct String *__alloc__String__(struct String value);
 
 void *malloc(uintmax_t size);
 
-struct String test__str__concat(struct String self, struct String other);
+struct String str__concat(struct String self, struct String other);
 
-bool test__str__equals(struct String self, struct String other);
+bool str__equals(struct String self, struct String other);
 
 int32_t test__main();
 

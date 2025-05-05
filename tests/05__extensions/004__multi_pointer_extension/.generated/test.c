@@ -5,7 +5,7 @@
 #include "test.h"
 
 #line 1 "tests/05__extensions/004__multi_pointer_extension/test.code"
-int32_t test__d_u8_b__length(uint8_t *self) {
+int32_t d_u8_b__length(uint8_t *self) {
 #line 2 "tests/05__extensions/004__multi_pointer_extension/test.code"
     int32_t length = 0;
 #line 3 "tests/05__extensions/004__multi_pointer_extension/test.code"
@@ -25,7 +25,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         return 1;
     }
 #line 13 "tests/05__extensions/004__multi_pointer_extension/test.code"
-    if (test__d_u8_b__length(argv[1]) != 4) {
+    if (d_u8_b__length(argv[1]) != 4) {
 #line 14 "tests/05__extensions/004__multi_pointer_extension/test.code"
         return 2;
     }
