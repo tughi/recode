@@ -335,12 +335,16 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
     pWriter__write__cstring(writer, "proc ");
     Checked_Procedure_Parameter *parameter = procedure_symbol->procedure_type->first_parameter;
     if (procedure_symbol->receiver_type != NULL) {
-        pWriter__write__checked_type(writer, procedure_symbol->receiver_type);
-        pWriter__write__char(writer, '.');
-        pWriter__write__string(writer, procedure_symbol->procedure_name);
         pWriter__write__char(writer, '(');
+        pWriter__write__checked_type(writer, procedure_symbol->receiver_type);
+        pWriter__write__cstring(writer, ").");
+        pWriter__write__string(writer, procedure_symbol->procedure_name);
+        pWriter__write__cstring(writer, "(anon");
         if (parameter != NULL) {
-            pWriter__write__string(writer, parameter->name);
+            if (!Checked_Type__equals(procedure_symbol->receiver_type, parameter->type) && parameter->label != NULL) {
+                // Parameter type mismatch: expected the receiver type.
+                panic();
+            }
             parameter = parameter->next_parameter;
             if (parameter != NULL) {
                 pWriter__write__cstring(writer, ", ");
@@ -351,11 +355,11 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
         pWriter__write__char(writer, '(');
     }
     while (parameter != NULL) {
-        if (parameter->label != NULL && !String__equals_string(parameter->label, parameter->name)) {
+        if (parameter->label != NULL) {
             pWriter__write__string(writer, parameter->label);
-            pWriter__write__char(writer, ' ');
+        } else {
+            pWriter__write__cstring(writer, "anon");
         }
-        pWriter__write__string(writer, parameter->name);
         pWriter__write__cstring(writer, ": ");
         pWriter__write__checked_type(writer, parameter->type);
         parameter = parameter->next_parameter;

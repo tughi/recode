@@ -357,15 +357,23 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
             pWriter__write__char(stderr_writer, '(');
             pWriter__write__checked_type(stderr_writer, receiver_expression->type);
             pWriter__write__cstring(stderr_writer, ").");
+            pWriter__write__token(stderr_writer, symbol_name);
+            pWriter__write__cstring(stderr_writer, "(anon");
+            if (first_parsed_argument != NULL) {
+                pWriter__write__cstring(stderr_writer, ", ");
+            }
+        } else {
+            pWriter__write__token(stderr_writer, symbol_name);
+            pWriter__write__char(stderr_writer, '(');
         }
-        pWriter__write__token(stderr_writer, symbol_name);
-        pWriter__write__char(stderr_writer, '(');
         if (first_parsed_argument != NULL) {
             Parsed_Call_Argument *parsed_argument = first_parsed_argument;
             while (parsed_argument != NULL) {
                 if (parsed_argument->name != NULL) {
                     pWriter__write__string(stderr_writer, parsed_argument->name->super.lexeme);
                     pWriter__write__cstring(stderr_writer, ": ");
+                } else {
+                    pWriter__write__cstring(stderr_writer, "anon: ");
                 }
                 Checked_Type *argument_type = Checker__check_expression(self, parsed_argument->expression, NULL)->type;
                 pWriter__write__checked_type(stderr_writer, argument_type);
@@ -391,7 +399,6 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
                     }
                 }
             }
-            panic();
         }
         panic();
     }
