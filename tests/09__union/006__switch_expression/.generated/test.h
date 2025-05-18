@@ -6,10 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Value;
-
-struct test_Literal;
-
 struct test_Value {
     int32_t variant;
     union {

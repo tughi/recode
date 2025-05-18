@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Animal;
-
 struct test_Animal {
     void *self;
     int32_t (*legs)(void *self);

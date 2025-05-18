@@ -1,3 +1,0 @@
-proc bar() -> i32 {
-    return 42
-}

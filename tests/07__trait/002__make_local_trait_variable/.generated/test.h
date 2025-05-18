@@ -6,10 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Dog;
-
-struct test_Animal;
-
 struct test_Dog {
     int32_t age;
 };

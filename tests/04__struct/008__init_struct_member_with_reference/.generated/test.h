@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Number;
-
 struct test_Number {
     int32_t value;
     struct test_Number *next;

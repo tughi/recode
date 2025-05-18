@@ -1,0 +1,6 @@
+import source
+
+proc main() -> i32 {
+    let span = source.Span(start: 0, end: 42)
+    return span.end - 42
+}

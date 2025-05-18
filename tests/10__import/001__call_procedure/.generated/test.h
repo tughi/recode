@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "foo.h"
+#include "deep_thought.h"
 
 int32_t test__main();
 

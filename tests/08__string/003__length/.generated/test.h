@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct String;
-
 struct String {
     uint8_t *data;
     uintmax_t length;

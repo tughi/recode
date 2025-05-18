@@ -6,12 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Shape;
-
-struct test_Square;
-
-struct test_Circle;
-
 struct test_Shape {
     void *self;
     int32_t (*area)(void *self);

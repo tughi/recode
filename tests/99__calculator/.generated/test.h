@@ -6,46 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Parser;
-
-struct test_Tokenizer;
-
-struct test_Token;
-
-struct test_Number;
-
-struct test_Span;
-
-struct test_Plus;
-
-struct test_Minus;
-
-struct test_Multiply;
-
-struct test_Divide;
-
-struct test_Stop;
-
-struct test_Error;
-
-struct String;
-
-struct test_Expression;
-
-struct test_Addition;
-
-struct test_Division;
-
-struct test_Multiplication;
-
-struct test_Subtraction;
-
-struct test_Writer;
-
-struct test_String_Builder;
-
-struct test_FILE;
-
 struct test_Span {
     int32_t start;
     int32_t end;

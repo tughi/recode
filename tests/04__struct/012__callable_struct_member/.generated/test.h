@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Function;
-
 struct test_Function {
     int32_t (*run)();
 };

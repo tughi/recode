@@ -1,6 +1,0 @@
-import foo
-
-proc main() -> i32 {
-    let foo: foo.Foo
-    return 0
-}

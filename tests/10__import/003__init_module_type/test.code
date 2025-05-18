@@ -1,7 +1,0 @@
-import foo
-
-proc main() -> i32 {
-    let bar = foo.Foo(value: 42)
-
-    return bar.value - 42
-}

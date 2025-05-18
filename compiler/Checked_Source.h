@@ -37,11 +37,13 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
 
+struct Checked_Type_Symbol;
 struct Checked_Type_Dependency;
 
 typedef struct Checked_Type {
     Checked_Type_Kind kind;
     Source_Location location;
+    struct Checked_Type_Symbol *symbol;
     struct Checked_Type *next_type;
     struct Checked_Type_Dependency *first_dependency;
 

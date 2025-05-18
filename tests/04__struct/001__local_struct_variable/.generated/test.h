@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Point;
-
 struct test_Point {
     int32_t x;
     int32_t y;

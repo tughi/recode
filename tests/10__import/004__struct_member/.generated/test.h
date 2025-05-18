@@ -5,7 +5,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "foo.h"
+#include "source.h"
+
+struct test_Token {
+    struct source_Span span;
+};
 
 int32_t test__main();
 

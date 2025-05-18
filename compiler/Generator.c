@@ -784,10 +784,30 @@ void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type
     pWriter__write__cstring(self->writer, "}\n\n");
 }
 
+void Generator__declare_type(Generator *self, Checked_Type *type) {
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        Generator__declare_external_type(self, (Checked_External_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__STRUCT:
+        Generator__declare_struct(self, (Checked_Struct_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__TRAIT:
+        Generator__declare_trait(self, (Checked_Trait_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__UNION:
+        Generator__declare_union(self, (Checked_Union_Type *)type);
+        break;
+    default:
+        panic();
+    }
+    pWriter__end_line(self->writer);
+}
+
 void Generator__define_type(Generator *self, Checked_Type *type) {
     struct Checked_Type_Dependency *dependency = type->first_dependency;
     while (dependency != NULL) {
-        if (!dependency->type->has_generated_definition) {
+        if (!dependency->type->has_generated_definition && dependency->type->symbol->super.module == type->symbol->super.module) {
             Generator__define_type(self, dependency->type);
         }
         dependency = dependency->next_dependency;
@@ -851,34 +871,6 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     }
     pWriter__end_line(generator.writer);
 
-    /* Declare all defined types */
-    checked_symbol = checked_source->symbols->first_symbol;
-    while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->module == checked_module) {
-            Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-            switch (named_type->super.kind) {
-            case CHECKED_TYPE_KIND__EXTERNAL:
-                Generator__declare_external_type(&generator, (Checked_External_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__STRUCT:
-                Generator__declare_struct(&generator, (Checked_Struct_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__TRAIT:
-                Generator__declare_trait(&generator, (Checked_Trait_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__UNION:
-                Generator__declare_union(&generator, (Checked_Union_Type *)named_type);
-                break;
-            default:
-                panic();
-            }
-            pWriter__end_line(generator.writer);
-        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
-            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
-        }
-        checked_symbol = checked_symbol->next_symbol;
-    }
-
     /* Generate all defined types */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
@@ -887,6 +879,8 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
             if (!type->has_generated_definition) {
                 Generator__define_type(&generator, type);
             }
+        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
+            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
         }
         checked_symbol = checked_symbol->next_symbol;
     }

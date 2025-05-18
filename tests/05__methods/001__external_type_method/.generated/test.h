@@ -6,8 +6,6 @@
 #include <stddef.h>
 
 
-struct test_FILE;
-
 extern struct test_FILE *__stdoutp;
 
 int32_t test__main();

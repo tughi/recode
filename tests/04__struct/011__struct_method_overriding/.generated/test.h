@@ -6,10 +6,6 @@
 #include <stddef.h>
 
 
-struct test_Number;
-
-struct test_Boolean;
-
 struct test_Number {
     int32_t value;
 };
