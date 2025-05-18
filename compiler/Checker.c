@@ -37,18 +37,17 @@ typedef struct Checker {
     Checked_Type *return_type;
 } Checker;
 
-Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_types) {
+Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_types, Checked_Symbols *global_symbols) {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
 
     checker->parsed_source = parsed_source;
 
     checker->builtin_types = builtin_types;
-    checker->global_symbols = checker->symbols = Checked_Symbols__create(builtin_types->symbols);
+    checker->global_symbols = checker->symbols = global_symbols;
 
     checker->checked_module = (Checked_Module *)malloc(sizeof(Checked_Module));
     checker->checked_module->name = parsed_source->package_name;
     checker->checked_module->source = parsed_source->source;
-    checker->checked_module->symbols = checker->global_symbols;
 
     checker->receiver_type = NULL;
     checker->return_type = NULL;
@@ -57,16 +56,18 @@ Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_ty
 }
 
 void Checker__create_type_symbol(Checker *self, String *symbol_name, Checked_Named_Type *type) {
-    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(type->super.location, symbol_name, (Checked_Type *)self->builtin_types->type_type, type);
+    Checked_Type_Symbol *type_symbol = Checked_Type_Symbol__create(self->checked_module, type->super.location, symbol_name, (Checked_Type *)self->builtin_types->type_type, type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_symbol);
 }
 
-Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, String *name) {
+Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, Checked_Module *module, String *name) {
     while (symbols != NULL) {
         Checked_Symbol *symbol = symbols->last_symbol;
         while (symbol != NULL) {
             if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE && String__equals_string(name, symbol->name)) {
-                return ((Checked_Type_Symbol *)symbol)->named_type;
+                if (module == NULL || symbol->module == NULL || module == symbol->module) {
+                    return ((Checked_Type_Symbol *)symbol)->named_type;
+                }
             }
             symbol = symbol->prev_symbol;
         }
@@ -76,7 +77,7 @@ Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, String 
 }
 
 Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
-    return Checked_Symbols__find_type(self->symbols, name);
+    return Checked_Symbols__find_type(self->symbols, self->checked_module, name);
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
@@ -123,7 +124,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
     case PARSED_TYPE_KIND__NAMED: {
         Parsed_Named_Type *parsed_named_type = (Parsed_Named_Type *)parsed_type;
         if (parsed_named_type->module != NULL) {
-            Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_named_type->module->lexeme);
+            Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->global_symbols, self->checked_module, parsed_named_type->module->lexeme);
             if (symbol == NULL) {
                 pWriter__begin_location_message(stderr_writer, parsed_named_type->module->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Undefined module");
@@ -137,8 +138,8 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
                 panic();
             }
             Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
-            Checked_Module *module = import_symbol->module;
-            Checked_Named_Type *type = Checked_Symbols__find_type(module->symbols, parsed_named_type->name);
+            Checked_Module *other_module = import_symbol->other_module;
+            Checked_Named_Type *type = Checked_Symbols__find_type(self->global_symbols, other_module, parsed_named_type->name);
             if (type == NULL) {
                 pWriter__begin_location_message(stderr_writer, parsed_named_type->super.location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Undefined type");
@@ -318,9 +319,8 @@ typedef struct Checked_Callable {
 } Checked_Callable;
 
 Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_name, Parsed_Call_Argument *first_parsed_argument, Checked_Expression *receiver_expression, Source_Location location) {
-    Checked_Symbols *global_symbols = self->global_symbols;
     if (receiver_expression == NULL) {
-        Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, symbol_name->lexeme);
+        Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_module, symbol_name->lexeme);
         if (symbol != NULL && symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE) {
             if (symbol->type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
                 pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
@@ -343,13 +343,12 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
             panic();
         }
         Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
-        Checked_Module *module = import_symbol->module;
-        global_symbols = module->symbols; // use module symbols for lookup
-        receiver_expression = NULL;       // clear receiver expression since it was used just to find the module
+        Checked_Module *other_module = import_symbol->other_module;
+        receiver_expression = NULL; // clear receiver expression since it was used just to find the module
     }
 
     int similar_procedure_symbols = 0;
-    Checked_Procedure_Symbol *procedure_symbol = Checked_Symbols__find_procedure_symbol(global_symbols, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_procedure_symbols);
+    Checked_Procedure_Symbol *procedure_symbol = Checked_Symbols__find_procedure_symbol(self->global_symbols, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_procedure_symbols);
     if (procedure_symbol == NULL) {
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unknown callable: ");
@@ -388,7 +387,7 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         if (similar_procedure_symbols > 0) {
             pWriter__write__cstring(stderr_writer, "Similar callables:");
             pWriter__end_line(stderr_writer);
-            Checked_Symbol *symbol = global_symbols->first_symbol;
+            Checked_Symbol *symbol = self->global_symbols->first_symbol;
             for (; symbol != NULL; symbol = symbol->next_symbol) {
                 if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                     procedure_symbol = (Checked_Procedure_Symbol *)symbol;
@@ -515,8 +514,8 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
                     panic();
                 }
                 Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
-                Checked_Module *module = import_symbol->module;
-                Checked_Named_Type *named_type = Checked_Symbols__find_type(module->symbols, parsed_member_access_expression->member_name->lexeme);
+                Checked_Module *other_module = import_symbol->other_module;
+                Checked_Named_Type *named_type = Checked_Symbols__find_type(self->global_symbols, other_module, parsed_member_access_expression->member_name->lexeme);
                 if (named_type != NULL) {
                     return Checker__check_init_expression(self, named_type, parsed_expression->first_argument, parsed_expression->super.location);
                 }
@@ -1053,7 +1052,7 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_expression->name->lexeme);
+    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_module, parsed_expression->name->lexeme);
     if (symbol == NULL) {
         if (expected_type == NULL) {
             Checked_Symbol *procedure_symbol = NULL;
@@ -1488,7 +1487,7 @@ Checked_If_Statement *Checker__check_if_statement(Checker *self, Parsed_If_State
             panic();
         }
         self->symbols = Checked_Symbols__create(self->symbols);
-        Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_union_variant_expression->union_expression, is_union_variant_expression->union_variant);
+        Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(self->checked_module, parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_union_variant_expression->union_expression, is_union_variant_expression->union_variant);
         Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
         true_statement = Checker__check_statement(self, parsed_statement->true_statement);
         self->symbols = self->symbols->parent;
@@ -1600,7 +1599,7 @@ Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *s
 
             if (parsed_switch_case->variant.alias != NULL) {
                 // Create a symbol for the union variant
-                Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, union_expression, union_variant);
+                Checked_Union_Switch_Variant_Symbol *variant_symbol = Checked_Union_Switch_Variant_Symbol__create(self->checked_module, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, union_expression, union_variant);
                 Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
             }
 
@@ -1672,7 +1671,7 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
             Checker__require_same_type(self, variable_type, expression->type, expression->location);
         }
     }
-    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type);
+    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(self->checked_module, parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variable);
     return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, expression, parsed_statement->is_external);
 }
@@ -1763,7 +1762,7 @@ void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statem
         procedure_parameter_index++;
     }
 
-    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Symbol__create(parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, procedure_name, procedure_type, receiver_type));
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Symbol__create(self->checked_module, parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, procedure_name, procedure_type, receiver_type));
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
@@ -1841,7 +1840,7 @@ void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Stateme
         /* Create a symbol for each procedure parameter */
         Checked_Procedure_Parameter *parameter = procedure_type->first_parameter;
         while (parameter != NULL) {
-            Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type));
+            Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Procedure_Parameter_Symbol__create(self->checked_module, parameter->location, parameter->name, parameter->type));
             parameter = parameter->next_parameter;
         }
     }
@@ -1874,7 +1873,7 @@ Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statem
 void Checker__check_module(Checker *self);
 
 void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *parsed_statement) {
-    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_statement->import_name);
+    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_module, parsed_statement->import_name);
     if (symbol != NULL) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Import symbol conflicts with existing symbol");
@@ -1883,7 +1882,7 @@ void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *par
     }
 
     // TODO: Check if module was already checked
-    Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types);
+    Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types, self->global_symbols);
     Checker__check_module(module_checker);
 
     /* Link imported module to current module */
@@ -1893,7 +1892,7 @@ void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *par
     }
     last_checked_module->next_module = module_checker->checked_module;
 
-    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(parsed_statement->super.location, parsed_statement->import_name, (Checked_Type *)self->builtin_types->module_type, module_checker->checked_module);
+    Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(self->checked_module, parsed_statement->super.location, parsed_statement->import_name, (Checked_Type *)self->builtin_types->module_type, module_checker->checked_module);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)import_symbol);
 }
 
@@ -1985,75 +1984,77 @@ void Checker__check_module(Checker *self) {
     }
 }
 
-Builtin_Types *Builtin_Symbols__create() {
+Builtin_Types *Builtin_Types__create() {
     Builtin_Types *builtin_types = (Builtin_Types *)malloc(sizeof(Builtin_Types));
     builtin_types->symbols = Checked_Symbols__create(NULL);
 
     Source_Location location = {};
 
     builtin_types->type_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TYPE, sizeof(Checked_Named_Type), location, String__create_from("Type"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->type_type->super.location, builtin_types->type_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->type_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->type_type->super.location, builtin_types->type_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->type_type));
 
     builtin_types->any_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ANY, sizeof(Checked_Named_Type), location, String__create_from("Any"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->any_type->super.location, builtin_types->any_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->any_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->any_type->super.location, builtin_types->any_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->any_type));
 
     builtin_types->bool_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->bool_type->super.location, builtin_types->bool_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->bool_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->bool_type->super.location, builtin_types->bool_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->bool_type));
 
     builtin_types->i16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I16, sizeof(Checked_Named_Type), location, String__create_from("i16"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->i16_type->super.location, builtin_types->i16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i16_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i16_type->super.location, builtin_types->i16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i16_type));
 
     builtin_types->i32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I32, sizeof(Checked_Named_Type), location, String__create_from("i32"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->i32_type->super.location, builtin_types->i32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i32_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i32_type->super.location, builtin_types->i32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i32_type));
 
     builtin_types->i64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I64, sizeof(Checked_Named_Type), location, String__create_from("i64"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->i64_type->super.location, builtin_types->i64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i64_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i64_type->super.location, builtin_types->i64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i64_type));
 
     builtin_types->i8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I8, sizeof(Checked_Named_Type), location, String__create_from("i8"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->i8_type->super.location, builtin_types->i8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i8_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i8_type->super.location, builtin_types->i8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i8_type));
 
     builtin_types->isize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ISIZE, sizeof(Checked_Named_Type), location, String__create_from("isize"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->isize_type->super.location, builtin_types->isize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->isize_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->isize_type->super.location, builtin_types->isize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->isize_type));
 
     builtin_types->module_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__MODULE, sizeof(Checked_Named_Type), location, String__create_from("Module"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->module_type->super.location, builtin_types->module_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->module_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->module_type->super.location, builtin_types->module_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->module_type));
 
     builtin_types->nil_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NIL, sizeof(Checked_Named_Type), location, String__create_from("nil"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->nil_type->super.location, builtin_types->nil_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->nil_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->nil_type->super.location, builtin_types->nil_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->nil_type));
 
     builtin_types->nothing_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NOTHING, sizeof(Checked_Named_Type), location, String__create_from("Nothing"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->nothing_type->super.location, builtin_types->nothing_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->nothing_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->nothing_type->super.location, builtin_types->nothing_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->nothing_type));
 
     builtin_types->null_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NULL, sizeof(Checked_Named_Type), location, String__create_from("Null"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->null_type->super.location, builtin_types->null_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->null_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->null_type->super.location, builtin_types->null_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->null_type));
 
     builtin_types->string_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRING, sizeof(Checked_Named_Type), location, String__create_from("str"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->string_type->super.location, builtin_types->string_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->string_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->string_type->super.location, builtin_types->string_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->string_type));
 
     builtin_types->u16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U16, sizeof(Checked_Named_Type), location, String__create_from("u16"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->u16_type->super.location, builtin_types->u16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u16_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u16_type->super.location, builtin_types->u16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u16_type));
 
     builtin_types->u32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U32, sizeof(Checked_Named_Type), location, String__create_from("u32"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->u32_type->super.location, builtin_types->u32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u32_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u32_type->super.location, builtin_types->u32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u32_type));
 
     builtin_types->u64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U64, sizeof(Checked_Named_Type), location, String__create_from("u64"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->u64_type->super.location, builtin_types->u64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u64_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u64_type->super.location, builtin_types->u64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u64_type));
 
     builtin_types->u8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), location, String__create_from("u8"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->u8_type->super.location, builtin_types->u8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u8_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u8_type->super.location, builtin_types->u8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u8_type));
 
     builtin_types->usize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), location, String__create_from("usize"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(builtin_types->usize_type->super.location, builtin_types->usize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->usize_type));
+    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->usize_type->super.location, builtin_types->usize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->usize_type));
 
     return builtin_types;
 }
 
 Checked_Source *check(Parsed_Source *parsed_source) {
-    Checker *type_checker = Checker__create(parsed_source, Builtin_Symbols__create());
+    Builtin_Types *builtin_types = Builtin_Types__create();
+    Checker *checker = Checker__create(parsed_source, builtin_types, Checked_Symbols__create(builtin_types->symbols));
 
-    Checker__check_module(type_checker);
+    Checker__check_module(checker);
 
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
-    checked_source->first_module = type_checker->checked_module;
+    checked_source->first_module = checker->checked_module;
+    checked_source->symbols = checker->global_symbols;
     return checked_source;
 }
