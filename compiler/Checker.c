@@ -940,6 +940,8 @@ Checked_Expression *Checker__check_logic_or_expression(Checker *self, Parsed_Log
     return (Checked_Expression *)Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
+Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name, Checked_Type *expected_type);
+
 Checked_Expression *Checker__check_member_access_expression(Checker *self, Parsed_Member_Access_Expression *parsed_expression) {
     Checked_Expression *object_expression = Checker__check_expression(self, parsed_expression->object_expression, NULL);
     Checked_Type *object_type = object_expression->type;
@@ -957,6 +959,24 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
         panic();
     case CHECKED_TYPE_KIND__STRUCT:
         break;
+    case CHECKED_TYPE_KIND__MODULE: {
+        if (object_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+            Checked_Symbol *symbol = ((Checked_Symbol_Expression *)object_expression)->symbol;
+            if (symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
+                pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Not an import");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
+            Checked_Module *other_module = import_symbol->other_module;
+            return Checker__check_module_symbol_expression(self, other_module, parsed_expression->super.location, parsed_expression->member_name, NULL);
+        }
+        pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Not an import");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     default:
         pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not a struct type");
@@ -1037,59 +1057,63 @@ Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Sub
 }
 
 Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression, Checked_Type *expected_type) {
+    return Checker__check_module_symbol_expression(self, self->checked_module, parsed_expression->super.location, parsed_expression->name, expected_type);
+}
+
+Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name, Checked_Type *expected_type) {
     if (expected_type != NULL && expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
         Checked_Symbol *symbol = self->global_symbols->first_symbol;
         for (; symbol != NULL; symbol = symbol->next_symbol) {
             if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                 Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
-                if (String__equals_string(procedure_symbol->procedure_name, parsed_expression->name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
-                    return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, expected_type, symbol);
+                if (String__equals_string(procedure_symbol->procedure_name, symbol_name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
+                    return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, expected_type, symbol);
                 }
             }
         }
-        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined procedure: ");
-        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+        pWriter__write__string(stderr_writer, symbol_name->lexeme);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_module, parsed_expression->name->lexeme);
+    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, checked_module, symbol_name->lexeme);
     if (symbol == NULL) {
         if (expected_type == NULL) {
             Checked_Symbol *procedure_symbol = NULL;
             int procedure_simbols = 0;
             symbol = self->global_symbols->first_symbol;
             for (; symbol != NULL; symbol = symbol->next_symbol) {
-                if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_string(((Checked_Procedure_Symbol *)symbol)->procedure_name, parsed_expression->name->lexeme)) {
+                if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_string(((Checked_Procedure_Symbol *)symbol)->procedure_name, symbol_name->lexeme)) {
                     procedure_symbol = symbol;
                     procedure_simbols++;
                 }
             }
             if (procedure_simbols == 1) {
-                return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, procedure_symbol->type, procedure_symbol);
+                return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, procedure_symbol->type, procedure_symbol);
             } else if (procedure_simbols > 1) {
-                pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+                pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Found ");
                 pWriter__write__int64(stderr_writer, procedure_simbols);
                 pWriter__write__cstring(stderr_writer, " procedures named: ");
-                pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+                pWriter__write__string(stderr_writer, symbol_name->lexeme);
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
         }
-        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined symbol: ");
-        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+        pWriter__write__string(stderr_writer, symbol_name->lexeme);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
     if (symbol->type == NULL) {
-        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Symbol without type");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol);
+    return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, symbol->type, symbol);
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
