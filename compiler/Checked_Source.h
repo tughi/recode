@@ -248,11 +248,12 @@ typedef struct Checked_Symbol {
     Source_Location location;
     String *name;
     Checked_Type *type;
+    bool is_global;
     struct Checked_Symbol *prev_symbol;
     struct Checked_Symbol *next_symbol;
 } Checked_Symbol;
 
-Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
+Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
 typedef struct Checked_Import_Symbol {
     Checked_Symbol super;
@@ -331,7 +332,7 @@ typedef struct Checked_Variable_Symbol {
     struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
-Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
 typedef struct Checked_Union_Switch_Variant_Symbol {
     Checked_Symbol super;

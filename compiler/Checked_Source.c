@@ -302,30 +302,31 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
 }
 
-Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
+Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Symbol *symbol = (Checked_Symbol *)malloc(kind_size);
     symbol->kind = kind;
     symbol->module = module;
     symbol->location = location;
     symbol->name = name;
     symbol->type = type;
+    symbol->is_global = is_global;
     symbol->prev_symbol = NULL;
     symbol->next_symbol = NULL;
     return symbol;
 }
 
 Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
-    return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), module, location, name, type);
+    return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), module, location, name, type, true);
 }
 
 Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module) {
-    Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), module, location, name, type);
+    Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), module, location, name, type, true);
     import_symbol->other_module = other_module;
     return import_symbol;
 }
 
 Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
-    Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), module, location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type));
+    Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), module, location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type), true);
     symbol->procedure_location = procedure_location;
     symbol->procedure_name = procedure_name;
     symbol->procedure_type = procedure_type;
@@ -378,23 +379,23 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
 }
 
 Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
-    return (Checked_Procedure_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER, sizeof(Checked_Procedure_Parameter_Symbol), module, location, name, type);
+    return (Checked_Procedure_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER, sizeof(Checked_Procedure_Parameter_Symbol), module, location, name, type, false);
 }
 
 Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {
-    Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), module, location, name, type);
+    Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), module, location, name, type, true);
     symbol->named_type = named_type;
     return symbol;
 }
 
-Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
-    Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type);
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
+    Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type,is_global);
     variable->statement = NULL;
     return variable;
 }
 
 Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant) {
-    Checked_Union_Switch_Variant_Symbol *symbol = (Checked_Union_Switch_Variant_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT, sizeof(Checked_Union_Switch_Variant_Symbol), module, location, name, union_variant->type);
+    Checked_Union_Switch_Variant_Symbol *symbol = (Checked_Union_Switch_Variant_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT, sizeof(Checked_Union_Switch_Variant_Symbol), module, location, name, union_variant->type, true);
     symbol->union_expression = union_expression;
     symbol->union_variant = union_variant;
     return symbol;

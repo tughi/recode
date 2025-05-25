@@ -1699,7 +1699,8 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
             Checker__require_same_type(self, variable_type, expression->type, expression->location);
         }
     }
-    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(self->checked_module, parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type);
+    bool is_global = self->symbols == self->global_symbols;
+    Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(self->checked_module, parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type, is_global);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variable);
     return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, expression, parsed_statement->is_external);
 }

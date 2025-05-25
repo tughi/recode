@@ -7,11 +7,11 @@
 #line 3 "tests/10__import/005__external_variable/test.code"
 int32_t test__main() {
 #line 4 "tests/10__import/005__external_variable/test.code"
-    fputc(52, __stdoutp);
+    fputc(((int32_t) '4'), __stdoutp);
 #line 5 "tests/10__import/005__external_variable/test.code"
-    fputc(50, __stdoutp);
+    fputc(((int32_t) '2'), __stdoutp);
 #line 6 "tests/10__import/005__external_variable/test.code"
-    fputc(10, __stdoutp);
+    fputc(((int32_t) '\n'), __stdoutp);
 #line 8 "tests/10__import/005__external_variable/test.code"
     return 0;
 }

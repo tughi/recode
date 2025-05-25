@@ -323,7 +323,13 @@ void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_E
 }
 
 void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expression *expression) {
-    if (expression->symbol->kind == CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT) {
+    switch (expression->symbol->kind) {
+    case CHECKED_SYMBOL_KIND__VARIABLE: {
+        CDECL_Variable_Name cdecl_variable_name = CDECL_Variable_Name__create((Checked_Variable_Symbol *)expression->symbol);
+        cdecl_variable_name.super.write((CDECL_Name *)&cdecl_variable_name, self->writer);
+        break;
+    }
+    case CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT: {
         Checked_Union_Switch_Variant_Symbol *variant_symbol = (Checked_Union_Switch_Variant_Symbol *)expression->symbol;
         if (variant_symbol->union_expression->temp_variable_name == NULL) {
             Generator__generate_expression(self, variant_symbol->union_expression);
@@ -337,7 +343,9 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
         }
         pWriter__write__cstring(self->writer, "variant_");
         pWriter__write__int64(self->writer, variant_symbol->union_variant->index);
-    } else {
+        break;
+    }
+    default:
         pWriter__write__string(self->writer, expression->symbol->name);
     }
 }
@@ -533,7 +541,8 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     statement->expression->temp_variable_name = String__create_from("__switch_");
     String__append_int16_t(statement->expression->temp_variable_name, statement->super.location.start_line);
     String__append_cstring(statement->expression->temp_variable_name, "_value__");
-    pWriter__write__cdecl(self->writer, statement->expression->temp_variable_name, statement->expression->type);
+    CDECL_Local_Name temp_variable_name = CDECL_Local_Name__create(statement->expression->temp_variable_name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&temp_variable_name, statement->expression->type);
     pWriter__write__cstring(self->writer, " = ");
     Generator__generate_expression(self, statement->expression);
     pWriter__write__char(self->writer, ';');
@@ -570,11 +579,19 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     }
 }
 
+void Generator__declare_variable(Generator *self, Checked_Variable_Statement *statement) {
+    pWriter__write__cstring(self->writer, "extern ");
+    CDECL_Variable_Name variable_name = CDECL_Variable_Name__create(statement->variable);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&variable_name, statement->variable->super.type);
+    pWriter__write__char(self->writer, ';');
+}
+
 void Generator__generate_variable_statement(Generator *self, Checked_Variable_Statement *statement) {
     if (statement->is_external) {
         pWriter__write__cstring(self->writer, "extern ");
     }
-    pWriter__write__cdecl(self->writer, statement->variable->super.name, statement->variable->super.type);
+    CDECL_Variable_Name variable_name = CDECL_Variable_Name__create(statement->variable);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&variable_name, statement->variable->super.type);
     if (statement->expression != NULL) {
         pWriter__write__cstring(self->writer, " = ");
         Generator__generate_expression(self, statement->expression);
@@ -657,7 +674,8 @@ void Generator__declare_external_type(Generator *self, Checked_External_Type *ex
 }
 
 void Generator__declare_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
-    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
+    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
@@ -666,7 +684,8 @@ void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *pr
         return;
     }
     Generator__write_source_location(self, procedure_symbol->super.location);
-    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
+    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, " {\n");
     Generator__generate_statements(self, procedure_symbol->checked_statements);
     pWriter__write__cstring(self->writer, "}\n\n");
@@ -686,7 +705,8 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     pWriter__write__cstring(self->writer, " {\n");
     while (struct_member != NULL) {
         pWriter__write__cstring(self->writer, "    ");
-        pWriter__write__cdecl(self->writer, struct_member->name, struct_member->type);
+        CDECL_Local_Name struct_member_name = CDECL_Local_Name__create(struct_member->name);
+        pWriter__write__cdecl(self->writer, (CDECL_Name *)&struct_member_name, struct_member->type);
         pWriter__write__cstring(self->writer, ";\n");
         struct_member = struct_member->next_member;
     }
@@ -703,7 +723,8 @@ void Generator__generate_alloc_procedure_signature(Generator *self, Checked_Name
         .data_size = 5,
         .length = 5,
     };
-    pWriter__write__cdecl(self->writer, &value, (Checked_Type *)type);
+    CDECL_Local_Name value_name = CDECL_Local_Name__create(&value);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&value_name, (Checked_Type *)type);
     pWriter__write__char(self->writer, ')');
 }
 
@@ -741,21 +762,35 @@ void Generator__declare_union(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cstring(self->writer, ";\n");
 }
 
+typedef struct CDECL_Union_Variant_Name {
+    CDECL_Name super;
+    int32_t variant_index;
+} CDECL_Union_Variant_Name;
+
+void CDECL_Union_Variant_Name__write(CDECL_Union_Variant_Name *self, Writer *writer) {
+    pWriter__write__cstring(writer, "variant_");
+    pWriter__write__int64(writer, self->variant_index);
+}
+
+CDECL_Union_Variant_Name CDECL_Union_Variant_Name__create(int32_t variant_index) {
+    CDECL_Union_Variant_Name name;
+    name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Union_Variant_Name__write;
+    name.variant_index = variant_index;
+    return name;
+}
+
 void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    int32_t variant;\n");
     Checked_Union_Variant *variant = union_type->first_variant;
     if (variant != NULL) {
-        String *variant_name = String__create();
         pWriter__write__cstring(self->writer, "    union {\n");
         while (variant != NULL) {
             if (variant->index != 0) {
-                String__clear(variant_name);
-                String__append_cstring(variant_name, "variant_");
-                String__append_int16_t(variant_name, variant->index);
                 pWriter__write__cstring(self->writer, "        ");
-                pWriter__write__cdecl(self->writer, variant_name, variant->type);
+                CDECL_Union_Variant_Name variant_name = CDECL_Union_Variant_Name__create(variant->index);
+                pWriter__write__cdecl(self->writer, (CDECL_Name *)&variant_name, variant->type);
                 pWriter__write__cstring(self->writer, ";\n");
             }
             variant = variant->next_variant;
@@ -890,7 +925,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     while (checked_symbol != NULL) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
-            Generator__generate_variable_statement(&generator, variable_symbol->statement);
+            Generator__declare_variable(&generator, variable_symbol->statement);
             pWriter__end_line(generator.writer);
             pWriter__end_line(generator.writer);
         }
@@ -957,7 +992,7 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     while (checked_symbol != NULL) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
-            if (variable_symbol->statement->expression != NULL) {
+            if (!variable_symbol->statement->is_external) {
                 Generator__generate_variable_statement(&generator, variable_symbol->statement);
                 pWriter__end_line(generator.writer);
             }
