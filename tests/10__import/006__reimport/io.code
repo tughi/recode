@@ -1,0 +1,14 @@
+import libc
+
+type Writer = trait {
+    proc write_char(self, anon c: i32) -> i32
+}
+
+proc (^Writer).write(writer, char c: i32) -> ^Writer {
+    writer.write_char(c)
+    return writer
+}
+
+proc (^libc.FILE).write_char(file, anon c: i32) -> i32 {
+    return libc.fputc(c, file)
+}

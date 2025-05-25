@@ -240,6 +240,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__U8:
     case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__ANY:
+    case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION: {
@@ -407,10 +408,10 @@ Checked_Symbols *Checked_Symbols__create(Checked_Symbols *parent) {
     return symbols;
 }
 
-Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, String *name) {
+Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Checked_Module *module, String *name) {
     Checked_Symbol *symbol = self->first_symbol;
     while (symbol != NULL) {
-        if (String__equals_string(name, symbol->name)) {
+        if (module == symbol->module && String__equals_string(name, symbol->name)) {
             return symbol;
         }
         symbol = symbol->next_symbol;
@@ -419,7 +420,7 @@ Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Stri
 }
 
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol) {
-    Checked_Symbol *other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol->name);
+    Checked_Symbol *other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol->module, symbol->name);
     if (other_symbol != NULL) {
         pWriter__begin_location_message(stderr_writer, symbol->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Symbol already defined here: ");

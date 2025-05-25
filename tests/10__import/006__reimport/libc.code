@@ -1,0 +1,5 @@
+type FILE = external
+
+let external __stdoutp: ^FILE
+
+proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external

@@ -349,7 +349,7 @@ typedef struct Checked_Symbols {
 
 Checked_Symbols *Checked_Symbols__create(Checked_Symbols *parent);
 
-Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, String *name);
+Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Checked_Module *module, String *name);
 
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol);
 
