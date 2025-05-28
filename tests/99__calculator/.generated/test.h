@@ -5,35 +5,34 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
-struct test_Span {
-    int32_t start;
-    int32_t end;
-};
+#include "calculator__source.h"
+#include "io.h"
+#include "libc.h"
+#include "os.h"
 
 struct test_Number {
-    struct test_Span span;
+    struct calculator__source_Span span;
     int32_t value;
 };
 
 struct test_Plus {
-    struct test_Span span;
+    struct calculator__source_Span span;
 };
 
 struct test_Minus {
-    struct test_Span span;
+    struct calculator__source_Span span;
 };
 
 struct test_Multiply {
-    struct test_Span span;
+    struct calculator__source_Span span;
 };
 
 struct test_Divide {
-    struct test_Span span;
+    struct calculator__source_Span span;
 };
 
 struct test_Stop {
-    struct test_Span span;
+    struct calculator__source_Span span;
 };
 
 struct String {
@@ -42,7 +41,7 @@ struct String {
 };
 
 struct test_Error {
-    struct test_Span span;
+    struct calculator__source_Span span;
     struct String message;
 };
 
@@ -70,25 +69,25 @@ struct test_Parser {
 };
 
 struct test_Addition {
-    struct test_Span span;
+    struct calculator__source_Span span;
     struct test_Expression *left;
     struct test_Expression *right;
 };
 
 struct test_Division {
-    struct test_Span span;
+    struct calculator__source_Span span;
     struct test_Expression *left;
     struct test_Expression *right;
 };
 
 struct test_Multiplication {
-    struct test_Span span;
+    struct calculator__source_Span span;
     struct test_Expression *left;
     struct test_Expression *right;
 };
 
 struct test_Subtraction {
-    struct test_Span span;
+    struct calculator__source_Span span;
     struct test_Expression *left;
     struct test_Expression *right;
 };
@@ -105,22 +104,11 @@ struct test_Expression {
     };
 };
 
-struct test_Writer {
-    void *self;
-    void (*write_char)(void *self, uint8_t c);
-};
-
 struct test_String_Builder {
     uint8_t *data;
     int32_t data_size;
     int32_t length;
 };
-
-extern struct test_FILE *__stdinp;
-
-extern struct test_FILE *__stdoutp;
-
-extern struct test_FILE *__stderrp;
 
 struct test_Parser *__alloc__test_Parser__(struct test_Parser value);
 
@@ -129,8 +117,6 @@ struct test_Tokenizer *__alloc__test_Tokenizer__(struct test_Tokenizer value);
 struct test_Token *__alloc__test_Token__(struct test_Token value);
 
 struct test_Number *__alloc__test_Number__(struct test_Number value);
-
-struct test_Span *__alloc__test_Span__(struct test_Span value);
 
 struct test_Plus *__alloc__test_Plus__(struct test_Plus value);
 
@@ -156,8 +142,6 @@ struct test_Multiplication *__alloc__test_Multiplication__(struct test_Multiplic
 
 struct test_Subtraction *__alloc__test_Subtraction__(struct test_Subtraction value);
 
-struct test_Writer *__alloc__test_Writer__(struct test_Writer value);
-
 struct test_String_Builder *__alloc__test_String_Builder__(struct test_String_Builder value);
 
 int32_t test__main(int32_t argc, uint8_t **argv);
@@ -172,9 +156,9 @@ struct test_Expression ptest_Parser__parse_multiplicative_expression(struct test
 
 struct test_Expression ptest_Parser__parse_primary_expression(struct test_Parser *self);
 
-struct test_Span ptest_Expression__span(struct test_Expression *self);
+struct calculator__source_Span ptest_Expression__span(struct test_Expression *self);
 
-struct test_Writer *ptest_Writer__write__1_expression(struct test_Writer *self, struct test_Expression *expression);
+struct io_Writer *pio_Writer__write__1_expression(struct io_Writer *self, struct test_Expression *expression);
 
 struct test_Token ptest_Tokenizer__peek_token(struct test_Tokenizer *self);
 
@@ -184,15 +168,9 @@ struct test_Token ptest_Tokenizer__scan_token(struct test_Tokenizer *self);
 
 struct test_Token ptest_Tokenizer__scan_number_token(struct test_Tokenizer *self);
 
-struct test_Span ptest_Token__span(struct test_Token *self);
+struct calculator__source_Span ptest_Token__span(struct test_Token *self);
 
-struct test_Writer *ptest_Writer__write__1_token(struct test_Writer *self, struct test_Token *token);
-
-struct test_Writer *ptest_Writer__write__1_char(struct test_Writer *self, uint8_t c);
-
-struct test_Writer *ptest_Writer__write__1_signed(struct test_Writer *self, int32_t value);
-
-struct test_Writer *ptest_Writer__end_line(struct test_Writer *self);
+struct io_Writer *pio_Writer__write__1_token(struct io_Writer *self, struct test_Token *token);
 
 struct test_String_Builder *ptest_String_Builder__write__1_char(struct test_String_Builder *self, uint8_t c);
 
@@ -204,16 +182,6 @@ struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_
 
 void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c);
 
-struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct String string);
-
-int32_t fputc(int32_t c, struct test_FILE *file);
-
-void ptest_FILE__write_char(struct test_FILE *self, uint8_t c);
-
-void *malloc(uint64_t size);
-
-void *realloc(void *block, uint64_t size);
-
-void exit(int32_t code);
+struct io_Writer *pio_Writer__write(struct io_Writer *self, struct String string);
 
 #endif // __test_H__

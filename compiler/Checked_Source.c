@@ -159,6 +159,10 @@ bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type 
     return String__equals_string(self->super.name, other->super.name);
 }
 
+bool Checked_Trait_Type__equals(Checked_Trait_Type *self, Checked_Trait_Type *other) {
+    return String__equals_string(self->super.name, other->super.name);
+}
+
 bool Checked_Union_Type__equals(Checked_Union_Type *self, Checked_Union_Type *other) {
     return String__equals_string(self->super.name, other->super.name);
 }
@@ -216,6 +220,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__STRUCT:
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
+    case CHECKED_TYPE_KIND__TRAIT:
+        return Checked_Trait_Type__equals((Checked_Trait_Type *)self, (Checked_Trait_Type *)other);
     case CHECKED_TYPE_KIND__UNION:
         return Checked_Union_Type__equals((Checked_Union_Type *)self, (Checked_Union_Type *)other);
     default:
@@ -389,7 +395,7 @@ Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_
 }
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
-    Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type,is_global);
+    Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type, is_global);
     variable->statement = NULL;
     return variable;
 }

@@ -1,0 +1,6 @@
+import libc
+
+type Span = struct {
+    start: i32
+    end: i32
+}
