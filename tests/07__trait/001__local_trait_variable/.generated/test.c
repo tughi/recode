@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 5 "tests/07__trait/001__local_trait_variable/test.code"

@@ -1,9 +1,7 @@
 #ifndef __numbers_H__
 #define __numbers_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 
 extern int32_t numbers__forty_two;

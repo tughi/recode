@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 1 "tests/02__any/001__convert/test.code"

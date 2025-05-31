@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 11 "tests/04__struct/002__make_local_struct_variable/test.code"

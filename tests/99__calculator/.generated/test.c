@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 struct test_Parser *__alloc__test_Parser__(struct test_Parser value) {
@@ -60,12 +56,6 @@ struct test_Stop *__alloc__test_Stop__(struct test_Stop value) {
 
 struct test_Error *__alloc__test_Error__(struct test_Error value) {
     struct test_Error *result = (struct test_Error *)malloc(sizeof(struct test_Error));
-    *result = value;
-    return result;
-}
-
-struct String *__alloc__String__(struct String value) {
-    struct String *result = (struct String *)malloc(sizeof(struct String));
     *result = value;
     return result;
 }
@@ -563,7 +553,7 @@ struct test_String_Builder test__make_string_builder() {
 }
 
 #line 431 "tests/99__calculator/test.code"
-struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_t initial_data_size) {
+struct test_String_Builder test__make_string_builder__0_initial_data_size(uintmax_t initial_data_size) {
 #line 432 "tests/99__calculator/test.code"
     return (struct test_String_Builder){.data = ((uint8_t *) malloc(((uint64_t) initial_data_size))), .data_size = initial_data_size, .length = 0};
 }
@@ -572,25 +562,6 @@ struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_
 void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c) {
 #line 440 "tests/99__calculator/test.code"
     ptest_String_Builder__write__1_char(self, c);
-}
-
-#line 450 "tests/99__calculator/test.code"
-struct io_Writer *pio_Writer__write(struct io_Writer *self, struct String string) {
-#line 451 "tests/99__calculator/test.code"
-    struct String string_copy = string;
-#line 452 "tests/99__calculator/test.code"
-    uint8_t *string_data = ((struct String *) (&string_copy))->data;
-#line 453 "tests/99__calculator/test.code"
-    uintmax_t index = 0;
-#line 454 "tests/99__calculator/test.code"
-    while (index < string.length) {
-#line 455 "tests/99__calculator/test.code"
-        pio_Writer__write__1_char(self, string_data[index]);
-#line 456 "tests/99__calculator/test.code"
-        index = index + 1;
-    }
-#line 458 "tests/99__calculator/test.code"
-    return self;
 }
 
 int32_t main(int argc, const char **argv) {

@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 7 "tests/01__basics/019__external_type/test.code"

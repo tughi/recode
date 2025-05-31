@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 1 "tests/03__multi_pointer/004__access_with_index_variable/test.code"

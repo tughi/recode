@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "io.h"
 
 #line 7 "tests/10__import/006__reimport/io.code"

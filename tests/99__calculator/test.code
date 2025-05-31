@@ -398,8 +398,8 @@ proc (^io.Writer).write(self, token: ^Token) -> ^io.Writer {
 
 type String_Builder = struct {
     data: [^]u8
-    data_size: i32
-    length: i32
+    data_size: usize
+    length: usize
 }
 
 proc (^String_Builder).write(self, char c: u8) -> ^String_Builder {
@@ -428,7 +428,7 @@ proc make_string_builder() -> String_Builder {
     return make_string_builder(initial_data_size: 4)
 }
 
-proc make_string_builder(initial_data_size: i32) -> String_Builder {
+proc make_string_builder(initial_data_size: usize) -> String_Builder {
     return String_Builder(
         data: malloc(initial_data_size.as(u64)).as([^]u8)
         data_size: initial_data_size
@@ -438,22 +438,4 @@ proc make_string_builder(initial_data_size: i32) -> String_Builder {
 
 proc (^String_Builder).write_char(self, anon c: u8) {
     self.write(char: c)
-}
-
-\ ------------------------------------------------------------------------------ String
-
-type String = struct {
-    data: [^]u8
-    length: i32
-}
-
-proc (^io.Writer).write(self, anon string: str) -> ^io.Writer {
-    let string_copy = string
-    let string_data = (^string_copy).as(^String).data
-    let index = 0usize
-    while index < string.length {
-        self.write(char: string_data[index])
-        index = index + 1
-    }
-    return self
 }

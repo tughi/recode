@@ -1,9 +1,7 @@
 #ifndef __libc_H__
 #define __libc_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 
 extern struct libc_FILE *__stdoutp;

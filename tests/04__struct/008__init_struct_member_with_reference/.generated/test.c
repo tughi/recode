@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 6 "tests/04__struct/008__init_struct_member_with_reference/test.code"

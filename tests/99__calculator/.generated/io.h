@@ -1,9 +1,7 @@
 #ifndef __io_H__
 #define __io_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 #include "libc.h"
 
@@ -13,6 +11,8 @@ struct io_Writer {
 };
 
 struct io_Writer *__alloc__io_Writer__(struct io_Writer value);
+
+struct io_Writer *pio_Writer__write(struct io_Writer *self, struct String string);
 
 struct io_Writer *pio_Writer__write__1_char(struct io_Writer *self, uint8_t c);
 

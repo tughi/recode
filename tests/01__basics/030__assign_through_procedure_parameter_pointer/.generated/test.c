@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 1 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"

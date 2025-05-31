@@ -1,9 +1,7 @@
 #ifndef __calculator__source_H__
 #define __calculator__source_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 #include "libc.h"
 

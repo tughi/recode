@@ -15,7 +15,7 @@ typedef struct Builtin_Types {
     Checked_Named_Type *nil_type;
     Checked_Named_Type *nothing_type;
     Checked_Named_Type *null_type;
-    Checked_Named_Type *string_type;
+    Checked_Named_Type *str_type;
     Checked_Named_Type *type_type;
     Checked_Named_Type *u16_type;
     Checked_Named_Type *u32_type;
@@ -81,7 +81,11 @@ Checked_Named_Type *Checked_Symbols__find_type(Checked_Symbols *symbols, Checked
 }
 
 Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
-    return Checked_Symbols__find_type(self->symbols, self->checked_module, name);
+    Checked_Named_Type *type = Checked_Symbols__find_type(self->symbols, self->checked_module, name);
+    if (type != NULL) {
+        return type;
+    }
+    return Checked_Symbols__find_type(self->global_symbols->parent, NULL, name);
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
@@ -952,7 +956,7 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
         object_type = ((Checked_Pointer_Type *)object_type)->other_type;
     }
     switch (object_type->kind) {
-    case CHECKED_TYPE_KIND__STRING:
+    case CHECKED_TYPE_KIND__STR:
         if (String__equals_cstring(parsed_expression->member_name->lexeme, "length")) {
             return (Checked_Expression *)Checked_String_Length_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->usize_type, object_expression);
         }
@@ -1046,7 +1050,7 @@ Checked_Expression *Checker__check_sizeof_expression(Checker *self, Parsed_Sizeo
 }
 
 Checked_Expression *Checker__check_string_expression(Checker *self, Parsed_String_Expression *parsed_expression) {
-    Checked_Type *string_type = (Checked_Type *)self->builtin_types->string_type;
+    Checked_Type *string_type = (Checked_Type *)self->builtin_types->str_type;
     String *string_value = parsed_expression->value;
     return (Checked_Expression *)Checked_String_Expression__create(parsed_expression->super.super.location, string_type, string_value);
 }
@@ -1190,10 +1194,83 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     panic();
 }
 
+Checked_Type *Checker__check_builtin_type_statement(Checker *self, Parsed_Builtin_Type_Statement *parsed_statement) {
+    Source_Location builtin_type_location = parsed_statement->super.name->location;
+    String *builtin_type_name = parsed_statement->super.name->lexeme;
+    Checked_Named_Type *type = Checker__find_type(self, builtin_type_name);
+    if (type != NULL) {
+        pWriter__begin_location_message(stderr_writer, builtin_type_location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type redeclaration: ");
+        pWriter__write__string(stderr_writer, builtin_type_name);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    Checked_Named_Type *builtin_type = NULL;
+    switch (builtin_type_name->data[0]) {
+    case 'A':
+        if (String__equals_cstring(builtin_type_name, "Any")) {
+            builtin_type = self->builtin_types->any_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ANY, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        }
+        break;
+    case 'b':
+        if (String__equals_cstring(builtin_type_name, "bool")) {
+            builtin_type = self->builtin_types->bool_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        }
+        break;
+    case 'i':
+        if (String__equals_cstring(builtin_type_name, "i8")) {
+            builtin_type = self->builtin_types->i8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I8, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "i16")) {
+            builtin_type = self->builtin_types->i16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I16, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "i32")) {
+            builtin_type = self->builtin_types->i32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I32, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "i64")) {
+            builtin_type = self->builtin_types->i64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I64, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "isize")) {
+            builtin_type = self->builtin_types->isize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ISIZE, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        }
+        break;
+    case 's':
+        if (String__equals_cstring(builtin_type_name, "str")) {
+            builtin_type = self->builtin_types->str_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STR, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        }
+        break;
+    case 'u':
+        if (String__equals_cstring(builtin_type_name, "u8")) {
+            builtin_type = self->builtin_types->u8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "u16")) {
+            builtin_type = self->builtin_types->u16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U16, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "u32")) {
+            builtin_type = self->builtin_types->u32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U32, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "u64")) {
+            builtin_type = self->builtin_types->u64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U64, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        } else if (String__equals_cstring(builtin_type_name, "usize")) {
+            builtin_type = self->builtin_types->usize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), builtin_type_location, builtin_type_name, NULL);
+        }
+        break;
+    }
+
+    if (builtin_type == NULL) {
+        pWriter__begin_location_message(stderr_writer, builtin_type_location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unknown builtin type: ");
+        pWriter__write__string(stderr_writer, builtin_type_name);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    Checked_Symbols__append_symbol(self->builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_type_location, builtin_type->name, (Checked_Type *)self->builtin_types->type_type, builtin_type));
+    return (Checked_Type *)builtin_type;
+}
+
 Checked_Type *Checker__check_external_type_statement(Checker *self, Parsed_External_Type_Statement *parsed_statement) {
     Checked_Named_Type *type = Checker__find_type(self, parsed_statement->super.name->lexeme);
     if (type != NULL) {
-        todo("Report type redeclaration");
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type redeclaration: ");
+        pWriter__write__string(stderr_writer, parsed_statement->super.name->lexeme);
+        pWriter__end_location_message(stderr_writer);
+        panic();
     }
     Checked_External_Type *external_type = Checked_External_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, self->checked_module->name);
     external_type->super.super.symbol = Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)external_type);
@@ -1228,13 +1305,6 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
         pWriter__write__checked_type(stderr_writer, other);
         pWriter__end_location_message(stderr_writer);
         panic();
-    case CHECKED_TYPE_KIND__STRING: {
-        String string_type_name = {.data = "String", .length = 6};
-        Parsed_Named_Type parsed_string_type = {.super = {.kind = PARSED_TYPE_KIND__NAMED, .location = location}, .name = &string_type_name};
-        Checked_Type *checked_string_type = Checker__resolve_type(checker, (Parsed_Type *)&parsed_string_type);
-        Checked_Type__append_dependencies(self, checked_string_type, location, checker);
-        return;
-    }
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__UNION:
         break;
@@ -1261,7 +1331,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
 }
 
 Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_Statement *parsed_statement) {
-    Checked_Named_Type *other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
+    Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, self->checked_module, parsed_statement->super.name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && Source_Location__equals(other_type->super.location, parsed_statement->super.name->location)) {
             /* Type checked already */
@@ -1280,7 +1350,8 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
 
     String *struct_type_name = parsed_statement->super.name->lexeme;
     String *struct_type_module = self->checked_module->name;
-    if (String__equals_cstring(struct_type_name, "String")) { /* TODO: Define String as a built-in type */
+    if (self->global_symbols == self->builtin_types->symbols) {
+        /* This is a builtin type */
         struct_type_module = NULL;
     }
     Checked_Struct_Type *struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, struct_type_name, struct_type_module);
@@ -1728,7 +1799,7 @@ static void String__append_receiver_type(String *symbol_name, Checked_Type *rece
     }
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__I32:
-    case CHECKED_TYPE_KIND__STRING:
+    case CHECKED_TYPE_KIND__STR:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__U8:
@@ -1883,6 +1954,8 @@ void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Stateme
 
 Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statement) {
     switch (parsed_statement->kind) {
+    case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
+        return Checker__check_builtin_type_statement(self, (Parsed_Builtin_Type_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
         return Checker__check_external_type_statement(self, (Parsed_External_Type_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__STRUCT:
@@ -1962,6 +2035,7 @@ void Checker__check_module(Checker *self) {
     while (parsed_statement != NULL) {
         Checked_Statement *checked_statement = NULL;
         switch (parsed_statement->kind) {
+        case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
         case PARSED_STATEMENT_KIND__STRUCT:
         case PARSED_STATEMENT_KIND__TRAIT:
@@ -1988,6 +2062,7 @@ void Checker__check_module(Checker *self) {
     parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
         switch (parsed_statement->kind) {
+        case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
         case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
         case PARSED_STATEMENT_KIND__STRUCT:
         case PARSED_STATEMENT_KIND__TRAIT:
@@ -2033,26 +2108,15 @@ Builtin_Types *Builtin_Types__create() {
     builtin_types->type_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TYPE, sizeof(Checked_Named_Type), location, String__create_from("Type"), NULL);
     Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->type_type->super.location, builtin_types->type_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->type_type));
 
-    builtin_types->any_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ANY, sizeof(Checked_Named_Type), location, String__create_from("Any"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->any_type->super.location, builtin_types->any_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->any_type));
+    builtin_types->any_type = NULL;
 
-    builtin_types->bool_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->bool_type->super.location, builtin_types->bool_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->bool_type));
+    builtin_types->bool_type = NULL;
 
-    builtin_types->i16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I16, sizeof(Checked_Named_Type), location, String__create_from("i16"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i16_type->super.location, builtin_types->i16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i16_type));
-
-    builtin_types->i32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I32, sizeof(Checked_Named_Type), location, String__create_from("i32"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i32_type->super.location, builtin_types->i32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i32_type));
-
-    builtin_types->i64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I64, sizeof(Checked_Named_Type), location, String__create_from("i64"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i64_type->super.location, builtin_types->i64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i64_type));
-
-    builtin_types->i8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I8, sizeof(Checked_Named_Type), location, String__create_from("i8"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->i8_type->super.location, builtin_types->i8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->i8_type));
-
-    builtin_types->isize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ISIZE, sizeof(Checked_Named_Type), location, String__create_from("isize"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->isize_type->super.location, builtin_types->isize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->isize_type));
+    builtin_types->i16_type = NULL;
+    builtin_types->i32_type = NULL;
+    builtin_types->i64_type = NULL;
+    builtin_types->i8_type = NULL;
+    builtin_types->isize_type = NULL;
 
     builtin_types->module_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__MODULE, sizeof(Checked_Named_Type), location, String__create_from("Module"), NULL);
     Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->module_type->super.location, builtin_types->module_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->module_type));
@@ -2066,31 +2130,24 @@ Builtin_Types *Builtin_Types__create() {
     builtin_types->null_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NULL, sizeof(Checked_Named_Type), location, String__create_from("Null"), NULL);
     Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->null_type->super.location, builtin_types->null_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->null_type));
 
-    builtin_types->string_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRING, sizeof(Checked_Named_Type), location, String__create_from("str"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->string_type->super.location, builtin_types->string_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->string_type));
+    builtin_types->str_type = NULL;
 
-    builtin_types->u16_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U16, sizeof(Checked_Named_Type), location, String__create_from("u16"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u16_type->super.location, builtin_types->u16_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u16_type));
-
-    builtin_types->u32_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U32, sizeof(Checked_Named_Type), location, String__create_from("u32"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u32_type->super.location, builtin_types->u32_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u32_type));
-
-    builtin_types->u64_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U64, sizeof(Checked_Named_Type), location, String__create_from("u64"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u64_type->super.location, builtin_types->u64_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u64_type));
-
-    builtin_types->u8_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), location, String__create_from("u8"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->u8_type->super.location, builtin_types->u8_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->u8_type));
-
-    builtin_types->usize_type = Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), location, String__create_from("usize"), NULL);
-    Checked_Symbols__append_symbol(builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_types->usize_type->super.location, builtin_types->usize_type->name, (Checked_Type *)builtin_types->type_type, builtin_types->usize_type));
+    builtin_types->u16_type = NULL;
+    builtin_types->u32_type = NULL;
+    builtin_types->u64_type = NULL;
+    builtin_types->u8_type = NULL;
+    builtin_types->usize_type = NULL;
 
     return builtin_types;
 }
 
-Checked_Source *check(Parsed_Source *parsed_source) {
+Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parsed_source) {
     Builtin_Types *builtin_types = Builtin_Types__create();
-    Checker *checker = Checker__create(parsed_source, builtin_types, Checked_Symbols__create(builtin_types->symbols), NULL);
 
+    Checker *builtin_checker = Checker__create(parsed_builtin_source, builtin_types, builtin_types->symbols, NULL);
+    Checker__check_module(builtin_checker);
+
+    Checker *checker = Checker__create(parsed_source, builtin_types, Checked_Symbols__create(builtin_types->symbols), NULL);
     Checker__check_module(checker);
 
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));

@@ -1,9 +1,7 @@
 #ifndef __os_H__
 #define __os_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 #include "io.h"
 #include "libc.h"

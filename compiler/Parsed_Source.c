@@ -254,6 +254,7 @@ Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size
 
 bool Parsed_Statement__is_type_statement(Parsed_Statement *statement) {
     switch (statement->kind) {
+    case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
     case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
     case PARSED_STATEMENT_KIND__STRUCT:
     case PARSED_STATEMENT_KIND__TRAIT:
@@ -286,6 +287,10 @@ Parsed_Block_Statement *Parsed_Block_Statement__create(Source_Location location,
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
+}
+
+Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name) {
+    return (Parsed_Builtin_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__BUILTIN_TYPE, sizeof(Parsed_Builtin_Type_Statement), location, name);
 }
 
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {

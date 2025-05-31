@@ -17,7 +17,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__NIL,     /* Pseudo type */
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
-    CHECKED_TYPE_KIND__STRING,
+    CHECKED_TYPE_KIND__STR,
     CHECKED_TYPE_KIND__TYPE, /* Pseudo type */
     CHECKED_TYPE_KIND__U16,
     CHECKED_TYPE_KIND__U32,

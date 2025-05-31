@@ -180,7 +180,7 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
         declare_procedure_pointer(cdecl, (Checked_Procedure_Pointer_Type *)symbol_type);
         break;
-    case CHECKED_TYPE_KIND__STRING:
+    case CHECKED_TYPE_KIND__STR:
         cdecl->type = String__create_from("struct String");
         break;
     case CHECKED_TYPE_KIND__EXTERNAL:

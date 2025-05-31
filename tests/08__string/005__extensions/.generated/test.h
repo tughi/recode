@@ -1,17 +1,8 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
-
-struct String {
-    uint8_t *data;
-    uintmax_t length;
-};
-
-struct String *__alloc__String__(struct String value);
 
 void *malloc(uintmax_t size);
 

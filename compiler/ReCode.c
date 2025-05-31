@@ -101,7 +101,9 @@ int32_t main(int32_t argc, char **argv) {
     }
     Parsed_Source *parsed_source = parse(project_dir, file_path);
 
-    Checked_Source *checked_source = check(parsed_source);
+    Parsed_Source *builtin_source = parse(String__create_from("code/"), String__create_from("builtin.code"));
+
+    Checked_Source *checked_source = check(builtin_source, parsed_source);
 
     if (output_dir == NULL) {
         output_dir = String__create_from(".generated");

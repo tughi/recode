@@ -1,9 +1,7 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 #include "calculator__source.h"
 #include "io.h"
@@ -33,11 +31,6 @@ struct test_Divide {
 
 struct test_Stop {
     struct calculator__source_Span span;
-};
-
-struct String {
-    uint8_t *data;
-    int32_t length;
 };
 
 struct test_Error {
@@ -106,8 +99,8 @@ struct test_Expression {
 
 struct test_String_Builder {
     uint8_t *data;
-    int32_t data_size;
-    int32_t length;
+    uintmax_t data_size;
+    uintmax_t length;
 };
 
 struct test_Parser *__alloc__test_Parser__(struct test_Parser value);
@@ -129,8 +122,6 @@ struct test_Divide *__alloc__test_Divide__(struct test_Divide value);
 struct test_Stop *__alloc__test_Stop__(struct test_Stop value);
 
 struct test_Error *__alloc__test_Error__(struct test_Error value);
-
-struct String *__alloc__String__(struct String value);
 
 struct test_Expression *__alloc__test_Expression__(struct test_Expression value);
 
@@ -178,10 +169,8 @@ struct String ptest_String_Builder__build(struct test_String_Builder *self);
 
 struct test_String_Builder test__make_string_builder();
 
-struct test_String_Builder test__make_string_builder__0_initial_data_size(int32_t initial_data_size);
+struct test_String_Builder test__make_string_builder__0_initial_data_size(uintmax_t initial_data_size);
 
 void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c);
-
-struct io_Writer *pio_Writer__write(struct io_Writer *self, struct String string);
 
 #endif // __test_H__

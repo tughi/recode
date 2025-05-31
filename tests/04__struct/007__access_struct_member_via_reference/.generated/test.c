@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 #line 11 "tests/04__struct/007__access_struct_member_via_reference/test.code"

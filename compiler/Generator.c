@@ -865,6 +865,42 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     type->has_generated_definition = true;
 }
 
+void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *output_dir) {
+    String *output_file_path = String__create_copy(output_dir);
+    if (!String__ends_with_cstring(output_file_path, "/")) {
+        String__append_char(output_file_path, '/');
+    }
+    String__append_cstring(output_file_path, "builtin_types.h");
+
+    Generator generator;
+    generator.writer = File__create_writer(output_file_path);
+    generator.identation = 0;
+
+    /* Header guard */
+    pWriter__write__cstring(generator.writer, "#ifndef __BUILTIN_TYPES_H__\n");
+    pWriter__write__cstring(generator.writer, "#define __BUILTIN_TYPES_H__\n\n");
+
+    /* Standard includes */
+    pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
+    pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
+    pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
+
+    /* Generate all builtin types */
+    Checked_Symbol *checked_symbol = builtin_symbols->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Named_Type *checked_named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
+            if (checked_named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+                Generator__define_type(&generator, (Checked_Type *)checked_named_type);
+            }
+        }
+        checked_symbol = checked_symbol->next_symbol;
+    }
+
+    /* Close header guard */
+    pWriter__write__cstring(generator.writer, "#endif // __BUILTIN_TYPES_H__\n");
+}
+
 void generate_module_header(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
@@ -885,10 +921,8 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     pWriter__write__string(generator.writer, checked_module->name);
     pWriter__write__cstring(generator.writer, "_H__\n\n");
 
-    /* Standard includes */
-    pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
-    pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
-    pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
+    /* Include builtin types header */
+    pWriter__write__cstring(generator.writer, "#include \"builtin_types.h\"\n\n");
 
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *malloc_procedure = NULL;
@@ -974,10 +1008,6 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     generator.writer = File__create_writer(output_file_path);
     generator.identation = 0;
 
-    pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
-    pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
-    pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
-
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *malloc_procedure = NULL;
     Checked_Procedure_Symbol *main_procedure = NULL;
@@ -1041,6 +1071,8 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
 }
 
 void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+    generate_builtin_types_header(checked_source->symbols->parent, output_dir);
+
     Checked_Module *checked_module = checked_source->first_module;
     while (checked_module != NULL) {
         generate_module_header(checked_source, checked_module, output_dir);

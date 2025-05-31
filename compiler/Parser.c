@@ -689,8 +689,17 @@ Parsed_Statement *Parser__parse_external_type(Parser *self, Source_Location type
 }
 
 /*
+builtin_type
+    | "builtin"
+*/
+Parsed_Statement *Parser__parse_builtin_type(Parser *self, Source_Location type_location, Token *name) {
+    Token *last_token = Parser__consume_token(self, Token__is_builtin);
+    return (Parsed_Statement *)Parsed_Builtin_Type_Statement__create(Source_Location__union(type_location, last_token->location), name);
+}
+
+/*
 type_definition
-    | "type" IDENTIFIER "=" (struct | union | trait | external_type)
+    | "type" IDENTIFIER "=" ( builtin_type | external_type | struct | trait | union )
 */
 Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Source_Location type_location = Parser__consume_token(self, Token__is_type)->location;
@@ -710,6 +719,9 @@ Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     }
     if (Parser__matches_one(self, Token__is_external)) {
         return Parser__parse_external_type(self, type_location, name);
+    }
+    if (Parser__matches_one(self, Token__is_builtin)) {
+        return Parser__parse_builtin_type(self, type_location, name);
     }
     pWriter__begin_location_message(stderr_writer, type_location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unsupported type");

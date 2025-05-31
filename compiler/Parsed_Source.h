@@ -353,6 +353,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
+    PARSED_STATEMENT_KIND__BUILTIN_TYPE,
     PARSED_STATEMENT_KIND__EXPRESSION,
     PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
     PARSED_STATEMENT_KIND__PROCEDURE,
@@ -415,6 +416,12 @@ typedef struct Parsed_Break_Statement {
 } Parsed_Break_Statement;
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location);
+
+typedef struct Parsed_Builtin_Type_Statement {
+    Parsed_Named_Statement super;
+} Parsed_Builtin_Type_Statement;
+
+Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name);
 
 typedef struct Parsed_Expression_Statement {
     Parsed_Statement super;

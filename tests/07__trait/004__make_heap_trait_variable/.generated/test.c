@@ -1,7 +1,3 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "test.h"
 
 struct test_Shape *__alloc__test_Shape__(struct test_Shape value) {

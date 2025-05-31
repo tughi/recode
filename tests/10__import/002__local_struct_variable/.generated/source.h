@@ -1,9 +1,7 @@
 #ifndef __source_H__
 #define __source_H__
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "builtin_types.h"
 
 
 struct source_Span {
