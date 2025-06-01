@@ -2,11 +2,11 @@ type Number = struct {
     value: i32
 }
 
-proc ^Number.get_value(self) -> i32 {
+proc (^Number).get_value(self) -> i32 {
     return self.value
 }
 
-proc ^Number.set_value(self, anon value: i32) {
+proc (^Number).set_value(self, anon value: i32) {
     self.value = value
 }
 
@@ -14,7 +14,7 @@ type Boolean = struct {
     value: bool
 }
 
-proc ^Boolean.get_value(self) -> bool {
+proc (^Boolean).get_value(self) -> bool {
     return self.value
 }
 

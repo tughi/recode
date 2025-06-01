@@ -1,0 +1,24 @@
+\ This file is automatically imported by the compiler.
+
+type bool = builtin
+
+type i16 = builtin
+type i32 = builtin
+type i64 = builtin
+type i8 = builtin
+type isize = builtin
+
+type str = builtin
+
+type u16 = builtin
+type u32 = builtin
+type u64 = builtin
+type u8 = builtin
+type usize = builtin
+
+type Any = builtin
+
+type String = struct {
+    data: [^]u8
+    length: usize
+}

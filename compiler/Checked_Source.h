@@ -13,10 +13,11 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__I64,
     CHECKED_TYPE_KIND__I8,
     CHECKED_TYPE_KIND__ISIZE,
+    CHECKED_TYPE_KIND__MODULE,  /* Pseudo type */
     CHECKED_TYPE_KIND__NIL,     /* Pseudo type */
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
-    CHECKED_TYPE_KIND__STRING,
+    CHECKED_TYPE_KIND__STR,
     CHECKED_TYPE_KIND__TYPE, /* Pseudo type */
     CHECKED_TYPE_KIND__U16,
     CHECKED_TYPE_KIND__U32,
@@ -36,11 +37,13 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
 
+struct Checked_Type_Symbol;
 struct Checked_Type_Dependency;
 
 typedef struct Checked_Type {
     Checked_Type_Kind kind;
     Source_Location location;
+    struct Checked_Type_Symbol *symbol;
     struct Checked_Type *next_type;
     struct Checked_Type_Dependency *first_dependency;
 
@@ -114,15 +117,16 @@ Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
+    String *module;
 } Checked_Named_Type;
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name);
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
 } Checked_External_Type;
 
-Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name);
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, String *module);
 
 typedef struct Checked_Procedure_Parameter {
     Source_Location location;
@@ -179,7 +183,7 @@ typedef struct Checked_Struct_Type {
     Checked_Struct_Member *first_member;
 } Checked_Struct_Type;
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 
@@ -200,7 +204,7 @@ typedef struct Checked_Trait_Type {
     Checked_Trait_Method *first_method;
 } Checked_Trait_Type;
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name);
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, String *module);
 
 typedef struct Checked_Union_Variant {
     Checked_Type *type;
@@ -216,7 +220,7 @@ typedef struct Checked_Union_Type {
     int32_t variant_count;
 } Checked_Union_Type;
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name);
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, String *module);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -224,29 +228,45 @@ void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
-    CHECKED_SYMBOL_KIND__PROCEDURE,
+    CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
+    CHECKED_SYMBOL_KIND__PROCEDURE,
     CHECKED_SYMBOL_KIND__TYPE,
+    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT,
     CHECKED_SYMBOL_KIND__VARIABLE,
-    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT
 } Checked_Symbol_Kind;
+
+typedef struct Checked_Module {
+    String *name;
+    Source *source;
+    struct Checked_Module *next_module;
+} Checked_Module;
 
 typedef struct Checked_Symbol {
     Checked_Symbol_Kind kind;
+    Checked_Module *module;
     Source_Location location;
     String *name;
     Checked_Type *type;
+    bool is_global;
     struct Checked_Symbol *prev_symbol;
     struct Checked_Symbol *next_symbol;
 } Checked_Symbol;
 
-Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Type *type);
+Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
+
+typedef struct Checked_Import_Symbol {
+    Checked_Symbol super;
+    Checked_Module *other_module;
+} Checked_Import_Symbol;
+
+Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module);
 
 typedef struct Checked_Enum_Member_Symbol {
     Checked_Symbol super;
 } Checked_Enum_Member_Symbol;
 
-Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location location, String *name, Checked_Type *type);
+Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
 
 typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
@@ -288,7 +308,7 @@ typedef struct Checked_Procedure_Symbol {
     Checked_Statements *checked_statements;
 } Checked_Procedure_Symbol;
 
-Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
 
 void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_Symbol *procedure_symbol);
 
@@ -296,20 +316,23 @@ typedef struct Checked_Procedure_Parameter_Symbol {
     Checked_Symbol super;
 } Checked_Procedure_Parameter_Symbol;
 
-Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Source_Location location, String *name, Checked_Type *type);
+Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Type_Symbol {
     Checked_Symbol super;
     Checked_Named_Type *named_type;
 } Checked_Type_Symbol;
 
-Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
+Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
+
+struct Checked_Variable_Statement;
 
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
+    struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
-Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location location, String *name, Checked_Type *type);
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
 typedef struct Checked_Union_Switch_Variant_Symbol {
     Checked_Symbol super;
@@ -317,7 +340,7 @@ typedef struct Checked_Union_Switch_Variant_Symbol {
     Checked_Union_Variant *union_variant;
 } Checked_Union_Switch_Variant_Symbol;
 
-Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
+Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -327,11 +350,11 @@ typedef struct Checked_Symbols {
 
 Checked_Symbols *Checked_Symbols__create(Checked_Symbols *parent);
 
-Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, String *name);
+Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Checked_Module *module, String *name);
 
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol);
 
-Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, String *name);
+Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, Checked_Module *module, String *name);
 
 Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location location, Checked_Type *type);
 
@@ -698,10 +721,8 @@ typedef struct Checked_While_Statement {
 Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
 
 typedef struct Checked_Source {
-    Source *first_source;
-    Checked_Symbol *first_symbol;
-    String *package_name;
-    Checked_Statements *statements;
+    Checked_Module *first_module;
+    struct Checked_Symbols *symbols;
 } Checked_Source;
 
 #endif

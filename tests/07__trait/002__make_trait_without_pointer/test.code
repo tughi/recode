@@ -5,7 +5,7 @@ type Animal = trait {
 type Dog = struct {
 }
 
-proc ^Dog.legs(self) -> i32 {
+proc (^Dog).legs(self) -> i32 {
     return 4
 }
 

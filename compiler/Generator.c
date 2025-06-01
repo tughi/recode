@@ -28,12 +28,21 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
+void Generator__generate_alloc_procedure_name(Generator *self, Checked_Named_Type *type) {
+    pWriter__write__cstring(self->writer, "__alloc__");
+    if (type->module != NULL) {
+        pWriter__write__string(self->writer, type->module);
+        pWriter__write__char(self->writer, '_');
+    }
+    pWriter__write__string(self->writer, type->name);
+    pWriter__write__cstring(self->writer, "__");
+}
+
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
-    pWriter__write__cstring(self->writer, "__alloc_");
-    pWriter__write__string(self->writer, ((Checked_Named_Type *)expression->value_expression->type)->name);
-    pWriter__write__cstring(self->writer, "_value(");
+    Generator__generate_alloc_procedure_name(self, (Checked_Named_Type *)expression->value_expression->type);
+    pWriter__write__char(self->writer, '(');
     Generator__generate_expression(self, expression->value_expression);
-    pWriter__write__cstring(self->writer, ")");
+    pWriter__write__char(self->writer, ')');
 }
 
 void Generator__generate_array_access_expression(Generator *self, Checked_Array_Access_Expression *expression) {
@@ -314,7 +323,13 @@ void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_E
 }
 
 void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expression *expression) {
-    if (expression->symbol->kind == CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT) {
+    switch (expression->symbol->kind) {
+    case CHECKED_SYMBOL_KIND__VARIABLE: {
+        CDECL_Variable_Name cdecl_variable_name = CDECL_Variable_Name__create((Checked_Variable_Symbol *)expression->symbol);
+        cdecl_variable_name.super.write((CDECL_Name *)&cdecl_variable_name, self->writer);
+        break;
+    }
+    case CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT: {
         Checked_Union_Switch_Variant_Symbol *variant_symbol = (Checked_Union_Switch_Variant_Symbol *)expression->symbol;
         if (variant_symbol->union_expression->temp_variable_name == NULL) {
             Generator__generate_expression(self, variant_symbol->union_expression);
@@ -328,7 +343,9 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
         }
         pWriter__write__cstring(self->writer, "variant_");
         pWriter__write__int64(self->writer, variant_symbol->union_variant->index);
-    } else {
+        break;
+    }
+    default:
         pWriter__write__string(self->writer, expression->symbol->name);
     }
 }
@@ -524,7 +541,8 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     statement->expression->temp_variable_name = String__create_from("__switch_");
     String__append_int16_t(statement->expression->temp_variable_name, statement->super.location.start_line);
     String__append_cstring(statement->expression->temp_variable_name, "_value__");
-    pWriter__write__cdecl(self->writer, statement->expression->temp_variable_name, statement->expression->type);
+    CDECL_Local_Name temp_variable_name = CDECL_Local_Name__create(statement->expression->temp_variable_name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&temp_variable_name, statement->expression->type);
     pWriter__write__cstring(self->writer, " = ");
     Generator__generate_expression(self, statement->expression);
     pWriter__write__char(self->writer, ';');
@@ -561,11 +579,19 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     }
 }
 
+void Generator__declare_variable(Generator *self, Checked_Variable_Statement *statement) {
+    pWriter__write__cstring(self->writer, "extern ");
+    CDECL_Variable_Name variable_name = CDECL_Variable_Name__create(statement->variable);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&variable_name, statement->variable->super.type);
+    pWriter__write__char(self->writer, ';');
+}
+
 void Generator__generate_variable_statement(Generator *self, Checked_Variable_Statement *statement) {
     if (statement->is_external) {
         pWriter__write__cstring(self->writer, "extern ");
     }
-    pWriter__write__cdecl(self->writer, statement->variable->super.name, statement->variable->super.type);
+    CDECL_Variable_Name variable_name = CDECL_Variable_Name__create(statement->variable);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&variable_name, statement->variable->super.type);
     if (statement->expression != NULL) {
         pWriter__write__cstring(self->writer, " = ");
         Generator__generate_expression(self, statement->expression);
@@ -643,15 +669,13 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
 }
 
 void Generator__declare_external_type(Generator *self, Checked_External_Type *external_type) {
-    pWriter__write__cstring(self->writer, "typedef struct ");
-    pWriter__write__string(self->writer, external_type->super.name);
-    pWriter__write__char(self->writer, ' ');
-    pWriter__write__string(self->writer, external_type->super.name);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)external_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__declare_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
-    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
+    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
@@ -660,7 +684,8 @@ void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *pr
         return;
     }
     Generator__write_source_location(self, procedure_symbol->super.location);
-    pWriter__write__cdecl(self->writer, procedure_symbol->super.name, (Checked_Type *)procedure_symbol->procedure_type);
+    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, " {\n");
     Generator__generate_statements(self, procedure_symbol->checked_statements);
     pWriter__write__cstring(self->writer, "}\n\n");
@@ -680,29 +705,37 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     pWriter__write__cstring(self->writer, " {\n");
     while (struct_member != NULL) {
         pWriter__write__cstring(self->writer, "    ");
-        pWriter__write__cdecl(self->writer, struct_member->name, struct_member->type);
+        CDECL_Local_Name struct_member_name = CDECL_Local_Name__create(struct_member->name);
+        pWriter__write__cdecl(self->writer, (CDECL_Name *)&struct_member_name, struct_member->type);
         pWriter__write__cstring(self->writer, ";\n");
         struct_member = struct_member->next_member;
     }
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
+void Generator__generate_alloc_procedure_signature(Generator *self, Checked_Named_Type *type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)type);
+    pWriter__write__cstring(self->writer, " *");
+    Generator__generate_alloc_procedure_name(self, type);
+    pWriter__write__char(self->writer, '(');
+    String value = {
+        .data = "value",
+        .data_size = 5,
+        .length = 5,
+    };
+    CDECL_Local_Name value_name = CDECL_Local_Name__create(&value);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&value_name, (Checked_Type *)type);
+    pWriter__write__char(self->writer, ')');
+}
+
 void Generator__declare_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, struct_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " value);\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__generate_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, struct_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " value) {\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    ");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, " *result = (");
@@ -729,21 +762,35 @@ void Generator__declare_union(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cstring(self->writer, ";\n");
 }
 
+typedef struct CDECL_Union_Variant_Name {
+    CDECL_Name super;
+    int32_t variant_index;
+} CDECL_Union_Variant_Name;
+
+void CDECL_Union_Variant_Name__write(CDECL_Union_Variant_Name *self, Writer *writer) {
+    pWriter__write__cstring(writer, "variant_");
+    pWriter__write__int64(writer, self->variant_index);
+}
+
+CDECL_Union_Variant_Name CDECL_Union_Variant_Name__create(int32_t variant_index) {
+    CDECL_Union_Variant_Name name;
+    name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Union_Variant_Name__write;
+    name.variant_index = variant_index;
+    return name;
+}
+
 void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    int32_t variant;\n");
     Checked_Union_Variant *variant = union_type->first_variant;
     if (variant != NULL) {
-        String *variant_name = String__create();
         pWriter__write__cstring(self->writer, "    union {\n");
         while (variant != NULL) {
             if (variant->index != 0) {
-                String__clear(variant_name);
-                String__append_cstring(variant_name, "variant_");
-                String__append_int16_t(variant_name, variant->index);
                 pWriter__write__cstring(self->writer, "        ");
-                pWriter__write__cdecl(self->writer, variant_name, variant->type);
+                CDECL_Union_Variant_Name variant_name = CDECL_Union_Variant_Name__create(variant->index);
+                pWriter__write__cdecl(self->writer, (CDECL_Name *)&variant_name, variant->type);
                 pWriter__write__cstring(self->writer, ";\n");
             }
             variant = variant->next_variant;
@@ -754,21 +801,13 @@ void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) 
 }
 
 void Generator__declare_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, union_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " value);\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *__alloc_");
-    pWriter__write__string(self->writer, union_type->super.name);
-    pWriter__write__cstring(self->writer, "_value(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " value) {\n");
+    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
+    pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
     pWriter__write__cstring(self->writer, " *result = (");
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
@@ -780,10 +819,30 @@ void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type
     pWriter__write__cstring(self->writer, "}\n\n");
 }
 
+void Generator__declare_type(Generator *self, Checked_Type *type) {
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        Generator__declare_external_type(self, (Checked_External_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__STRUCT:
+        Generator__declare_struct(self, (Checked_Struct_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__TRAIT:
+        Generator__declare_trait(self, (Checked_Trait_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__UNION:
+        Generator__declare_union(self, (Checked_Union_Type *)type);
+        break;
+    default:
+        panic();
+    }
+    pWriter__end_line(self->writer);
+}
+
 void Generator__define_type(Generator *self, Checked_Type *type) {
     struct Checked_Type_Dependency *dependency = type->first_dependency;
     while (dependency != NULL) {
-        if (!dependency->type->has_generated_definition) {
+        if (!dependency->type->has_generated_definition && dependency->type->symbol->super.module == type->symbol->super.module) {
             Generator__define_type(self, dependency->type);
         }
         dependency = dependency->next_dependency;
@@ -806,102 +865,113 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     type->has_generated_definition = true;
 }
 
-void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *output_dir) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
     }
-    String__append_string(output_file_path, checked_source->package_name);
-    String__append_cstring(output_file_path, ".c");
+    String__append_cstring(output_file_path, "builtin_types.h");
 
     Generator generator;
     generator.writer = File__create_writer(output_file_path);
     generator.identation = 0;
 
-    Checked_Symbol *checked_symbol;
+    /* Header guard */
+    pWriter__write__cstring(generator.writer, "#ifndef __BUILTIN_TYPES_H__\n");
+    pWriter__write__cstring(generator.writer, "#define __BUILTIN_TYPES_H__\n\n");
 
+    /* Standard includes */
     pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
     pWriter__write__cstring(generator.writer, "#include <stdbool.h>\n");
     pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
 
-    Source *source = checked_source->first_source->next;
-    while (source != NULL) {
-        if (source->file_path->data[source->file_path->length - 1] == 'h') {
-            pWriter__write__cstring(generator.writer, "#include \"");
-            pWriter__write__string(generator.writer, source->file_path);
-            pWriter__write__cstring(generator.writer, "\"\n\n");
+    /* Generate all builtin types */
+    Checked_Symbol *checked_symbol = builtin_symbols->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Named_Type *checked_named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
+            if (checked_named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+                Generator__define_type(&generator, (Checked_Type *)checked_named_type);
+            }
         }
-        source = source->next;
+        checked_symbol = checked_symbol->next_symbol;
     }
 
-    Checked_Procedure_Symbol *malloc_procedure = NULL;
-    Checked_Procedure_Symbol *main_procedure = NULL;
+    /* Close header guard */
+    pWriter__write__cstring(generator.writer, "#endif // __BUILTIN_TYPES_H__\n");
+}
 
-    /* Declare all defined types */
-    checked_symbol = checked_source->first_symbol;
+void generate_module_header(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir) {
+    String *output_file_path = String__create_copy(output_dir);
+    if (!String__ends_with_cstring(output_file_path, "/")) {
+        String__append_char(output_file_path, '/');
+    }
+    String__append_string(output_file_path, checked_module->name);
+    String__append_cstring(output_file_path, ".h");
+
+    Generator generator;
+    generator.writer = File__create_writer(output_file_path);
+    generator.identation = 0;
+
+    /* Header guard */
+    pWriter__write__cstring(generator.writer, "#ifndef __");
+    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__cstring(generator.writer, "_H__\n");
+    pWriter__write__cstring(generator.writer, "#define __");
+    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__cstring(generator.writer, "_H__\n\n");
+
+    /* Include builtin types header */
+    pWriter__write__cstring(generator.writer, "#include \"builtin_types.h\"\n\n");
+
+    Checked_Symbol *checked_symbol;
+    Checked_Procedure_Symbol *malloc_procedure = NULL;
+
+    /* Import all modules */
+    checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
-            Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-            switch (named_type->super.kind) {
-            case CHECKED_TYPE_KIND__EXTERNAL:
-                Generator__declare_external_type(&generator, (Checked_External_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__STRUCT:
-                Generator__declare_struct(&generator, (Checked_Struct_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__TRAIT:
-                Generator__declare_trait(&generator, (Checked_Trait_Type *)named_type);
-                break;
-            case CHECKED_TYPE_KIND__UNION:
-                Generator__declare_union(&generator, (Checked_Union_Type *)named_type);
-                break;
-            default:
-                panic();
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__IMPORT && checked_symbol->module == checked_module) {
+            Checked_Module *other_module = ((Checked_Import_Symbol *)checked_symbol)->other_module;
+            pWriter__write__cstring(generator.writer, "#include \"");
+            pWriter__write__string(generator.writer, other_module->name);
+            pWriter__write__cstring(generator.writer, ".h\"\n");
+        }
+        checked_symbol = checked_symbol->next_symbol;
+    }
+    pWriter__end_line(generator.writer);
+
+    /* Generate all defined types */
+    checked_symbol = checked_source->symbols->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->module == checked_module) {
+            Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
+            if (!type->has_generated_definition) {
+                Generator__define_type(&generator, type);
             }
-            pWriter__end_line(generator.writer);
         } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
             malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
         }
         checked_symbol = checked_symbol->next_symbol;
     }
 
-    /* Generate all defined types */
-    checked_symbol = checked_source->first_symbol;
+    /* Declare all global variables */
+    checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location.source == checked_source->first_source) {
-            Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
-            if (!type->has_generated_definition) {
-                Generator__define_type(&generator, type);
-            }
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
+            Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
+            Generator__declare_variable(&generator, variable_symbol->statement);
+            pWriter__end_line(generator.writer);
+            pWriter__end_line(generator.writer);
         }
         checked_symbol = checked_symbol->next_symbol;
     }
 
-    /* Declare all global variables */
-    Checked_Statement *checked_statement = checked_source->statements->first_statement;
-    while (checked_statement != NULL) {
-        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location.source == checked_source->first_source) {
-            Generator__generate_variable_statement(&generator, (Checked_Variable_Statement *)checked_statement);
-            pWriter__end_line(generator.writer);
-        } else {
-            pWriter__begin_location_message(stderr_writer, checked_statement->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Unsupported statement");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        checked_statement = checked_statement->next_statement;
-    }
-
     /* Declare all defined procedures */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->module == checked_module) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-                Checked_Procedure_Symbol *checked_procedure = (Checked_Procedure_Symbol *)checked_symbol;
-                if (String__equals_cstring(checked_procedure->procedure_name, "main")) {
-                    main_procedure = checked_procedure;
-                }
-                Generator__declare_procedure(&generator, checked_procedure);
+                Generator__declare_procedure(&generator, (Checked_Procedure_Symbol *)checked_symbol);
                 pWriter__end_line(generator.writer);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
@@ -920,25 +990,58 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
         checked_symbol = checked_symbol->next_symbol;
     }
 
-    /* Generate main procedure */
-    if (generate_main && main_procedure != NULL) {
-        pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
-        pWriter__write__cstring(generator.writer, "    return ");
-        pWriter__write__string(generator.writer, main_procedure->super.name);
-        if (main_procedure->procedure_type->first_parameter != NULL) {
-            pWriter__write__cstring(generator.writer, "(argc, (uint8_t **)argv);\n");
-        } else {
-            pWriter__write__cstring(generator.writer, "();\n");
+    /* Close header guard */
+    pWriter__write__cstring(generator.writer, "#endif // __");
+    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__cstring(generator.writer, "_H__\n");
+}
+
+void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main) {
+    String *output_file_path = String__create_copy(output_dir);
+    if (!String__ends_with_cstring(output_file_path, "/")) {
+        String__append_char(output_file_path, '/');
+    }
+    String__append_string(output_file_path, checked_module->name);
+    String__append_cstring(output_file_path, ".c");
+
+    Generator generator;
+    generator.writer = File__create_writer(output_file_path);
+    generator.identation = 0;
+
+    Checked_Symbol *checked_symbol;
+    Checked_Procedure_Symbol *malloc_procedure = NULL;
+    Checked_Procedure_Symbol *main_procedure = NULL;
+
+    /* Include this module's header file */
+    pWriter__write__cstring(generator.writer, "#include \"");
+    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__cstring(generator.writer, ".h\"\n\n");
+
+    /* Define all global variables */
+    checked_symbol = checked_source->symbols->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
+            Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
+            if (!variable_symbol->statement->is_external) {
+                Generator__generate_variable_statement(&generator, variable_symbol->statement);
+                pWriter__end_line(generator.writer);
+            }
+        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
+            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
         }
-        pWriter__write__cstring(generator.writer, "}\n\n");
+        checked_symbol = checked_symbol->next_symbol;
     }
 
     /* Generate all defined procedures */
-    checked_symbol = checked_source->first_symbol;
+    checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location.source == checked_source->first_source) {
+        if (checked_symbol->module == checked_module) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-                Generator__generate_procedure(&generator, (Checked_Procedure_Symbol *)checked_symbol);
+                Checked_Procedure_Symbol *checked_procedure = (Checked_Procedure_Symbol *)checked_symbol;
+                if (generate_main && String__equals_cstring(checked_procedure->procedure_name, "main")) {
+                    main_procedure = checked_procedure;
+                }
+                Generator__generate_procedure(&generator, checked_procedure);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
                 if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
@@ -951,5 +1054,29 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
             }
         }
         checked_symbol = checked_symbol->next_symbol;
+    }
+
+    /* Generate main procedure */
+    if (generate_main && main_procedure != NULL) {
+        pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
+        pWriter__write__cstring(generator.writer, "    return ");
+        pWriter__write__string(generator.writer, main_procedure->super.name);
+        if (main_procedure->procedure_type->first_parameter != NULL) {
+            pWriter__write__cstring(generator.writer, "(argc, (uint8_t **)argv);\n");
+        } else {
+            pWriter__write__cstring(generator.writer, "();\n");
+        }
+        pWriter__write__cstring(generator.writer, "}\n\n");
+    }
+}
+
+void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
+    generate_builtin_types_header(checked_source->symbols->parent, output_dir);
+
+    Checked_Module *checked_module = checked_source->first_module;
+    while (checked_module != NULL) {
+        generate_module_header(checked_source, checked_module, output_dir);
+        generate_module(checked_source, checked_module, output_dir, generate_main);
+        checked_module = checked_module->next_module;
     }
 }

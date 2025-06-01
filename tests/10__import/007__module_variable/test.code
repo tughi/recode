@@ -1,0 +1,5 @@
+import numbers
+
+proc main() -> i32 {
+    return numbers.forty_two - 42
+}

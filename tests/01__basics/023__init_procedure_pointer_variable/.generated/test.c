@@ -1,14 +1,4 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-int32_t test__main();
-
-int32_t test__echo__0_value(int32_t value);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/023__init_procedure_pointer_variable/test.code"
 int32_t test__main() {
@@ -22,5 +12,9 @@ int32_t test__main() {
 int32_t test__echo__0_value(int32_t value) {
 #line 8 "tests/01__basics/023__init_procedure_pointer_variable/test.code"
     return value;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

@@ -4,6 +4,6 @@
 #include "Checked_Source.h"
 #include "Parsed_Source.h"
 
-Checked_Source *check(Parsed_Source *parsed_source);
+Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parsed_source);
 
 #endif

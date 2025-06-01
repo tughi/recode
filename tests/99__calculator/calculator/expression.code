@@ -1,0 +1,93 @@
+import calculator.source
+import io
+
+type Expression = union {
+    Number
+    Addition
+    Division
+    Multiplication
+    Subtraction
+    source.Error
+}
+
+type Number = struct {
+    span: source.Span
+    value: i32
+}
+
+type Addition = struct {
+    span: source.Span
+    left: ^Expression
+    right: ^Expression
+}
+
+type Division = struct {
+    span: source.Span
+    left: ^Expression
+    right: ^Expression
+}
+
+type Multiplication = struct {
+    span: source.Span
+    left: ^Expression
+    right: ^Expression
+}
+
+type Subtraction = struct {
+    span: source.Span
+    left: ^Expression
+    right: ^Expression
+}
+
+proc (^Expression).span(self) -> source.Span {
+    switch self {
+        is Number as variant {
+            return variant.span
+        }
+        is Addition as variant {
+            return variant.span
+        }
+        is Division as variant {
+            return variant.span
+        }
+        is Multiplication as variant {
+            return variant.span
+        }
+        is Subtraction as variant {
+            return variant.span
+        }
+        is source.Error as variant {
+            return variant.span
+        }
+        is nil {
+            return source.Span(start: 0, end: 0)
+        }
+    }
+}
+
+proc (^io.Writer).write(self, expression: ^Expression) -> ^io.Writer {
+    switch expression {
+        is Number as number {
+            return self.write(signed: number.value)
+        }
+        is Addition as addition {
+            return self.write("(").write(expression: addition.left).write(" + ").write(expression: addition.right).write(")")
+        }
+        is Division as division {
+            return self.write("(").write(expression: division.left).write(" / ").write(expression: division.right).write(")")
+        }
+        is Multiplication as multiplication {
+            return self.write("(").write(expression: multiplication.left).write(" * ").write(expression: multiplication.right).write(")")
+        }
+        is Subtraction as subtraction {
+            return self.write("(").write(expression: subtraction.left).write(" - ").write(expression: subtraction.right).write(")")
+        }
+        is source.Error as error {
+            return self.write("Error: ").write(error.message)
+        }
+        is nil {
+            return self.write("Nil!")
+        }
+    }
+    return self
+}

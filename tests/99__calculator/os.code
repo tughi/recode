@@ -1,0 +1,14 @@
+import io
+import libc
+
+let stdout: ^io.Writer
+let stderr: ^io.Writer
+
+proc init() {
+    stdout = alloc io.Writer(libc.__stdoutp)
+    stderr = alloc io.Writer(libc.__stderrp)
+}
+
+proc (^libc.FILE).write_char(self, anon c: u8) {
+    fputc(c.as(i32), self)
+}

@@ -6,8 +6,3 @@ proc main() -> i32 {
     let message_ptr = ^message
     return message_ptr.length.as(i32) - 16
 }
-
-type String = struct {
-    data: [^]u8
-    length: usize
-}

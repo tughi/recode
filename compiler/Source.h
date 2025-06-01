@@ -7,9 +7,6 @@ typedef struct Source {
     char *content;
     String *file_path;
     size_t file_size;
-
-    struct Source *next;
-    struct Source *prev;
 } Source;
 
 Source *Source__create(String *file_path);

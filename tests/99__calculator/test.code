@@ -1,0 +1,61 @@
+import calculator.expression
+import calculator.parser
+import calculator.tokenizer
+import calculator.source
+import io
+import libc
+import os
+import string
+
+proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
+    os.init()
+
+    if argc != 2 {
+        exit(1)
+    }
+
+    let input_tokenizer = tokenizer.Tokenizer(
+        data: argv[1]
+        index: 0
+    )
+
+    while input_tokenizer.peek_token() is not tokenizer.Stop {
+        let token = input_tokenizer.next_token()
+        os.stdout.write(token: ^token).end_line()
+    }
+
+    let input_parser = parser.Parser(tokenizer: tokenizer.Tokenizer(
+        data: argv[1]
+        index: 0
+    ))
+    let expression = input_parser.parse_expression()
+    os.stdout.write("Expression: ").write(expression: ^expression).end_line()
+
+    let result = evaluate(expression: ^expression)
+    os.stdout.write("Result: ").write(signed: result).end_line()
+
+    return 0
+}
+
+proc evaluate(expression: ^expression.Expression) -> i32 {
+    switch expression {
+        is expression.Number as number {
+            return number.value
+        }
+        is expression.Addition as addition {
+            return evaluate(expression: addition.left) + evaluate(expression: addition.right)
+        }
+        is expression.Division as division {
+            return evaluate(expression: division.left) / evaluate(expression: division.right)
+        }
+        is expression.Multiplication as multiplication {
+            return evaluate(expression: multiplication.left) * evaluate(expression: multiplication.right)
+        }
+        is expression.Subtraction as subtraction {
+            return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
+        }
+        else {
+            exit(1)
+        }
+    }
+}

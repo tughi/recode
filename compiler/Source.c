@@ -34,8 +34,6 @@ Source *Source__create(String *file_path) {
     source->content = content;
     source->file_path = file_path;
     source->file_size = file_size;
-    source->next = NULL;
-    source->prev = NULL;
 
     return source;
 }

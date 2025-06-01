@@ -6,7 +6,7 @@ type Square = struct {
     side: i32
 }
 
-proc ^Square.area(self) -> i32 {
+proc (^Square).area(self) -> i32 {
     return self.side * self.side
 }
 
@@ -14,7 +14,7 @@ type Circle = struct {
     radius: i32
 }
 
-proc ^Circle.area(self) -> i32 {
+proc (^Circle).area(self) -> i32 {
     return 312 * self.radius * self.radius / 100
 }
 

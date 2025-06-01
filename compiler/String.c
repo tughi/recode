@@ -12,6 +12,13 @@ String *String__create() {
     return String__create_empty(16);
 }
 
+Writer *String__create_writer(String *self) {
+    Writer *writer = (Writer *)malloc(sizeof(Writer));
+    writer->object = self;
+    writer->write_char = (void (*)(void *, char))String__append_char;
+    return writer;
+}
+
 void String__clear(String *self) {
     self->length = 0;
 }

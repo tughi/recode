@@ -1,14 +1,4 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-int32_t test__main();
-
-uint8_t test__cast(int32_t value);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/027__convert_i32_to_u8/test.code"
 int32_t test__main() {
@@ -35,5 +25,9 @@ int32_t test__main() {
 uint8_t test__cast(int32_t value) {
 #line 15 "tests/01__basics/027__convert_i32_to_u8/test.code"
     return ((uint8_t) value);
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

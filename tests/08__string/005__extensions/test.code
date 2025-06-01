@@ -1,11 +1,6 @@
-type String = struct {
-    data: [^]u8
-    length: usize
-}
-
 proc malloc(anon size: usize) -> ^Any = external
 
-proc str.concat(self, anon other: str) -> str {
+proc (str).concat(self, anon other: str) -> str {
     if self.length == 0 {
         return other
     }
@@ -34,7 +29,7 @@ proc str.concat(self, anon other: str) -> str {
     return (^result).as(^str).^
 }
 
-proc str.equals(self, anon other: str) -> bool {
+proc (str).equals(self, anon other: str) -> bool {
     if self.length != other.length {
         return false
     }

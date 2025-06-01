@@ -36,9 +36,10 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
     return (Parsed_Type *)type;
 }
 
-Parsed_Type *Parsed_Named_Type__create(Token *name) {
+Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module) {
     Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
     type->name = name->lexeme;
+    type->module = module;
     return (Parsed_Type *)type;
 }
 
@@ -253,6 +254,7 @@ Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size
 
 bool Parsed_Statement__is_type_statement(Parsed_Statement *statement) {
     switch (statement->kind) {
+    case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
     case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
     case PARSED_STATEMENT_KIND__STRUCT:
     case PARSED_STATEMENT_KIND__TRAIT:
@@ -287,6 +289,10 @@ Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
 
+Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name) {
+    return (Parsed_Builtin_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__BUILTIN_TYPE, sizeof(Parsed_Builtin_Type_Statement), location, name);
+}
+
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {
     Parsed_Expression_Statement *statement = (Parsed_Expression_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location);
     statement->expression = expression;
@@ -304,6 +310,13 @@ Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, T
     statement->return_type = resturn_type;
     statement->statements = statements;
     statement->is_external = is_external;
+    return (Parsed_Statement *)statement;
+}
+
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source) {
+    Parsed_Import_Statement *statement = (Parsed_Import_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IMPORT, sizeof(Parsed_Import_Statement), location);
+    statement->import_name = import_name;
+    statement->parsed_source = parsed_source;
     return (Parsed_Statement *)statement;
 }
 
@@ -442,7 +455,7 @@ void Parsed_Statements__append(Parsed_Statements *self, Parsed_Statement *statem
 
 Parsed_Source *Parsed_Source__create() {
     Parsed_Source *parsed_source = (Parsed_Source *)malloc(sizeof(Parsed_Source));
-    parsed_source->first_source = NULL;
+    parsed_source->source = NULL;
     parsed_source->package_name = NULL;
     parsed_source->statements = Parsed_Statements__create(true);
     return parsed_source;

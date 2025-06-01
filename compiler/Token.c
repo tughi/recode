@@ -109,6 +109,10 @@ bool Token__is_break(Token *self) {
     return Token__is_keyword(self, "break");
 }
 
+bool Token__is_builtin(Token *self) {
+    return Token__is_keyword(self, "builtin");
+}
+
 bool Token__is_case(Token *self) {
     return Token__is_keyword(self, "case");
 }
@@ -135,6 +139,10 @@ bool Token__is_false(Token *self) {
 
 bool Token__is_if(Token *self) {
     return Token__is_keyword(self, "if");
+}
+
+bool Token__is_import(Token *self) {
+    return Token__is_keyword(self, "import");
 }
 
 bool Token__is_in(Token *self) {

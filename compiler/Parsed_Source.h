@@ -93,9 +93,10 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
 typedef struct Parsed_Named_Type {
     Parsed_Type super;
     String *name;
+    Token *module;
 } Parsed_Named_Type;
 
-Parsed_Type *Parsed_Named_Type__create(Token *name);
+Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module);
 
 typedef struct Parsed_Pointer_Type {
     Parsed_Type super;
@@ -352,10 +353,12 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
+    PARSED_STATEMENT_KIND__BUILTIN_TYPE,
     PARSED_STATEMENT_KIND__EXPRESSION,
     PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
     PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__IF,
+    PARSED_STATEMENT_KIND__IMPORT,
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
@@ -413,6 +416,12 @@ typedef struct Parsed_Break_Statement {
 } Parsed_Break_Statement;
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location);
+
+typedef struct Parsed_Builtin_Type_Statement {
+    Parsed_Named_Statement super;
+} Parsed_Builtin_Type_Statement;
+
+Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name);
 
 typedef struct Parsed_Expression_Statement {
     Parsed_Statement super;
@@ -560,11 +569,19 @@ typedef struct Parsed_While_Statement {
 Parsed_Statement *Parsed_While_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Parsed_Statement *body_statement);
 
 typedef struct Parsed_Source {
-    Source *first_source;
+    Source *source;
     String *package_name;
     Parsed_Statements *statements;
 } Parsed_Source;
 
 Parsed_Source *Parsed_Source__create();
+
+typedef struct Parsed_Import_Statement {
+    Parsed_Statement super;
+    String *import_name;
+    Parsed_Source *parsed_source;
+} Parsed_Import_Statement;
+
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source);
 
 #endif

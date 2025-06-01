@@ -1,12 +1,4 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/01__basics/017__i32_negation/test.code"
 int32_t test__main() {
@@ -19,5 +11,9 @@ int32_t test__main() {
     }
 #line 6 "tests/01__basics/017__i32_negation/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

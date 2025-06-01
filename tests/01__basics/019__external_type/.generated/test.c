@@ -1,17 +1,4 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-typedef struct FILE FILE;
-
-extern FILE *__stdoutp;
-int32_t fputc(int32_t ch, FILE *file);
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 7 "tests/01__basics/019__external_type/test.code"
 int32_t test__main() {
@@ -23,5 +10,9 @@ int32_t test__main() {
     fputc(10, __stdoutp);
 #line 11 "tests/01__basics/019__external_type/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

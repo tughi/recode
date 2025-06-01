@@ -1,0 +1,3 @@
+proc get_answer() -> i32 {
+    return 42
+}

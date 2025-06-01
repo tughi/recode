@@ -1,70 +1,31 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "test.h"
 
-struct Shape;
-
-struct Square;
-
-struct Circle;
-
-struct Shape {
-    void *self;
-    int32_t (*area)(void *self);
-};
-
-struct Square {
-    int32_t side;
-};
-
-struct Circle {
-    int32_t radius;
-};
-
-struct Shape *__alloc_Shape_value(struct Shape value);
-
-struct Square *__alloc_Square_value(struct Square value);
-
-struct Circle *__alloc_Circle_value(struct Circle value);
-
-int32_t test__pSquare__area(struct Square *self);
-
-int32_t test__pCircle__area(struct Circle *self);
-
-int32_t test__main();
-
-void *malloc(uint64_t size);
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
-
-struct Shape *__alloc_Shape_value(struct Shape value) {
-    struct Shape *result = (struct Shape *)malloc(sizeof(struct Shape));
+struct test_Shape *__alloc__test_Shape__(struct test_Shape value) {
+    struct test_Shape *result = (struct test_Shape *)malloc(sizeof(struct test_Shape));
     *result = value;
     return result;
 }
 
-struct Square *__alloc_Square_value(struct Square value) {
-    struct Square *result = (struct Square *)malloc(sizeof(struct Square));
+struct test_Square *__alloc__test_Square__(struct test_Square value) {
+    struct test_Square *result = (struct test_Square *)malloc(sizeof(struct test_Square));
     *result = value;
     return result;
 }
 
-struct Circle *__alloc_Circle_value(struct Circle value) {
-    struct Circle *result = (struct Circle *)malloc(sizeof(struct Circle));
+struct test_Circle *__alloc__test_Circle__(struct test_Circle value) {
+    struct test_Circle *result = (struct test_Circle *)malloc(sizeof(struct test_Circle));
     *result = value;
     return result;
 }
 
 #line 9 "tests/07__trait/004__make_heap_trait_variable/test.code"
-int32_t test__pSquare__area(struct Square *self) {
+int32_t ptest_Square__area(struct test_Square *self) {
 #line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return self->side * self->side;
 }
 
 #line 17 "tests/07__trait/004__make_heap_trait_variable/test.code"
-int32_t test__pCircle__area(struct Circle *self) {
+int32_t ptest_Circle__area(struct test_Circle *self) {
 #line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 312 * self->radius * self->radius / 100;
 }
@@ -72,13 +33,13 @@ int32_t test__pCircle__area(struct Circle *self) {
 #line 21 "tests/07__trait/004__make_heap_trait_variable/test.code"
 int32_t test__main() {
 #line 22 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Square *square = __alloc_Square_value((struct Square){.side = 10});
+    struct test_Square *square = __alloc__test_Square__((struct test_Square){.side = 10});
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *square_shape = __alloc_Shape_value((struct Shape){.self = square, .area = ((int32_t (*)(void *self)) test__pSquare__area)});
+    struct test_Shape *square_shape = __alloc__test_Shape__((struct test_Shape){.self = square, .area = ((int32_t (*)(void *self)) ptest_Square__area)});
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Circle *circle = __alloc_Circle_value((struct Circle){.radius = 10});
+    struct test_Circle *circle = __alloc__test_Circle__((struct test_Circle){.radius = 10});
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    struct Shape *circle_shape = __alloc_Shape_value((struct Shape){.self = circle, .area = ((int32_t (*)(void *self)) test__pCircle__area)});
+    struct test_Shape *circle_shape = __alloc__test_Shape__((struct test_Shape){.self = circle, .area = ((int32_t (*)(void *self)) ptest_Circle__area)});
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (square_shape->area(square_shape->self) != 100) {
 #line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
@@ -91,5 +52,9 @@ int32_t test__main() {
     }
 #line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 

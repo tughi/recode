@@ -17,26 +17,13 @@ CDECL *CDECL__create() {
 
 void declare(CDECL *cdecl, Checked_Type *symbol_type);
 
-void String__append_cdecl(String *self, String *name, Checked_Type *type) {
-    CDECL cdecl = {NULL, NULL, NULL};
-    declare(&cdecl, type);
-    String__append_string(self, cdecl.type);
-    String__delete(cdecl.type);
-    String__append_char(self, ' ');
-    if (cdecl.left != NULL) {
-        String__append_string(self, cdecl.left);
-        String__delete(cdecl.left);
-    }
-    if (name != NULL) {
-        String__append_string(self, name);
-    }
-    if (cdecl.right != NULL) {
-        String__append_string(self, cdecl.right);
-        String__delete(cdecl.right);
-    }
+void String__append_cdecl(String *self, CDECL_Name *name, Checked_Type *type) {
+    Writer *writer = String__create_writer(self);
+    pWriter__write__cdecl(writer, name, type);
+    pWriter__destroy(writer);
 }
 
-void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
+void pWriter__write__cdecl(Writer *writer, CDECL_Name *name, Checked_Type *type) {
     CDECL cdecl = {NULL, NULL, NULL};
     declare(&cdecl, type);
     pWriter__write__string(writer, cdecl.type);
@@ -49,7 +36,7 @@ void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
         String__delete(cdecl.left);
     }
     if (name != NULL) {
-        pWriter__write__string(writer, name);
+        name->write(name, writer);
     }
     if (cdecl.right != NULL) {
         pWriter__write__string(writer, cdecl.right);
@@ -70,7 +57,8 @@ void declare_procedure(CDECL *cdecl, Checked_Procedure_Type *procedure_type) {
     String__append_char(cdecl->right, '(');
     Checked_Procedure_Parameter *parameter = procedure_type->first_parameter;
     while (parameter != NULL) {
-        String__append_cdecl(cdecl->right, parameter->name, parameter->type);
+        CDECL_Local_Name parameter_name = CDECL_Local_Name__create(parameter->name);
+        String__append_cdecl(cdecl->right, (CDECL_Name *)&parameter_name, parameter->type);
         parameter = parameter->next_parameter;
         if (parameter != NULL) {
             String__append_cstring(cdecl->right, ", ");
@@ -186,22 +174,24 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__ARRAY:
         declare_array(cdecl, (Checked_Array_Type *)symbol_type);
         break;
-    case CHECKED_TYPE_KIND__EXTERNAL:
-        cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
-        break;
     case CHECKED_TYPE_KIND__PROCEDURE:
         declare_procedure(cdecl, (Checked_Procedure_Type *)symbol_type);
         break;
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
         declare_procedure_pointer(cdecl, (Checked_Procedure_Pointer_Type *)symbol_type);
         break;
-    case CHECKED_TYPE_KIND__STRING:
+    case CHECKED_TYPE_KIND__STR:
         cdecl->type = String__create_from("struct String");
         break;
+    case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION:
         cdecl->type = String__create_from("struct ");
+        if (((Checked_Named_Type *)symbol_type)->module != NULL) {
+            String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->module);
+            String__append_char(cdecl->type, '_');
+        }
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
         break;
     case CHECKED_TYPE_KIND__MULTI_POINTER:
@@ -213,4 +203,30 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     default:
         todo("Handle unexpected Checked_Type_Kind");
     }
+}
+
+void CDECL_Local_Name__write(CDECL_Local_Name *self, Writer *writer) {
+    pWriter__write__string(writer, self->name);
+}
+
+CDECL_Local_Name CDECL_Local_Name__create(String *name) {
+    CDECL_Local_Name local_name;
+    local_name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Local_Name__write;
+    local_name.name = name;
+    return local_name;
+}
+
+void CDECL_Variable_Name__write(CDECL_Variable_Name *self, Writer *writer) {
+    if (self->variable_symbol->super.is_global && !self->variable_symbol->statement->is_external) {
+        pWriter__write__string(writer, self->variable_symbol->super.module->name);
+        pWriter__write__cstring(writer, "__");
+    }
+    pWriter__write__string(writer, self->variable_symbol->super.name);
+}
+
+CDECL_Variable_Name CDECL_Variable_Name__create(Checked_Variable_Symbol *variable_symbol) {
+    CDECL_Variable_Name variable_name;
+    variable_name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Variable_Name__write;
+    variable_name.variable_symbol = variable_symbol;
+    return variable_name;
 }

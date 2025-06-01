@@ -1,19 +1,4 @@
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-struct String;
-
-struct String {
-    uint8_t *data;
-    uintmax_t length;
-};
-
-int32_t test__main();
-
-int32_t main(int argc, const char **argv) {
-    return test__main();
-}
+#include "test.h"
 
 #line 1 "tests/08__string/004__assignment/test.code"
 int32_t test__main() {
@@ -42,5 +27,9 @@ int32_t test__main() {
     }
 #line 15 "tests/08__string/004__assignment/test.code"
     return 0;
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
 }
 
