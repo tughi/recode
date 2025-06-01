@@ -4,3 +4,8 @@ type Span = struct {
     start: i32
     end: i32
 }
+
+type Error = struct {
+    span: Span
+    message: str
+}

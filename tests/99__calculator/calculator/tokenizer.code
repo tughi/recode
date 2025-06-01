@@ -1,0 +1,159 @@
+import calculator.expression
+import calculator.source
+import io
+
+type Tokenizer = struct {
+    data: [^]u8
+    index: i32
+
+    current_token: Token
+}
+
+proc (^Tokenizer).peek_token(self) -> Token {
+    if self.current_token is nil {
+        self.current_token = self.scan_token()
+    }
+    return self.current_token
+}
+
+proc (^Tokenizer).next_token(self) -> Token {
+    let token = self.peek_token()
+    self.current_token = nil
+    return token
+}
+
+proc (^Tokenizer).scan_token(self) -> Token {
+    while self.data[self.index] == ' ' {
+        self.index = self.index + 1
+    }
+    let ch = self.data[self.index]
+    if ch == 0 {
+        return Stop(span: source.Span(start: self.index, end: self.index))
+    }
+    if ch >= '0' and ch <= '9' {
+        return self.scan_number_token()
+    }
+    self.index = self.index + 1
+    if ch == '+' {
+        return Plus(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '-' {
+        return Minus(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '*' {
+        return Multiply(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '/' {
+        return Divide(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    return source.Error(
+        span: source.Span(start: self.index - 1, end: self.index)
+        message: "Unexpected character"
+    )
+}
+
+proc (^Tokenizer).scan_number_token(self) -> Token {
+    let start = self.index
+    let value = 0
+    loop {
+        let c = self.data[self.index]
+        if c < '0' or c > '9' {
+            break
+        }
+        value = value * 10 + (c - '0').as(i32)
+        self.index = self.index + 1
+    }
+    return Token(expression.Number(
+        span: source.Span(start: start, end: self.index)
+        value: value
+    ))
+}
+
+type Plus = struct {
+    span: source.Span
+}
+
+type Minus = struct {
+    span: source.Span
+}
+
+type Multiply = struct {
+    span: source.Span
+}
+
+type Divide = struct {
+    span: source.Span
+}
+
+type Stop = struct {
+    span: source.Span
+}
+
+type Token = union {
+    expression.Number
+    Plus
+    Minus
+    Multiply
+    Divide
+    Stop
+    source.Error
+}
+
+proc (^Token).span(self) -> source.Span {
+    switch self {
+        is expression.Number as variant {
+            return variant.span
+        }
+        is Plus as variant {
+            return variant.span
+        }
+        is Minus as variant {
+            return variant.span
+        }
+        is Multiply as variant {
+            return variant.span
+        }
+        is Divide as variant {
+            return variant.span
+        }
+        is Stop as variant {
+            return variant.span
+        }
+        is source.Error as variant {
+            return variant.span
+        }
+        is nil {
+            return source.Span(start: 0, end: 0)
+        }
+    }
+}
+
+proc (^io.Writer).write(self, token: ^Token) -> ^io.Writer {
+    switch token {
+        is expression.Number as number {
+            return self.write("Number: ").write(signed: number.value)
+        }
+        is Plus {
+            return self.write("Plus")
+        }
+        is Minus {
+            return self.write("Minus")
+        }
+        is Multiply {
+            return self.write("Multiply")
+        }
+        is Divide {
+            return self.write("Divide")
+        }
+        is Stop {
+            return self.write("Stop")
+        }
+        is source.Error as error {
+            return self.write("Error: ").write(error.message)
+        }
+        is nil {
+            return self.write("Nil!")
+        }
+    }
+    return self
+}

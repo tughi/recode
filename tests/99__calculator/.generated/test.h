@@ -3,174 +3,17 @@
 
 #include "builtin_types.h"
 
+#include "calculator__expression.h"
+#include "calculator__parser.h"
+#include "calculator__tokenizer.h"
 #include "calculator__source.h"
 #include "io.h"
 #include "libc.h"
 #include "os.h"
-
-struct test_Number {
-    struct calculator__source_Span span;
-    int32_t value;
-};
-
-struct test_Plus {
-    struct calculator__source_Span span;
-};
-
-struct test_Minus {
-    struct calculator__source_Span span;
-};
-
-struct test_Multiply {
-    struct calculator__source_Span span;
-};
-
-struct test_Divide {
-    struct calculator__source_Span span;
-};
-
-struct test_Stop {
-    struct calculator__source_Span span;
-};
-
-struct test_Error {
-    struct calculator__source_Span span;
-    struct String message;
-};
-
-struct test_Token {
-    int32_t variant;
-    union {
-        struct test_Number variant_1;
-        struct test_Plus variant_2;
-        struct test_Minus variant_3;
-        struct test_Multiply variant_4;
-        struct test_Divide variant_5;
-        struct test_Stop variant_6;
-        struct test_Error variant_7;
-    };
-};
-
-struct test_Tokenizer {
-    uint8_t *data;
-    int32_t index;
-    struct test_Token current_token;
-};
-
-struct test_Parser {
-    struct test_Tokenizer tokenizer;
-};
-
-struct test_Addition {
-    struct calculator__source_Span span;
-    struct test_Expression *left;
-    struct test_Expression *right;
-};
-
-struct test_Division {
-    struct calculator__source_Span span;
-    struct test_Expression *left;
-    struct test_Expression *right;
-};
-
-struct test_Multiplication {
-    struct calculator__source_Span span;
-    struct test_Expression *left;
-    struct test_Expression *right;
-};
-
-struct test_Subtraction {
-    struct calculator__source_Span span;
-    struct test_Expression *left;
-    struct test_Expression *right;
-};
-
-struct test_Expression {
-    int32_t variant;
-    union {
-        struct test_Number variant_1;
-        struct test_Addition variant_2;
-        struct test_Division variant_3;
-        struct test_Multiplication variant_4;
-        struct test_Subtraction variant_5;
-        struct test_Error variant_6;
-    };
-};
-
-struct test_String_Builder {
-    uint8_t *data;
-    uintmax_t data_size;
-    uintmax_t length;
-};
-
-struct test_Parser *__alloc__test_Parser__(struct test_Parser value);
-
-struct test_Tokenizer *__alloc__test_Tokenizer__(struct test_Tokenizer value);
-
-struct test_Token *__alloc__test_Token__(struct test_Token value);
-
-struct test_Number *__alloc__test_Number__(struct test_Number value);
-
-struct test_Plus *__alloc__test_Plus__(struct test_Plus value);
-
-struct test_Minus *__alloc__test_Minus__(struct test_Minus value);
-
-struct test_Multiply *__alloc__test_Multiply__(struct test_Multiply value);
-
-struct test_Divide *__alloc__test_Divide__(struct test_Divide value);
-
-struct test_Stop *__alloc__test_Stop__(struct test_Stop value);
-
-struct test_Error *__alloc__test_Error__(struct test_Error value);
-
-struct test_Expression *__alloc__test_Expression__(struct test_Expression value);
-
-struct test_Addition *__alloc__test_Addition__(struct test_Addition value);
-
-struct test_Division *__alloc__test_Division__(struct test_Division value);
-
-struct test_Multiplication *__alloc__test_Multiplication__(struct test_Multiplication value);
-
-struct test_Subtraction *__alloc__test_Subtraction__(struct test_Subtraction value);
-
-struct test_String_Builder *__alloc__test_String_Builder__(struct test_String_Builder value);
+#include "string.h"
 
 int32_t test__main(int32_t argc, uint8_t **argv);
 
-int32_t test__evaluate__0_expression(struct test_Expression *expression);
-
-struct test_Expression ptest_Parser__parse_expression(struct test_Parser *self);
-
-struct test_Expression ptest_Parser__parse_additive_expression(struct test_Parser *self);
-
-struct test_Expression ptest_Parser__parse_multiplicative_expression(struct test_Parser *self);
-
-struct test_Expression ptest_Parser__parse_primary_expression(struct test_Parser *self);
-
-struct calculator__source_Span ptest_Expression__span(struct test_Expression *self);
-
-struct io_Writer *pio_Writer__write__1_expression(struct io_Writer *self, struct test_Expression *expression);
-
-struct test_Token ptest_Tokenizer__peek_token(struct test_Tokenizer *self);
-
-struct test_Token ptest_Tokenizer__next_token(struct test_Tokenizer *self);
-
-struct test_Token ptest_Tokenizer__scan_token(struct test_Tokenizer *self);
-
-struct test_Token ptest_Tokenizer__scan_number_token(struct test_Tokenizer *self);
-
-struct calculator__source_Span ptest_Token__span(struct test_Token *self);
-
-struct io_Writer *pio_Writer__write__1_token(struct io_Writer *self, struct test_Token *token);
-
-struct test_String_Builder *ptest_String_Builder__write__1_char(struct test_String_Builder *self, uint8_t c);
-
-struct String ptest_String_Builder__build(struct test_String_Builder *self);
-
-struct test_String_Builder test__make_string_builder();
-
-struct test_String_Builder test__make_string_builder__0_initial_data_size(uintmax_t initial_data_size);
-
-void ptest_String_Builder__write_char(struct test_String_Builder *self, uint8_t c);
+int32_t test__evaluate__0_expression(struct calculator__expression_Expression *expression);
 
 #endif // __test_H__

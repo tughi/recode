@@ -1,0 +1,79 @@
+import calculator.expression
+import calculator.source
+import calculator.tokenizer
+
+type Parser = struct {
+    tokenizer: tokenizer.Tokenizer
+}
+
+proc (^Parser).parse_expression(self) -> expression.Expression {
+    return self.parse_additive_expression()
+}
+
+proc (^Parser).parse_additive_expression(self) -> expression.Expression {
+    let parsed_expression = self.parse_multiplicative_expression()
+    loop {
+        switch self.tokenizer.peek_token() {
+            is tokenizer.Plus as plus {
+                self.tokenizer.next_token()
+                let other_expression = self.parse_multiplicative_expression()
+                parsed_expression = expression.Addition(
+                    span: source.Span(start: parsed_expression.span().start, end: other_expression.span().end)
+                    left: alloc parsed_expression
+                    right: alloc other_expression
+                )
+            }
+            is tokenizer.Minus as minus {
+                self.tokenizer.next_token()
+                let other_expression = self.parse_multiplicative_expression()
+                parsed_expression = expression.Subtraction(
+                    span: source.Span(start: parsed_expression.span().start, end: other_expression.span().end)
+                    left: alloc parsed_expression
+                    right: alloc other_expression
+                )
+            }
+            else {
+                break
+            }
+        }
+    }
+    return parsed_expression
+}
+
+proc (^Parser).parse_multiplicative_expression(self) -> expression.Expression {
+    let parsed_expression = self.parse_primary_expression()
+    loop {
+        let token = self.tokenizer.peek_token()
+        if token is tokenizer.Multiply as multiply {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            parsed_expression = expression.Multiplication(
+                span: source.Span(start: parsed_expression.span().start, end: other_expression.span().end)
+                left: alloc parsed_expression
+                right: alloc other_expression
+            )
+        } else if token is tokenizer.Divide as divide {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            parsed_expression = expression.Division(
+                span: source.Span(start: parsed_expression.span().start, end: other_expression.span().end)
+                left: alloc parsed_expression
+                right: alloc other_expression
+            )
+        } else {
+            break
+        }
+    }
+    return parsed_expression
+}
+
+proc (^Parser).parse_primary_expression(self) -> expression.Expression {
+    let token = self.tokenizer.next_token()
+    if token is expression.Number as number {
+        return number
+    }
+    return source.Error(
+        span: token.span()
+        message: "Expected number"
+    )
+}
