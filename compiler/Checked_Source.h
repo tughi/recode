@@ -83,6 +83,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__MAKE_STRUCT,
     CHECKED_EXPRESSION_KIND__MAKE_UNION,
     CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
+    CHECKED_EXPRESSION_KIND__METHOD,
     CHECKED_EXPRESSION_KIND__MINUS,
     CHECKED_EXPRESSION_KIND__MODULO,
     CHECKED_EXPRESSION_KIND__MULTIPLY,
@@ -545,6 +546,15 @@ typedef struct Checked_Member_Access_Expression {
 } Checked_Member_Access_Expression;
 
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
+
+typedef struct Checked_Method_Expression {
+    Checked_Expression super;
+    Checked_Expression *receiver_expression;
+    Checked_Expression *procedure_expression;
+    Checked_Procedure_Type *procedure_type;
+} Checked_Method_Expression;
+
+Checked_Method_Expression *Checked_Method_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *receiver_expression, Checked_Expression *procedure_expression, Checked_Procedure_Type *procedure_type);
 
 typedef struct Checked_Minus_Expression {
     Checked_Unary_Expression super;

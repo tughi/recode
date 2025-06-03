@@ -5,13 +5,13 @@ int32_t test__main() {
 #line 2 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
     int32_t (*procedure_pointer)(int32_t value);
 #line 4 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
-    procedure_pointer = test__echo__0_value;
+    procedure_pointer = test__echo;
 #line 6 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
     return 0;
 }
 
 #line 9 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
-int32_t test__echo__0_value(int32_t value) {
+int32_t test__echo(int32_t value) {
 #line 10 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
     return value;
 }

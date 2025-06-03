@@ -4,7 +4,7 @@ type Writer = trait {
     proc write_char(self, anon c: u8)
 }
 
-proc (^Writer).write(self, anon string: str) -> ^Writer {
+proc (^Writer).write_string(self, anon string: str) -> ^Writer {
     let string_copy = string
     let string_data = (^string_copy).as(^String).data
     let index = 0usize
@@ -20,14 +20,14 @@ proc (^Writer).write(self, char c: u8) -> ^Writer {
     return self
 }
 
-proc (^Writer).write(self, signed value: i32) -> ^Writer {
+proc (^Writer).write_signed(self, signed value: i32) -> ^Writer {
     \ TODO: Use a buffer to avoid recursion
     if value < 0 {
         self.write(char: '-')
-        return self.write(signed: -value)
+        return self.write_signed(signed: -value)
     }
     if value >= 10 {
-        self.write(signed: value / 10)
+        self.write_signed(signed: value / 10)
     }
     return self.write(char: (value // 10).as(u8) + '0')
 }

@@ -903,13 +903,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
     Source_Location location = Parser__consume_token(self, Token__is_proc)->location;
     Parser__consume_space(self, 1);
     Token *name = NULL;
-    if (Parser__matches_one(self, Token__is_opening_paren)) {
-        if (receiver_type != NULL) {
-            pWriter__begin_location_message(stderr_writer, name->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Procedure already has a receiver type");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
+    if (receiver_type == NULL && Parser__matches_one(self, Token__is_opening_paren)) {
         Parser__consume_token(self, Token__is_opening_paren);
         Parser__consume_space(self, 0);
         receiver_type = Parser__parse_type(self);
@@ -940,7 +934,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_external);
-        return Parsed_Procedure_Statement__create(location, name, receiver_type, first_parameter, return_type, NULL, true);
+        return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, NULL, true);
     }
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
         pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
@@ -958,7 +952,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
     Parser__consume_space(self, self->current_identation * 4);
     Token *closing_brace = Parser__consume_token(self, Token__is_closing_brace);
     location = Source_Location__union(location, closing_brace->location);
-    return Parsed_Procedure_Statement__create(location, name, receiver_type, first_parameter, return_type, statements, false);
+    return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, statements, false);
 }
 
 /*

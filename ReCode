@@ -424,13 +424,13 @@ def editor():
     if not os.path.exists(f'build/editor'):
         run(f'mkdir build/editor')
 
-    compiler_command = ['build/stage1/ReCode', 'code', 'editor/editor.code']
-    with open('build/editor/editor.c', 'w') as f:
-        if run(compiler_command, check=False, stdout=f).returncode != 0:
-            trace(*compiler_command)
-            exit(1)
-    assemble('build/editor/editor.c', 'build/editor/editor', sdl=True)
-    run('build/editor/editor')
+    compiler_command = ['build/stage1/ReCode', '--output-dir', 'build/editor', '--project-dir', 'editor', 'app', 'editor.code']
+    if run(compiler_command, capture_output=False, check=False).returncode != 0:
+        trace(*compiler_command)
+        exit(1)
+
+    if assemble([f'build/editor/{file}' for file in os.listdir('build/editor')], 'build/editor/editor', sdl=True, check=True):
+        run('build/editor/editor')
 
 
 def time():

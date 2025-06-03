@@ -11,7 +11,7 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     os.init()
 
     if argc != 2 {
-        exit(1)
+        libc.exit(1)
     }
 
     let input_tokenizer = tokenizer.Tokenizer(
@@ -21,7 +21,7 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
 
     while input_tokenizer.peek_token() is not tokenizer.Stop {
         let token = input_tokenizer.next_token()
-        os.stdout.write(token: ^token).end_line()
+        os.stdout.write_token(^token).end_line()
     }
 
     let input_parser = parser.Parser(tokenizer: tokenizer.Tokenizer(
@@ -29,10 +29,10 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
         index: 0
     ))
     let expression = input_parser.parse_expression()
-    os.stdout.write("Expression: ").write(expression: ^expression).end_line()
+    os.stdout.write_string("Expression: ").write_expression(^expression).end_line()
 
     let result = evaluate(expression: ^expression)
-    os.stdout.write("Result: ").write(signed: result).end_line()
+    os.stdout.write_string("Result: ").write_signed(signed: result).end_line()
 
     return 0
 }
@@ -55,7 +55,7 @@ proc evaluate(expression: ^expression.Expression) -> i32 {
             return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
         else {
-            exit(1)
+            libc.exit(1)
         }
     }
 }

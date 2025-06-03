@@ -324,9 +324,9 @@ void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_E
 
 void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expression *expression) {
     switch (expression->symbol->kind) {
-    case CHECKED_SYMBOL_KIND__VARIABLE: {
-        CDECL_Variable_Name cdecl_variable_name = CDECL_Variable_Name__create((Checked_Variable_Symbol *)expression->symbol);
-        cdecl_variable_name.super.write((CDECL_Name *)&cdecl_variable_name, self->writer);
+    case CHECKED_SYMBOL_KIND__PROCEDURE: {
+        CDECL_Procedure_Name procedure_name = CDECL_Procedure_Name__create((Checked_Procedure_Symbol *)expression->symbol);
+        procedure_name.super.write((CDECL_Name *)&procedure_name, self->writer);
         break;
     }
     case CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT: {
@@ -343,6 +343,11 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
         }
         pWriter__write__cstring(self->writer, "variant_");
         pWriter__write__int64(self->writer, variant_symbol->union_variant->index);
+        break;
+    }
+    case CHECKED_SYMBOL_KIND__VARIABLE: {
+        CDECL_Variable_Name variable_name = CDECL_Variable_Name__create((Checked_Variable_Symbol *)expression->symbol);
+        variable_name.super.write((CDECL_Name *)&variable_name, self->writer);
         break;
     }
     default:
@@ -674,7 +679,7 @@ void Generator__declare_external_type(Generator *self, Checked_External_Type *ex
 }
 
 void Generator__declare_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
-    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    CDECL_Procedure_Name procedure_name = CDECL_Procedure_Name__create(procedure_symbol);
     pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
@@ -684,7 +689,7 @@ void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *pr
         return;
     }
     Generator__write_source_location(self, procedure_symbol->super.location);
-    CDECL_Local_Name procedure_name = CDECL_Local_Name__create(procedure_symbol->super.name);
+    CDECL_Procedure_Name procedure_name = CDECL_Procedure_Name__create(procedure_symbol);
     pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
     pWriter__write__cstring(self->writer, " {\n");
     Generator__generate_statements(self, procedure_symbol->checked_statements);
@@ -1060,7 +1065,8 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     if (generate_main && main_procedure != NULL) {
         pWriter__write__cstring(generator.writer, "int32_t main(int argc, const char **argv) {\n");
         pWriter__write__cstring(generator.writer, "    return ");
-        pWriter__write__string(generator.writer, main_procedure->super.name);
+        CDECL_Procedure_Name main_procedure_name = CDECL_Procedure_Name__create(main_procedure);
+        main_procedure_name.super.write((CDECL_Name *)&main_procedure_name, generator.writer);
         if (main_procedure->procedure_type->first_parameter != NULL) {
             pWriter__write__cstring(generator.writer, "(argc, (uint8_t **)argv);\n");
         } else {

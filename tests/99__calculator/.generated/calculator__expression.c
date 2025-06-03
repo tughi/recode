@@ -78,43 +78,43 @@ struct calculator__source_Span pcalculator__expression_Expression__span(struct c
 }
 
 #line 68 "tests/99__calculator/calculator/expression.code"
-struct io_Writer *pio_Writer__write__1_expression(struct io_Writer *self, struct calculator__expression_Expression *expression) {
+struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct calculator__expression_Expression *expression) {
 #line 69 "tests/99__calculator/calculator/expression.code"
     struct calculator__expression_Expression *__switch_69_value__ = expression;
 #line 70 "tests/99__calculator/calculator/expression.code"
     if (__switch_69_value__->variant == 1) {
 #line 71 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write__1_signed(self, __switch_69_value__->variant_1.value);
+        return pio_Writer__write_signed(self, __switch_69_value__->variant_1.value);
     }
 #line 73 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 2) {
 #line 74 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_69_value__->variant_2.right), (struct String){.data = ")", .length = 1});
+        return pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_69_value__->variant_2.right), (struct String){.data = ")", .length = 1});
     }
 #line 76 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 3) {
 #line 77 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_69_value__->variant_3.right), (struct String){.data = ")", .length = 1});
+        return pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_69_value__->variant_3.right), (struct String){.data = ")", .length = 1});
     }
 #line 79 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 4) {
 #line 80 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_69_value__->variant_4.right), (struct String){.data = ")", .length = 1});
+        return pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_69_value__->variant_4.right), (struct String){.data = ")", .length = 1});
     }
 #line 82 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 5) {
 #line 83 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(pio_Writer__write__1_expression(pio_Writer__write(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_69_value__->variant_5.right), (struct String){.data = ")", .length = 1});
+        return pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_69_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_69_value__->variant_5.right), (struct String){.data = ")", .length = 1});
     }
 #line 85 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 6) {
 #line 86 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(pio_Writer__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_69_value__->variant_6.message);
+        return pio_Writer__write_string(pio_Writer__write_string(self, (struct String){.data = "Error: ", .length = 7}), __switch_69_value__->variant_6.message);
     }
 #line 88 "tests/99__calculator/calculator/expression.code"
     else if (__switch_69_value__->variant == 0) {
 #line 89 "tests/99__calculator/calculator/expression.code"
-        return pio_Writer__write(self, (struct String){.data = "Nil!", .length = 4});
+        return pio_Writer__write_string(self, (struct String){.data = "Nil!", .length = 4});
     }
 #line 92 "tests/99__calculator/calculator/expression.code"
     return self;

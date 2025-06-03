@@ -128,31 +128,31 @@ proc (^Token).span(self) -> source.Span {
     }
 }
 
-proc (^io.Writer).write(self, token: ^Token) -> ^io.Writer {
+proc (^io.Writer).write_token(self, anon token: ^Token) -> ^io.Writer {
     switch token {
         is expression.Number as number {
-            return self.write("Number: ").write(signed: number.value)
+            return self.write_string("Number: ").write_signed(signed: number.value)
         }
         is Plus {
-            return self.write("Plus")
+            return self.write_string("Plus")
         }
         is Minus {
-            return self.write("Minus")
+            return self.write_string("Minus")
         }
         is Multiply {
-            return self.write("Multiply")
+            return self.write_string("Multiply")
         }
         is Divide {
-            return self.write("Divide")
+            return self.write_string("Divide")
         }
         is Stop {
-            return self.write("Stop")
+            return self.write_string("Stop")
         }
         is source.Error as error {
-            return self.write("Error: ").write(error.message)
+            return self.write_string("Error: ").write_string(error.message)
         }
         is nil {
-            return self.write("Nil!")
+            return self.write_string("Nil!")
         }
     }
     return self

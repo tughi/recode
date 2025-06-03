@@ -446,17 +446,18 @@ void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbo
 }
 
 Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, Checked_Module *module, String *name) {
-    Checked_Symbol *symbol = self->last_symbol;
-    while (symbol != NULL) {
-        if (String__equals_string(name, symbol->name)) {
-            if (module == NULL || symbol->module == NULL || module == symbol->module) {
-                return symbol;
+    Checked_Symbols *symbols = self;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (String__equals_string(name, symbol->name)) {
+                if (module == NULL || symbol->module == NULL || module == symbol->module) {
+                    return symbol;
+                }
             }
+            symbol = symbol->prev_symbol;
         }
-        symbol = symbol->prev_symbol;
-    }
-    if (self->parent != NULL) {
-        return Checked_Symbols__find_symbol(self->parent, module, name);
+        symbols = symbols->parent;
     }
     return NULL;
 }
@@ -637,6 +638,14 @@ Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Sourc
     Checked_Member_Access_Expression *expression = (Checked_Member_Access_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type);
     expression->object_expression = object_expression;
     expression->member = member;
+    return expression;
+}
+
+Checked_Method_Expression *Checked_Method_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *receiver_expression, Checked_Expression *procedure_expression, Checked_Procedure_Type *procedure_type) {
+    Checked_Method_Expression *expression = (Checked_Method_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__METHOD, sizeof(Checked_Method_Expression), location, type);
+    expression->receiver_expression = receiver_expression;
+    expression->procedure_expression = procedure_expression;
+    expression->procedure_type = procedure_type;
     return expression;
 }
 

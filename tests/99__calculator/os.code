@@ -10,5 +10,5 @@ proc init() {
 }
 
 proc (^libc.FILE).write_char(self, anon c: u8) {
-    fputc(c.as(i32), self)
+    libc.fputc(c.as(i32), self)
 }

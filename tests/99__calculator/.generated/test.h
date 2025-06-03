@@ -14,6 +14,6 @@
 
 int32_t test__main(int32_t argc, uint8_t **argv);
 
-int32_t test__evaluate__0_expression(struct calculator__expression_Expression *expression);
+int32_t test__evaluate(struct calculator__expression_Expression *expression);
 
 #endif // __test_H__

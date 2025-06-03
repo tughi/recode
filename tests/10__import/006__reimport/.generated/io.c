@@ -1,7 +1,7 @@
 #include "io.h"
 
 #line 7 "tests/10__import/006__reimport/io.code"
-struct io_Writer *pio_Writer__write__1_char(struct io_Writer *writer, int32_t c) {
+struct io_Writer *pio_Writer__write(struct io_Writer *writer, int32_t c) {
 #line 8 "tests/10__import/006__reimport/io.code"
     writer->write_char(writer->self, c);
 #line 9 "tests/10__import/006__reimport/io.code"

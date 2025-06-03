@@ -179,48 +179,48 @@ struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calcula
 }
 
 #line 131 "tests/99__calculator/calculator/tokenizer.code"
-struct io_Writer *pio_Writer__write__1_token(struct io_Writer *self, struct calculator__tokenizer_Token *token) {
+struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calculator__tokenizer_Token *token) {
 #line 132 "tests/99__calculator/calculator/tokenizer.code"
     struct calculator__tokenizer_Token *__switch_132_value__ = token;
 #line 133 "tests/99__calculator/calculator/tokenizer.code"
     if (__switch_132_value__->variant == 1) {
 #line 134 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write__1_signed(pio_Writer__write(self, (struct String){.data = "Number: ", .length = 8}), __switch_132_value__->variant_1.value);
+        return pio_Writer__write_signed(pio_Writer__write_string(self, (struct String){.data = "Number: ", .length = 8}), __switch_132_value__->variant_1.value);
     }
 #line 136 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 2) {
 #line 137 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Plus", .length = 4});
+        return pio_Writer__write_string(self, (struct String){.data = "Plus", .length = 4});
     }
 #line 139 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 3) {
 #line 140 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Minus", .length = 5});
+        return pio_Writer__write_string(self, (struct String){.data = "Minus", .length = 5});
     }
 #line 142 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 4) {
 #line 143 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Multiply", .length = 8});
+        return pio_Writer__write_string(self, (struct String){.data = "Multiply", .length = 8});
     }
 #line 145 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 5) {
 #line 146 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Divide", .length = 6});
+        return pio_Writer__write_string(self, (struct String){.data = "Divide", .length = 6});
     }
 #line 148 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 6) {
 #line 149 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Stop", .length = 4});
+        return pio_Writer__write_string(self, (struct String){.data = "Stop", .length = 4});
     }
 #line 151 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 7) {
 #line 152 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(pio_Writer__write(self, (struct String){.data = "Error: ", .length = 7}), __switch_132_value__->variant_7.message);
+        return pio_Writer__write_string(pio_Writer__write_string(self, (struct String){.data = "Error: ", .length = 7}), __switch_132_value__->variant_7.message);
     }
 #line 154 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_132_value__->variant == 0) {
 #line 155 "tests/99__calculator/calculator/tokenizer.code"
-        return pio_Writer__write(self, (struct String){.data = "Nil!", .length = 4});
+        return pio_Writer__write_string(self, (struct String){.data = "Nil!", .length = 4});
     }
 #line 158 "tests/99__calculator/calculator/tokenizer.code"
     return self;
