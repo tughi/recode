@@ -333,12 +333,12 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         receiver_expression = NULL;
         break;
     }
-    case CHECKED_EXPRESSION_KIND__METHOD: {
-        Checked_Method_Expression *method_expression = (Checked_Method_Expression *)callee_expression;
-        procedure_expression = method_expression->procedure_expression;
-        procedure_type = method_expression->procedure_type;
-        receiver_expression = method_expression->receiver_expression;
-        free(method_expression);
+    case CHECKED_EXPRESSION_KIND__RECEIVER_METHOD: {
+        Checked_Receiver_Method_Expression *receiver_method_expression = (Checked_Receiver_Method_Expression *)callee_expression;
+        procedure_expression = receiver_method_expression->procedure_expression;
+        procedure_type = receiver_method_expression->procedure_type;
+        receiver_expression = receiver_method_expression->receiver_expression;
+        free(receiver_method_expression);
         break;
     }
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
@@ -865,7 +865,7 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
             if (String__equals_string(trait_method->name, parsed_expression->member_name->lexeme)) {
                 Checked_Member_Access_Expression *receiver_expression = Checked_Member_Access_Expression__create(object_expression->location, trait_type->self_struct_member->type, object_expression, trait_type->self_struct_member);
                 Checked_Member_Access_Expression *procedure_expression = Checked_Member_Access_Expression__create(parsed_expression->member_name->location, trait_method->struct_member->type, object_expression, trait_method->struct_member);
-                return (Checked_Expression *)Checked_Method_Expression__create(parsed_expression->super.location, trait_method->procedure_type->return_type, (Checked_Expression *)receiver_expression, (Checked_Expression *)procedure_expression, trait_method->procedure_type);
+                return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, trait_method->procedure_type->return_type, (Checked_Expression *)receiver_expression, (Checked_Expression *)procedure_expression, trait_method->procedure_type);
             }
         }
         break;
@@ -880,7 +880,7 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
     for (method = self->methods->first_method; method != NULL; method = method->next_method) {
         if (Checked_Type__equals(method->receiver_type, object_type) && String__equals_string(method->procedure_symbol->procedure_name, parsed_expression->member_name->lexeme)) {
             Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)method->procedure_symbol->super.type, (Checked_Symbol *)method->procedure_symbol);
-            return (Checked_Expression *)Checked_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
+            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
         }
     }
 
@@ -891,7 +891,7 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
                 object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
                 object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
                 Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)method->procedure_symbol->super.type, (Checked_Symbol *)method->procedure_symbol);
-                return (Checked_Expression *)Checked_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
+                return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
             }
         }
     }
