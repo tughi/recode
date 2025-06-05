@@ -467,10 +467,8 @@ Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, Checked_Modu
     while (symbols != NULL) {
         Checked_Symbol *symbol = symbols->last_symbol;
         while (symbol != NULL) {
-            if (String__equals_string(name, symbol->name)) {
-                if (module == NULL || symbol->module == NULL || module == symbol->module) {
-                    return symbol;
-                }
+            if (module == symbol->module && String__equals_string(name, symbol->name)) {
+                return symbol;
             }
             symbol = symbol->prev_symbol;
         }

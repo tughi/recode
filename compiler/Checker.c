@@ -39,6 +39,8 @@ typedef struct Checker {
     Parsed_Source *parsed_source;
 
     Builtin_Types *builtin_types;
+    Checked_Module *builtin_module;
+
     Checked_Symbols *global_symbols;
     Checked_Symbols *symbols;
 
@@ -51,12 +53,14 @@ typedef struct Checker {
     Checked_Type *return_type;
 } Checker;
 
-Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_types, Checked_Symbols *global_symbols, Checked_Module *first_module, Checked_Methods *methods) {
+Checker *Checker__create(Parsed_Source *parsed_source, Builtin_Types *builtin_types, Checked_Module *builtin_module, Checked_Symbols *global_symbols, Checked_Module *first_module, Checked_Methods *methods) {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
 
     checker->parsed_source = parsed_source;
 
     checker->builtin_types = builtin_types;
+    checker->builtin_module = builtin_module;
+
     checker->global_symbols = checker->symbols = global_symbols;
 
     checker->checked_module = (Checked_Module *)malloc(sizeof(Checked_Module));
@@ -270,7 +274,7 @@ Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed
         panic();
     }
     Checked_Type *type = ((Checked_Pointer_Type *)array_type)->other_type;
-    Checked_Expression *index_expression = Checker__check_expression(self, parsed_expression->index_expression, (Checked_Type *)self->builtin_types->isize_type);
+    Checked_Expression *index_expression = Checker__check_expression(self, parsed_expression->index_expression, NULL);
     Checker__require_numeric_type(self, index_expression->type, index_expression->location);
     return (Checked_Expression *)Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression);
 }
@@ -524,7 +528,7 @@ Checked_Expression *Checker__check_equals_expression(Checker *self, Parsed_Equal
 }
 
 Checked_Expression *Checker__check_greater_expression(Checker *self, Parsed_Greater_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checker__require_numeric_type(self, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
@@ -532,7 +536,7 @@ Checked_Expression *Checker__check_greater_expression(Checker *self, Parsed_Grea
 }
 
 Checked_Expression *Checker__check_greater_or_equals_expression(Checker *self, Parsed_Greater_Or_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checker__require_numeric_type(self, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
@@ -784,7 +788,7 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expres
 }
 
 Checked_Expression *Checker__check_less_expression(Checker *self, Parsed_Less_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checker__require_numeric_type(self, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
@@ -792,7 +796,7 @@ Checked_Expression *Checker__check_less_expression(Checker *self, Parsed_Less_Ex
 }
 
 Checked_Expression *Checker__check_less_or_equals_expression(Checker *self, Parsed_Less_Or_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checker__require_numeric_type(self, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
@@ -815,7 +819,7 @@ Checked_Expression *Checker__check_logic_or_expression(Checker *self, Parsed_Log
     return (Checked_Expression *)Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
-Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name, Checked_Type *expected_type);
+Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name);
 
 Checked_Expression *Checker__check_member_access_expression(Checker *self, Parsed_Member_Access_Expression *parsed_expression) {
     Checked_Expression *object_expression = Checker__check_expression(self, parsed_expression->object_expression, NULL);
@@ -832,7 +836,7 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
             }
             Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
             Checked_Module *other_module = import_symbol->other_module;
-            return Checker__check_module_symbol_expression(self, other_module, parsed_expression->super.location, parsed_expression->member_name, NULL);
+            return Checker__check_module_symbol_expression(self, other_module, parsed_expression->super.location, parsed_expression->member_name);
         }
         pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not an import");
@@ -964,55 +968,19 @@ Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Sub
     return (Checked_Expression *)Checked_Subtract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
-Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression, Checked_Type *expected_type) {
-    return Checker__check_module_symbol_expression(self, self->checked_module, parsed_expression->super.location, parsed_expression->name, expected_type);
+Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression) {
+    return Checker__check_module_symbol_expression(self, self->checked_module, parsed_expression->super.location, parsed_expression->name);
 }
 
-Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name, Checked_Type *expected_type) {
-    if (expected_type != NULL && expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
-        Checked_Symbol *symbol = self->global_symbols->first_symbol;
-        for (; symbol != NULL; symbol = symbol->next_symbol) {
-            if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-                Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
-                if (String__equals_string(procedure_symbol->procedure_name, symbol_name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
-                    return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, expected_type, symbol);
-                }
-            }
-        }
-        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Undefined procedure: ");
-        pWriter__write__string(stderr_writer, symbol_name->lexeme);
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
+Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name) {
     Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, checked_module, symbol_name->lexeme);
     if (symbol == NULL) {
-        /* Check builtin symbols */
-        symbol = Checked_Symbols__find_symbol(self->builtin_types->symbols, NULL, symbol_name->lexeme);
+        symbol = Checked_Symbols__find_symbol(self->builtin_types->symbols, self->builtin_module, symbol_name->lexeme);
     }
     if (symbol == NULL) {
-        if (expected_type == NULL) {
-            Checked_Symbol *procedure_symbol = NULL;
-            int procedure_simbols = 0;
-            symbol = self->global_symbols->first_symbol;
-            for (; symbol != NULL; symbol = symbol->next_symbol) {
-                if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_string(((Checked_Procedure_Symbol *)symbol)->procedure_name, symbol_name->lexeme)) {
-                    procedure_symbol = symbol;
-                    procedure_simbols++;
-                }
-            }
-            if (procedure_simbols == 1) {
-                return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, procedure_symbol->type, procedure_symbol);
-            } else if (procedure_simbols > 1) {
-                pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "Found ");
-                pWriter__write__int64(stderr_writer, procedure_simbols);
-                pWriter__write__cstring(stderr_writer, " procedures named: ");
-                pWriter__write__string(stderr_writer, symbol_name->lexeme);
-                pWriter__end_location_message(stderr_writer);
-                panic();
-            }
-        }
+        symbol = Checked_Symbols__find_symbol(self->global_symbols, NULL, symbol_name->lexeme);
+    }
+    if (symbol == NULL) {
         pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined symbol: ");
         pWriter__write__string(stderr_writer, symbol_name->lexeme);
@@ -1091,7 +1059,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     case PARSED_EXPRESSION_KIND__SUBTRACT:
         return Checker__check_subtract_expression(self, (Parsed_Subtract_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__SYMBOL:
-        return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression, expected_type);
+        return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression);
     }
     pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unsupported expression kind");
@@ -1900,7 +1868,7 @@ void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *par
     }
     if (module == NULL) {
         /* Imported module must be checked yet */
-        Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types, self->global_symbols, self->first_module, self->methods);
+        Checker *module_checker = Checker__create(parsed_statement->parsed_source, self->builtin_types, self->builtin_module, self->global_symbols, self->first_module, self->methods);
         Checker__check_module(module_checker);
         module = module_checker->checked_module;
 
@@ -2055,10 +2023,10 @@ Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parse
     methods->first_method = NULL;
     methods->last_method = NULL;
 
-    Checker *builtin_checker = Checker__create(parsed_builtin_source, builtin_types, builtin_types->symbols, NULL, methods);
+    Checker *builtin_checker = Checker__create(parsed_builtin_source, builtin_types, NULL, builtin_types->symbols, NULL, methods);
     Checker__check_module(builtin_checker);
 
-    Checker *checker = Checker__create(parsed_source, builtin_types, Checked_Symbols__create(builtin_types->symbols), NULL, methods);
+    Checker *checker = Checker__create(parsed_source, builtin_types, builtin_checker->checked_module, Checked_Symbols__create(builtin_types->symbols), NULL, methods);
     Checker__check_module(checker);
 
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));

@@ -2,16 +2,16 @@ import os
 import sdl
 
 proc main() -> i32 {
-    if SDL_Init(0x20) != 0 {
+    if sdl.SDL_Init(0x20) != 0 {
         return 1
     }
 
-    let window = create_window(title: "Hello, World!", x: 100, y: 100, w: 640, h: 480, flags: 0)
+    let window = sdl.create_window(title: "Hello, World!", x: 100, y: 100, w: 640, h: 480, flags: 0)
     if window == null {
         return 1
     }
 
-    let surface = SDL_GetWindowSurface(window)
+    let surface = sdl.SDL_GetWindowSurface(window)
     if surface == null {
         return 1
     }
@@ -19,17 +19,17 @@ proc main() -> i32 {
     let event = sdl.Event()
     let running = true
     while running {
-        while SDL_PollEvent(^event) != 0 {
+        while sdl.SDL_PollEvent(^event) != 0 {
             if event.type == 0x100 {
                 running = false
             }
         }
-        SDL_UpdateWindowSurface(window)
+        sdl.SDL_UpdateWindowSurface(window)
     }
 
     window.destroy()
 
-    SDL_Quit()
+    sdl.SDL_Quit()
 
     return 0
 }
