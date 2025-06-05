@@ -12,11 +12,11 @@ struct io_Writer {
 
 struct io_Writer *__alloc__io_Writer__(struct io_Writer value);
 
-struct io_Writer *pio_Writer__write(struct io_Writer *self, struct String string);
+struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String string);
 
-struct io_Writer *pio_Writer__write__1_char(struct io_Writer *self, uint8_t c);
+struct io_Writer *pio_Writer__write(struct io_Writer *self, uint8_t c);
 
-struct io_Writer *pio_Writer__write__1_signed(struct io_Writer *self, int32_t value);
+struct io_Writer *pio_Writer__write_signed(struct io_Writer *self, int32_t value);
 
 struct io_Writer *pio_Writer__end_line(struct io_Writer *self);
 

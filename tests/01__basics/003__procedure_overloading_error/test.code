@@ -1,5 +1,0 @@
-proc test() {
-}
-
-proc test(anon value: i32) {
-}

@@ -87,6 +87,13 @@ bool Checked_Procedure_Type__equals(Checked_Procedure_Type *self, Checked_Proced
     Checked_Procedure_Parameter *self_parameter = self->first_parameter;
     Checked_Procedure_Parameter *other_parameter = other->first_parameter;
     while (self_parameter != NULL && other_parameter != NULL) {
+        if (self_parameter->label != NULL && other_parameter->label != NULL) {
+            if (!String__equals_string(self_parameter->label, other_parameter->label)) {
+                return false;
+            }
+        } else if (self_parameter->label != NULL || other_parameter->label != NULL) {
+            return false;
+        }
         if (!Checked_Type__equals(self_parameter->type, other_parameter->type)) {
             return false;
         }
@@ -259,15 +266,15 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         break;
     }
     case CHECKED_TYPE_KIND__PROCEDURE: {
-        panic();
-        break;
-    }
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type;
+        Checked_Procedure_Type *procedure_type = (Checked_Procedure_Type *)type;
         pWriter__write__cstring(self, "proc (");
-        Checked_Procedure_Parameter *procedure_parameter = procedure_pointer_type->procedure_type->first_parameter;
+        Checked_Procedure_Parameter *procedure_parameter = procedure_type->first_parameter;
         while (procedure_parameter != NULL) {
-            pWriter__write__string(self, procedure_parameter->name);
+            if (procedure_parameter->label != NULL) {
+                pWriter__write__string(self, procedure_parameter->label);
+            } else {
+                pWriter__write__cstring(self, "anon");
+            }
             pWriter__write__cstring(self, ": ");
             pWriter__write__checked_type(self, procedure_parameter->type);
             procedure_parameter = procedure_parameter->next_parameter;
@@ -275,8 +282,18 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
                 pWriter__write__cstring(self, ", ");
             }
         }
-        pWriter__write__cstring(self, ") -> ");
-        pWriter__write__checked_type(self, procedure_pointer_type->procedure_type->return_type);
+        if (procedure_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+            pWriter__write__cstring(self, ") -> ");
+            pWriter__write__checked_type(self, procedure_type->return_type);
+        } else {
+            pWriter__write__char(self, ')');
+        }
+        break;
+    }
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+        Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type;
+        pWriter__write__char(self, '^');
+        pWriter__write__checked_type(self, (Checked_Type *)procedure_pointer_type->procedure_type);
         break;
     }
     case CHECKED_TYPE_KIND__MULTI_POINTER: {
@@ -378,7 +395,7 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
         }
     }
     pWriter__write__char(writer, ')');
-    if (procedure_symbol->procedure_type->return_type != NULL) {
+    if (procedure_symbol->procedure_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__write__cstring(writer, " -> ");
         pWriter__write__checked_type(writer, procedure_symbol->procedure_type->return_type);
     }
@@ -446,17 +463,16 @@ void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbo
 }
 
 Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, Checked_Module *module, String *name) {
-    Checked_Symbol *symbol = self->last_symbol;
-    while (symbol != NULL) {
-        if (String__equals_string(name, symbol->name)) {
-            if (module == NULL || symbol->module == NULL || module == symbol->module) {
+    Checked_Symbols *symbols = self;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (module == symbol->module && String__equals_string(name, symbol->name)) {
                 return symbol;
             }
+            symbol = symbol->prev_symbol;
         }
-        symbol = symbol->prev_symbol;
-    }
-    if (self->parent != NULL) {
-        return Checked_Symbols__find_symbol(self->parent, module, name);
+        symbols = symbols->parent;
     }
     return NULL;
 }
@@ -637,6 +653,14 @@ Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Sourc
     Checked_Member_Access_Expression *expression = (Checked_Member_Access_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type);
     expression->object_expression = object_expression;
     expression->member = member;
+    return expression;
+}
+
+Checked_Receiver_Method_Expression *Checked_Receiver_Method_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *receiver_expression, Checked_Expression *procedure_expression, Checked_Procedure_Type *procedure_type) {
+    Checked_Receiver_Method_Expression *expression = (Checked_Receiver_Method_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RECEIVER_METHOD, sizeof(Checked_Receiver_Method_Expression), location, type);
+    expression->receiver_expression = receiver_expression;
+    expression->procedure_expression = procedure_expression;
+    expression->procedure_type = procedure_type;
     return expression;
 }
 

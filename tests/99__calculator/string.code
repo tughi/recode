@@ -29,13 +29,13 @@ proc (^Builder).build(self) -> str {
 }
 
 proc make_string_builder() -> Builder {
-    return make_string_builder(initial_data_size: 4)
+    return make_string_builder_with_data_size(4)
 }
 
-proc make_string_builder(initial_data_size: usize) -> Builder {
+proc make_string_builder_with_data_size(anon data_size: usize) -> Builder {
     return Builder(
-        data: libc.malloc(initial_data_size.as(u64)).as([^]u8)
-        data_size: initial_data_size
+        data: libc.malloc(data_size.as(u64)).as([^]u8)
+        data_size: data_size
         length: 0
     )
 }

@@ -18,6 +18,13 @@ typedef struct CDECL_Local_Name {
 
 CDECL_Local_Name CDECL_Local_Name__create(String *name);
 
+typedef struct CDECL_Procedure_Name {
+    CDECL_Name super;
+    Checked_Procedure_Symbol *procedure_symbol;
+} CDECL_Procedure_Name;
+
+CDECL_Procedure_Name CDECL_Procedure_Name__create(Checked_Procedure_Symbol *procedure_symbol);
+
 typedef struct CDECL_Variable_Name {
     CDECL_Name super;
     Checked_Variable_Symbol *variable_symbol;

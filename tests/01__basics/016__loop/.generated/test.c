@@ -3,11 +3,11 @@
 #line 1 "tests/01__basics/016__loop/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/016__loop/test.code"
-    return test__fibonacci__0_of(12) - 144;
+    return test__fibonacci(12) - 144;
 }
 
 #line 5 "tests/01__basics/016__loop/test.code"
-int32_t test__fibonacci__0_of(int32_t n) {
+int32_t test__fibonacci(int32_t n) {
 #line 6 "tests/01__basics/016__loop/test.code"
     if (n <= 1) {
 #line 7 "tests/01__basics/016__loop/test.code"

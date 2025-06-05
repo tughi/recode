@@ -61,6 +61,6 @@ struct calculator__expression_Subtraction *__alloc__calculator__expression_Subtr
 
 struct calculator__source_Span pcalculator__expression_Expression__span(struct calculator__expression_Expression *self);
 
-struct io_Writer *pio_Writer__write__1_expression(struct io_Writer *self, struct calculator__expression_Expression *expression);
+struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct calculator__expression_Expression *expression);
 
 #endif // __calculator__expression_H__

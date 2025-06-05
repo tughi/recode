@@ -1,0 +1,43 @@
+type Window = external
+type Surface = external
+
+type Event = struct {
+    type: u32
+    timestamp: u32
+    window_id: u32
+    _data_1: u64
+    _data_2: u64
+    _data_3: u64
+    _data_4: u64
+    _data_5: u64
+    _data_6: u64
+    _data_7: u64
+}
+
+proc SDL_Init(anon flags: u32) -> i32 = external
+
+proc SDL_Quit() = external
+
+proc SDL_GetError() -> ^u8 = external
+
+proc SDL_Delay(anon ms: u32) = external
+
+proc SDL_CreateWindow(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^Window = external
+
+proc SDL_GetWindowSurface(anon window: ^Window) -> ^Surface = external
+
+proc SDL_UpdateWindowSurface(anon window: ^Window) -> i32 = external
+
+proc SDL_DestroyWindow(anon window: ^Window) = external
+
+proc SDL_PollEvent(anon event: ^Event) -> i32 = external
+
+proc create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> ^Window {
+    let title_copy = title
+    let title_data = (^title_copy).as(^String).data
+    return SDL_CreateWindow(title_data, x, y, w, h, flags)
+}
+
+proc (^Window).destroy(self) {
+    SDL_DestroyWindow(self)
+}

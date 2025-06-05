@@ -70,6 +70,6 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_number
 
 struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calculator__tokenizer_Token *self);
 
-struct io_Writer *pio_Writer__write__1_token(struct io_Writer *self, struct calculator__tokenizer_Token *token);
+struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calculator__tokenizer_Token *token);
 
 #endif // __calculator__tokenizer_H__

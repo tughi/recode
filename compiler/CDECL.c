@@ -216,6 +216,21 @@ CDECL_Local_Name CDECL_Local_Name__create(String *name) {
     return local_name;
 }
 
+void CDECL_Procedure_Name__write(CDECL_Procedure_Name *self, Writer *writer) {
+    if (self->procedure_symbol->super.is_global && self->procedure_symbol->checked_statements != NULL && self->procedure_symbol->receiver_type == NULL) {
+        pWriter__write__string(writer, self->procedure_symbol->super.module->name);
+        pWriter__write__cstring(writer, "__");
+    }
+    pWriter__write__string(writer, self->procedure_symbol->super.name);
+}
+
+CDECL_Procedure_Name CDECL_Procedure_Name__create(Checked_Procedure_Symbol *procedure_symbol) {
+    CDECL_Procedure_Name procedure_name;
+    procedure_name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Procedure_Name__write;
+    procedure_name.procedure_symbol = procedure_symbol;
+    return procedure_name;
+}
+
 void CDECL_Variable_Name__write(CDECL_Variable_Name *self, Writer *writer) {
     if (self->variable_symbol->super.is_global && !self->variable_symbol->statement->is_external) {
         pWriter__write__string(writer, self->variable_symbol->super.module->name);

@@ -65,28 +65,28 @@ proc (^Expression).span(self) -> source.Span {
     }
 }
 
-proc (^io.Writer).write(self, expression: ^Expression) -> ^io.Writer {
+proc (^io.Writer).write_expression(self, anon expression: ^Expression) -> ^io.Writer {
     switch expression {
         is Number as number {
-            return self.write(signed: number.value)
+            return self.write_signed(signed: number.value)
         }
         is Addition as addition {
-            return self.write("(").write(expression: addition.left).write(" + ").write(expression: addition.right).write(")")
+            return self.write_string("(").write_expression(addition.left).write_string(" + ").write_expression(addition.right).write_string(")")
         }
         is Division as division {
-            return self.write("(").write(expression: division.left).write(" / ").write(expression: division.right).write(")")
+            return self.write_string("(").write_expression(division.left).write_string(" / ").write_expression(division.right).write_string(")")
         }
         is Multiplication as multiplication {
-            return self.write("(").write(expression: multiplication.left).write(" * ").write(expression: multiplication.right).write(")")
+            return self.write_string("(").write_expression(multiplication.left).write_string(" * ").write_expression(multiplication.right).write_string(")")
         }
         is Subtraction as subtraction {
-            return self.write("(").write(expression: subtraction.left).write(" - ").write(expression: subtraction.right).write(")")
+            return self.write_string("(").write_expression(subtraction.left).write_string(" - ").write_expression(subtraction.right).write_string(")")
         }
         is source.Error as error {
-            return self.write("Error: ").write(error.message)
+            return self.write_string("Error: ").write_string(error.message)
         }
         is nil {
-            return self.write("Nil!")
+            return self.write_string("Nil!")
         }
     }
     return self

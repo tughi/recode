@@ -438,14 +438,14 @@ Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Lo
 
 typedef struct Parsed_Procedure_Statement {
     Parsed_Named_Statement super;
-    Parsed_Type *receiver_type;
+    bool is_method;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
     struct Parsed_Statements *statements;
     bool is_external;
 } Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type *receiver_type, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *resturn_type, struct Parsed_Statements *statements, bool is_external);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, struct Parsed_Statements *statements, bool is_external);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;

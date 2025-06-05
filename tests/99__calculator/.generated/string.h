@@ -13,13 +13,13 @@ struct string_Builder {
 
 struct string_Builder *__alloc__string_Builder__(struct string_Builder value);
 
-struct string_Builder *pstring_Builder__write__1_char(struct string_Builder *self, uint8_t c);
+struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8_t c);
 
 struct String pstring_Builder__build(struct string_Builder *self);
 
 struct string_Builder string__make_string_builder();
 
-struct string_Builder string__make_string_builder__0_initial_data_size(uintmax_t initial_data_size);
+struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_size);
 
 void pstring_Builder__write_char(struct string_Builder *self, uint8_t c);
 
