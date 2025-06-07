@@ -871,16 +871,26 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
 
     if (object_type->kind == CHECKED_TYPE_KIND__MODULE) {
         if (object_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
-            Checked_Symbol *symbol = ((Checked_Symbol_Expression *)object_expression)->symbol;
-            if (symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
+            Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)object_expression;
+            if (symbol_expression->symbol->kind != CHECKED_SYMBOL_KIND__IMPORT) {
                 pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Not an import");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
-            Checked_Module *other_module = import_symbol->other_module;
-            return Checker__check_module_symbol_expression(self, other_module, parsed_expression->super.location, parsed_expression->member_name);
+            Checked_Module *module = ((Checked_Import_Symbol *)symbol_expression->symbol)->other_module;
+            Checked_Symbol *module_symbol = Checked_Symbols__find_symbol(self->global_symbols, module, parsed_expression->member_name->lexeme);
+            if (module_symbol == NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Module ");
+                pWriter__write__string(stderr_writer, module->name);
+                pWriter__write__cstring(stderr_writer, " has no ");
+                pWriter__write__string(stderr_writer, parsed_expression->member_name->lexeme);
+                pWriter__write__cstring(stderr_writer, " symbol");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, module_symbol->type, module_symbol);
         }
         pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not an import");
@@ -1013,31 +1023,28 @@ Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Sub
 }
 
 Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression) {
-    return Checker__check_module_symbol_expression(self, self->checked_module, parsed_expression->super.location, parsed_expression->name);
-}
-
-Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Checked_Module *checked_module, Source_Location expression_location, Token *symbol_name) {
-    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, checked_module, symbol_name->lexeme);
+    Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_module, parsed_expression->name->lexeme);
     if (symbol == NULL) {
-        symbol = Checked_Symbols__find_symbol(self->builtin_types->symbols, self->modules->builtin_module, symbol_name->lexeme);
+        symbol = Checked_Symbols__find_symbol(self->global_symbols->parent, self->modules->builtin_module, parsed_expression->name->lexeme);
     }
     if (symbol == NULL) {
-        symbol = Checked_Symbols__find_symbol(self->global_symbols, NULL, symbol_name->lexeme);
+        symbol = Checked_Symbols__find_symbol(self->builtin_types->symbols, NULL, parsed_expression->name->lexeme);
     }
+    Source_Location expression_location = parsed_expression->name->location;
     if (symbol == NULL || symbol->kind == CHECKED_SYMBOL_KIND__EXTERNAL) {
-        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined symbol: ");
-        pWriter__write__string(stderr_writer, symbol_name->lexeme);
+        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
     if (symbol->type == NULL) {
-        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Symbol without type");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, symbol->type, symbol);
+    return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol);
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
