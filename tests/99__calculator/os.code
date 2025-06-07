@@ -5,8 +5,8 @@ let stdout: ^io.Writer
 let stderr: ^io.Writer
 
 proc init() {
-    stdout = alloc io.Writer(libc.__stdoutp)
-    stderr = alloc io.Writer(libc.__stderrp)
+    stdout = alloc io.Writer(libc.stdout)
+    stderr = alloc io.Writer(libc.stderr)
 }
 
 proc (^libc.FILE).write_char(self, anon c: u8) {

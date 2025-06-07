@@ -244,6 +244,18 @@ typedef struct Checked_Module {
     struct Checked_Module *next_module;
 } Checked_Module;
 
+Checked_Module *Checked_Module__create(String *name, Source *source);
+
+typedef struct Checked_Modules {
+    Checked_Module *builtin_module;
+    Checked_Module *first_module;
+    Checked_Module *last_module;
+} Checked_Modules;
+
+void Checked_Modules__append(Checked_Modules *self, Checked_Module *module);
+
+Checked_Module *Checked_Modules__find(Checked_Modules *self, String *name);
+
 typedef struct Checked_Symbol {
     Checked_Symbol_Kind kind;
     Checked_Module *module;

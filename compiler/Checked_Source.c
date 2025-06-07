@@ -325,6 +325,34 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
 }
 
+Checked_Module *Checked_Module__create(String *name, Source *source) {
+    Checked_Module *module = (Checked_Module *)malloc(sizeof(Checked_Module));
+    module->name = name;
+    module->source = source;
+    module->next_module = NULL;
+    return module;
+}
+
+void Checked_Modules__append(Checked_Modules *self, Checked_Module *module) {
+    if (self->first_module == NULL) {
+        self->first_module = module;
+    } else {
+        self->last_module->next_module = module;
+    }
+    self->last_module = module;
+}
+
+Checked_Module *Checked_Modules__find(Checked_Modules *self, String *name) {
+    Checked_Module *module = self->first_module;
+    while (module != NULL) {
+        if (String__equals_string(module->name, name)) {
+            return module;
+        }
+        module = module->next_module;
+    }
+    return NULL;
+}
+
 Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Symbol *symbol = (Checked_Symbol *)malloc(kind_size);
     symbol->kind = kind;
