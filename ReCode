@@ -100,6 +100,7 @@ def assemble(source_files, output_file, sdl=False, **kwargs):
                 '-c', source_file,
                 '-o', object_file,
                 '-g',
+                '-Wno-builtin-requires-header',
                 '-Wno-incompatible-library-redeclaration',
                 '-Wno-pointer-sign',
                 '-Wno-return-type',

@@ -441,11 +441,12 @@ typedef struct Parsed_Procedure_Statement {
     bool is_method;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
-    struct Parsed_Statements *statements;
     bool is_external;
+    struct Parsed_Statements *statements;
+    String_Token *external_name;
 } Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, struct Parsed_Statements *statements, bool is_external);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
@@ -554,11 +555,12 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location,
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;
     Parsed_Type *type;
-    Parsed_Expression *expression;
     bool is_external;
+    Parsed_Expression *expression;
+    String_Token *external_name;
 } Parsed_Variable_Statement;
 
-Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external);
+Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, bool is_external, Parsed_Expression *expression, String_Token *external_name);
 
 typedef struct Parsed_While_Statement {
     Parsed_Statement super;

@@ -303,13 +303,14 @@ Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Lo
     return (Parsed_External_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__EXTERNAL_TYPE, sizeof(Parsed_External_Type_Statement), location, name);
 }
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Statements *statements, bool is_external) {
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
     Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
     statement->is_method = is_method;
     statement->first_parameter = first_parameter;
     statement->return_type = return_type;
-    statement->statements = statements;
     statement->is_external = is_external;
+    statement->statements = statements;
+    statement->external_name = external_name;
     return (Parsed_Statement *)statement;
 }
 
@@ -421,11 +422,12 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location,
     return statement;
 }
 
-Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external) {
+Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, bool is_external, Parsed_Expression *expression, String_Token *external_name) {
     Parsed_Variable_Statement *statement = (Parsed_Variable_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;
-    statement->expression = expression;
     statement->is_external = is_external;
+    statement->expression = expression;
+    statement->external_name = external_name;
     return statement;
 }
 

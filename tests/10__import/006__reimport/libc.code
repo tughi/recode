@@ -1,5 +1,5 @@
 type FILE = external
 
-let external __stdoutp: ^FILE
+let stdout: ^FILE = external "__stdoutp"
 
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external

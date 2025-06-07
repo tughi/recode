@@ -229,6 +229,7 @@ void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
+    CHECKED_SYMBOL_KIND__EXTERNAL,
     CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
@@ -243,6 +244,18 @@ typedef struct Checked_Module {
     struct Checked_Module *next_module;
 } Checked_Module;
 
+Checked_Module *Checked_Module__create(String *name, Source *source);
+
+typedef struct Checked_Modules {
+    Checked_Module *builtin_module;
+    Checked_Module *first_module;
+    Checked_Module *last_module;
+} Checked_Modules;
+
+void Checked_Modules__append(Checked_Modules *self, Checked_Module *module);
+
+Checked_Module *Checked_Modules__find(Checked_Modules *self, String *name);
+
 typedef struct Checked_Symbol {
     Checked_Symbol_Kind kind;
     Checked_Module *module;
@@ -256,18 +269,25 @@ typedef struct Checked_Symbol {
 
 Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
+typedef struct Checked_Enum_Member_Symbol {
+    Checked_Symbol super;
+} Checked_Enum_Member_Symbol;
+
+Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
+
+typedef struct Checked_External_Symbol {
+    Checked_Symbol super;
+    Checked_Symbol *other_symbol;
+} Checked_External_Symbol;
+
+Checked_External_Symbol *Checked_External_Symbol__create(Source_Location location, String *name, Checked_Symbol *other_symbol);
+
 typedef struct Checked_Import_Symbol {
     Checked_Symbol super;
     Checked_Module *other_module;
 } Checked_Import_Symbol;
 
 Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module);
-
-typedef struct Checked_Enum_Member_Symbol {
-    Checked_Symbol super;
-} Checked_Enum_Member_Symbol;
-
-Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
 
 typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
@@ -307,6 +327,7 @@ typedef struct Checked_Procedure_Symbol {
     Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
     Checked_Statements *checked_statements;
+    String *external_name;
 } Checked_Procedure_Symbol;
 
 Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
@@ -330,6 +351,7 @@ struct Checked_Variable_Statement;
 
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
+    String *external_name;
     struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
@@ -716,11 +738,11 @@ Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Lo
 typedef struct Checked_Variable_Statement {
     Checked_Statement super;
     Checked_Variable_Symbol *variable;
-    Checked_Expression *expression;
     bool is_external;
+    Checked_Expression *expression;
 } Checked_Variable_Statement;
 
-Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location location, Checked_Variable_Symbol *variable, Checked_Expression *expression, bool is_external);
+Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location location, Checked_Variable_Symbol *variable, bool is_external, Checked_Expression *expression);
 
 typedef struct Checked_While_Statement {
     Checked_Statement super;

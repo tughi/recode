@@ -844,18 +844,13 @@ Parsed_Type *Parser__parse_type(Parser *self) {
 
 /*
 variable
-    | "let" "external" IDENTIFIER ":" type
-    | "let" IDENTIFIER ( ":" type )? ( "=" expression )?
+    | "let" IDENTIFIER ":" type
+    | "let" IDENTIFIER ( ":" type )? "=" "external" STRING?
+    | "let" IDENTIFIER ( ":" type )? "=" expression
 */
 Parsed_Statement *Parser__parse_variable(Parser *self) {
     Source_Location location = Parser__consume_token(self, Token__is_let)->location;
     Parser__consume_space(self, 1);
-    bool is_external = false;
-    if (Parser__matches_one(self, Token__is_external)) {
-        is_external = true;
-        Parser__consume_token(self, Token__is_external);
-        Parser__consume_space(self, 1);
-    }
     Token *name = Parser__consume_token(self, Token__is_identifier);
     location = Source_Location__union(location, name->location);
     Parsed_Type *type = NULL;
@@ -867,14 +862,26 @@ Parsed_Statement *Parser__parse_variable(Parser *self) {
         location = Source_Location__union(location, type->location);
     }
     Parsed_Expression *expression = NULL;
+    String_Token *external_name = NULL;
+    bool is_external = false;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
-        expression = Parser__parse_expression(self);
-        location = Source_Location__union(location, expression->location);
+        if (Parser__matches_one(self, Token__is_external)) {
+            is_external = true;
+            location = Source_Location__union(location, Parser__consume_token(self, Token__is_external)->location);
+            if (Parser__matches_two(self, Token__is_space, false, Token__is_string)) {
+                Parser__consume_space(self, 1);
+                external_name = (String_Token *)Parser__consume_token(self, Token__is_string);
+                location = Source_Location__union(location, external_name->super.location);
+            }
+        } else {
+            expression = Parser__parse_expression(self);
+            location = Source_Location__union(location, expression->location);
+        }
     }
-    return (Parsed_Statement *)Parsed_Variable_Statement__create(location, name, type, expression, is_external);
+    return (Parsed_Statement *)Parsed_Variable_Statement__create(location, name, type, is_external, expression, external_name);
 }
 
 void Parser__parse_statements(Parser *self, Parsed_Statements *statements);
@@ -897,7 +904,7 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
 
 /*
 procedure
-    | "proc" ( "(" type ")" "." )? IDENTIFIER "(" procedure_parameter* ")" "->" type ( "=" "external" | block )
+    | "proc" ( "(" type ")" "." )? IDENTIFIER "(" procedure_parameter* ")" ( "->" type )? ( "=" "external" STRING? | block )
 */
 Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_type) {
     Source_Location location = Parser__consume_token(self, Token__is_proc)->location;
@@ -934,7 +941,12 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_external);
-        return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, NULL, true);
+        String_Token *external_name = NULL;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_string)) {
+            Parser__consume_space(self, 1);
+            external_name = (String_Token *)Parser__consume_token(self, Token__is_string);
+        }
+        return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, true, NULL, external_name);
     }
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
         pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
@@ -952,7 +964,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
     Parser__consume_space(self, self->current_identation * 4);
     Token *closing_brace = Parser__consume_token(self, Token__is_closing_brace);
     location = Source_Location__union(location, closing_brace->location);
-    return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, statements, false);
+    return Parsed_Procedure_Statement__create(location, name, receiver_type != NULL, first_parameter, return_type, false, statements, NULL);
 }
 
 /*
