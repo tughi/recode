@@ -342,6 +342,12 @@ Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *m
     return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), module, location, name, type, true);
 }
 
+Checked_External_Symbol *Checked_External_Symbol__create(Source_Location location, String *name, Checked_Symbol *other_symbol) {
+    Checked_External_Symbol *external_symbol = (Checked_External_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__EXTERNAL, sizeof(Checked_External_Symbol), NULL, location, name, other_symbol->type, true);
+    external_symbol->other_symbol = other_symbol;
+    return external_symbol;
+}
+
 Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module) {
     Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), module, location, name, type, true);
     import_symbol->other_module = other_module;
@@ -413,6 +419,7 @@ Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type, is_global);
+    variable->external_name = NULL;
     variable->statement = NULL;
     return variable;
 }
@@ -809,11 +816,11 @@ Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Lo
     return statement;
 }
 
-Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location location, Checked_Variable_Symbol *variable, Checked_Expression *expression, bool is_external) {
+Checked_Variable_Statement *Checked_Variable_Statement__create(Source_Location location, Checked_Variable_Symbol *variable, bool is_external, Checked_Expression *expression) {
     Checked_Variable_Statement *statement = (Checked_Variable_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__VARIABLE, sizeof(Checked_Variable_Statement), location);
     statement->variable = variable;
-    statement->expression = expression;
     statement->is_external = is_external;
+    statement->expression = expression;
     variable->statement = statement;
     return statement;
 }

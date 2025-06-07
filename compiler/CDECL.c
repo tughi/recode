@@ -232,7 +232,12 @@ CDECL_Procedure_Name CDECL_Procedure_Name__create(Checked_Procedure_Symbol *proc
 }
 
 void CDECL_Variable_Name__write(CDECL_Variable_Name *self, Writer *writer) {
-    if (self->variable_symbol->super.is_global && !self->variable_symbol->statement->is_external) {
+    if (self->variable_symbol->statement->is_external) {
+        if (self->variable_symbol->external_name != NULL) {
+            pWriter__write__string(writer, self->variable_symbol->external_name);
+            return;
+        }
+    } else if (self->variable_symbol->super.is_global) {
         pWriter__write__string(writer, self->variable_symbol->super.module->name);
         pWriter__write__cstring(writer, "__");
     }

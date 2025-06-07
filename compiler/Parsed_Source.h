@@ -554,11 +554,12 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location,
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;
     Parsed_Type *type;
-    Parsed_Expression *expression;
     bool is_external;
+    Parsed_Expression *expression;
+    String_Token *external_name;
 } Parsed_Variable_Statement;
 
-Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external);
+Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, bool is_external, Parsed_Expression *expression, String_Token *external_name);
 
 typedef struct Parsed_While_Statement {
     Parsed_Statement super;

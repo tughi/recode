@@ -421,11 +421,12 @@ Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location,
     return statement;
 }
 
-Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, Parsed_Expression *expression, bool is_external) {
+Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, bool is_external, Parsed_Expression *expression, String_Token *external_name) {
     Parsed_Variable_Statement *statement = (Parsed_Variable_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;
-    statement->expression = expression;
     statement->is_external = is_external;
+    statement->expression = expression;
+    statement->external_name = external_name;
     return statement;
 }
 

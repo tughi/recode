@@ -980,7 +980,7 @@ Checked_Expression *Checker__check_module_symbol_expression(Checker *self, Check
     if (symbol == NULL) {
         symbol = Checked_Symbols__find_symbol(self->global_symbols, NULL, symbol_name->lexeme);
     }
-    if (symbol == NULL) {
+    if (symbol == NULL || symbol->kind == CHECKED_SYMBOL_KIND__EXTERNAL) {
         pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined symbol: ");
         pWriter__write__string(stderr_writer, symbol_name->lexeme);
@@ -1646,7 +1646,23 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
     bool is_global = self->symbols == self->global_symbols;
     Checked_Variable_Symbol *variable = Checked_Variable_Symbol__create(self->checked_module, parsed_statement->super.name->location, parsed_statement->super.name->lexeme, variable_type, is_global);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variable);
-    return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, expression, parsed_statement->is_external);
+    if (parsed_statement->is_external) {
+        if (!is_global) {
+            pWriter__begin_location_message(stderr_writer, parsed_statement->super.super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "External variables can only be declared in the global scope");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_External_Symbol *external_symbol;
+        if (parsed_statement->external_name != NULL) {
+            external_symbol = Checked_External_Symbol__create(parsed_statement->external_name->super.location, parsed_statement->external_name->value, (Checked_Symbol *)variable);
+            variable->external_name = parsed_statement->external_name->value;
+        } else {
+            external_symbol = Checked_External_Symbol__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, (Checked_Symbol *)variable);
+        }
+        Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)external_symbol);
+    }
+    return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, parsed_statement->is_external, expression);
 }
 
 Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_While_Statement *parsed_statement) {
