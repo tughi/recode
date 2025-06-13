@@ -1,0 +1,22 @@
+type List<T> = struct {
+    first: ^Item<T>
+    last: ^Item<T>
+    length: usize
+}
+
+type Item<T> = struct {
+    value: T
+    next: ^Item<T>
+    prev: ^Item<T>
+}
+
+proc (^List<T>).append<T>(self, value: T) {
+    let new_item = alloc Item<T>(value: value, next: null, prev: self.last)
+    if self.first == null {
+        self.first = new_item
+    } else {
+        self.last.next = new_item
+    }
+    self.last = new_item
+    self.length = self.length + 1
+}

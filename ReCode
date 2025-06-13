@@ -472,6 +472,22 @@ def stage():
     run("cp -R bootstrap/stage0 compiler")
 
 
+def compiler():
+    build()
+
+    if not os.path.exists(f"build/compiler"):
+        run(f"mkdir build/compiler")
+
+    compiler_command = ["build/stage1/ReCode", "-o", "build/compiler", "code", "compiler"]
+    if run(compiler_command, capture_output=False, check=False).returncode != 0:
+        trace(*compiler_command)
+        exit(1)
+
+    if assemble([f"build/compiler/{file}" for file in os.listdir("build/compiler")], "build/compiler/ReCode", check=True):
+        # run('build/compiler/ReCode', check=True)
+        pass
+
+
 def editor(launch):
     build()
 
@@ -523,6 +539,9 @@ if __name__ == "__main__":
     editor_args_parser.add_argument("--clean", action="store_true", help="clean before running")
     editor_args_parser.add_argument("--launch", action="store_true", help="launch the editor")
 
+    compiler_args_parser = args_command_parser.add_parser("compiler", help="run the compiler")
+    compiler_args_parser.add_argument("--clean", action="store_true", help="clean before running")
+
     args = args_parsers.parse_args()
     if args.command == "clean":
         clean()
@@ -535,6 +554,8 @@ if __name__ == "__main__":
             stage()
         elif args.command == "test":
             test(args.path, save=args.save, stage=1)
+        elif args.command == "compiler":
+            compiler()
         elif args.command == "editor":
             editor(args.launch)
         else:

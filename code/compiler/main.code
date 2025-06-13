@@ -1,0 +1,13 @@
+import compiler.source
+import libc
+
+proc main() -> i32 {
+    let source = try source.load("code/compiler/main.code") else {
+        libc.stderr.puts("Error: ").puts(error).putc('\n')
+        return 1
+    }
+
+    libc.stdout.puts(source)
+
+    return 0
+}

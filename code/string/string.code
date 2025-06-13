@@ -1,0 +1,4 @@
+proc (str).data(self) -> [^]u8 {
+    let copy = self
+    return (^copy).as(^String).data
+}
