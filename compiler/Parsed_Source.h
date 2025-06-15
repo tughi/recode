@@ -480,9 +480,17 @@ typedef struct Parsed_Struct_Member {
 
 Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type);
 
+typedef struct Parsed_Type_Parameter {
+    Token *name;
+    struct Parsed_Type_Parameter *next_type_parameter;
+} Parsed_Type_Parameter;
+
+Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name);
+
 typedef struct Parsed_Struct_Statement {
     Parsed_Named_Statement super;
     Parsed_Struct_Member *first_member;
+    Parsed_Type_Parameter *first_type_parameter;
 } Parsed_Struct_Statement;
 
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location location, Token *name);

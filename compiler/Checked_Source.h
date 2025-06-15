@@ -1,8 +1,7 @@
 #ifndef __CHECKED_SOURCE_H__
 #define __CHECKED_SOURCE_H__
 
-#include "Builtins.h"
-#include "Source_Location.h"
+#include "Parsed_Source.h"
 
 typedef enum Checked_Type_Kind {
     /* Builtins */
@@ -27,6 +26,7 @@ typedef enum Checked_Type_Kind {
     /* Defined */
     CHECKED_TYPE_KIND__ARRAY,
     CHECKED_TYPE_KIND__EXTERNAL,
+    CHECKED_TYPE_KIND__GENERIC,
     CHECKED_TYPE_KIND__PROCEDURE,
     CHECKED_TYPE_KIND__STRUCT,
     CHECKED_TYPE_KIND__TRAIT,
@@ -122,6 +122,14 @@ typedef struct Checked_Named_Type {
 } Checked_Named_Type;
 
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module);
+
+typedef struct Checked_Generic_Type {
+    Checked_Named_Type super;
+    Parsed_Statement *parsed_statement;
+    Parsed_Type_Parameter *first_parsed_type_parameter;
+} Checked_Generic_Type;
+
+Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, String *module, Parsed_Statement *parsed_statement, Parsed_Type_Parameter *first_parsed_type_parameter);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;

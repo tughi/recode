@@ -256,6 +256,9 @@ void Checker__require_numeric_type(Checker *self, Checked_Type *type, Source_Loc
 }
 
 void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Checked_Type *actual_type, Source_Location location) {
+    if (expected_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
+        return;
+    }
     if (expected_type->kind == CHECKED_TYPE_KIND__POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
         return;
     }
@@ -1270,6 +1273,12 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
             pWriter__end_location_message(stderr_writer);
         }
         panic();
+    }
+
+    if (parsed_statement->first_type_parameter != NULL) {
+        Checked_Generic_Type *generic_type = Checked_Generic_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, self->checked_module->name, (Parsed_Statement *)parsed_statement, parsed_statement->first_type_parameter);
+        generic_type->super.super.symbol = Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)generic_type);
+        return (Checked_Type *)generic_type;
     }
 
     String *struct_type_name = parsed_statement->super.name->lexeme;

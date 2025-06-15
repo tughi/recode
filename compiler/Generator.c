@@ -863,6 +863,7 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
         Generator__generate_union(self, (Checked_Union_Type *)type);
         break;
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
         break;
     default:
         panic();

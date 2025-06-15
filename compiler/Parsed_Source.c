@@ -350,6 +350,13 @@ Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *typ
     return member;
 }
 
+Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name) {
+    Parsed_Type_Parameter *parameter = (Parsed_Type_Parameter *)malloc(sizeof(Parsed_Type_Parameter));
+    parameter->name = name;
+    parameter->next_type_parameter = NULL;
+    return parameter;
+}
+
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location location, Token *name) {
     Parsed_Struct_Statement *statement = (Parsed_Struct_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
     statement->first_member = NULL;

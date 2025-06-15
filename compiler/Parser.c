@@ -556,15 +556,14 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
     return Parser__parse_logic_or_expression(self);
 }
 
-Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_type);
-
 /*
 struct
     | "struct" "{" ( IDENTIFIER ":" type )* "}"
 */
-Parsed_Statement *Parser__parse_struct(Parser *self, Source_Location type_location, Token *struct_name) {
+Parsed_Statement *Parser__parse_struct(Parser *self, Source_Location type_location, Token *struct_name, Parsed_Type_Parameter *first_type_parameter) {
     Parser__consume_token(self, Token__is_struct);
     Parsed_Struct_Statement *struct_statement = Parsed_Struct_Statement__create(struct_name->location, struct_name);
+    struct_statement->first_type_parameter = first_type_parameter;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
@@ -698,18 +697,60 @@ Parsed_Statement *Parser__parse_builtin_type(Parser *self, Source_Location type_
 }
 
 /*
+type_parameter
+    | IDENTIFIER
+*/
+Parsed_Type_Parameter *Parser__parse_type_parameter(Parser *self) {
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    return Parsed_Type_Parameter__create(name);
+}
+
+/*
+type_parameters
+    | "[" type_parameter ( "," type_parameter )* "]"
+*/
+Parsed_Type_Parameter *Parser__parse_type_parameters(Parser *self) {
+    Parser__consume_token(self, Token__is_opening_bracket);
+    Parser__consume_space(self, 0);
+    Parsed_Type_Parameter *first_parameter = Parser__parse_type_parameter(self);
+    Parsed_Type_Parameter *last_parameter = first_parameter;
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_comma);
+        Parser__consume_space(self, 1);
+        Parsed_Type_Parameter *next_parameter = Parser__parse_type_parameter(self);
+        last_parameter->next_type_parameter = next_parameter;
+        last_parameter = next_parameter;
+    }
+    Parser__consume_space(self, 0);
+    Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
+    return first_parameter;
+}
+
+/*
 type_definition
-    | "type" IDENTIFIER "=" ( builtin_type | external_type | struct | trait | union )
+    | "type" IDENTIFIER type_parameters? "=" ( builtin_type | external_type | struct | trait | union )
 */
 Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Source_Location type_location = Parser__consume_token(self, Token__is_type)->location;
     Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
+    Parsed_Type_Parameter *first_type_parameter = NULL;
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+        Parser__consume_space(self, 0);
+        first_type_parameter = Parser__parse_type_parameters(self);
+    }
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_equals);
     Parser__consume_space(self, 1);
     if (Parser__matches_one(self, Token__is_struct)) {
-        return Parser__parse_struct(self, type_location, name);
+        return Parser__parse_struct(self, type_location, name, first_type_parameter);
+    }
+    if (first_type_parameter != NULL) {
+        pWriter__begin_location_message(stderr_writer, first_type_parameter->name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type parameters are not allowed for this type definition");
+        pWriter__end_location_message(stderr_writer);
+        panic();
     }
     if (Parser__matches_one(self, Token__is_union)) {
         return Parser__parse_union(self, type_location, name);
@@ -723,8 +764,10 @@ Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     if (Parser__matches_one(self, Token__is_builtin)) {
         return Parser__parse_builtin_type(self, type_location, name);
     }
-    pWriter__begin_location_message(stderr_writer, type_location, WRITER_STYLE__ERROR);
-    pWriter__write__cstring(stderr_writer, "Unsupported type");
+    Token *unsupported_type = Parser__consume_token(self, Token__is_identifier);
+    pWriter__begin_location_message(stderr_writer, unsupported_type->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Unsupported type: ");
+    pWriter__write__token(stderr_writer, unsupported_type);
     pWriter__end_location_message(stderr_writer);
     panic();
 }
