@@ -557,17 +557,16 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
 }
 
 /*
-struct
+struct_type_specifier
     | "struct" "{" ( IDENTIFIER ":" type )* "}"
 */
-Parsed_Statement *Parser__parse_struct(Parser *self, Source_Location type_location, Token *struct_name, Parsed_Type_Parameter *first_type_parameter) {
-    Parser__consume_token(self, Token__is_struct);
-    Parsed_Struct_Statement *struct_statement = Parsed_Struct_Statement__create(struct_name->location, struct_name);
-    struct_statement->first_type_parameter = first_type_parameter;
+Parsed_Type_Specifier *Parser__parse_struct_type_specifier(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_struct);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
     self->current_identation = self->current_identation + 1;
+    Parsed_Struct_Member *first_struct_member = NULL;
     Parsed_Struct_Member *last_struct_member = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
@@ -579,35 +578,33 @@ Parsed_Statement *Parser__parse_struct(Parser *self, Source_Location type_locati
             Parsed_Type *struct_member_type = Parser__parse_type(self);
             Parser__consume_end_of_line(self);
             Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
-            if (last_struct_member == NULL) {
-                struct_statement->first_member = struct_member;
-                last_struct_member = struct_member;
+            if (first_struct_member == NULL) {
+                first_struct_member = struct_member;
             } else {
                 last_struct_member->next_member = struct_member;
-                last_struct_member = struct_member;
             }
+            last_struct_member = struct_member;
         }
     }
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    struct_statement->super.super.location = Source_Location__union(type_location, last_token->location);
-    return (Parsed_Statement *)struct_statement;
+    return (Parsed_Type_Specifier *)Parsed_Struct_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_struct_member);
 }
 
 Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Parsed_Type *receiver_type);
 
 /*
-trait
+trait_type_specifier
     | "trait" "{" trait_method* "}"
 */
-Parsed_Statement *Parser__parse_trait(Parser *self, Source_Location type_location, Token *trait_name) {
-    Parser__consume_token(self, Token__is_trait);
-    Parsed_Trait_Statement *trait_statement = Parsed_Trait_Statement__create(trait_name->location, trait_name);
+Parsed_Type_Specifier *Parser__parse_trait_type_specifier(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_trait);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
     self->current_identation = self->current_identation + 1;
+    Parsed_Trait_Method *first_trait_method = NULL;
     Parsed_Trait_Method *last_trait_method = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
@@ -617,7 +614,8 @@ Parsed_Statement *Parser__parse_trait(Parser *self, Source_Location type_locatio
             Token *method_name = Parser__consume_token(self, Token__is_identifier);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_opening_paren);
-            Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, (Parsed_Type *)Parsed_Receiver_Type__create(trait_name->location));
+            Source_Location receiver_type_location = {0}; // Default location for receiver type
+            Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, (Parsed_Type *)Parsed_Receiver_Type__create(receiver_type_location));
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_closing_paren);
             Parsed_Type *return_type = NULL;
@@ -631,7 +629,7 @@ Parsed_Statement *Parser__parse_trait(Parser *self, Source_Location type_locatio
             Parser__consume_end_of_line(self);
             Parsed_Trait_Method *trait_method = Parsed_Trait_Method__create(method_location, method_name, first_parameter, return_type);
             if (last_trait_method == NULL) {
-                trait_statement->first_method = trait_method;
+                first_trait_method = trait_method;
             } else {
                 last_trait_method->next_method = trait_method;
             }
@@ -641,21 +639,20 @@ Parsed_Statement *Parser__parse_trait(Parser *self, Source_Location type_locatio
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    trait_statement->super.super.location = Source_Location__union(type_location, last_token->location);
-    return (Parsed_Statement *)trait_statement;
+    return (Parsed_Type_Specifier *)Parsed_Trait_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_trait_method);
 }
 
 /*
-union
+union_type_specifier
     | "union" "{" ( type )* "}"
 */
-Parsed_Statement *Parser__parse_union(Parser *self, Source_Location type_location, Token *union_name) {
-    Parser__consume_token(self, Token__is_union);
-    Parsed_Union_Statement *union_statement = Parsed_Union_Statement__create(union_name->location, union_name);
+Parsed_Type_Specifier *Parser__parse_union_type_specifier(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_union);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
     self->current_identation = self->current_identation + 1;
+    Parsed_Union_Variant *first_union_variant = NULL;
     Parsed_Union_Variant *last_union_variant = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
@@ -664,7 +661,7 @@ Parsed_Statement *Parser__parse_union(Parser *self, Source_Location type_locatio
             Parser__consume_end_of_line(self);
             Parsed_Union_Variant *union_variant = Parsed_Union_Variant__create(union_variant_type);
             if (last_union_variant == NULL) {
-                union_statement->first_variant = union_variant;
+                first_union_variant = union_variant;
             } else {
                 last_union_variant->next_variant = union_variant;
             }
@@ -674,26 +671,25 @@ Parsed_Statement *Parser__parse_union(Parser *self, Source_Location type_locatio
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    union_statement->super.super.location = Source_Location__union(type_location, last_token->location);
-    return (Parsed_Statement *)union_statement;
+    return (Parsed_Type_Specifier *)Parsed_Union_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_union_variant);
 }
 
 /*
-external_type
+external_type_specifier
     | "external"
 */
-Parsed_Statement *Parser__parse_external_type(Parser *self, Source_Location type_location, Token *name) {
+Parsed_Type_Specifier *Parser__parse_external_type_specifier(Parser *self) {
     Token *last_token = Parser__consume_token(self, Token__is_external);
-    return (Parsed_Statement *)Parsed_External_Type_Statement__create(Source_Location__union(type_location, last_token->location), name);
+    return (Parsed_Type_Specifier *)Parsed_External_Type_Specifier__create(last_token->location);
 }
 
 /*
-builtin_type
+builtin_type_specifier
     | "builtin"
 */
-Parsed_Statement *Parser__parse_builtin_type(Parser *self, Source_Location type_location, Token *name) {
-    Token *last_token = Parser__consume_token(self, Token__is_builtin);
-    return (Parsed_Statement *)Parsed_Builtin_Type_Statement__create(Source_Location__union(type_location, last_token->location), name);
+Parsed_Type_Specifier *Parser__parse_builtin_type_specifier(Parser *self) {
+    Token *token = Parser__consume_token(self, Token__is_builtin);
+    return (Parsed_Type_Specifier *)Parsed_Builtin_Type_Specifier__create(token->location);
 }
 
 /*
@@ -728,8 +724,40 @@ Parsed_Type_Parameter *Parser__parse_type_parameters(Parser *self) {
 }
 
 /*
+type_specifier
+    | builtin_type_specifier
+    | external_type_specifier
+    | struct_type_specifier
+    | trait_type_specifier
+    | union_type_specifier
+*/
+Parsed_Type_Specifier *Parser__parse_type_specifier(Parser *self) {
+    if (Parser__matches_one(self, Token__is_builtin)) {
+        return Parser__parse_builtin_type_specifier(self);
+    }
+    if (Parser__matches_one(self, Token__is_external)) {
+        return Parser__parse_external_type_specifier(self);
+    }
+    if (Parser__matches_one(self, Token__is_struct)) {
+        return Parser__parse_struct_type_specifier(self);
+    }
+    if (Parser__matches_one(self, Token__is_trait)) {
+        return Parser__parse_trait_type_specifier(self);
+    }
+    if (Parser__matches_one(self, Token__is_union)) {
+        return Parser__parse_union_type_specifier(self);
+    }
+    Token *unsupported_type = Parser__consume_token(self, Token__is_identifier);
+    pWriter__begin_location_message(stderr_writer, unsupported_type->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Unsupported type specifier: ");
+    pWriter__write__token(stderr_writer, unsupported_type);
+    pWriter__end_location_message(stderr_writer);
+    panic();
+}
+
+/*
 type_definition
-    | "type" IDENTIFIER type_parameters? "=" ( builtin_type | external_type | struct | trait | union )
+    | "type" IDENTIFIER type_parameters? "=" type_specifier
 */
 Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Source_Location type_location = Parser__consume_token(self, Token__is_type)->location;
@@ -743,33 +771,8 @@ Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_equals);
     Parser__consume_space(self, 1);
-    if (Parser__matches_one(self, Token__is_struct)) {
-        return Parser__parse_struct(self, type_location, name, first_type_parameter);
-    }
-    if (first_type_parameter != NULL) {
-        pWriter__begin_location_message(stderr_writer, first_type_parameter->name->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Type parameters are not allowed for this type definition");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    if (Parser__matches_one(self, Token__is_union)) {
-        return Parser__parse_union(self, type_location, name);
-    }
-    if (Parser__matches_one(self, Token__is_trait)) {
-        return Parser__parse_trait(self, type_location, name);
-    }
-    if (Parser__matches_one(self, Token__is_external)) {
-        return Parser__parse_external_type(self, type_location, name);
-    }
-    if (Parser__matches_one(self, Token__is_builtin)) {
-        return Parser__parse_builtin_type(self, type_location, name);
-    }
-    Token *unsupported_type = Parser__consume_token(self, Token__is_identifier);
-    pWriter__begin_location_message(stderr_writer, unsupported_type->location, WRITER_STYLE__ERROR);
-    pWriter__write__cstring(stderr_writer, "Unsupported type: ");
-    pWriter__write__token(stderr_writer, unsupported_type);
-    pWriter__end_location_message(stderr_writer);
-    panic();
+    Parsed_Type_Specifier *type_specifier = Parser__parse_type_specifier(self);
+    return (Parsed_Statement *)Parsed_Type_Statement__create(Source_Location__union(type_location, type_specifier->location), name, type_specifier, first_type_parameter);
 }
 
 /*

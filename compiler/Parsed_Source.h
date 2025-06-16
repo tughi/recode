@@ -361,18 +361,14 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
-    PARSED_STATEMENT_KIND__BUILTIN_TYPE,
     PARSED_STATEMENT_KIND__EXPRESSION,
-    PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
     PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__IF,
     PARSED_STATEMENT_KIND__IMPORT,
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
-    PARSED_STATEMENT_KIND__STRUCT,
     PARSED_STATEMENT_KIND__SWITCH,
-    PARSED_STATEMENT_KIND__TRAIT,
-    PARSED_STATEMENT_KIND__UNION,
+    PARSED_STATEMENT_KIND__TYPE,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
 } Parsed_Statement_Kind;
@@ -384,8 +380,6 @@ typedef struct Parsed_Statement {
 } Parsed_Statement;
 
 Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location location);
-
-bool Parsed_Statement__is_type_statement(Parsed_Statement *self);
 
 typedef struct Parsed_Statements {
     Parsed_Statement *first_statement;
@@ -425,24 +419,12 @@ typedef struct Parsed_Break_Statement {
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location);
 
-typedef struct Parsed_Builtin_Type_Statement {
-    Parsed_Named_Statement super;
-} Parsed_Builtin_Type_Statement;
-
-Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name);
-
 typedef struct Parsed_Expression_Statement {
     Parsed_Statement super;
     Parsed_Expression *expression;
 } Parsed_Expression_Statement;
 
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression);
-
-typedef struct Parsed_External_Type_Statement {
-    Parsed_Named_Statement super;
-} Parsed_External_Type_Statement;
-
-Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Location location, Token *name);
 
 typedef struct Parsed_Procedure_Statement {
     Parsed_Named_Statement super;
@@ -480,13 +462,18 @@ typedef struct Parsed_Return_Statement {
 
 Parsed_Statement *Parsed_Return_Statement__create(Source_Location location, Parsed_Expression *expression);
 
-typedef struct Parsed_Struct_Member {
-    Token *name;
-    Parsed_Type *type;
-    struct Parsed_Struct_Member *next_member;
-} Parsed_Struct_Member;
+typedef enum Parsed_Type_Specifier_Kind {
+    PARSED_TYPE_SPECIFIER_KIND__BUILTIN,
+    PARSED_TYPE_SPECIFIER_KIND__EXTERNAL,
+    PARSED_TYPE_SPECIFIER_KIND__STRUCT,
+    PARSED_TYPE_SPECIFIER_KIND__TRAIT,
+    PARSED_TYPE_SPECIFIER_KIND__UNION,
+} Parsed_Type_Specifier_Kind;
 
-Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type);
+typedef struct Parsed_Type_Specifier {
+    Parsed_Type_Specifier_Kind kind;
+    Source_Location location;
+} Parsed_Type_Specifier;
 
 typedef struct Parsed_Type_Parameter {
     Token *name;
@@ -495,13 +482,13 @@ typedef struct Parsed_Type_Parameter {
 
 Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name);
 
-typedef struct Parsed_Struct_Statement {
+typedef struct Parsed_Type_Statement {
     Parsed_Named_Statement super;
-    Parsed_Struct_Member *first_member;
+    Parsed_Type_Specifier *type_specifier;
     Parsed_Type_Parameter *first_type_parameter;
-} Parsed_Struct_Statement;
+} Parsed_Type_Statement;
 
-Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location location, Token *name);
+Parsed_Type_Statement *Parsed_Type_Statement__create(Source_Location location, Token *name, Parsed_Type_Specifier *type_specifier, Parsed_Type_Parameter *first_type_parameter);
 
 typedef enum Parsed_Switch_Case_Kind {
     PARSED_SWITCH_CASE_KIND__ELSE,
@@ -537,37 +524,6 @@ typedef struct Parsed_Switch_Statement {
 
 Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location location, Parsed_Expression *expression, Parsed_Switch_Case *first_case);
 
-typedef struct Parsed_Trait_Method {
-    Source_Location location;
-    Token *name;
-    Parsed_Procedure_Parameter *first_parameter;
-    Parsed_Type *return_type;
-    struct Parsed_Trait_Method *next_method;
-} Parsed_Trait_Method;
-
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
-
-typedef struct Parsed_Trait_Statement {
-    Parsed_Named_Statement super;
-    Parsed_Trait_Method *first_method;
-} Parsed_Trait_Statement;
-
-Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location location, Token *name);
-
-typedef struct Parsed_Union_Variant {
-    Parsed_Type *type;
-    struct Parsed_Union_Variant *next_variant;
-} Parsed_Union_Variant;
-
-Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type);
-
-typedef struct Parsed_Union_Statement {
-    Parsed_Named_Statement super;
-    Parsed_Union_Variant *first_variant;
-} Parsed_Union_Statement;
-
-Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location, Token *name);
-
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;
     Parsed_Type *type;
@@ -585,6 +541,64 @@ typedef struct Parsed_While_Statement {
 } Parsed_While_Statement;
 
 Parsed_Statement *Parsed_While_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Parsed_Statement *body_statement);
+
+typedef struct Parsed_Builtin_Type_Specifier {
+    Parsed_Type_Specifier super;
+} Parsed_Builtin_Type_Specifier;
+
+Parsed_Builtin_Type_Specifier *Parsed_Builtin_Type_Specifier__create(Source_Location location);
+
+typedef struct Parsed_External_Type_Specifier {
+    Parsed_Type_Specifier super;
+} Parsed_External_Type_Specifier;
+
+Parsed_External_Type_Specifier *Parsed_External_Type_Specifier__create(Source_Location location);
+
+typedef struct Parsed_Struct_Member {
+    Token *name;
+    Parsed_Type *type;
+    struct Parsed_Struct_Member *next_member;
+} Parsed_Struct_Member;
+
+Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type);
+
+typedef struct Parsed_Struct_Type_Specifier {
+    Parsed_Type_Specifier super;
+    Parsed_Struct_Member *first_member;
+} Parsed_Struct_Type_Specifier;
+
+Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Location location, Parsed_Struct_Member *first_member);
+
+typedef struct Parsed_Trait_Method {
+    Source_Location location;
+    Token *name;
+    Parsed_Procedure_Parameter *first_parameter;
+    Parsed_Type *return_type;
+    struct Parsed_Trait_Method *next_method;
+} Parsed_Trait_Method;
+
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
+
+typedef struct Parsed_Trait_Type_Specifier {
+    Parsed_Type_Specifier super;
+    Parsed_Trait_Method *first_method;
+} Parsed_Trait_Type_Specifier;
+
+Parsed_Trait_Type_Specifier *Parsed_Trait_Type_Specifier__create(Source_Location location, Parsed_Trait_Method *first_method);
+
+typedef struct Parsed_Union_Variant {
+    Parsed_Type *type;
+    struct Parsed_Union_Variant *next_variant;
+} Parsed_Union_Variant;
+
+Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type);
+
+typedef struct Parsed_Union_Type_Specifier {
+    Parsed_Type_Specifier super;
+    Parsed_Union_Variant *first_variant;
+} Parsed_Union_Type_Specifier;
+
+Parsed_Union_Type_Specifier *Parsed_Union_Type_Specifier__create(Source_Location location, Parsed_Union_Variant *first_variant);
 
 typedef struct Parsed_Source {
     Source *source;

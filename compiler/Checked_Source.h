@@ -125,11 +125,10 @@ Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
 
 typedef struct Checked_Generic_Type {
     Checked_Named_Type super;
-    Parsed_Statement *parsed_statement;
-    Parsed_Type_Parameter *first_parsed_type_parameter;
+    Parsed_Type_Statement *parsed_type_statement;
 } Checked_Generic_Type;
 
-Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, String *module, Parsed_Statement *parsed_statement, Parsed_Type_Parameter *first_parsed_type_parameter);
+Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, String *module, Parsed_Type_Statement *parsed_type_statement);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
