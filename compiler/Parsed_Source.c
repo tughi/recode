@@ -36,11 +36,19 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
     return (Parsed_Type *)type;
 }
 
-Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module) {
+Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type) {
+    Parsed_Type_Argument *type_argument = (Parsed_Type_Argument *)malloc(sizeof(Parsed_Type_Argument));
+    type_argument->type = type;
+    type_argument->next_type_argument = NULL;
+    return type_argument;
+}
+
+Parsed_Named_Type *Parsed_Named_Type__create(Token *module, Token *name) {
     Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
-    type->name = name->lexeme;
     type->module = module;
-    return (Parsed_Type *)type;
+    type->name = name->lexeme;
+    type->first_type_argument = NULL;
+    return type;
 }
 
 Parsed_Type *Parsed_Pointer_Type__create(Source_Location location, Parsed_Type *other_type) {

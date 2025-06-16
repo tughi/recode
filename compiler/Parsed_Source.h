@@ -90,13 +90,21 @@ typedef struct Parsed_Multi_Pointer_Type {
 
 Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_Type *item_type);
 
+typedef struct Parsed_Type_Argument {
+    Parsed_Type *type;
+    struct Parsed_Type_Argument *next_type_argument;
+} Parsed_Type_Argument;
+
+Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type);
+
 typedef struct Parsed_Named_Type {
     Parsed_Type super;
-    String *name;
     Token *module;
+    String *name;
+    Parsed_Type_Argument *first_type_argument;
 } Parsed_Named_Type;
 
-Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module);
+Parsed_Named_Type *Parsed_Named_Type__create(Token *module, Token *name);
 
 typedef struct Parsed_Pointer_Type {
     Parsed_Type super;

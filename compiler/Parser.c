@@ -155,18 +155,18 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         if (Token__is_identifier(next_token)) {
             if (next_token->lexeme->data[0] == 'i' || next_token->lexeme->data[0] == 'u') {
                 if (next_token->lexeme->length == 2 && next_token->lexeme->data[1] == '8') {
-                    integer_type = (Parsed_Named_Type *)Parsed_Named_Type__create(Parser__consume_token(self, Token__is_identifier), NULL);
+                    integer_type = Parsed_Named_Type__create(NULL, Parser__consume_token(self, Token__is_identifier));
                 } else if (next_token->lexeme->length == 3) {
                     if (next_token->lexeme->data[1] == '1' && next_token->lexeme->data[2] == '6') {
-                        integer_type = (Parsed_Named_Type *)Parsed_Named_Type__create(Parser__consume_token(self, Token__is_identifier), NULL);
+                        integer_type = Parsed_Named_Type__create(NULL, Parser__consume_token(self, Token__is_identifier));
                     } else if (next_token->lexeme->data[1] == '3' && next_token->lexeme->data[2] == '2') {
-                        integer_type = (Parsed_Named_Type *)Parsed_Named_Type__create(Parser__consume_token(self, Token__is_identifier), NULL);
+                        integer_type = Parsed_Named_Type__create(NULL, Parser__consume_token(self, Token__is_identifier));
                     } else if (next_token->lexeme->data[1] == '6' && next_token->lexeme->data[2] == '4') {
-                        integer_type = (Parsed_Named_Type *)Parsed_Named_Type__create(Parser__consume_token(self, Token__is_identifier), NULL);
+                        integer_type = Parsed_Named_Type__create(NULL, Parser__consume_token(self, Token__is_identifier));
                     }
                 } else if (next_token->lexeme->length == 5) {
                     if (next_token->lexeme->data[1] == 's' && next_token->lexeme->data[2] == 'i' && next_token->lexeme->data[3] == 'z' && next_token->lexeme->data[4] == 'e') {
-                        integer_type = (Parsed_Named_Type *)Parsed_Named_Type__create(Parser__consume_token(self, Token__is_identifier), NULL);
+                        integer_type = Parsed_Named_Type__create(NULL, Parser__consume_token(self, Token__is_identifier));
                     }
                 }
             }
@@ -825,10 +825,40 @@ Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Par
 }
 
 /*
+type_argument
+    | type
+*/
+Parsed_Type_Argument *Parser__parse_type_argument(Parser *self) {
+    Parsed_Type *type = Parser__parse_type(self);
+    return Parsed_Type_Argument__create(type);
+}
+
+/*
+type_arguments
+    | "[" type_argument ( "," type_argument )* "]"
+*/
+Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self) {
+    Parser__consume_token(self, Token__is_opening_bracket);
+    Parser__consume_space(self, 0);
+    Parsed_Type_Argument *first_type_argument = Parser__parse_type_argument(self);
+    Parsed_Type_Argument *last_type_argument = first_type_argument;
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_comma);
+        Parser__consume_space(self, 1);
+        last_type_argument->next_type_argument = Parser__parse_type_argument(self);
+        last_type_argument = last_type_argument->next_type_argument;
+    }
+    Parser__consume_space(self, 0);
+    Parser__consume_token(self, Token__is_closing_bracket);
+    return first_type_argument;
+}
+
+/*
 type
     | "^" type
     | "[" ( expression | "^" ) "]" type
-    | IDENTIFIER ( "." IDENTIFIER )?
+    | IDENTIFIER ( "." IDENTIFIER )? type_arguments?
     | proc "(" procedure_parameters? ")" ( "->" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
@@ -873,16 +903,21 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         }
         return Parsed_Procedure_Type__create(Source_Location__union(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
     }
+    Token *module = NULL;
     Token *name = Parser__consume_token(self, Token__is_identifier);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_dot);
         Parser__consume_space(self, 0);
-        Token *module = name;
+        module = name;
         name = Parser__consume_token(self, Token__is_identifier);
-        return Parsed_Named_Type__create(name, module);
     }
-    return Parsed_Named_Type__create(name, NULL);
+    Parsed_Named_Type *named_type = Parsed_Named_Type__create(module, name);
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+        Parser__consume_space(self, 0);
+        named_type->first_type_argument = Parser__parse_type_arguments(self);
+    }
+    return (Parsed_Type *)named_type;
 }
 
 /*
