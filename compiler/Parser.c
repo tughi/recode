@@ -128,6 +128,7 @@ primary_expression
     | IDENTIFIER
     | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
+    | type
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_alloc)) {
@@ -145,7 +146,9 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_true)) {
         return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
     }
-    if (Parser__matches_one(self, Token__is_identifier)) {
+    if (Parser__matches_one(self, Token__is_identifier) &&
+        !Parser__matches_three(self, Token__is_proc, true, Token__is_space, false, Token__is_opening_paren) &&
+        !Parser__matches_two(self, Token__is_identifier, true, Token__is_less_than)) {
         return (Parsed_Expression *)Parsed_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
     }
     if (Parser__matches_one(self, Token__is_integer)) {
@@ -186,6 +189,12 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__union(first_token->location, last_token->location), expression);
+    }
+    if (Parser__matches_three(self, Token__is_proc, true, Token__is_space, false, Token__is_opening_paren) ||
+        Parser__matches_one(self, Token__is_opening_bracket) ||
+        Parser__matches_two(self, Token__is_identifier, true, Token__is_less_than)) {
+        Parsed_Type *type = Parser__parse_type(self);
+        return (Parsed_Expression *)Parsed_Type_Expression__create(type);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unexpected token");
@@ -703,10 +712,10 @@ Parsed_Type_Parameter *Parser__parse_type_parameter(Parser *self) {
 
 /*
 type_parameters
-    | "[" type_parameter ( "," type_parameter )* "]"
+    | "<" type_parameter ( "," type_parameter )* ">"
 */
 Parsed_Type_Parameter *Parser__parse_type_parameters(Parser *self) {
-    Parser__consume_token(self, Token__is_opening_bracket);
+    Parser__consume_token(self, Token__is_less_than);
     Parser__consume_space(self, 0);
     Parsed_Type_Parameter *first_parameter = Parser__parse_type_parameter(self);
     Parsed_Type_Parameter *last_parameter = first_parameter;
@@ -719,7 +728,7 @@ Parsed_Type_Parameter *Parser__parse_type_parameters(Parser *self) {
         last_parameter = next_parameter;
     }
     Parser__consume_space(self, 0);
-    Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
+    Token *last_token = Parser__consume_token(self, Token__is_greater_than);
     return first_parameter;
 }
 
@@ -764,7 +773,7 @@ Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
     Parsed_Type_Parameter *first_type_parameter = NULL;
-    if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
         Parser__consume_space(self, 0);
         first_type_parameter = Parser__parse_type_parameters(self);
     }
@@ -838,10 +847,10 @@ Parsed_Type_Argument *Parser__parse_type_argument(Parser *self) {
 
 /*
 type_arguments
-    | "[" type_argument ( "," type_argument )* "]"
+    | "<" type_argument ( "," type_argument )* ">"
 */
 Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location *type_location) {
-    Parser__consume_token(self, Token__is_opening_bracket);
+    Parser__consume_token(self, Token__is_less_than);
     Parser__consume_space(self, 0);
     Parsed_Type_Argument *first_type_argument = Parser__parse_type_argument(self);
     Parsed_Type_Argument *last_type_argument = first_type_argument;
@@ -853,7 +862,7 @@ Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location
         last_type_argument = last_type_argument->next_type_argument;
     }
     Parser__consume_space(self, 0);
-    Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
+    Token *last_token = Parser__consume_token(self, Token__is_greater_than);
     *type_location = Source_Location__union(*type_location, last_token->location);
     return first_type_argument;
 }
@@ -917,7 +926,7 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         name = Parser__consume_token(self, Token__is_identifier);
     }
     Parsed_Named_Type *named_type = Parsed_Named_Type__create(module, name);
-    if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
         Parser__consume_space(self, 0);
         named_type->first_type_argument = Parser__parse_type_arguments(self, &named_type->super.location);
     }

@@ -34,7 +34,8 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__SIZEOF,
     PARSED_EXPRESSION_KIND__STRING,
     PARSED_EXPRESSION_KIND__SUBTRACT,
-    PARSED_EXPRESSION_KIND__SYMBOL
+    PARSED_EXPRESSION_KIND__SYMBOL,
+    PARSED_EXPRESSION_KIND__TYPE,
 } Parsed_Expression_Kind;
 
 typedef struct Parsed_Expression {
@@ -356,6 +357,13 @@ typedef struct Parsed_Symbol_Expression {
 } Parsed_Symbol_Expression;
 
 Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name);
+
+typedef struct Parsed_Type_Expression {
+    Parsed_Expression super;
+    Parsed_Type *type;
+} Parsed_Type_Expression;
+
+Parsed_Type_Expression *Parsed_Type_Expression__create(Parsed_Type *type);
 
 typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,

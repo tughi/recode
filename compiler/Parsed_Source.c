@@ -252,6 +252,12 @@ Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name) {
     return expression;
 }
 
+Parsed_Type_Expression *Parsed_Type_Expression__create(Parsed_Type *type) {
+    Parsed_Type_Expression *expression = (Parsed_Type_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE, sizeof(Parsed_Type_Expression), type->location);
+    expression->type = type;
+    return expression;
+}
+
 Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location location) {
     Parsed_Statement *statement = (Parsed_Statement *)malloc(kind_size);
     statement->kind = kind;

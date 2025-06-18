@@ -432,10 +432,15 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         }
         break;
     }
+    case CHECKED_EXPRESSION_KIND__TYPE: {
+        Checked_Type *type = ((Checked_Type_Expression *)callee_expression)->type;
+        if (type->kind == CHECKED_TYPE_KIND__STRUCT) {
+            return Checker__check_init_expression(self, (Checked_Named_Type *)type, parsed_expression->first_argument, parsed_expression->super.location);
+        }
+    }
     default:
         pWriter__begin_location_message(stderr_writer, parsed_expression->callee_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Unsupported callee expression kind: ");
-        pWriter__write__int64(stderr_writer, callee_expression->kind);
+        pWriter__write__cstring(stderr_writer, "Not a callable");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
@@ -1055,6 +1060,11 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
     return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol);
 }
 
+Checked_Expression *Checker__check_type_expression(Checker *self, Parsed_Type_Expression *parsed_expression) {
+    Checked_Type *type = Checker__resolve_type(self, parsed_expression->type);
+    return (Checked_Expression *)Checked_Type_Expression__create(parsed_expression->super.location, type);
+}
+
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
     switch (parsed_expression->kind) {
     case PARSED_EXPRESSION_KIND__ADD:
@@ -1119,6 +1129,8 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         return Checker__check_subtract_expression(self, (Parsed_Subtract_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__SYMBOL:
         return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression);
+    case PARSED_EXPRESSION_KIND__TYPE:
+        return Checker__check_type_expression(self, (Parsed_Type_Expression *)parsed_expression);
     }
     pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unsupported expression kind");
@@ -1966,7 +1978,7 @@ Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type
 
     String *type_name = String__create_copy(parsed_type->name);
     Writer *type_name_writer = String__create_writer(type_name);
-    pWriter__write__char(type_name_writer, '[');
+    pWriter__write__char(type_name_writer, '<');
     Checked_Type_Argument *type_argument = first_type_argument;
     pWriter__write__checked_type(type_name_writer, type_argument->type);
     type_argument = type_argument->next_type_argument;
@@ -1975,7 +1987,7 @@ Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type
         pWriter__write__checked_type(type_name_writer, type_argument->type);
         type_argument = type_argument->next_type_argument;
     }
-    pWriter__write__char(type_name_writer, ']');
+    pWriter__write__char(type_name_writer, '>');
     pWriter__destroy(type_name_writer);
 
     Token type_name_token = {
@@ -1992,6 +2004,10 @@ Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type
         case CHECKED_TYPE_KIND__I32:
         case CHECKED_TYPE_KIND__I64:
             break;
+        case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+            Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type_argument->type;
+            todo("Create procedure pointer alias type");
+        }
         default:
             todo("Create alias type");
         }

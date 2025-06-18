@@ -305,6 +305,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION: {
@@ -800,6 +801,12 @@ Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location
 Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location location, Checked_Type *type, Checked_Symbol *symbol) {
     Checked_Symbol_Expression *expression = (Checked_Symbol_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SYMBOL, sizeof(Checked_Symbol_Expression), location, type);
     expression->symbol = symbol;
+    return expression;
+}
+
+Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type) {
+    Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
+    expression->type = type;
     return expression;
 }
 

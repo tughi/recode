@@ -1,11 +1,11 @@
-type Array[T] = struct {
+type Array<T> = struct {
     items: [^]T
     length: usize
     capacity: usize
 }
 
 proc main() -> i32 {
-    let array_of_i32: Array[i32]
-    let array_of_i64: Array[i64]
+    let array_of_i32: Array<i32>
+    let array_of_i64: Array<i64>
     return 0
 }

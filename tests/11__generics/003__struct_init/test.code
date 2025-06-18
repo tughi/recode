@@ -1,0 +1,14 @@
+type Array<T> = struct {
+    items: [^]T
+    length: usize
+    capacity: usize
+}
+
+proc main() -> i32 {
+    let array = Array<i32>(
+        items: null
+        length: 0
+        capacity: 0
+    )
+    return array.length.as(i32)
+}
