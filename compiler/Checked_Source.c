@@ -30,6 +30,41 @@ bool Checked_Type__is_numeric_type(Checked_Type *self) {
     }
 }
 
+void String__append_mangled_type_name(String *self, Checked_Type *type) {
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)type;
+        String__append_cstring(self, "d_");
+        String__append_mangled_type_name(self, multi_pointer_type->item_type);
+        String__append_cstring(self, "_b");
+        break;
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
+        String__append_char(self, 'p');
+        String__append_mangled_type_name(self, ((Checked_Pointer_Type *)type)->other_type);
+        break;
+    }
+    case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__I64:
+    case CHECKED_TYPE_KIND__STR:
+    case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
+    case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__UNION: {
+        Checked_Named_Type *checked_named_type = (Checked_Named_Type *)type;
+        if (checked_named_type->module != NULL) {
+            String__append_string(self, checked_named_type->module);
+            String__append_char(self, '_');
+        }
+        String__append_string(self, checked_named_type->name);
+        break;
+    }
+    default:
+        todo("Handle unexpected Checked_Type_Kind");
+    }
+}
+
 Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression) {
     Checked_Array_Type *type = (Checked_Array_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__ARRAY, sizeof(Checked_Array_Type), location);
     type->item_type = item_type;
@@ -142,6 +177,15 @@ bool Checked_Pointer_Type__equals(Checked_Pointer_Type *self, Checked_Pointer_Ty
     return Checked_Type__equals(self->other_type, other->other_type);
 }
 
+Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, String *name, Checked_Type *type) {
+    Checked_Type_Argument *type_argument = (Checked_Type_Argument *)malloc(sizeof(Checked_Type_Argument));
+    type_argument->location = location;
+    type_argument->name = name;
+    type_argument->type = type;
+    type_argument->next_type_argument = NULL;
+    return type_argument;
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -151,9 +195,10 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, S
     return member;
 }
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module) {
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name, module);
     type->first_member = NULL;
+    type->parsed_type_specifier = parsed_type_specifier;
     return type;
 }
 

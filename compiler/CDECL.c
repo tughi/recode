@@ -186,14 +186,26 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
-    case CHECKED_TYPE_KIND__UNION:
+    case CHECKED_TYPE_KIND__UNION: {
+        Checked_Named_Type *named_type = (Checked_Named_Type *)symbol_type;
         cdecl->type = String__create_from("struct ");
-        if (((Checked_Named_Type *)symbol_type)->module != NULL) {
-            String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->module);
+        if (named_type->module != NULL) {
+            String__append_string(cdecl->type, named_type->module);
             String__append_char(cdecl->type, '_');
         }
-        String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
+        if (named_type->generic_type != NULL) {
+            String__append_string(cdecl->type, named_type->generic_type->super.name);
+            String__append_cstring(cdecl->type, "__");
+            Checked_Type_Argument *type_argument = named_type->first_type_argument;
+            while (type_argument != NULL) {
+                String__append_mangled_type_name(cdecl->type, type_argument->type);
+                type_argument = type_argument->next_type_argument;
+            }
+        } else {
+            String__append_string(cdecl->type, named_type->name);
+        }
         break;
+    }
     case CHECKED_TYPE_KIND__MULTI_POINTER:
         declare_multi_pointer(cdecl, (Checked_Multi_Pointer_Type *)symbol_type);
         break;

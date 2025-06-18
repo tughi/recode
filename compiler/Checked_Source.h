@@ -59,6 +59,8 @@ Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
 
 bool Checked_Type__is_numeric_type(Checked_Type *self);
 
+void String__append_mangled_type_name(String *self, Checked_Type *type);
+
 typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__ADD,
     CHECKED_EXPRESSION_KIND__ADDRESS_OF,
@@ -115,10 +117,24 @@ typedef struct Checked_Array_Type {
 
 Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression);
 
+typedef struct Checked_Type_Argument {
+    Source_Location location;
+    String *name;
+    Checked_Type *type;
+    struct Checked_Type_Argument *next_type_argument;
+} Checked_Type_Argument;
+
+Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, String *name, Checked_Type *type);
+
+struct Checked_Generic_Type;
+
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
     String *module;
+
+    struct Checked_Generic_Type *generic_type;
+    Checked_Type_Argument *first_type_argument;
 } Checked_Named_Type;
 
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module);
@@ -189,9 +205,10 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, S
 typedef struct Checked_Struct_Type {
     Checked_Named_Type super;
     Checked_Struct_Member *first_member;
+    Parsed_Struct_Type_Specifier *parsed_type_specifier;
 } Checked_Struct_Type;
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module, Parsed_Struct_Type_Specifier *parsed_type_specifier);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 

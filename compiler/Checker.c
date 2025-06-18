@@ -153,7 +153,9 @@ Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
 
-Checked_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement);
+Checked_Named_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement);
+
+Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type *generic_type, Parsed_Named_Type *parsed_type);
 
 Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
     switch (parsed_type->kind) {
@@ -221,6 +223,9 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         }
         Checked_Named_Type *type = Checker__find_type(self, parsed_named_type->name);
         if (type != NULL) {
+            if (type->super.kind == CHECKED_TYPE_KIND__GENERIC) {
+                return (Checked_Type *)Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_named_type);
+            }
             return (Checked_Type *)type;
         }
         Parsed_Statement *parsed_statement = self->parsed_source->statements->first_statement;
@@ -228,7 +233,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
             if (parsed_statement->kind == PARSED_STATEMENT_KIND__TYPE) {
                 Parsed_Type_Statement *parsed_type_statement = (Parsed_Type_Statement *)parsed_statement;
                 if (String__equals_string(parsed_type_statement->super.name->lexeme, parsed_named_type->name)) {
-                    return Checker__check_type_statement(self, parsed_type_statement);
+                    return (Checked_Type *)Checker__check_type_statement(self, parsed_type_statement);
                 }
             }
         }
@@ -1121,7 +1126,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     panic();
 }
 
-Checked_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
+Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
     Source_Location builtin_type_location = type_name->location;
     String *builtin_type_name = type_name->lexeme;
     Checked_Named_Type *type = Checker__find_type(self, builtin_type_name);
@@ -1187,10 +1192,10 @@ Checked_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_n
     }
 
     Checked_Symbols__append_symbol(self->builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_type_location, builtin_type->name, (Checked_Type *)self->builtin_types->type_type, builtin_type));
-    return (Checked_Type *)builtin_type;
+    return builtin_type;
 }
 
-Checked_Type *Checker__check_external_type_statement(Checker *self, Token *type_name) {
+Checked_Named_Type *Checker__check_external_type_statement(Checker *self, Token *type_name) {
     Checked_Named_Type *type = Checker__find_type(self, type_name->lexeme);
     if (type != NULL) {
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
@@ -1201,7 +1206,7 @@ Checked_Type *Checker__check_external_type_statement(Checker *self, Token *type_
     }
     Checked_External_Type *external_type = Checked_External_Type__create(type_name->location, type_name->lexeme, self->checked_module->name);
     external_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)external_type);
-    return (Checked_Type *)external_type;
+    return (Checked_Named_Type *)external_type;
 }
 
 struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type) {
@@ -1257,12 +1262,12 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
 }
 
-Checked_Type *Checker__check_struct_type_statement(Checker *self, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
+Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, self->checked_module, type_name->lexeme);
     if (other_type != NULL) {
-        if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && Source_Location__equals(other_type->super.location, type_name->location)) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && ((Checked_Struct_Type *)other_type)->parsed_type_specifier == parsed_type_specifier) {
             /* Type checked already */
-            return (Checked_Type *)other_type;
+            return other_type;
         }
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
@@ -1281,7 +1286,7 @@ Checked_Type *Checker__check_struct_type_statement(Checker *self, Token *type_na
         /* This is a builtin type */
         struct_type_module = NULL;
     }
-    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(type_name->location, struct_type_name, struct_type_module);
+    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(type_name->location, struct_type_name, struct_type_module, parsed_type_specifier);
     struct_type->super.super.symbol = Checker__create_type_symbol(self, struct_type_name, (Checked_Named_Type *)struct_type);
 
     if (parsed_type_specifier->first_member != NULL) {
@@ -1311,7 +1316,7 @@ Checked_Type *Checker__check_struct_type_statement(Checker *self, Token *type_na
         }
     }
 
-    return (Checked_Type *)struct_type;
+    return (Checked_Named_Type *)struct_type;
 }
 
 Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
@@ -1366,7 +1371,7 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
     return Checked_Procedure_Type__create(location, procedure_first_parameter, procedure_return_type);
 }
 
-Checked_Type *Checker__check_trait_type_statement(Checker *self, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
+Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
     Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
@@ -1378,7 +1383,7 @@ Checked_Type *Checker__check_trait_type_statement(Checker *self, Token *type_nam
     Checked_Trait_Type *trait_type = Checked_Trait_Type__create(type_name->location, type_name->lexeme, self->checked_module->name);
     trait_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)trait_type);
 
-    trait_type->struct_type = Checked_Struct_Type__create(type_name->location, trait_type->super.name, self->checked_module->name);
+    trait_type->struct_type = Checked_Struct_Type__create(type_name->location, trait_type->super.name, self->checked_module->name, NULL);
 
     Checked_Type *trait_receiver_type = (Checked_Type *)Checked_Pointer_Type__create((Source_Location){}, (Checked_Type *)self->builtin_types->any_type);
     trait_type->self_struct_member = trait_type->struct_type->first_member = Checked_Struct_Member__create((Source_Location){}, String__create_from("self"), trait_receiver_type);
@@ -1402,15 +1407,15 @@ Checked_Type *Checker__check_trait_type_statement(Checker *self, Token *type_nam
         }
     }
 
-    return (Checked_Type *)trait_type;
+    return (Checked_Named_Type *)trait_type;
 }
 
-Checked_Type *Checker__check_union_type_statement(Checker *self, Token *type_name, Parsed_Union_Type_Specifier *parsed_union_type_specifier) {
+Checked_Named_Type *Checker__check_union_type_statement(Checker *self, Token *type_name, Parsed_Union_Type_Specifier *parsed_union_type_specifier) {
     Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__UNION && Source_Location__equals(other_type->super.location, type_name->location)) {
             /* Type checked already */
-            return (Checked_Type *)other_type;
+            return other_type;
         }
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
@@ -1448,7 +1453,7 @@ Checked_Type *Checker__check_union_type_statement(Checker *self, Token *type_nam
 
     union_type->variant_count = last_union_variant->index;
 
-    return (Checked_Type *)union_type;
+    return (Checked_Named_Type *)union_type;
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
@@ -1726,40 +1731,6 @@ Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_Wh
     return Checked_While_Statement__create(parsed_statement->super.location, condition_expression, body_statement);
 }
 
-static void String__append_receiver_type(String *symbol_name, Checked_Type *receiver_type) {
-    switch (receiver_type->kind) {
-    case CHECKED_TYPE_KIND__MULTI_POINTER: {
-        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)receiver_type;
-        String__append_cstring(symbol_name, "d_");
-        String__append_receiver_type(symbol_name, multi_pointer_type->item_type);
-        String__append_cstring(symbol_name, "_b");
-        break;
-    }
-    case CHECKED_TYPE_KIND__POINTER: {
-        String__append_char(symbol_name, 'p');
-        String__append_receiver_type(symbol_name, ((Checked_Pointer_Type *)receiver_type)->other_type);
-        break;
-    }
-    case CHECKED_TYPE_KIND__EXTERNAL:
-    case CHECKED_TYPE_KIND__I32:
-    case CHECKED_TYPE_KIND__STR:
-    case CHECKED_TYPE_KIND__STRUCT:
-    case CHECKED_TYPE_KIND__TRAIT:
-    case CHECKED_TYPE_KIND__U8:
-    case CHECKED_TYPE_KIND__UNION: {
-        Checked_Named_Type *checked_named_type = (Checked_Named_Type *)receiver_type;
-        if (checked_named_type->module != NULL) {
-            String__append_string(symbol_name, checked_named_type->module);
-            String__append_char(symbol_name, '_');
-        }
-        String__append_string(symbol_name, checked_named_type->name);
-        break;
-    }
-    default:
-        todo("Handle unexpected Checked_Type_Kind");
-    }
-}
-
 void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
     Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
 
@@ -1775,7 +1746,7 @@ void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statem
             panic();
         }
         receiver_type = Checker__resolve_type(self, parsed_statement->first_parameter->type);
-        String__append_receiver_type(symbol_name, receiver_type);
+        String__append_mangled_type_name(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
     }
     String__append_string(symbol_name, procedure_name);
@@ -1906,12 +1877,12 @@ void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Stateme
     self->symbols = self->symbols->parent;
 }
 
-Checked_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement) {
+Checked_Named_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement) {
     Token *type_name = parsed_type_statement->super.name;
     if (parsed_type_statement->first_type_parameter != NULL) {
         Checked_Generic_Type *generic_type = Checked_Generic_Type__create(type_name->location, type_name->lexeme, self->checked_module->name, parsed_type_statement);
         generic_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)generic_type);
-        return (Checked_Type *)generic_type;
+        return (Checked_Named_Type *)generic_type;
     }
     switch (parsed_type_statement->type_specifier->kind) {
     case PARSED_TYPE_SPECIFIER_KIND__BUILTIN:
@@ -1930,6 +1901,122 @@ Checked_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+}
+
+Checked_Type_Argument *Checker__check_type_arguments(Checker *self, Parsed_Type_Parameter *first_parsed_type_parameter, Parsed_Type_Argument *first_parsed_type_argument) {
+    Checked_Type_Argument *first_type_argument = Checked_Type_Argument__create(first_parsed_type_parameter->name->location, first_parsed_type_parameter->name->lexeme, Checker__resolve_type(self, first_parsed_type_argument->type));
+    Checked_Type_Argument *last_type_argument = first_type_argument;
+
+    Parsed_Type_Parameter *parsed_type_parameter = first_parsed_type_parameter->next_type_parameter;
+    Parsed_Type_Argument *parsed_type_argument = first_parsed_type_argument->next_type_argument;
+    while (parsed_type_parameter != NULL && parsed_type_argument != NULL) {
+        last_type_argument->next_type_argument = Checked_Type_Argument__create(parsed_type_parameter->name->location, parsed_type_parameter->name->lexeme, Checker__resolve_type(self, parsed_type_argument->type));
+        last_type_argument = last_type_argument->next_type_argument;
+        parsed_type_parameter = parsed_type_parameter->next_type_parameter;
+        parsed_type_argument = parsed_type_argument->next_type_argument;
+    }
+    if (parsed_type_parameter != NULL) {
+        todo("Report too few arguments")
+    }
+    if (parsed_type_argument != NULL) {
+        todo("Report too many arguments")
+    }
+
+    return first_type_argument;
+}
+
+Checked_Named_Type *Checked_Symbols__find_specialized_type(Checked_Symbols *self, Checked_Generic_Type *generic_type, Checked_Type_Argument *first_type_argument) {
+    Checked_Symbols *symbols = self;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+                Checked_Named_Type *type = ((Checked_Type_Symbol *)symbol)->named_type;
+                if (type->generic_type == generic_type) {
+                    Checked_Type_Argument *type_argument = type->first_type_argument;
+                    Checked_Type_Argument *required_type_argument = first_type_argument;
+                    while (type_argument != NULL && required_type_argument != NULL) {
+                        if (!Checked_Type__equals(type_argument->type, required_type_argument->type)) {
+                            break;
+                        }
+                        type_argument = type_argument->next_type_argument;
+                        required_type_argument = required_type_argument->next_type_argument;
+                    }
+                    if (type_argument == NULL && required_type_argument == NULL) {
+                        // Found a specialized type
+                        return type;
+                    }
+                }
+            }
+            symbol = symbol->prev_symbol;
+        }
+        symbols = symbols->parent;
+    }
+    return NULL;
+}
+
+Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type *generic_type, Parsed_Named_Type *parsed_type) {
+    Checked_Type_Argument *first_type_argument = Checker__check_type_arguments(self, generic_type->parsed_type_statement->first_type_parameter, parsed_type->first_type_argument);
+
+    Checked_Named_Type *type = Checked_Symbols__find_specialized_type(self->global_symbols, generic_type, first_type_argument);
+    if (type != NULL) {
+        // TODO: delete created types arguments
+        return type;
+    }
+
+    String *type_name = String__create_copy(parsed_type->name);
+    Writer *type_name_writer = String__create_writer(type_name);
+    pWriter__write__char(type_name_writer, '[');
+    Checked_Type_Argument *type_argument = first_type_argument;
+    pWriter__write__checked_type(type_name_writer, type_argument->type);
+    type_argument = type_argument->next_type_argument;
+    while (type_argument != NULL) {
+        pWriter__write__cstring(type_name_writer, ", ");
+        pWriter__write__checked_type(type_name_writer, type_argument->type);
+        type_argument = type_argument->next_type_argument;
+    }
+    pWriter__write__char(type_name_writer, ']');
+    pWriter__destroy(type_name_writer);
+
+    Token type_name_token = {
+        .kind = TOKEN_KIND__IDENTIFIER,
+        .location = parsed_type->super.location,
+        .lexeme = type_name,
+        .next_token = NULL,
+    };
+
+    self->symbols = Checked_Symbols__create(self->symbols);
+    type_argument = first_type_argument;
+    while (type_argument != NULL) {
+        switch (type_argument->type->kind) {
+        case CHECKED_TYPE_KIND__I32:
+        case CHECKED_TYPE_KIND__I64:
+            break;
+        default:
+            todo("Create alias type");
+        }
+        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, type_argument->location, type_argument->name, (Checked_Type *)self->builtin_types->type_type, (Checked_Named_Type *)type_argument->type));
+        type_argument = type_argument->next_type_argument;
+    }
+
+    switch (generic_type->parsed_type_statement->type_specifier->kind) {
+    case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
+        type = Checker__check_struct_type_statement(self, &type_name_token, (Parsed_Struct_Type_Specifier *)generic_type->parsed_type_statement->type_specifier);
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, parsed_type->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot specialize type ");
+        pWriter__write__string(stderr_writer, generic_type->super.name);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    type->generic_type = generic_type;
+    type->first_type_argument = first_type_argument;
+
+    self->symbols = self->symbols->parent;
+
+    return type;
 }
 
 void Checker__check_module(Checker *self);

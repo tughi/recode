@@ -840,7 +840,7 @@ Parsed_Type_Argument *Parser__parse_type_argument(Parser *self) {
 type_arguments
     | "[" type_argument ( "," type_argument )* "]"
 */
-Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self) {
+Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location *type_location) {
     Parser__consume_token(self, Token__is_opening_bracket);
     Parser__consume_space(self, 0);
     Parsed_Type_Argument *first_type_argument = Parser__parse_type_argument(self);
@@ -853,7 +853,8 @@ Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self) {
         last_type_argument = last_type_argument->next_type_argument;
     }
     Parser__consume_space(self, 0);
-    Parser__consume_token(self, Token__is_closing_bracket);
+    Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
+    *type_location = Source_Location__union(*type_location, last_token->location);
     return first_type_argument;
 }
 
@@ -918,7 +919,7 @@ Parsed_Type *Parser__parse_type(Parser *self) {
     Parsed_Named_Type *named_type = Parsed_Named_Type__create(module, name);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
         Parser__consume_space(self, 0);
-        named_type->first_type_argument = Parser__parse_type_arguments(self);
+        named_type->first_type_argument = Parser__parse_type_arguments(self, &named_type->super.location);
     }
     return (Parsed_Type *)named_type;
 }
