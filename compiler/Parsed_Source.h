@@ -35,7 +35,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__STRING,
     PARSED_EXPRESSION_KIND__SUBTRACT,
     PARSED_EXPRESSION_KIND__SYMBOL,
-    PARSED_EXPRESSION_KIND__TYPE,
+    PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION,
 } Parsed_Expression_Kind;
 
 typedef struct Parsed_Expression {
@@ -358,12 +358,13 @@ typedef struct Parsed_Symbol_Expression {
 
 Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name);
 
-typedef struct Parsed_Type_Expression {
+typedef struct Parsed_Type_Specialization_Expression {
     Parsed_Expression super;
-    Parsed_Type *type;
-} Parsed_Type_Expression;
+    Parsed_Expression *type_expression;
+    Parsed_Type_Argument *first_type_argument;
+} Parsed_Type_Specialization_Expression;
 
-Parsed_Type_Expression *Parsed_Type_Expression__create(Parsed_Type *type);
+Parsed_Type_Specialization_Expression *Parsed_Type_Specialization_Expression__create(Source_Location location, Parsed_Expression *first_type_expression, Parsed_Type_Argument *type_argument);
 
 typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
@@ -378,7 +379,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__SWITCH,
     PARSED_STATEMENT_KIND__TYPE,
     PARSED_STATEMENT_KIND__VARIABLE,
-    PARSED_STATEMENT_KIND__WHILE
+    PARSED_STATEMENT_KIND__WHILE,
 } Parsed_Statement_Kind;
 
 typedef struct Parsed_Statement {

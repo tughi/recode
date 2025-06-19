@@ -1,0 +1,10 @@
+type List<T, L> = struct {
+    first_item: ^List_Item<T>
+    last_item: ^List_Item<T>
+    length: L
+}
+
+type List_Item<T> = struct {
+    data: T
+    next: ^List_Item<T>
+}

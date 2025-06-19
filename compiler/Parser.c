@@ -128,7 +128,6 @@ primary_expression
     | IDENTIFIER
     | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
-    | type
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_alloc)) {
@@ -146,9 +145,7 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_true)) {
         return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
     }
-    if (Parser__matches_one(self, Token__is_identifier) &&
-        !Parser__matches_three(self, Token__is_proc, true, Token__is_space, false, Token__is_opening_paren) &&
-        !Parser__matches_two(self, Token__is_identifier, true, Token__is_less_than)) {
+    if (Parser__matches_one(self, Token__is_identifier)) {
         return (Parsed_Expression *)Parsed_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
     }
     if (Parser__matches_one(self, Token__is_integer)) {
@@ -189,12 +186,6 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__union(first_token->location, last_token->location), expression);
-    }
-    if (Parser__matches_three(self, Token__is_proc, true, Token__is_space, false, Token__is_opening_paren) ||
-        Parser__matches_one(self, Token__is_opening_bracket) ||
-        Parser__matches_two(self, Token__is_identifier, true, Token__is_less_than)) {
-        Parsed_Type *type = Parser__parse_type(self);
-        return (Parsed_Expression *)Parsed_Type_Expression__create(type);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unexpected token");
@@ -298,16 +289,19 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
     return first_argument;
 }
 
+Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location *type_location);
+
 /*
 access_expression
     | primary_expression (
-        "." (
-            "^" |
-            "as" "(" type ")" |
-            IDENTIFIER
-        ) |
-        "(" call_arguments ")" |
-        "[" expression "]"
+        | "." (
+            | "^"
+            | "as" "(" type ")"
+            | IDENTIFIER
+        )
+        | "(" call_arguments ")"
+        | "[" expression "]"
+        | "<" type_argument ( "," type_argument )* ">"
     )*
 */
 Parsed_Expression *Parser__parse_access_expression(Parser *self) {
@@ -351,6 +345,11 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             Parser__consume_space(self, 0);
             Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
             expression = (Parsed_Expression *)Parsed_Array_Access_Expression__create(Source_Location__union(expression->location, last_token->location), expression, index_expression);
+        }
+        if (Parser__matches_one(self, Token__is_less_than)) {
+            Source_Location type_specialization_location = expression->location;
+            Parsed_Type_Argument *first_type_argument = Parser__parse_type_arguments(self, &type_specialization_location);
+            expression = (Parsed_Expression *)Parsed_Type_Specialization_Expression__create(Source_Location__union(expression->location, type_specialization_location), expression, first_type_argument);
         }
         if (old_expression == expression) {
             break;

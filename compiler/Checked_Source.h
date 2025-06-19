@@ -3,6 +3,24 @@
 
 #include "Parsed_Source.h"
 
+typedef struct Checked_Module {
+    String *name;
+    Source *source;
+    struct Checked_Module *next_module;
+} Checked_Module;
+
+Checked_Module *Checked_Module__create(String *name, Source *source);
+
+typedef struct Checked_Modules {
+    Checked_Module *builtin_module;
+    Checked_Module *first_module;
+    Checked_Module *last_module;
+} Checked_Modules;
+
+void Checked_Modules__append(Checked_Modules *self, Checked_Module *module);
+
+Checked_Module *Checked_Modules__find(Checked_Modules *self, String *name);
+
 typedef enum Checked_Type_Kind {
     /* Builtins */
     CHECKED_TYPE_KIND__ANY,
@@ -132,26 +150,26 @@ struct Checked_Generic_Type;
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
-    String *module;
+    Checked_Module *module;
 
     struct Checked_Generic_Type *generic_type;
     Checked_Type_Argument *first_type_argument;
 } Checked_Named_Type;
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module);
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Module *module);
 
 typedef struct Checked_Generic_Type {
     Checked_Named_Type super;
     Parsed_Type_Statement *parsed_type_statement;
 } Checked_Generic_Type;
 
-Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, String *module, Parsed_Type_Statement *parsed_type_statement);
+Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, Checked_Module *module, Parsed_Type_Statement *parsed_type_statement);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
 } Checked_External_Type;
 
-Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, String *module);
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Module *module);
 
 typedef struct Checked_Procedure_Parameter {
     Source_Location location;
@@ -209,7 +227,7 @@ typedef struct Checked_Struct_Type {
     Parsed_Struct_Type_Specifier *parsed_type_specifier;
 } Checked_Struct_Type;
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module, Parsed_Struct_Type_Specifier *parsed_type_specifier);
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Module *module, Parsed_Struct_Type_Specifier *parsed_type_specifier);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 
@@ -230,7 +248,7 @@ typedef struct Checked_Trait_Type {
     Checked_Trait_Method *first_method;
 } Checked_Trait_Type;
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, String *module);
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, Checked_Module *module);
 
 typedef struct Checked_Union_Variant {
     Checked_Type *type;
@@ -246,7 +264,7 @@ typedef struct Checked_Union_Type {
     int32_t variant_count;
 } Checked_Union_Type;
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, String *module);
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, Checked_Module *module);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -262,24 +280,6 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT,
     CHECKED_SYMBOL_KIND__VARIABLE,
 } Checked_Symbol_Kind;
-
-typedef struct Checked_Module {
-    String *name;
-    Source *source;
-    struct Checked_Module *next_module;
-} Checked_Module;
-
-Checked_Module *Checked_Module__create(String *name, Source *source);
-
-typedef struct Checked_Modules {
-    Checked_Module *builtin_module;
-    Checked_Module *first_module;
-    Checked_Module *last_module;
-} Checked_Modules;
-
-void Checked_Modules__append(Checked_Modules *self, Checked_Module *module);
-
-Checked_Module *Checked_Modules__find(Checked_Modules *self, String *name);
 
 typedef struct Checked_Symbol {
     Checked_Symbol_Kind kind;
@@ -675,10 +675,10 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
 
 typedef struct Checked_Type_Expression {
     Checked_Expression super;
-    Checked_Type *type;
+    Checked_Named_Type *named_type;
 } Checked_Type_Expression;
 
-Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type);
+Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type);
 
 typedef struct Checked_Assignment_Statement {
     Checked_Statement super;

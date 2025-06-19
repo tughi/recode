@@ -252,9 +252,10 @@ Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name) {
     return expression;
 }
 
-Parsed_Type_Expression *Parsed_Type_Expression__create(Parsed_Type *type) {
-    Parsed_Type_Expression *expression = (Parsed_Type_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE, sizeof(Parsed_Type_Expression), type->location);
-    expression->type = type;
+Parsed_Type_Specialization_Expression *Parsed_Type_Specialization_Expression__create(Source_Location location, Parsed_Expression *type_expression, Parsed_Type_Argument *first_type_argument) {
+    Parsed_Type_Specialization_Expression *expression = (Parsed_Type_Specialization_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION, sizeof(Parsed_Type_Specialization_Expression), location);
+    expression->type_expression = type_expression;
+    expression->first_type_argument = first_type_argument;
     return expression;
 }
 
