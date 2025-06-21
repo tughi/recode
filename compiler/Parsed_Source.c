@@ -296,8 +296,9 @@ Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expressi
     return statement;
 }
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
     Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
+    statement->first_type_parameter = first_type_parameter;
     statement->is_method = is_method;
     statement->first_parameter = first_parameter;
     statement->return_type = return_type;

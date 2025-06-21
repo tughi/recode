@@ -45,6 +45,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
         break;
     }
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__I16:
     case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__I64:
@@ -431,6 +432,12 @@ Checked_External_Symbol *Checked_External_Symbol__create(Source_Location locatio
     Checked_External_Symbol *external_symbol = (Checked_External_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__EXTERNAL, sizeof(Checked_External_Symbol), NULL, location, name, other_symbol->type, true);
     external_symbol->other_symbol = other_symbol;
     return external_symbol;
+}
+
+Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Parsed_Procedure_Statement *parsed_procedure_statement) {
+    Checked_Generic_Procedure_Symbol *symbol = (Checked_Generic_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE, sizeof(Checked_Generic_Procedure_Symbol), module, location, name, NULL, true);
+    symbol->parsed_procedure_statement = parsed_procedure_statement;
+    return symbol;
 }
 
 Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module) {

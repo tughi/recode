@@ -273,6 +273,7 @@ void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
     CHECKED_SYMBOL_KIND__EXTERNAL,
+    CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE,
     CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
@@ -306,6 +307,13 @@ typedef struct Checked_External_Symbol {
 } Checked_External_Symbol;
 
 Checked_External_Symbol *Checked_External_Symbol__create(Source_Location location, String *name, Checked_Symbol *other_symbol);
+
+typedef struct Checked_Generic_Procedure_Symbol {
+    Checked_Symbol super;
+    Parsed_Procedure_Statement *parsed_procedure_statement;
+} Checked_Generic_Procedure_Symbol;
+
+Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Parsed_Procedure_Statement *parsed_procedure_statement);
 
 typedef struct Checked_Import_Symbol {
     Checked_Symbol super;

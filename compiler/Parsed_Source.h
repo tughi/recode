@@ -435,8 +435,16 @@ typedef struct Parsed_Expression_Statement {
 
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression);
 
+typedef struct Parsed_Type_Parameter {
+    Token *name;
+    struct Parsed_Type_Parameter *next_type_parameter;
+} Parsed_Type_Parameter;
+
+Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name);
+
 typedef struct Parsed_Procedure_Statement {
     Parsed_Named_Statement super;
+    Parsed_Type_Parameter *first_type_parameter;
     bool is_method;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
@@ -445,7 +453,7 @@ typedef struct Parsed_Procedure_Statement {
     String_Token *external_name;
 } Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
@@ -483,13 +491,6 @@ typedef struct Parsed_Type_Specifier {
     Parsed_Type_Specifier_Kind kind;
     Source_Location location;
 } Parsed_Type_Specifier;
-
-typedef struct Parsed_Type_Parameter {
-    Token *name;
-    struct Parsed_Type_Parameter *next_type_parameter;
-} Parsed_Type_Parameter;
-
-Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name);
 
 typedef struct Parsed_Type_Statement {
     Parsed_Named_Statement super;
