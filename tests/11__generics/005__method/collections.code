@@ -1,0 +1,21 @@
+type List<T> = struct {
+    first_item: ^List_Item<T>
+    last_item: ^List_Item<T>
+    length: usize
+}
+
+type List_Item<T> = struct {
+    data: T
+    next: ^List_Item<T>
+}
+
+proc (^List<T>).prepend<T>(self, data: T) {
+    let new_item = alloc List_Item<T>(data: data, next: self.first_item)
+    if self.first_item == null {
+        self.last_item = new_item
+    }
+    self.first_item = new_item
+    self.length = self.length + 1
+}
+
+proc malloc(anon size: usize) -> ^Any = external

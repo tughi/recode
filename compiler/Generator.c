@@ -29,13 +29,12 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
 }
 
 void Generator__generate_alloc_procedure_name(Generator *self, Checked_Named_Type *type) {
+    String *mangled_name = String__create();
+    String__append_mangled_type_name(mangled_name, (Checked_Type *)type);
     pWriter__write__cstring(self->writer, "__alloc__");
-    if (type->module != NULL) {
-        pWriter__write__string(self->writer, type->module->name);
-        pWriter__write__char(self->writer, '_');
-    }
-    pWriter__write__string(self->writer, type->name);
+    pWriter__write__string(self->writer, mangled_name);
     pWriter__write__cstring(self->writer, "__");
+    String__delete(mangled_name);
 }
 
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {

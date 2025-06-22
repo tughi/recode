@@ -63,7 +63,17 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
             String__append_string(self, checked_named_type->module->name);
             String__append_char(self, '_');
         }
-        String__append_string(self, checked_named_type->name);
+        if (checked_named_type->generic_type != NULL) {
+            String__append_string(self, checked_named_type->generic_type->super.name);
+            Checked_Type_Argument *type_argument = checked_named_type->first_type_argument;
+            while (type_argument != NULL) {
+                String__append_cstring(self, "__");
+                String__append_mangled_type_name(self, type_argument->type);
+                type_argument = type_argument->next_type_argument;
+            }
+        } else {
+            String__append_string(self, checked_named_type->name);
+        }
         break;
     }
     default:
@@ -434,8 +444,9 @@ Checked_External_Symbol *Checked_External_Symbol__create(Source_Location locatio
     return external_symbol;
 }
 
-Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Parsed_Procedure_Statement *parsed_procedure_statement) {
+Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *receiver_type, Parsed_Procedure_Statement *parsed_procedure_statement) {
     Checked_Generic_Procedure_Symbol *symbol = (Checked_Generic_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE, sizeof(Checked_Generic_Procedure_Symbol), module, location, name, NULL, true);
+    symbol->receiver_type = receiver_type;
     symbol->parsed_procedure_statement = parsed_procedure_statement;
     return symbol;
 }
@@ -446,10 +457,12 @@ Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Sou
     return import_symbol;
 }
 
-Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, Parsed_Procedure_Statement *parsed_procedure_statement, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
     Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), module, location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type), true);
     symbol->procedure_location = procedure_location;
-    symbol->procedure_name = procedure_name;
+    symbol->parsed_procedure_statement = parsed_procedure_statement;
+    symbol->first_type_argument = NULL;
+    symbol->procedure_name = parsed_procedure_statement->super.name->lexeme;
     symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
     symbol->checked_statements = NULL;

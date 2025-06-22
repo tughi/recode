@@ -310,10 +310,11 @@ Checked_External_Symbol *Checked_External_Symbol__create(Source_Location locatio
 
 typedef struct Checked_Generic_Procedure_Symbol {
     Checked_Symbol super;
+    Checked_Type *receiver_type;
     Parsed_Procedure_Statement *parsed_procedure_statement;
 } Checked_Generic_Procedure_Symbol;
 
-Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Parsed_Procedure_Statement *parsed_procedure_statement);
+Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *receiver_type, Parsed_Procedure_Statement *parsed_procedure_statement);
 
 typedef struct Checked_Import_Symbol {
     Checked_Symbol super;
@@ -356,6 +357,8 @@ void Checked_Statements__append(Checked_Statements *self, Checked_Statement *sta
 typedef struct Checked_Procedure_Symbol {
     Checked_Symbol super;
     Source_Location procedure_location;
+    Parsed_Procedure_Statement *parsed_procedure_statement;
+    Checked_Type_Argument *first_type_argument;
     String *procedure_name;
     Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
@@ -363,7 +366,7 @@ typedef struct Checked_Procedure_Symbol {
     String *external_name;
 } Checked_Procedure_Symbol;
 
-Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, Parsed_Procedure_Statement *parsed_procedure_statement, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type);
 
 void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_Symbol *procedure_symbol);
 
