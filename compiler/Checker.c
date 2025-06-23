@@ -169,6 +169,21 @@ Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
     return Checked_Symbols__find_type(self->global_symbols->parent, NULL, name);
 }
 
+Checked_Type_Argument_Symbol *Checker__find_type_argument_symbol(Checker *self, String *alias) {
+    Checked_Symbols *symbols = self->symbols;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE_ARGUMENT && String__equals_string(alias, symbol->name)) {
+                return (Checked_Type_Argument_Symbol *)symbol;
+            }
+            symbol = symbol->prev_symbol;
+        }
+        symbols = symbols->parent;
+    }
+    return NULL;
+}
+
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
 
 Checked_Named_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement);
@@ -257,6 +272,10 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
                     return (Checked_Type *)Checker__check_type_statement(self, parsed_type_statement);
                 }
             }
+        }
+        Checked_Type_Argument_Symbol *type_argument_symbol = Checker__find_type_argument_symbol(self, parsed_named_type->name);
+        if (type_argument_symbol != NULL) {
+            return type_argument_symbol->argument_type;
         }
         pWriter__begin_location_message(stderr_writer, parsed_type->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined type: ");
@@ -2040,29 +2059,18 @@ void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol
     self->symbols = self->symbols->parent;
 }
 
-void Checker__create_specialization_symbols(Checker *self, Checked_Type_Argument *first_type_argument) {
+void Checker__create_type_argument_symbols(Checker *self, Checked_Type_Argument *first_type_argument) {
     Checked_Type_Argument *type_argument = first_type_argument;
     while (type_argument != NULL) {
-        switch (type_argument->type->kind) {
-        case CHECKED_TYPE_KIND__I32:
-        case CHECKED_TYPE_KIND__I64:
-        case CHECKED_TYPE_KIND__U32:
-            break;
-        case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-            Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type_argument->type;
-            todo("Create procedure pointer alias type");
-        }
-        default:
-            todo("Create alias type");
-        }
-        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, type_argument->location, type_argument->name, (Checked_Type *)self->builtin_types->type_type, (Checked_Named_Type *)type_argument->type));
+        Checked_Type_Argument_Symbol *type_argument_symbol = Checked_Type_Argument_Symbol__create(type_argument->location, type_argument->name, (Checked_Type *)self->builtin_types->type_type, type_argument->type);
+        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_argument_symbol);
         type_argument = type_argument->next_type_argument;
     }
 }
 
 Checked_Procedure_Symbol *Checker__specialize_method(Checker *self, Checked_Generic_Procedure_Symbol *generic_procedure_symbol, Checked_Type_Argument *first_type_argument) {
     self->symbols = Checked_Symbols__create(self->symbols);
-    Checker__create_specialization_symbols(self, first_type_argument);
+    Checker__create_type_argument_symbols(self, first_type_argument);
 
     Checked_Module *checked_module = self->checked_module;
     self->checked_module = generic_procedure_symbol->super.module;
@@ -2179,7 +2187,7 @@ Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type
     pWriter__destroy(type_name_writer);
 
     self->symbols = Checked_Symbols__create(self->symbols);
-    Checker__create_specialization_symbols(self, first_type_argument);
+    Checker__create_type_argument_symbols(self, first_type_argument);
 
     Token *type_name_token = (Token *)Identifier_Token__create(parsed_type->super.location, type_name);
     Checked_Module *current_module = self->checked_module;
@@ -2315,7 +2323,7 @@ void Checker__check_module(Checker *self) {
                 }
                 if (procedure_symbol->first_type_argument != NULL) {
                     self->symbols = Checked_Symbols__create(self->symbols);
-                    Checker__create_specialization_symbols(self, procedure_symbol->first_type_argument);
+                    Checker__create_type_argument_symbols(self, procedure_symbol->first_type_argument);
                 }
                 Checked_Module *current_module = self->checked_module;
                 self->checked_module = procedure_symbol->super.module;

@@ -523,6 +523,12 @@ Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_
     return symbol;
 }
 
+Checked_Type_Argument_Symbol *Checked_Type_Argument_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Type *argument_type) {
+    Checked_Type_Argument_Symbol *symbol = (Checked_Type_Argument_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE_ARGUMENT, sizeof(Checked_Type_Argument_Symbol), NULL, location, name, type, true);
+    symbol->argument_type = argument_type;
+    return symbol;
+}
+
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type, is_global);
     variable->external_name = NULL;

@@ -278,6 +278,7 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
     CHECKED_SYMBOL_KIND__TYPE,
+    CHECKED_SYMBOL_KIND__TYPE_ARGUMENT,
     CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT,
     CHECKED_SYMBOL_KIND__VARIABLE,
 } Checked_Symbol_Kind;
@@ -382,6 +383,13 @@ typedef struct Checked_Type_Symbol {
 } Checked_Type_Symbol;
 
 Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type);
+
+typedef struct Checked_Type_Argument_Symbol {
+    Checked_Symbol super;
+    Checked_Type *argument_type;
+} Checked_Type_Argument_Symbol;
+
+Checked_Type_Argument_Symbol *Checked_Type_Argument_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Type *argument_type);
 
 struct Checked_Variable_Statement;
 
