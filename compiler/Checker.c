@@ -77,24 +77,6 @@ typedef struct Checked_Methods {
     Checked_Method *last_method;
 } Checked_Methods;
 
-void Checked_Methods__append_method(Checked_Methods *self, Checked_Type *receiver_type, Checked_Symbol *procedure_symbol) {
-    if (procedure_symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE && procedure_symbol->kind != CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE) {
-        panic();
-    }
-
-    Checked_Method *method = (Checked_Method *)malloc(sizeof(Checked_Method));
-    method->receiver_type = receiver_type;
-    method->procedure_symbol = procedure_symbol;
-    method->next_method = NULL;
-
-    if (self->first_method == NULL) {
-        self->first_method = method;
-    } else {
-        self->last_method->next_method = method;
-    }
-    self->last_method = method;
-}
-
 typedef struct Checker {
     Parsed_Source *parsed_source;
 
@@ -182,6 +164,36 @@ Checked_Type_Argument_Symbol *Checker__find_type_argument_symbol(Checker *self, 
         symbols = symbols->parent;
     }
     return NULL;
+}
+
+void Checker__append_method(Checker *self, Checked_Type *receiver_type, Checked_Symbol *procedure_symbol) {
+    if (procedure_symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE && procedure_symbol->kind != CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE) {
+        panic();
+    }
+
+    Checked_Method *method = self->methods->first_method;
+    while (method != NULL) {
+        if (Checked_Type__equals(method->receiver_type, receiver_type) && String__equals_string(method->procedure_symbol->name, procedure_symbol->name)) {
+            pWriter__begin_location_message(stderr_writer, procedure_symbol->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Method already defined here: ");
+            pWriter__write__location(stderr_writer, method->procedure_symbol->location);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        method = method->next_method;
+    }
+
+    method = (Checked_Method *)malloc(sizeof(Checked_Method));
+    method->receiver_type = receiver_type;
+    method->procedure_symbol = procedure_symbol;
+    method->next_method = NULL;
+
+    if (self->methods->first_method == NULL) {
+        self->methods->first_method = method;
+    } else {
+        self->methods->last_method->next_method = method;
+    }
+    self->methods->last_method = method;
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
@@ -1934,7 +1946,7 @@ void Checker__check_generic_procedure_declaration(Checker *self, Parsed_Procedur
     Checked_Generic_Procedure_Symbol *generic_procedure_symbol = Checked_Generic_Procedure_Symbol__create(self->checked_module, parsed_statement->super.super.location, symbol_name, receiver_type, parsed_statement);
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)generic_procedure_symbol);
 
-    Checked_Methods__append_method(self->methods, receiver_type, (Checked_Symbol *)generic_procedure_symbol);
+    Checker__append_method(self, receiver_type, (Checked_Symbol *)generic_procedure_symbol);
 }
 
 Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
@@ -1981,7 +1993,7 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
     }
 
     if (parsed_statement->is_method) {
-        Checked_Methods__append_method(self->methods, receiver_type, (Checked_Symbol *)procedure_symbol);
+        Checker__append_method(self, receiver_type, (Checked_Symbol *)procedure_symbol);
     }
 
     return procedure_symbol;
