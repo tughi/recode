@@ -2319,40 +2319,6 @@ void Checker__check_module(Checker *self) {
         }
         parsed_statement = parsed_statement->next_statement;
     }
-
-    /* Check procedure definitions */
-    Checked_Symbol *symbol = self->global_symbols->first_symbol;
-    while (symbol != NULL) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
-            Parsed_Procedure_Statement *procedure_statement = procedure_symbol->parsed_procedure_statement;
-            if (!procedure_statement->is_external) {
-                if (procedure_statement->statements == NULL) {
-                    pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
-                    pWriter__write__cstring(stderr_writer, "Missing procedure body");
-                    pWriter__end_location_message(stderr_writer);
-                    panic();
-                }
-                if (procedure_symbol->first_type_argument != NULL) {
-                    self->symbols = Checked_Symbols__create(self->symbols);
-                    Checker__create_type_argument_symbols(self, procedure_symbol->first_type_argument);
-                }
-                Checked_Module *current_module = self->checked_module;
-                self->checked_module = procedure_symbol->super.module;
-                Checker__check_procedure_definition(self, procedure_symbol);
-                self->checked_module = current_module;
-                if (procedure_symbol->first_type_argument != NULL) {
-                    self->symbols = self->symbols->parent;
-                }
-            } else if (procedure_statement->statements != NULL) {
-                pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "External procedure with body");
-                pWriter__end_location_message(stderr_writer);
-                panic();
-            }
-        }
-        symbol = symbol->next_symbol;
-    }
 }
 
 void Checker__check_builtin_module(Checker *self, Parsed_Source *parsed_source) {
@@ -2381,8 +2347,43 @@ Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parse
     Checker__check_builtin_module(checker, parsed_builtin_source);
     Checker__check_module(checker);
 
+    /* Check procedure definitions from all modules */
+    Checked_Symbol *symbol = checker->global_symbols->first_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            Parsed_Procedure_Statement *procedure_statement = procedure_symbol->parsed_procedure_statement;
+            if (!procedure_statement->is_external) {
+                if (procedure_statement->statements == NULL) {
+                    pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Missing procedure body");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
+                if (procedure_symbol->first_type_argument != NULL) {
+                    checker->symbols = Checked_Symbols__create(checker->symbols);
+                    Checker__create_type_argument_symbols(checker, procedure_symbol->first_type_argument);
+                }
+                // Checked_Module *current_module = checker->checked_module;
+                checker->checked_module = procedure_symbol->super.module;
+                Checker__check_procedure_definition(checker, procedure_symbol);
+                // checker->checked_module = current_module;
+                if (procedure_symbol->first_type_argument != NULL) {
+                    checker->symbols = checker->symbols->parent;
+                }
+            } else if (procedure_statement->statements != NULL) {
+                pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External procedure with body");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+        }
+        symbol = symbol->next_symbol;
+    }
+
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
     checked_source->first_module = checker->modules->first_module;
     checked_source->symbols = checker->global_symbols;
+
     return checked_source;
 }

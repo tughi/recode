@@ -1001,7 +1001,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     pWriter__write__cstring(generator.writer, "_H__\n");
 }
 
-void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main) {
+void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main, Checked_Module *first_module) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
@@ -1017,10 +1017,15 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     Checked_Procedure_Symbol *malloc_procedure = NULL;
     Checked_Procedure_Symbol *main_procedure = NULL;
 
-    /* Include this module's header file */
-    pWriter__write__cstring(generator.writer, "#include \"");
-    pWriter__write__string(generator.writer, checked_module->name);
-    pWriter__write__cstring(generator.writer, ".h\"\n\n");
+    /* Include all headers to have all methods available */
+    Checked_Module *module = first_module;
+    while (module != NULL) {
+        pWriter__write__cstring(generator.writer, "#include \"");
+        pWriter__write__string(generator.writer, module->name);
+        pWriter__write__cstring(generator.writer, ".h\"\n");
+        module = module->next_module;
+    }
+    pWriter__end_line(generator.writer);
 
     /* Define all global variables */
     checked_symbol = checked_source->symbols->first_symbol;
@@ -1082,7 +1087,7 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     Checked_Module *checked_module = checked_source->first_module;
     while (checked_module != NULL) {
         generate_module_header(checked_source, checked_module, output_dir);
-        generate_module(checked_source, checked_module, output_dir, generate_main);
+        generate_module(checked_source, checked_module, output_dir, generate_main, checked_source->first_module);
         checked_module = checked_module->next_module;
     }
 }

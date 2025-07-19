@@ -1,4 +1,12 @@
+#include "test.h"
+#include "calculator__expression.h"
+#include "calculator__source.h"
+#include "libc.h"
 #include "io.h"
+#include "calculator__parser.h"
+#include "calculator__tokenizer.h"
+#include "os.h"
+#include "string.h"
 
 struct io_Writer *__alloc__io_Writer__(struct io_Writer value) {
     struct io_Writer *result = (struct io_Writer *)malloc(sizeof(struct io_Writer));

@@ -1,4 +1,5 @@
 #include "test.h"
+#include "collections.h"
 
 #line 14 "tests/11__generics/005__method/test.code"
 int32_t test__main() {

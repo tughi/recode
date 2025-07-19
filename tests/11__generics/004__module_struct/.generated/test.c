@@ -1,4 +1,5 @@
 #include "test.h"
+#include "collections.h"
 
 #line 3 "tests/11__generics/004__module_struct/test.code"
 int32_t test__main() {

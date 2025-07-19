@@ -1,4 +1,12 @@
+#include "test.h"
+#include "calculator__expression.h"
+#include "calculator__source.h"
+#include "libc.h"
+#include "io.h"
 #include "calculator__parser.h"
+#include "calculator__tokenizer.h"
+#include "os.h"
+#include "string.h"
 
 struct calculator__parser_Parser *__alloc__calculator__parser_Parser__(struct calculator__parser_Parser value) {
     struct calculator__parser_Parser *result = (struct calculator__parser_Parser *)malloc(sizeof(struct calculator__parser_Parser));

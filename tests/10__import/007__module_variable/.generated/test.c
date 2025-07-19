@@ -1,4 +1,5 @@
 #include "test.h"
+#include "numbers.h"
 
 #line 3 "tests/10__import/007__module_variable/test.code"
 int32_t test__main() {

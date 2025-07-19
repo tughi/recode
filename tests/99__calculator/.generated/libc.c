@@ -1,2 +1,10 @@
+#include "test.h"
+#include "calculator__expression.h"
+#include "calculator__source.h"
 #include "libc.h"
+#include "io.h"
+#include "calculator__parser.h"
+#include "calculator__tokenizer.h"
+#include "os.h"
+#include "string.h"
 

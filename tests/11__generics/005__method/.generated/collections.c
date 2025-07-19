@@ -1,3 +1,4 @@
+#include "test.h"
 #include "collections.h"
 
 struct collections_List__i32 *__alloc__collections_List__i32__(struct collections_List__i32 value) {
