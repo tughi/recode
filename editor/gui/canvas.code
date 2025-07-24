@@ -1,0 +1,13 @@
+import gui.rect
+
+type Canvas = struct {
+    bitmaps: [^]u8
+    width: i32
+    height: i32
+    clip_rect: rect.Rect
+    color: u32
+}
+
+type Drawable = trait {
+    proc draw(self, canvas: ^Canvas)
+}

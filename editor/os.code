@@ -1,1 +1,5 @@
 proc exit(anon status: i32) = external
+
+proc malloc(anon size: usize) -> ^Any = external
+proc realloc(anon ptr: ^Any, anon size: usize) -> ^Any = external
+proc free(anon ptr: ^Any) = external

@@ -1,0 +1,9 @@
+import gui.rect
+import gui.widget
+
+type Button = struct {
+    super: widget.Widget
+    label: str
+    label_bounds: rect.Rect
+    pressed: bool
+}

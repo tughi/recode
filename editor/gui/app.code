@@ -1,0 +1,59 @@
+import collections.list
+import os
+import sdl
+
+let ready = false
+let windows: list.List<^Window>
+
+proc init() {
+    if ready {
+        os.exit(1)
+    }
+
+    windows.init()
+
+    if sdl.init(0x20) != 0 {
+        os.exit(1)
+    }
+
+    ready = true
+}
+
+proc run() -> i32 {
+    let event = sdl.Event()
+    let running = true
+    while running {
+        while sdl.poll_event(^event) != 0 {
+            if event.type == 0x100 { \ SDL_QUIT
+                running = false
+            }
+        }
+        \ Update the main window here if needed
+    }
+
+    sdl.quit()
+    return 0
+}
+
+type Window = struct {
+    sdl_window: ^sdl.Window
+}
+
+proc (^str).data(self) -> [^]u8 {
+    return self.as(^String).data
+}
+
+proc create_window(title: str, width: i32, height: i32) -> ^Window {
+    if not ready {
+        os.exit(1)
+    }
+
+    let sdl_window = sdl.create_window(title.data(), 0x2fff0001, 0x2fff0001, width, height, 0)
+    if sdl_window == null {
+        return null
+    }
+
+    let window = alloc Window(sdl_window: sdl_window)
+    windows.append(window)
+    return window
+}

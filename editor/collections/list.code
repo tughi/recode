@@ -1,0 +1,37 @@
+import os
+
+type List<T> = struct {
+    items: [^]T
+    capacity: usize
+    length: usize
+}
+
+\ proc new<T>() -> ^List<T> {
+\     let list = alloc List<T>()
+\     list.init()
+\     return list
+\ }
+
+proc (^List<T>).init<T>(self) {
+    self.items = null
+    self.capacity = 0
+    self.length = 0
+}
+
+proc (^List<T>).append<T>(self, anon item: T) -> bool {
+    if self.length >= self.capacity {
+        let new_capacity = self.capacity + self.capacity / 2
+        if new_capacity == 0 {
+            new_capacity = 10
+        }
+        let item_size = (sizeof(T)).as(usize) \ TODO: Use sizeof(T) directly
+        let new_items = os.malloc(new_capacity * item_size)
+        if new_items == null {
+            return false
+        }
+        self.items = new_items.as([^]T)
+        self.capacity = new_capacity
+    }
+    self.items[self.length] = item
+    self.length = self.length + 1
+}

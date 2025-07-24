@@ -419,7 +419,7 @@ def stage():
     run('cp -R bootstrap/stage0 compiler')
 
 
-def editor():
+def editor(launch):
     build()
 
     if not os.path.exists(f'build/editor'):
@@ -430,7 +430,9 @@ def editor():
         trace(*compiler_command)
         exit(1)
 
-    if assemble([f'build/editor/{file}' for file in os.listdir('build/editor')], 'build/editor/editor', sdl=True, check=True):
+    assemble([f'build/editor/{file}' for file in os.listdir('build/editor')], 'build/editor/editor', sdl=True, check=True)
+
+    if launch:
         run('build/editor/editor')
 
 
@@ -466,6 +468,7 @@ if __name__ == '__main__':
 
     editor_args_parser = args_command_parser.add_parser('editor', help='run the editor')
     editor_args_parser.add_argument('--clean', action='store_true', help='clean before running')
+    editor_args_parser.add_argument('--launch', action='store_true', help='launch the editor')
 
     args = args_parsers.parse_args()
     if args.command == 'clean':
@@ -480,6 +483,6 @@ if __name__ == '__main__':
         elif args.command == 'test':
             test(args.path, save=args.save, stage=1)
         elif args.command == 'editor':
-            editor()
+            editor(args.launch)
         else:
             args_parsers.print_help()
