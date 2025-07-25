@@ -10,6 +10,8 @@ proc init() {
         os.exit(1)
     }
 
+    os.init()
+
     windows.init()
 
     if sdl.init(0x20) != 0 {
@@ -24,6 +26,8 @@ proc run() -> i32 {
     let running = true
     while running {
         while sdl.poll_event(^event) != 0 {
+            os.stdout.write_string("Event: ").write_unsigned(event.type.as(u64)).end_line()
+
             if event.type == 0x100 { \ SDL_QUIT
                 running = false
             }

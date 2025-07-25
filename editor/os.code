@@ -1,3 +1,18 @@
+import io
+import libc
+
+let stdout: ^io.Writer
+let stderr: ^io.Writer
+
+proc init() {
+    stdout = alloc io.Writer(libc.stdout)
+    stderr = alloc io.Writer(libc.stderr)
+}
+
+proc (^libc.FILE).write_char(self, anon c: u8) {
+    libc.fputc(c.as(i32), self)
+}
+
 proc exit(anon status: i32) = external
 
 proc malloc(anon size: usize) -> ^Any = external

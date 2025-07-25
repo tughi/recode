@@ -1,0 +1,55 @@
+import libc
+
+type Writer = trait {
+    proc write_char(self, anon c: u8)
+}
+
+proc (^Writer).write_string(self, anon string: str) -> ^Writer {
+    let string_copy = string
+    let string_data = (^string_copy).as(^String).data
+    let index = 0usize
+    while index < string.length {
+        self.write(char: string_data[index])
+        index = index + 1
+    }
+    return self
+}
+
+proc (^Writer).write(self, char c: u8) -> ^Writer {
+    self.write_char(c)
+    return self
+}
+
+proc (^Writer).write_signed(self, anon value: i64) -> ^Writer {
+    if value < 0 {
+        self.write(char: '-')
+        return self.write_unsigned((-value).as(u64))
+    }
+    return self.write_unsigned(value.as(u64))
+}
+
+proc (^Writer).write_unsigned(self, anon value: u64) -> ^Writer {
+    \ Find the highest power of 10
+    let divisor = 1u64
+    let temp_value = value
+    while temp_value >= 10 {
+        divisor = divisor * 10
+        temp_value = temp_value / 10
+    }
+
+    \ Write digits from highest to lowest
+    temp_value = value
+    while divisor > 0 {
+        let digit = (temp_value / divisor).as(u8) + '0'
+        self.write(char: digit)
+        temp_value = temp_value // divisor
+        divisor = divisor / 10
+    }
+
+    return self
+}
+
+proc (^Writer).end_line(self) -> ^Writer {
+    self.write(char: '\n')
+    return self
+}
