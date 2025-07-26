@@ -271,8 +271,16 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         }
         Checked_Named_Type *type = Checker__find_type(self, parsed_named_type->name);
         if (type != NULL) {
-            if (type->super.kind == CHECKED_TYPE_KIND__GENERIC && parsed_named_type->first_type_argument != NULL) {
-                return (Checked_Type *)Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_named_type);
+            if (type->super.kind == CHECKED_TYPE_KIND__GENERIC) {
+                if (parsed_named_type->first_type_argument != NULL) {
+                    return (Checked_Type *)Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_named_type);
+                }
+            } else if (parsed_named_type->first_type_argument != NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_named_type->super.location, WRITER_STYLE__ERROR);
+                pWriter__write__checked_type(stderr_writer, (Checked_Type *)type);
+                pWriter__write__cstring(stderr_writer, " is not a generic type");
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
             return (Checked_Type *)type;
         }

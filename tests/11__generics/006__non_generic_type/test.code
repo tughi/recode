@@ -1,0 +1,8 @@
+type Result = struct {
+    value: i32
+}
+
+proc main() -> i32 {
+    let result: Result<u64>
+    return 0
+}
