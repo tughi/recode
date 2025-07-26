@@ -249,6 +249,7 @@ Parsed_Group_Expression *Parsed_Group_Expression__create(Source_Location locatio
 typedef struct Parsed_Integer_Expression {
     Parsed_Literal_Expression super;
     uint64_t value;
+    int32_t base;
     Parsed_Named_Type *type;
 } Parsed_Integer_Expression;
 

@@ -79,9 +79,11 @@ Token *Scanner__scan_identifier_token(Scanner *self, String *token_lexeme) {
 
 Token *Scanner__scan_integer_token(Scanner *self, String *token_lexeme) {
     uint64_t value = 0;
+    int32_t base = 10;
     if (Scanner__peek_char(self) == '0') {
         String__append_char(token_lexeme, Scanner__next_char(self));
         if (Scanner__peek_char(self) == 'x') {
+            base = 16;
             String__append_char(token_lexeme, Scanner__next_char(self));
             while (true) {
                 char c = Scanner__peek_char(self);
@@ -108,7 +110,7 @@ Token *Scanner__scan_integer_token(Scanner *self, String *token_lexeme) {
             String__append_char(token_lexeme, c);
         }
     }
-    return (Token *)Integer_Token__create(self->current_location, token_lexeme, value);
+    return (Token *)Integer_Token__create(self->current_location, token_lexeme, value, base);
 }
 
 Token *Scanner__scan_space_token(Scanner *self, String *token_lexeme) {

@@ -919,7 +919,8 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Parsed_Inte
         expression_type = (Checked_Type *)self->builtin_types->i32_type;
     }
     uint64_t expression_value = parsed_expression->value;
-    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value);
+    int32_t expression_base = parsed_expression->base;
+    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value, expression_base);
 }
 
 Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expression *parsed_expression) {

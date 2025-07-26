@@ -171,6 +171,7 @@ Parsed_Group_Expression *Parsed_Group_Expression__create(Source_Location locatio
 Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *literal, Parsed_Named_Type *type) {
     Parsed_Integer_Expression *expression = (Parsed_Integer_Expression *)Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__INTEGER, sizeof(Parsed_Integer_Expression), (Token *)literal);
     expression->value = literal->value;
+    expression->base = literal->base;
     expression->type = type;
     return expression;
 }

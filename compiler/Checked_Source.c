@@ -723,9 +723,10 @@ Checked_Group_Expression *Checked_Group_Expression__create(Source_Location locat
     return expression;
 }
 
-Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value) {
+Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base) {
     Checked_Integer_Expression *expression = (Checked_Integer_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__INTEGER, sizeof(Checked_Integer_Expression), location, type);
     expression->value = value;
+    expression->base = base;
     return expression;
 }
 

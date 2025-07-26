@@ -543,9 +543,10 @@ Checked_Group_Expression *Checked_Group_Expression__create(Source_Location locat
 typedef struct Checked_Integer_Expression {
     Checked_Expression super;
     uint64_t value;
+    int32_t base;
 } Checked_Integer_Expression;
 
-Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value);
+Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base);
 
 typedef struct Checked_Is_Union_Variant_Expression {
     Checked_Expression super;

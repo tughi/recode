@@ -158,7 +158,43 @@ void Generator__generate_group_expression(Generator *self, Checked_Group_Express
 }
 
 void Generator__generate_integer_expression(Generator *self, Checked_Integer_Expression *expression) {
-    pWriter__write__uint64(self->writer, expression->value);
+    uint8_t base = expression->base;
+    switch (base) {
+    case 10:
+        // no prefix
+        break;
+    case 2:
+    case 8:
+        base = 16; // change base and fall through
+    case 16:
+        pWriter__write__cstring(self->writer, "0x");
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported integer base: ");
+        pWriter__write__int64(stderr_writer, expression->base);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    // find the highest power
+    uint64_t divisor = 1;
+    uint64_t temp_value = expression->value;
+    while (temp_value >= base) {
+        divisor = divisor * base;
+        temp_value = temp_value / base;
+    }
+
+    // write the digits from highest to lowest
+    char digits[] = "0123456789abcdef";
+    temp_value = expression->value;
+    while (divisor > 0) {
+        uint64_t digit = temp_value / divisor;
+        pWriter__write__char(self->writer, digits[digit]);
+        temp_value = temp_value % divisor;
+        divisor = divisor / base;
+    }
+
     switch (expression->super.type->kind) {
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:

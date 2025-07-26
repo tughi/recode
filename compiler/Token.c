@@ -35,9 +35,10 @@ Identifier_Token *Identifier_Token__create(Source_Location location, String *lex
     return (Identifier_Token *)Token__create_kind(TOKEN_KIND__IDENTIFIER, sizeof(Identifier_Token), location, lexeme);
 }
 
-Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value) {
+Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value, int32_t base) {
     Integer_Token *token = (Integer_Token *)Token__create_kind(TOKEN_KIND__INTEGER, sizeof(Integer_Token), location, lexeme);
     token->value = value;
+    token->base = base;
     return token;
 }
 
