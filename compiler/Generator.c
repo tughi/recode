@@ -177,24 +177,20 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
         panic();
     }
 
-    // find the highest power
-    uint64_t divisor = 1;
+    // write value in the specified base
     uint64_t temp_value = expression->value;
-    while (temp_value >= base) {
-        divisor = divisor * base;
+    char digits[16] = "0123456789abcdef";
+    char buffer[20]; // buffer filled in reverse order
+    int length = 1;
+    do {
+        buffer[sizeof(buffer) - 1 - length] = digits[temp_value % base];
+        length += 1;
         temp_value = temp_value / base;
-    }
+    } while (temp_value > 0);
+    buffer[sizeof(buffer) - 1] = '\0'; // null-terminate the string
+    pWriter__write__cstring(self->writer, buffer + (sizeof(buffer) - length));
 
-    // write the digits from highest to lowest
-    char digits[] = "0123456789abcdef";
-    temp_value = expression->value;
-    while (divisor > 0) {
-        uint64_t digit = temp_value / divisor;
-        pWriter__write__char(self->writer, digits[digit]);
-        temp_value = temp_value % divisor;
-        divisor = divisor / base;
-    }
-
+    // write type suffix
     switch (expression->super.type->kind) {
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
@@ -208,6 +204,7 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
         break;
     }
 }
+
 void Generator__generate_is_union_variant_expression(Generator *self, Checked_Is_Union_Variant_Expression *expression) {
     Generator__generate_expression(self, expression->union_expression);
     pWriter__write__cstring(self->writer, ".variant");

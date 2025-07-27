@@ -44,6 +44,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
         String__append_mangled_type_name(self, ((Checked_Pointer_Type *)type)->other_type);
         break;
     }
+    case CHECKED_TYPE_KIND__BOOL:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__I16:

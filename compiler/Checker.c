@@ -1200,7 +1200,9 @@ Checked_Expression *Checker__check_type_specialization_expression(Checker *self,
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Parsed_Named_Type *parsed_type = Parsed_Named_Type__create((Token *)Identifier_Token__create(parsed_expression->super.location, type->module->name), (Token *)Identifier_Token__create(parsed_expression->super.location, type->name));
+    Identifier_Token *parsed_type_module = Identifier_Token__create(parsed_expression->super.location, type->module->name);
+    Identifier_Token *parsed_type_name_token = Identifier_Token__create(parsed_expression->super.location, type->name);
+    Parsed_Named_Type *parsed_type = Parsed_Named_Type__create((Token *)parsed_type_module, (Token *)parsed_type_name_token);
     parsed_type->first_type_argument = parsed_expression->first_type_argument;
     Checked_Named_Type *specialized_type = Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_type);
     return (Checked_Expression *)Checked_Type_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->type_type, specialized_type);
