@@ -4,25 +4,25 @@ type Writer = trait {
     proc write_char(self, anon c: u8)
 }
 
+proc (^Writer).write_char(self, anon c: u8) -> ^Writer {
+    self.write_char(c)
+    return self
+}
+
 proc (^Writer).write_string(self, anon string: str) -> ^Writer {
     let string_copy = string
     let string_data = (^string_copy).as(^String).data
     let index = 0usize
     while index < string.length {
-        self.write(char: string_data[index])
+        self.write_char(string_data[index])
         index = index + 1
     }
     return self
 }
 
-proc (^Writer).write(self, char c: u8) -> ^Writer {
-    self.write_char(c)
-    return self
-}
-
 proc (^Writer).write_signed(self, anon value: i64) -> ^Writer {
     if value < 0 {
-        self.write(char: '-')
+        self.write_char('-')
         return self.write_unsigned((-value).as(u64))
     }
     return self.write_unsigned(value.as(u64))
@@ -41,7 +41,7 @@ proc (^Writer).write_unsigned(self, anon value: u64) -> ^Writer {
     temp_value = value
     while divisor > 0 {
         let digit = (temp_value / divisor).as(u8) + '0'
-        self.write(char: digit)
+        self.write_char(digit)
         temp_value = temp_value // divisor
         divisor = divisor / 10
     }
@@ -50,6 +50,6 @@ proc (^Writer).write_unsigned(self, anon value: u64) -> ^Writer {
 }
 
 proc (^Writer).end_line(self) -> ^Writer {
-    self.write(char: '\n')
+    self.write_char('\n')
     return self
 }

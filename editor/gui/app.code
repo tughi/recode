@@ -26,10 +26,32 @@ proc run() -> i32 {
     let running = true
     while running {
         while sdl.poll_event(^event) != 0 {
-            os.stdout.write_string("Event: ").write_unsigned(event.type.as(u64)).end_line()
-
             if event.type == 0x100 { \ SDL_QUIT
+                os.stdout.write_string("Quit event (").write_unsigned(event.type.as(u64)).write_string(")").end_line()
                 running = false
+            } else if event.type == 0x200 { \ SDL_WINDOWEVENT
+                let window_event = (^event).as(^sdl.Window_Event)
+                os.stdout.write_string("Window Event (").write_unsigned(event.type.as(u64)).write_string("): ").write_unsigned(window_event.event.as(u64)).end_line()
+            } else if event.type == 0x300 { \ SDL_KEYDOWN
+                let key_event = (^event).as(^sdl.Keyboard_Event)
+                os.stdout.write_string("Key Down (").write_unsigned(event.type.as(u64)).write_string("): key=").write_unsigned(key_event.key.scan_code.as(u64)).end_line()
+            } else if event.type == 0x301 { \ SDL_KEYUP
+                let key_event = (^event).as(^sdl.Keyboard_Event)
+                os.stdout.write_string("Key Up (").write_unsigned(event.type.as(u64)).write_string("): key=").write_unsigned(key_event.key.scan_code.as(u64)).end_line()
+            } else if event.type == 0x400 { \ SDL_MOUSEMOTION
+                let mouse_event = (^event).as(^sdl.Mouse_Motion_Event)
+                os.stdout.write_string("Mouse Motion (").write_unsigned(event.type.as(u64)).write_string("): x=").write_signed(mouse_event.x.as(i64)).write_string(", y=").write_signed(mouse_event.y.as(i64)).end_line()
+            } else if event.type == 0x401 { \ SDL_MOUSEBUTTONDOWN
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                os.stdout.write_string("Mouse Button Down (").write_unsigned(event.type.as(u64)).write_string("): button=").write_unsigned(mouse_button_event.button.as(u64)).write_string(", state=").write_unsigned(mouse_button_event.state.as(u64)).end_line()
+            } else if event.type == 0x402 { \ SDL_MOUSEBUTTONUP
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                os.stdout.write_string("Mouse Button Up (").write_unsigned(event.type.as(u64)).write_string("): button=").write_unsigned(mouse_button_event.button.as(u64)).write_string(", state=").write_unsigned(mouse_button_event.state.as(u64)).end_line()
+            } else if event.type == 0x403 { \ SDL_MOUSEWHEEL
+                let mouse_wheel_event = (^event).as(^sdl.Mouse_Wheel_Event)
+                os.stdout.write_string("Mouse Wheel (").write_unsigned(event.type.as(u64)).write_string("): x=").write_signed(mouse_wheel_event.x.as(i64)).write_string(", y=").write_signed(mouse_wheel_event.y.as(i64)).write_string(", direction=").write_unsigned(mouse_wheel_event.direction.as(u64)).end_line()
+            } else {
+                os.stdout.write_string("Unsupported event (").write_unsigned(event.type.as(u64)).write_string(")").end_line()
             }
         }
         \ Update the main window here if needed
