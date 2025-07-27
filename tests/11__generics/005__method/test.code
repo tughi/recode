@@ -1,0 +1,19 @@
+import collections
+
+proc (^collections.List<T>).append<T>(self, data: T) {
+    let new_item = alloc collections.List_Item<T>(data: data, next: null)
+    if self.first_item == null {
+        self.first_item = new_item
+    } else {
+        self.last_item.next = new_item
+    }
+    self.last_item = new_item
+    self.length = self.length + 1
+}
+
+proc main() -> i32 {
+    let list = collections.List<i32>(first_item: null, last_item: null, length: 0)
+    list.append(data: 42)
+    list.prepend(data: 24)
+    return list.last_item.data - list.first_item.data - 18
+}

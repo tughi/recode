@@ -1,0 +1,6 @@
+import collections
+
+proc main() -> i32 {
+    let list = collections.List<i32, u32>()
+    return 0
+}

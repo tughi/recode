@@ -1,4 +1,6 @@
 #include "test.h"
+#include "io.h"
+#include "libc.h"
 
 #line 4 "tests/10__import/006__reimport/test.code"
 int32_t test__main() {

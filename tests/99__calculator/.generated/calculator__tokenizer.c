@@ -1,4 +1,12 @@
+#include "test.h"
+#include "calculator__expression.h"
+#include "calculator__source.h"
+#include "libc.h"
+#include "io.h"
+#include "calculator__parser.h"
 #include "calculator__tokenizer.h"
+#include "os.h"
+#include "string.h"
 
 struct calculator__tokenizer_Tokenizer *__alloc__calculator__tokenizer_Tokenizer__(struct calculator__tokenizer_Tokenizer value) {
     struct calculator__tokenizer_Tokenizer *result = (struct calculator__tokenizer_Tokenizer *)malloc(sizeof(struct calculator__tokenizer_Tokenizer));

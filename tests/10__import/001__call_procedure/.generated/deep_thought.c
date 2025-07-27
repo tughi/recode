@@ -1,3 +1,4 @@
+#include "test.h"
 #include "deep_thought.h"
 
 #line 1 "tests/10__import/001__call_procedure/deep_thought.code"

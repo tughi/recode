@@ -29,13 +29,12 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
 }
 
 void Generator__generate_alloc_procedure_name(Generator *self, Checked_Named_Type *type) {
+    String *mangled_name = String__create();
+    String__append_mangled_type_name(mangled_name, (Checked_Type *)type);
     pWriter__write__cstring(self->writer, "__alloc__");
-    if (type->module != NULL) {
-        pWriter__write__string(self->writer, type->module);
-        pWriter__write__char(self->writer, '_');
-    }
-    pWriter__write__string(self->writer, type->name);
+    pWriter__write__string(self->writer, mangled_name);
     pWriter__write__cstring(self->writer, "__");
+    String__delete(mangled_name);
 }
 
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
@@ -159,7 +158,39 @@ void Generator__generate_group_expression(Generator *self, Checked_Group_Express
 }
 
 void Generator__generate_integer_expression(Generator *self, Checked_Integer_Expression *expression) {
-    pWriter__write__uint64(self->writer, expression->value);
+    uint8_t base = expression->base;
+    switch (base) {
+    case 10:
+        // no prefix
+        break;
+    case 2:
+    case 8:
+        base = 16; // change base and fall through
+    case 16:
+        pWriter__write__cstring(self->writer, "0x");
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported integer base: ");
+        pWriter__write__int64(stderr_writer, expression->base);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    // write value in the specified base
+    uint64_t temp_value = expression->value;
+    char digits[16] = "0123456789abcdef";
+    char buffer[20]; // buffer filled in reverse order
+    int length = 1;
+    do {
+        buffer[sizeof(buffer) - 1 - length] = digits[temp_value % base];
+        length += 1;
+        temp_value = temp_value / base;
+    } while (temp_value > 0);
+    buffer[sizeof(buffer) - 1] = '\0'; // null-terminate the string
+    pWriter__write__cstring(self->writer, buffer + (sizeof(buffer) - length));
+
+    // write type suffix
     switch (expression->super.type->kind) {
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
@@ -173,6 +204,7 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
         break;
     }
 }
+
 void Generator__generate_is_union_variant_expression(Generator *self, Checked_Is_Union_Variant_Expression *expression) {
     Generator__generate_expression(self, expression->union_expression);
     pWriter__write__cstring(self->writer, ".variant");
@@ -863,6 +895,7 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
         Generator__generate_union(self, (Checked_Union_Type *)type);
         break;
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
         break;
     default:
         panic();
@@ -1001,7 +1034,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     pWriter__write__cstring(generator.writer, "_H__\n");
 }
 
-void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main) {
+void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main, Checked_Module *first_module) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
@@ -1017,10 +1050,15 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     Checked_Procedure_Symbol *malloc_procedure = NULL;
     Checked_Procedure_Symbol *main_procedure = NULL;
 
-    /* Include this module's header file */
-    pWriter__write__cstring(generator.writer, "#include \"");
-    pWriter__write__string(generator.writer, checked_module->name);
-    pWriter__write__cstring(generator.writer, ".h\"\n\n");
+    /* Include all headers to have all methods available */
+    Checked_Module *module = first_module;
+    while (module != NULL) {
+        pWriter__write__cstring(generator.writer, "#include \"");
+        pWriter__write__string(generator.writer, module->name);
+        pWriter__write__cstring(generator.writer, ".h\"\n");
+        module = module->next_module;
+    }
+    pWriter__end_line(generator.writer);
 
     /* Define all global variables */
     checked_symbol = checked_source->symbols->first_symbol;
@@ -1082,7 +1120,7 @@ void generate(Checked_Source *checked_source, String *output_dir, bool generate_
     Checked_Module *checked_module = checked_source->first_module;
     while (checked_module != NULL) {
         generate_module_header(checked_source, checked_module, output_dir);
-        generate_module(checked_source, checked_module, output_dir, generate_main);
+        generate_module(checked_source, checked_module, output_dir, generate_main, checked_source->first_module);
         checked_module = checked_module->next_module;
     }
 }

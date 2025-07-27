@@ -1,4 +1,5 @@
 #include "test.h"
+#include "source.h"
 
 #line 7 "tests/10__import/004__struct_member/test.code"
 int32_t test__main() {

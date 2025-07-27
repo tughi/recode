@@ -67,9 +67,10 @@ Identifier_Token *Identifier_Token__create(Source_Location location, String *lex
 typedef struct Integer_Token {
     Token super;
     uint64_t value;
+    int32_t base;
 } Integer_Token;
 
-Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value);
+Integer_Token *Integer_Token__create(Source_Location location, String *lexeme, uint64_t value, int32_t base);
 
 typedef struct Other_Token {
     Token super;

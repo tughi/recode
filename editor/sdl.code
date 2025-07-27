@@ -1,7 +1,24 @@
+proc init(anon flags: u32) -> i32 = external "SDL_Init"
+
+proc quit() = external "SDL_Quit"
+
+proc get_error() -> ^u8 = external "SDL_GetError"
+
+proc delay(anon ms: u32) = external "SDL_Delay"
+
 type Window = external
+
+proc create_window(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^Window = external "SDL_CreateWindow"
+
 type Surface = external
 
-type Event = struct {
+proc get_window_surface(anon window: ^Window) -> ^Surface = external "SDL_GetWindowSurface"
+
+proc update_window_surface(anon window: ^Window) -> i32 = external "SDL_UpdateWindowSurface"
+
+proc destroy_window(anon window: ^Window) = external "SDL_DestroyWindow"
+
+type Event = struct { \ SDL_Event
     type: u32
     timestamp: u32
     window_id: u32
@@ -14,38 +31,69 @@ type Event = struct {
     _data_7: u64
 }
 
-proc init(anon flags: u32) -> i32 = external "SDL_Init"
-
-proc quit() = external "SDL_Quit"
-
-proc get_error() -> ^u8 = external "SDL_GetError"
-
-proc delay(anon ms: u32) = external "SDL_Delay"
-
-proc __create_window(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^Window = external "SDL_CreateWindow"
-
-proc create_window(title: str, x: i32, y: i32, w: i32, h: i32, flags: u32) -> ^Window {
-    let title_copy = title
-    let title_data = (^title_copy).as(^String).data
-    return __create_window(title_data, x, y, w, h, flags)
-}
-
-proc get_window_surface(anon window: ^Window) -> ^Surface = external "SDL_GetWindowSurface"
-
-proc (^Window).get_surface(self) -> ^Surface {
-    return get_window_surface(self)
-}
-
-proc update_window_surface(anon window: ^Window) -> i32 = external "SDL_UpdateWindowSurface"
-
-proc (^Window).update_surface(self) -> i32 {
-    return update_window_surface(self)
-}
-
-proc destroy_window(anon window: ^Window) = external "SDL_DestroyWindow"
-
 proc poll_event(anon event: ^Event) -> i32 = external "SDL_PollEvent"
 
-proc (^Window).destroy(self) {
-    destroy_window(self)
+type Window_Event = struct { \ SDL_WindowEvent
+    type: u32
+    timestamp: u32
+    window_id: u32
+    event: u8
+    padding1: u8
+    padding2: u8
+    padding3: u8
+    data1: i32
+    data2: i32
+}
+
+type Keyboard_Event = struct { \ SDL_KeyboardEvent
+    type: u32
+    timestamp: u32
+    window_id: u32
+    state: u8
+    repeat: u8
+    padding2: u8
+    padding3: u8
+    key: Keyboard_Key
+}
+
+type Keyboard_Key = struct { \ SDL_Keysym
+    scan_code: u32
+    key_code: u32
+    modifiers: u32
+    unused: u32
+}
+
+type Mouse_Motion_Event = struct { \ SDL_MouseMotionEvent
+    type: u32
+    timestamp: u32
+    window_id: u32
+    which: u32
+    state: u32
+    x: i32
+    y: i32
+    x_rel: i32
+    y_rel: i32
+}
+
+type Mouse_Button_Event = struct { \ SDL_MouseButtonEvent
+    type: u32
+    timestamp: u32
+    window_id: u32
+    which: u32
+    button: u8
+    state: u8
+    clicks: u8
+    padding1: u8
+    x: i32
+    y: i32
+}
+
+type Mouse_Wheel_Event = struct { \ SDL_MouseWheelEvent
+    type: u32
+    timestamp: u32
+    window_id: u32
+    which: u32
+    x: i32
+    y: i32
+    direction: u8
 }

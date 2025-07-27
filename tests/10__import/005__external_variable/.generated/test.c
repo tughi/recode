@@ -1,4 +1,5 @@
 #include "test.h"
+#include "libc.h"
 
 #line 3 "tests/10__import/005__external_variable/test.code"
 int32_t test__main() {

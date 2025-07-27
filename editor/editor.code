@@ -1,35 +1,11 @@
 import os
 import sdl
+import gui.app
 
 proc main() -> i32 {
-    if sdl.init(0x20) != 0 {
-        return 1
-    }
+    app.init()
 
-    let sdl_window = sdl.create_window(title: "Hello, World!", x: 100, y: 100, w: 640, h: 480, flags: 0)
-    if sdl_window == null {
-        return 1
-    }
+    let window = app.create_window(title: "Editor", width: 800, height: 600)
 
-    \ let sdl_surface = sdl_window.get_surface()
-    \ if sdl_surface == null {
-    \     return 1
-    \ }
-
-    let event = sdl.Event()
-    let running = true
-    while running {
-        while sdl.poll_event(^event) != 0 {
-            if event.type == 0x100 {
-                running = false
-            }
-        }
-        sdl_window.update_surface()
-    }
-
-    sdl_window.destroy()
-
-    sdl.quit()
-
-    return 0
+    return app.run()
 }

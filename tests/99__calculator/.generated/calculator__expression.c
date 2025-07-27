@@ -1,4 +1,12 @@
+#include "test.h"
 #include "calculator__expression.h"
+#include "calculator__source.h"
+#include "libc.h"
+#include "io.h"
+#include "calculator__parser.h"
+#include "calculator__tokenizer.h"
+#include "os.h"
+#include "string.h"
 
 struct calculator__expression_Expression *__alloc__calculator__expression_Expression__(struct calculator__expression_Expression value) {
 struct calculator__expression_Expression *result = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));

@@ -68,7 +68,7 @@ Builtin_Types *Builtin_Types__create() {
 
 typedef struct Checked_Method {
     Checked_Type *receiver_type;
-    Checked_Procedure_Symbol *procedure_symbol;
+    Checked_Symbol *procedure_symbol;
     struct Checked_Method *next_method;
 } Checked_Method;
 
@@ -151,9 +151,56 @@ Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
     return Checked_Symbols__find_type(self->global_symbols->parent, NULL, name);
 }
 
+Checked_Type_Argument_Symbol *Checker__find_type_argument_symbol(Checker *self, String *alias) {
+    Checked_Symbols *symbols = self->symbols;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE_ARGUMENT && String__equals_string(alias, symbol->name)) {
+                return (Checked_Type_Argument_Symbol *)symbol;
+            }
+            symbol = symbol->prev_symbol;
+        }
+        symbols = symbols->parent;
+    }
+    return NULL;
+}
+
+void Checker__append_method(Checker *self, Checked_Type *receiver_type, Checked_Symbol *procedure_symbol) {
+    if (procedure_symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE && procedure_symbol->kind != CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE) {
+        panic();
+    }
+
+    Checked_Method *method = self->methods->first_method;
+    while (method != NULL) {
+        if (Checked_Type__equals(method->receiver_type, receiver_type) && String__equals_string(method->procedure_symbol->name, procedure_symbol->name)) {
+            pWriter__begin_location_message(stderr_writer, procedure_symbol->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Method already defined here: ");
+            pWriter__write__location(stderr_writer, method->procedure_symbol->location);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        method = method->next_method;
+    }
+
+    method = (Checked_Method *)malloc(sizeof(Checked_Method));
+    method->receiver_type = receiver_type;
+    method->procedure_symbol = procedure_symbol;
+    method->next_method = NULL;
+
+    if (self->methods->first_method == NULL) {
+        self->methods->first_method = method;
+    } else {
+        self->methods->last_method->next_method = method;
+    }
+    self->methods->last_method = method;
+}
+
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
 
-Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statement);
+Checked_Named_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement);
+
+Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type *generic_type, Parsed_Named_Type *parsed_type);
 
 Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
     switch (parsed_type->kind) {
@@ -217,20 +264,38 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
+            if (type->super.kind == CHECKED_TYPE_KIND__GENERIC && parsed_named_type->first_type_argument != NULL) {
+                return (Checked_Type *)Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_named_type);
+            }
             return (Checked_Type *)type;
         }
         Checked_Named_Type *type = Checker__find_type(self, parsed_named_type->name);
         if (type != NULL) {
+            if (type->super.kind == CHECKED_TYPE_KIND__GENERIC) {
+                if (parsed_named_type->first_type_argument != NULL) {
+                    return (Checked_Type *)Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_named_type);
+                }
+            } else if (parsed_named_type->first_type_argument != NULL) {
+                pWriter__begin_location_message(stderr_writer, parsed_named_type->super.location, WRITER_STYLE__ERROR);
+                pWriter__write__checked_type(stderr_writer, (Checked_Type *)type);
+                pWriter__write__cstring(stderr_writer, " is not a generic type");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             return (Checked_Type *)type;
         }
         Parsed_Statement *parsed_statement = self->parsed_source->statements->first_statement;
         for (; parsed_statement != NULL; parsed_statement = parsed_statement->next_statement) {
-            if (Parsed_Statement__is_type_statement(parsed_statement)) {
-                Parsed_Named_Statement *parsed_type_statement = (Parsed_Named_Statement *)parsed_statement;
-                if (String__equals_string(parsed_type_statement->name->lexeme, parsed_named_type->name)) {
-                    return Checker__check_type(self, parsed_statement);
+            if (parsed_statement->kind == PARSED_STATEMENT_KIND__TYPE) {
+                Parsed_Type_Statement *parsed_type_statement = (Parsed_Type_Statement *)parsed_statement;
+                if (String__equals_string(parsed_type_statement->super.name->lexeme, parsed_named_type->name)) {
+                    return (Checked_Type *)Checker__check_type_statement(self, parsed_type_statement);
                 }
             }
+        }
+        Checked_Type_Argument_Symbol *type_argument_symbol = Checker__find_type_argument_symbol(self, parsed_named_type->name);
+        if (type_argument_symbol != NULL) {
+            return type_argument_symbol->argument_type;
         }
         pWriter__begin_location_message(stderr_writer, parsed_type->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined type: ");
@@ -256,6 +321,9 @@ void Checker__require_numeric_type(Checker *self, Checked_Type *type, Source_Loc
 }
 
 void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Checked_Type *actual_type, Source_Location location) {
+    if (expected_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
+        return;
+    }
     if (expected_type->kind == CHECKED_TYPE_KIND__POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
         return;
     }
@@ -268,6 +336,77 @@ void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Chec
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+}
+
+/**
+ * Checks if `self` is a specialization of the another type.
+ */
+Checked_Type_Argument *Checked_Type__is_specialization(Checked_Type *self, Checked_Type *other_type) {
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__POINTER:
+        if (other_type->kind != CHECKED_TYPE_KIND__POINTER) {
+            return NULL;
+        }
+        return Checked_Type__is_specialization(((Checked_Pointer_Type *)self)->other_type, ((Checked_Pointer_Type *)other_type)->other_type);
+    case CHECKED_TYPE_KIND__STRUCT: {
+        if (other_type->kind == CHECKED_TYPE_KIND__GENERIC) {
+            Checked_Struct_Type *struct_type = (Checked_Struct_Type *)self;
+            if ((Checked_Type *)struct_type->super.generic_type == other_type) {
+                if (other_type->kind != CHECKED_TYPE_KIND__GENERIC) {
+                    panic();
+                }
+                Checked_Generic_Type *generic_type = (Checked_Generic_Type *)other_type;
+                return struct_type->super.first_type_argument;
+            }
+        }
+        return NULL;
+    }
+    default:
+        todo("Handle other types for specialization check");
+        break;
+    }
+    todo("Check if type is specialization");
+}
+
+Checked_Procedure_Symbol *Checker__specialize_method(Checker *self, Checked_Generic_Procedure_Symbol *generic_procedure_symbol, Checked_Type_Argument *first_type_argument);
+
+Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checked_Type *receiver_type, String *procedure_name) {
+    Checked_Method *method = self->methods->first_method;
+    while (method != NULL) {
+        switch (method->procedure_symbol->kind) {
+        case CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE: {
+            Checked_Generic_Procedure_Symbol *generic_procedure_symbol = (Checked_Generic_Procedure_Symbol *)method->procedure_symbol;
+            if (String__equals_string(generic_procedure_symbol->parsed_procedure_statement->super.name->lexeme, procedure_name)) {
+                Checked_Type_Argument *first_type_argument = Checked_Type__is_specialization(receiver_type, generic_procedure_symbol->receiver_type);
+                if (first_type_argument != NULL) {
+                    return Checker__specialize_method(self, generic_procedure_symbol, first_type_argument);
+                }
+            }
+            break;
+        }
+        case CHECKED_SYMBOL_KIND__PROCEDURE: {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)method->procedure_symbol;
+            if (String__equals_string(procedure_symbol->procedure_name, procedure_name) && Checked_Type__equals(method->receiver_type, receiver_type)) {
+                return procedure_symbol;
+            }
+            break;
+        }
+        default:
+            panic();
+        }
+        method = method->next_method;
+    }
+    return NULL;
+}
+
+Checked_Procedure_Symbol *Checker__resolve_reference_method_symbol(Checker *self, Checked_Type *receiver_type, String *procedure_name) {
+    Checked_Pointer_Type pointer_type = {
+        .super = {
+            .kind = CHECKED_TYPE_KIND__POINTER,
+        },
+        .other_type = receiver_type,
+    };
+    return Checker__resolve_method_symbol(self, (Checked_Type *)&pointer_type, procedure_name);
 }
 
 Checked_Expression *Checker__check_add_expression(Checker *self, Parsed_Add_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -424,10 +563,13 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         }
         break;
     }
+    case CHECKED_EXPRESSION_KIND__TYPE: {
+        Checked_Type_Expression *type_expression = (Checked_Type_Expression *)callee_expression;
+        return Checker__check_init_expression(self, type_expression->named_type, parsed_expression->first_argument, parsed_expression->super.location);
+    }
     default:
         pWriter__begin_location_message(stderr_writer, parsed_expression->callee_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Unsupported callee expression kind: ");
-        pWriter__write__int64(stderr_writer, callee_expression->kind);
+        pWriter__write__cstring(stderr_writer, "Not a callable");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
@@ -675,27 +817,8 @@ Checked_Expression *Checker__check_init_trait_expression(Checker *self, Checked_
     for (trait_method = trait_type->first_method; trait_method != NULL; trait_method = trait_method->next_method) {
         Checked_Type *saved_first_parameter_type = trait_method->procedure_type->first_parameter->type;
         trait_method->procedure_type->first_parameter->type = self_expression->type;
-        Checked_Procedure_Symbol *procedure_symbol = NULL;
-        Checked_Method *method;
-        for (method = self->methods->first_method; method != NULL; method = method->next_method) {
-            if (String__equals_string(method->procedure_symbol->procedure_name, trait_method->name) && Checked_Type__equals(method->receiver_type, self_expression->type)) {
-                if (!Checked_Procedure_Type__equals(method->procedure_symbol->procedure_type, trait_method->procedure_type)) {
-                    pWriter__begin_location_message(stderr_writer, method->procedure_symbol->super.location, WRITER_STYLE__ERROR);
-                    pWriter__write__cstring(stderr_writer, "Procedure type does not match: ");
-                    pWriter__write__checked_type(stderr_writer, (Checked_Type *)trait_method->procedure_type);
-                    pWriter__end_location_message(stderr_writer);
-                    panic();
-                }
-                procedure_symbol = method->procedure_symbol;
-                break;
-            }
-        }
-        trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
-        if (procedure_symbol != NULL) {
-            Checked_Symbol_Expression *procedure_symbol_expression = Checked_Symbol_Expression__create(location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-            Checked_Cast_Expression *trait_struct_member_argument_expression = Checked_Cast_Expression__create(location, trait_method->struct_member->type, (Checked_Expression *)procedure_symbol_expression);
-            last_make_struct_argument = last_make_struct_argument->next_argument = Checked_Make_Struct_Argument__create(trait_method->struct_member, (Checked_Expression *)trait_struct_member_argument_expression);
-        } else {
+        Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, self_expression->type, trait_method->name);
+        if (procedure_symbol == NULL) {
             pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "The ");
             pWriter__write__checked_type(stderr_writer, self_type);
@@ -711,7 +834,17 @@ Checked_Expression *Checker__check_init_trait_expression(Checker *self, Checked_
             trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
             pWriter__end_location_message(stderr_writer);
             panic();
+        } else if (!Checked_Procedure_Type__equals(procedure_symbol->procedure_type, trait_method->procedure_type)) {
+            pWriter__begin_location_message(stderr_writer, procedure_symbol->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Procedure type does not match: ");
+            pWriter__write__checked_type(stderr_writer, (Checked_Type *)trait_method->procedure_type);
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
+        trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
+        Checked_Symbol_Expression *procedure_symbol_expression = Checked_Symbol_Expression__create(location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+        Checked_Cast_Expression *trait_struct_member_argument_expression = Checked_Cast_Expression__create(location, trait_method->struct_member->type, (Checked_Expression *)procedure_symbol_expression);
+        last_make_struct_argument = last_make_struct_argument->next_argument = Checked_Make_Struct_Argument__create(trait_method->struct_member, (Checked_Expression *)trait_struct_member_argument_expression);
     }
 
     return (Checked_Expression *)Checked_Make_Struct_Expression__create(location, (Checked_Type *)trait_type, trait_type->struct_type, first_make_struct_argument);
@@ -794,7 +927,8 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Parsed_Inte
         expression_type = (Checked_Type *)self->builtin_types->i32_type;
     }
     uint64_t expression_value = parsed_expression->value;
-    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value);
+    int32_t expression_base = parsed_expression->base;
+    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value, expression_base);
 }
 
 Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expression *parsed_expression) {
@@ -934,23 +1068,20 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
 
     /* Check method */
     object_type = object_expression->type;
-    Checked_Method *method;
-    for (method = self->methods->first_method; method != NULL; method = method->next_method) {
-        if (Checked_Type__equals(method->receiver_type, object_type) && String__equals_string(method->procedure_symbol->procedure_name, parsed_expression->member_name->lexeme)) {
-            Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)method->procedure_symbol->super.type, (Checked_Symbol *)method->procedure_symbol);
-            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
-        }
+    Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, object_type, parsed_expression->member_name->lexeme);
+    if (procedure_symbol != NULL) {
+        Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+        return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
     }
 
     /* Check referenced method */
     if (object_type->kind != CHECKED_TYPE_KIND__POINTER) {
-        for (method = self->methods->first_method; method != NULL; method = method->next_method) {
-            if (method->receiver_type->kind == CHECKED_TYPE_KIND__POINTER && Checked_Type__equals(((Checked_Pointer_Type *)method->receiver_type)->other_type, object_type) && String__equals_string(method->procedure_symbol->procedure_name, parsed_expression->member_name->lexeme)) {
-                object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
-                object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
-                Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)method->procedure_symbol->super.type, (Checked_Symbol *)method->procedure_symbol);
-                return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, method->procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, method->procedure_symbol->procedure_type);
-            }
+        procedure_symbol = Checker__resolve_reference_method_symbol(self, object_type, parsed_expression->member_name->lexeme);
+        if (procedure_symbol != NULL) {
+            object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
+            object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
+            Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
         }
     }
 
@@ -1047,6 +1178,36 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
     return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol);
 }
 
+Checked_Expression *Checker__check_type_specialization_expression(Checker *self, Parsed_Type_Specialization_Expression *parsed_expression) {
+    Checked_Expression *type_expression = Checker__check_expression(self, parsed_expression->type_expression, NULL);
+    if (type_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->type_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected type symbol");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Symbol *type_symbol = ((Checked_Symbol_Expression *)type_expression)->symbol;
+    if (type_symbol->kind != CHECKED_SYMBOL_KIND__TYPE) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->type_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected type symbol");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Named_Type *type = ((Checked_Type_Symbol *)type_symbol)->named_type;
+    if (type->super.kind != CHECKED_TYPE_KIND__GENERIC) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->type_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected generic type symbol");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Identifier_Token *parsed_type_module = Identifier_Token__create(parsed_expression->super.location, type->module->name);
+    Identifier_Token *parsed_type_name_token = Identifier_Token__create(parsed_expression->super.location, type->name);
+    Parsed_Named_Type *parsed_type = Parsed_Named_Type__create((Token *)parsed_type_module, (Token *)parsed_type_name_token);
+    parsed_type->first_type_argument = parsed_expression->first_type_argument;
+    Checked_Named_Type *specialized_type = Checker__specialize_type(self, (Checked_Generic_Type *)type, parsed_type);
+    return (Checked_Expression *)Checked_Type_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->type_type, specialized_type);
+}
+
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
     switch (parsed_expression->kind) {
     case PARSED_EXPRESSION_KIND__ADD:
@@ -1111,6 +1272,8 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         return Checker__check_subtract_expression(self, (Parsed_Subtract_Expression *)parsed_expression, expected_type);
     case PARSED_EXPRESSION_KIND__SYMBOL:
         return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression);
+    case PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION:
+        return Checker__check_type_specialization_expression(self, (Parsed_Type_Specialization_Expression *)parsed_expression);
     }
     pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unsupported expression kind");
@@ -1118,9 +1281,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     panic();
 }
 
-Checked_Type *Checker__check_builtin_type_statement(Checker *self, Parsed_Builtin_Type_Statement *parsed_statement) {
-    Source_Location builtin_type_location = parsed_statement->super.name->location;
-    String *builtin_type_name = parsed_statement->super.name->lexeme;
+Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
+    Source_Location builtin_type_location = type_name->location;
+    String *builtin_type_name = type_name->lexeme;
     Checked_Named_Type *type = Checker__find_type(self, builtin_type_name);
     if (type != NULL) {
         pWriter__begin_location_message(stderr_writer, builtin_type_location, WRITER_STYLE__ERROR);
@@ -1184,21 +1347,21 @@ Checked_Type *Checker__check_builtin_type_statement(Checker *self, Parsed_Builti
     }
 
     Checked_Symbols__append_symbol(self->builtin_types->symbols, (Checked_Symbol *)Checked_Type_Symbol__create(NULL, builtin_type_location, builtin_type->name, (Checked_Type *)self->builtin_types->type_type, builtin_type));
-    return (Checked_Type *)builtin_type;
+    return builtin_type;
 }
 
-Checked_Type *Checker__check_external_type_statement(Checker *self, Parsed_External_Type_Statement *parsed_statement) {
-    Checked_Named_Type *type = Checker__find_type(self, parsed_statement->super.name->lexeme);
+Checked_Named_Type *Checker__check_external_type_statement(Checker *self, Token *type_name) {
+    Checked_Named_Type *type = Checker__find_type(self, type_name->lexeme);
     if (type != NULL) {
-        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration: ");
-        pWriter__write__string(stderr_writer, parsed_statement->super.name->lexeme);
+        pWriter__write__string(stderr_writer, type_name->lexeme);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_External_Type *external_type = Checked_External_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, self->checked_module->name);
-    external_type->super.super.symbol = Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)external_type);
-    return (Checked_Type *)external_type;
+    Checked_External_Type *external_type = Checked_External_Type__create(type_name->location, type_name->lexeme, self->checked_module);
+    external_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)external_type);
+    return (Checked_Named_Type *)external_type;
 }
 
 struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type) {
@@ -1254,14 +1417,14 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
 }
 
-Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_Statement *parsed_statement) {
-    Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, self->checked_module, parsed_statement->super.name->lexeme);
+Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
+    Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, self->checked_module, type_name->lexeme);
     if (other_type != NULL) {
-        if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && Source_Location__equals(other_type->super.location, parsed_statement->super.name->location)) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && ((Checked_Struct_Type *)other_type)->parsed_type_specifier == parsed_type_specifier) {
             /* Type checked already */
-            return (Checked_Type *)other_type;
+            return other_type;
         }
-        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
         pWriter__end_location_message(stderr_writer);
         if (other_type->super.location.source != NULL) {
@@ -1272,18 +1435,18 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
         panic();
     }
 
-    String *struct_type_name = parsed_statement->super.name->lexeme;
-    String *struct_type_module = self->checked_module->name;
+    String *struct_type_name = type_name->lexeme;
+    Checked_Module *struct_type_module = self->checked_module;
     if (self->global_symbols == self->builtin_types->symbols) {
         /* This is a builtin type */
         struct_type_module = NULL;
     }
-    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, struct_type_name, struct_type_module);
+    Checked_Struct_Type *struct_type = Checked_Struct_Type__create(type_name->location, struct_type_name, struct_type_module, parsed_type_specifier);
     struct_type->super.super.symbol = Checker__create_type_symbol(self, struct_type_name, (Checked_Named_Type *)struct_type);
 
-    if (parsed_statement->first_member != NULL) {
+    if (parsed_type_specifier->first_member != NULL) {
         Checked_Struct_Member *last_struct_member = NULL;
-        Parsed_Struct_Member *parsed_member = parsed_statement->first_member;
+        Parsed_Struct_Member *parsed_member = parsed_type_specifier->first_member;
         while (parsed_member != NULL) {
             Checked_Struct_Member *struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
             if (struct_member != NULL) {
@@ -1308,7 +1471,7 @@ Checked_Type *Checker__check_struct_statement(Checker *self, Parsed_Struct_State
         }
     }
 
-    return (Checked_Type *)struct_type;
+    return (Checked_Named_Type *)struct_type;
 }
 
 Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
@@ -1363,24 +1526,24 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
     return Checked_Procedure_Type__create(location, procedure_first_parameter, procedure_return_type);
 }
 
-Checked_Type *Checker__check_trait_statement(Checker *self, Parsed_Trait_Statement *parsed_statement) {
-    Checked_Named_Type *other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
+Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
+    Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
-        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
 
-    Checked_Trait_Type *trait_type = Checked_Trait_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, self->checked_module->name);
-    trait_type->super.super.symbol = Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)trait_type);
+    Checked_Trait_Type *trait_type = Checked_Trait_Type__create(type_name->location, type_name->lexeme, self->checked_module);
+    trait_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)trait_type);
 
-    trait_type->struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, trait_type->super.name, self->checked_module->name);
+    trait_type->struct_type = Checked_Struct_Type__create(type_name->location, trait_type->super.name, self->checked_module, NULL);
 
     Checked_Type *trait_receiver_type = (Checked_Type *)Checked_Pointer_Type__create((Source_Location){}, (Checked_Type *)self->builtin_types->any_type);
     trait_type->self_struct_member = trait_type->struct_type->first_member = Checked_Struct_Member__create((Source_Location){}, String__create_from("self"), trait_receiver_type);
 
-    Parsed_Trait_Method *parsed_method = parsed_statement->first_method;
+    Parsed_Trait_Method *parsed_method = parsed_trait_type_specifier->first_method;
     if (parsed_method != NULL) {
         self->receiver_type = trait_receiver_type;
         Checked_Struct_Member *last_struct_member = trait_type->struct_type->first_member;
@@ -1399,17 +1562,17 @@ Checked_Type *Checker__check_trait_statement(Checker *self, Parsed_Trait_Stateme
         }
     }
 
-    return (Checked_Type *)trait_type;
+    return (Checked_Named_Type *)trait_type;
 }
 
-Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Statement *parsed_statement) {
-    Checked_Named_Type *other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
+Checked_Named_Type *Checker__check_union_type_statement(Checker *self, Token *type_name, Parsed_Union_Type_Specifier *parsed_union_type_specifier) {
+    Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
-        if (other_type->super.kind == CHECKED_TYPE_KIND__UNION && Source_Location__equals(other_type->super.location, parsed_statement->super.name->location)) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__UNION && Source_Location__equals(other_type->super.location, type_name->location)) {
             /* Type checked already */
-            return (Checked_Type *)other_type;
+            return other_type;
         }
-        pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
+        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
         pWriter__end_location_message(stderr_writer);
         if (other_type->super.location.source != NULL) {
@@ -1420,15 +1583,15 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
         panic();
     }
 
-    Checked_Union_Type *union_type = Checked_Union_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, self->checked_module->name);
-    union_type->super.super.symbol = Checker__create_type_symbol(self, parsed_statement->super.name->lexeme, (Checked_Named_Type *)union_type);
+    Checked_Union_Type *union_type = Checked_Union_Type__create(type_name->location, type_name->lexeme, self->checked_module);
+    union_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)union_type);
 
     // Each union has the nil variant
-    Checked_Union_Variant *nil_variant = Checked_Union_Variant__create(parsed_statement->super.super.location, (Checked_Type *)self->builtin_types->nil_type, 0);
+    Checked_Union_Variant *nil_variant = Checked_Union_Variant__create(type_name->location, (Checked_Type *)self->builtin_types->nil_type, 0);
     union_type->first_variant = nil_variant;
 
     Checked_Union_Variant *last_union_variant = union_type->first_variant;
-    Parsed_Union_Variant *parsed_variant = parsed_statement->first_variant;
+    Parsed_Union_Variant *parsed_variant = parsed_union_type_specifier->first_variant;
     while (parsed_variant != NULL) {
         Checked_Type *union_variant_type = Checker__resolve_type(self, parsed_variant->type);
         if (Checked_Type__equals(union_variant_type, (Checked_Type *)union_type)) {
@@ -1445,7 +1608,7 @@ Checked_Type *Checker__check_union_statement(Checker *self, Parsed_Union_Stateme
 
     union_type->variant_count = last_union_variant->index;
 
-    return (Checked_Type *)union_type;
+    return (Checked_Named_Type *)union_type;
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
@@ -1723,44 +1886,82 @@ Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_Wh
     return Checked_While_Statement__create(parsed_statement->super.location, condition_expression, body_statement);
 }
 
-static void String__append_receiver_type(String *symbol_name, Checked_Type *receiver_type) {
-    switch (receiver_type->kind) {
-    case CHECKED_TYPE_KIND__MULTI_POINTER: {
-        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)receiver_type;
-        String__append_cstring(symbol_name, "d_");
-        String__append_receiver_type(symbol_name, multi_pointer_type->item_type);
-        String__append_cstring(symbol_name, "_b");
-        break;
-    }
-    case CHECKED_TYPE_KIND__POINTER: {
-        String__append_char(symbol_name, 'p');
-        String__append_receiver_type(symbol_name, ((Checked_Pointer_Type *)receiver_type)->other_type);
-        break;
-    }
-    case CHECKED_TYPE_KIND__EXTERNAL:
-    case CHECKED_TYPE_KIND__I32:
-    case CHECKED_TYPE_KIND__STR:
-    case CHECKED_TYPE_KIND__STRUCT:
-    case CHECKED_TYPE_KIND__TRAIT:
-    case CHECKED_TYPE_KIND__U8:
-    case CHECKED_TYPE_KIND__UNION: {
-        Checked_Named_Type *checked_named_type = (Checked_Named_Type *)receiver_type;
-        if (checked_named_type->module != NULL) {
-            String__append_string(symbol_name, checked_named_type->module);
-            String__append_char(symbol_name, '_');
+Parsed_Named_Type *Parsed_Type__get_generic_dependency(Parsed_Type *self, Parsed_Type_Parameter *first_type_parameter) {
+    switch (self->kind) {
+    case PARSED_TYPE_KIND__NAMED: {
+        Parsed_Named_Type *named_type = (Parsed_Named_Type *)self;
+        // Check if the named type has a type argument that matches one of the type parameters
+        Parsed_Type_Argument *type_argument = named_type->first_type_argument;
+        while (type_argument != NULL) {
+            if (type_argument->type->kind != PARSED_TYPE_KIND__NAMED) {
+                todo("Check if type argument is the generic dependency itself");
+            }
+            Parsed_Named_Type *type_argument_type = (Parsed_Named_Type *)type_argument->type;
+            Parsed_Type_Parameter *type_parameter = first_type_parameter;
+            while (type_parameter != NULL) {
+                if (String__equals_string(type_argument_type->name, type_parameter->name->lexeme)) {
+                    // Found a matching type parameter
+                    return named_type;
+                }
+                type_parameter = type_parameter->next_type_parameter;
+            }
+            type_argument = type_argument->next_type_argument;
         }
-        String__append_string(symbol_name, checked_named_type->name);
-        break;
+        return NULL;
     }
+    case PARSED_TYPE_KIND__POINTER:
+        return Parsed_Type__get_generic_dependency(((Parsed_Pointer_Type *)self)->other_type, first_type_parameter);
     default:
-        todo("Handle unexpected Checked_Type_Kind");
+        todo("Check other parsed type kinds for generic dependencies");
     }
+    return NULL;
 }
 
-void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
-    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
+void Checker__check_generic_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
+    if (parsed_statement->is_external) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "External procedures cannot have type parameters");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    if (!parsed_statement->is_method) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type parameters can only be used in methods");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
 
-    String *procedure_name = parsed_statement->super.name->lexeme;
+    Checked_Type *receiver_type;
+    Parsed_Type *parsed_receiver_type = parsed_statement->first_parameter->type;
+    if (parsed_receiver_type == NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->first_parameter->name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Method must have a receiver type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Parsed_Named_Type *parsed_generic_type = Parsed_Type__get_generic_dependency(parsed_receiver_type, parsed_statement->first_type_parameter);
+    if (parsed_generic_type == NULL) {
+        receiver_type = Checker__resolve_type(self, parsed_receiver_type);
+    } else {
+        Parsed_Type_Argument *first_type_argument = parsed_generic_type->first_type_argument;
+        parsed_generic_type->first_type_argument = NULL; // Remove type arguments temporarily
+        receiver_type = Checker__resolve_type(self, parsed_receiver_type);
+        parsed_generic_type->first_type_argument = first_type_argument; // Restore type arguments
+    }
+
+    String *symbol_name = String__create();
+    String__append_mangled_type_name(symbol_name, receiver_type);
+    String__append_cstring(symbol_name, "__");
+    String__append_string(symbol_name, parsed_statement->super.name->lexeme);
+
+    Checked_Generic_Procedure_Symbol *generic_procedure_symbol = Checked_Generic_Procedure_Symbol__create(self->checked_module, parsed_statement->super.super.location, symbol_name, receiver_type, parsed_statement);
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)generic_procedure_symbol);
+
+    Checker__append_method(self, receiver_type, (Checked_Symbol *)generic_procedure_symbol);
+}
+
+Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
+    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
 
     String *symbol_name = String__create();
     Checked_Type *receiver_type = NULL;
@@ -1772,13 +1973,13 @@ void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statem
             panic();
         }
         receiver_type = Checker__resolve_type(self, parsed_statement->first_parameter->type);
-        String__append_receiver_type(symbol_name, receiver_type);
+        String__append_mangled_type_name(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
     }
-    String__append_string(symbol_name, procedure_name);
+    String__append_string(symbol_name, parsed_statement->super.name->lexeme);
 
-    Checked_Procedure_Symbol *procedure_symbol = Checked_Procedure_Symbol__create(self->checked_module, parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, procedure_name, procedure_type, receiver_type);
-    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)procedure_symbol);
+    Checked_Procedure_Symbol *procedure_symbol = Checked_Procedure_Symbol__create(self->checked_module, parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, parsed_statement, procedure_type, receiver_type);
+    Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)procedure_symbol);
 
     if (parsed_statement->is_external) {
         Checked_Procedure_Parameter *procedure_parameter = procedure_type->first_parameter;
@@ -1797,23 +1998,16 @@ void Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statem
             external_symbol = Checked_External_Symbol__create(parsed_statement->external_name->super.location, parsed_statement->external_name->value, (Checked_Symbol *)procedure_symbol);
             procedure_symbol->external_name = parsed_statement->external_name->value;
         } else {
-            external_symbol = Checked_External_Symbol__create(parsed_statement->super.name->location, procedure_name, (Checked_Symbol *)procedure_symbol);
+            external_symbol = Checked_External_Symbol__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, (Checked_Symbol *)procedure_symbol);
         }
         Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)external_symbol);
     }
 
     if (parsed_statement->is_method) {
-        Checked_Method *method = (Checked_Method *)malloc(sizeof(Checked_Method));
-        method->receiver_type = receiver_type;
-        method->procedure_symbol = procedure_symbol;
-        method->next_method = NULL;
-        if (self->methods->last_method != NULL) {
-            self->methods->last_method->next_method = method;
-        } else {
-            self->methods->first_method = method;
-        }
-        self->methods->last_method = method;
+        Checker__append_method(self, receiver_type, (Checked_Symbol *)procedure_symbol);
     }
+
+    return procedure_symbol;
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
@@ -1865,22 +2059,7 @@ Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *
     return checked_statements;
 }
 
-void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
-    Checked_Symbol *symbol = self->symbols->first_symbol;
-    while (symbol != NULL) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
-            if (procedure_symbol->procedure_name == parsed_statement->super.name->lexeme) {
-                break;
-            }
-        }
-        symbol = symbol->next_symbol;
-    }
-    if (symbol == NULL) {
-        // Procedure symbol should exist
-        panic();
-    }
-    Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol *procedure_symbol) {
     Checked_Procedure_Type *procedure_type = procedure_symbol->procedure_type;
     self->return_type = procedure_type->return_type;
 
@@ -1897,30 +2076,165 @@ void Checker__check_procedure_definition(Checker *self, Parsed_Procedure_Stateme
     }
 
     /* Check statements */
-    procedure_symbol->checked_statements = Checker__check_statements(self, parsed_statement->statements);
+    procedure_symbol->checked_statements = Checker__check_statements(self, procedure_symbol->parsed_procedure_statement->statements);
 
     /* Pop procedure symbols */
     self->symbols = self->symbols->parent;
 }
 
-Checked_Type *Checker__check_type(Checker *self, Parsed_Statement *parsed_statement) {
-    switch (parsed_statement->kind) {
-    case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
-        return Checker__check_builtin_type_statement(self, (Parsed_Builtin_Type_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
-        return Checker__check_external_type_statement(self, (Parsed_External_Type_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__STRUCT:
-        return Checker__check_struct_statement(self, (Parsed_Struct_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__TRAIT:
-        return Checker__check_trait_statement(self, (Parsed_Trait_Statement *)parsed_statement);
-    case PARSED_STATEMENT_KIND__UNION:
-        return Checker__check_union_statement(self, (Parsed_Union_Statement *)parsed_statement);
+void Checker__create_type_argument_symbols(Checker *self, Checked_Type_Argument *first_type_argument) {
+    Checked_Type_Argument *type_argument = first_type_argument;
+    while (type_argument != NULL) {
+        Checked_Type_Argument_Symbol *type_argument_symbol = Checked_Type_Argument_Symbol__create(type_argument->location, type_argument->name, (Checked_Type *)self->builtin_types->type_type, type_argument->type);
+        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)type_argument_symbol);
+        type_argument = type_argument->next_type_argument;
+    }
+}
+
+Checked_Procedure_Symbol *Checker__specialize_method(Checker *self, Checked_Generic_Procedure_Symbol *generic_procedure_symbol, Checked_Type_Argument *first_type_argument) {
+    self->symbols = Checked_Symbols__create(self->symbols);
+    Checker__create_type_argument_symbols(self, first_type_argument);
+
+    Checked_Module *checked_module = self->checked_module;
+    self->checked_module = generic_procedure_symbol->super.module;
+
+    Checked_Procedure_Symbol *procedure_symbol = Checker__check_procedure_declaration(self, generic_procedure_symbol->parsed_procedure_statement);
+    procedure_symbol->first_type_argument = first_type_argument;
+
+    self->checked_module = checked_module;
+
+    self->symbols = self->symbols->parent;
+
+    return procedure_symbol;
+}
+
+Checked_Named_Type *Checker__check_type_statement(Checker *self, Parsed_Type_Statement *parsed_type_statement) {
+    Token *type_name = parsed_type_statement->super.name;
+    if (parsed_type_statement->first_type_parameter != NULL) {
+        Checked_Generic_Type *generic_type = Checked_Generic_Type__create(type_name->location, type_name->lexeme, self->checked_module, parsed_type_statement);
+        generic_type->super.super.symbol = Checker__create_type_symbol(self, type_name->lexeme, (Checked_Named_Type *)generic_type);
+        return (Checked_Named_Type *)generic_type;
+    }
+    switch (parsed_type_statement->type_specifier->kind) {
+    case PARSED_TYPE_SPECIFIER_KIND__BUILTIN:
+        return Checker__check_builtin_type_statement(self, type_name);
+    case PARSED_TYPE_SPECIFIER_KIND__EXTERNAL:
+        return Checker__check_external_type_statement(self, type_name);
+    case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
+        return Checker__check_struct_type_statement(self, type_name, (Parsed_Struct_Type_Specifier *)parsed_type_statement->type_specifier);
+    case PARSED_TYPE_SPECIFIER_KIND__TRAIT:
+        return Checker__check_trait_type_statement(self, type_name, (Parsed_Trait_Type_Specifier *)parsed_type_statement->type_specifier);
+    case PARSED_TYPE_SPECIFIER_KIND__UNION:
+        return Checker__check_union_type_statement(self, type_name, (Parsed_Union_Type_Specifier *)parsed_type_statement->type_specifier);
     default:
-        pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Unsupported type statement");
+        pWriter__begin_location_message(stderr_writer, parsed_type_statement->type_specifier->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported type specifier");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+}
+
+Checked_Type_Argument *Checker__check_type_arguments(Checker *self, Parsed_Type_Parameter *first_parsed_type_parameter, Parsed_Type_Argument *first_parsed_type_argument) {
+    Checked_Type_Argument *first_type_argument = Checked_Type_Argument__create(first_parsed_type_parameter->name->location, first_parsed_type_parameter->name->lexeme, Checker__resolve_type(self, first_parsed_type_argument->type));
+    Checked_Type_Argument *last_type_argument = first_type_argument;
+
+    Parsed_Type_Parameter *parsed_type_parameter = first_parsed_type_parameter->next_type_parameter;
+    Parsed_Type_Argument *parsed_type_argument = first_parsed_type_argument->next_type_argument;
+    while (parsed_type_parameter != NULL && parsed_type_argument != NULL) {
+        last_type_argument->next_type_argument = Checked_Type_Argument__create(parsed_type_parameter->name->location, parsed_type_parameter->name->lexeme, Checker__resolve_type(self, parsed_type_argument->type));
+        last_type_argument = last_type_argument->next_type_argument;
+        parsed_type_parameter = parsed_type_parameter->next_type_parameter;
+        parsed_type_argument = parsed_type_argument->next_type_argument;
+    }
+    if (parsed_type_parameter != NULL) {
+        todo("Report too few arguments")
+    }
+    if (parsed_type_argument != NULL) {
+        todo("Report too many arguments")
+    }
+
+    return first_type_argument;
+}
+
+Checked_Named_Type *Checked_Symbols__find_specialized_type(Checked_Symbols *self, Checked_Generic_Type *generic_type, Checked_Type_Argument *first_type_argument) {
+    Checked_Symbols *symbols = self;
+    while (symbols != NULL) {
+        Checked_Symbol *symbol = symbols->last_symbol;
+        while (symbol != NULL) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+                Checked_Named_Type *type = ((Checked_Type_Symbol *)symbol)->named_type;
+                if (type->generic_type == generic_type) {
+                    Checked_Type_Argument *type_argument = type->first_type_argument;
+                    Checked_Type_Argument *required_type_argument = first_type_argument;
+                    while (type_argument != NULL && required_type_argument != NULL) {
+                        if (!Checked_Type__equals(type_argument->type, required_type_argument->type)) {
+                            break;
+                        }
+                        type_argument = type_argument->next_type_argument;
+                        required_type_argument = required_type_argument->next_type_argument;
+                    }
+                    if (type_argument == NULL && required_type_argument == NULL) {
+                        // Found a specialized type
+                        return type;
+                    }
+                }
+            }
+            symbol = symbol->prev_symbol;
+        }
+        symbols = symbols->parent;
+    }
+    return NULL;
+}
+
+Checked_Named_Type *Checker__specialize_type(Checker *self, Checked_Generic_Type *generic_type, Parsed_Named_Type *parsed_type) {
+    Checked_Type_Argument *first_type_argument = Checker__check_type_arguments(self, generic_type->parsed_type_statement->first_type_parameter, parsed_type->first_type_argument);
+
+    Checked_Named_Type *type = Checked_Symbols__find_specialized_type(self->global_symbols, generic_type, first_type_argument);
+    if (type != NULL) {
+        // TODO: delete created types arguments
+        return type;
+    }
+
+    String *type_name = String__create_copy(parsed_type->name);
+    Writer *type_name_writer = String__create_writer(type_name);
+    pWriter__write__char(type_name_writer, '<');
+    Checked_Type_Argument *type_argument = first_type_argument;
+    pWriter__write__checked_type(type_name_writer, type_argument->type);
+    type_argument = type_argument->next_type_argument;
+    while (type_argument != NULL) {
+        pWriter__write__cstring(type_name_writer, ", ");
+        pWriter__write__checked_type(type_name_writer, type_argument->type);
+        type_argument = type_argument->next_type_argument;
+    }
+    pWriter__write__char(type_name_writer, '>');
+    pWriter__destroy(type_name_writer);
+
+    self->symbols = Checked_Symbols__create(self->symbols);
+    Checker__create_type_argument_symbols(self, first_type_argument);
+
+    Token *type_name_token = (Token *)Identifier_Token__create(parsed_type->super.location, type_name);
+    Checked_Module *current_module = self->checked_module;
+    self->checked_module = generic_type->super.module;
+    switch (generic_type->parsed_type_statement->type_specifier->kind) {
+    case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
+        type = Checker__check_struct_type_statement(self, type_name_token, (Parsed_Struct_Type_Specifier *)generic_type->parsed_type_statement->type_specifier);
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, parsed_type->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot specialize type ");
+        pWriter__write__string(stderr_writer, generic_type->super.name);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    self->checked_module = current_module;
+    // TODO: delete type_name_token
+
+    type->generic_type = generic_type;
+    type->first_type_argument = first_type_argument;
+
+    self->symbols = self->symbols->parent;
+
+    return type;
 }
 
 void Checker__check_module(Checker *self);
@@ -1983,8 +2297,8 @@ void Checker__check_module(Checker *self) {
     /* Check all declared types */
     parsed_statement = self->parsed_source->statements->first_statement;
     while (parsed_statement != NULL) {
-        if (Parsed_Statement__is_type_statement(parsed_statement)) {
-            Checker__check_type(self, parsed_statement);
+        if (parsed_statement->kind == PARSED_STATEMENT_KIND__TYPE) {
+            Checker__check_type_statement(self, (Parsed_Type_Statement *)parsed_statement);
         }
         parsed_statement = parsed_statement->next_statement;
     }
@@ -1994,60 +2308,20 @@ void Checker__check_module(Checker *self) {
     while (parsed_statement != NULL) {
         Checked_Statement *checked_statement = NULL;
         switch (parsed_statement->kind) {
-        case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
-        case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
-        case PARSED_STATEMENT_KIND__STRUCT:
-        case PARSED_STATEMENT_KIND__TRAIT:
-        case PARSED_STATEMENT_KIND__UNION:
+        case PARSED_STATEMENT_KIND__TYPE:
         case PARSED_STATEMENT_KIND__IMPORT:
             /* ignored */
             break;
         case PARSED_STATEMENT_KIND__PROCEDURE:
-            Checker__check_procedure_declaration(self, (Parsed_Procedure_Statement *)parsed_statement);
+            if (((Parsed_Procedure_Statement *)parsed_statement)->first_type_parameter != NULL) {
+                Checker__check_generic_procedure_declaration(self, (Parsed_Procedure_Statement *)parsed_statement);
+            } else {
+                Checker__check_procedure_declaration(self, (Parsed_Procedure_Statement *)parsed_statement);
+            }
             break;
         case PARSED_STATEMENT_KIND__VARIABLE:
             checked_statement = (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
             break;
-        default:
-            pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Unsupported statement");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        parsed_statement = parsed_statement->next_statement;
-    }
-
-    /* Check procedure definitions */
-    parsed_statement = self->parsed_source->statements->first_statement;
-    while (parsed_statement != NULL) {
-        switch (parsed_statement->kind) {
-        case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
-        case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
-        case PARSED_STATEMENT_KIND__STRUCT:
-        case PARSED_STATEMENT_KIND__TRAIT:
-        case PARSED_STATEMENT_KIND__UNION:
-        case PARSED_STATEMENT_KIND__VARIABLE:
-        case PARSED_STATEMENT_KIND__IMPORT:
-            /* ignored */
-            break;
-        case PARSED_STATEMENT_KIND__PROCEDURE: {
-            Parsed_Procedure_Statement *procedure_statement = (Parsed_Procedure_Statement *)parsed_statement;
-            if (!procedure_statement->is_external) {
-                if (procedure_statement->statements == NULL) {
-                    pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
-                    pWriter__write__cstring(stderr_writer, "Missing procedure body");
-                    pWriter__end_location_message(stderr_writer);
-                    panic();
-                }
-                Checker__check_procedure_definition(self, procedure_statement);
-            } else if (procedure_statement->statements != NULL) {
-                pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "External procedure with body");
-                pWriter__end_location_message(stderr_writer);
-                panic();
-            }
-            break;
-        }
         default:
             pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Unsupported statement");
@@ -2070,7 +2344,6 @@ void Checker__check_builtin_module(Checker *self, Parsed_Source *parsed_source) 
     module_checker.modules = self->modules;
 
     module_checker.checked_module = self->modules->builtin_module = Checked_Module__create(parsed_source->package_name, parsed_source->source);
-    // Checked_Modules__append(self->modules, module_checker.checked_module);
 
     module_checker.methods = self->methods;
 
@@ -2085,8 +2358,43 @@ Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parse
     Checker__check_builtin_module(checker, parsed_builtin_source);
     Checker__check_module(checker);
 
+    /* Check procedure definitions from all modules */
+    Checked_Symbol *symbol = checker->global_symbols->first_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            Parsed_Procedure_Statement *procedure_statement = procedure_symbol->parsed_procedure_statement;
+            if (!procedure_statement->is_external) {
+                if (procedure_statement->statements == NULL) {
+                    pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Missing procedure body");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
+                if (procedure_symbol->first_type_argument != NULL) {
+                    checker->symbols = Checked_Symbols__create(checker->symbols);
+                    Checker__create_type_argument_symbols(checker, procedure_symbol->first_type_argument);
+                }
+                // Checked_Module *current_module = checker->checked_module;
+                checker->checked_module = procedure_symbol->super.module;
+                Checker__check_procedure_definition(checker, procedure_symbol);
+                // checker->checked_module = current_module;
+                if (procedure_symbol->first_type_argument != NULL) {
+                    checker->symbols = checker->symbols->parent;
+                }
+            } else if (procedure_statement->statements != NULL) {
+                pWriter__begin_location_message(stderr_writer, procedure_statement->super.name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External procedure with body");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+        }
+        symbol = symbol->next_symbol;
+    }
+
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
     checked_source->first_module = checker->modules->first_module;
     checked_source->symbols = checker->global_symbols;
+
     return checked_source;
 }

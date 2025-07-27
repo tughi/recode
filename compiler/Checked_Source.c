@@ -30,6 +30,58 @@ bool Checked_Type__is_numeric_type(Checked_Type *self) {
     }
 }
 
+void String__append_mangled_type_name(String *self, Checked_Type *type) {
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        Checked_Multi_Pointer_Type *multi_pointer_type = (Checked_Multi_Pointer_Type *)type;
+        String__append_cstring(self, "d_");
+        String__append_mangled_type_name(self, multi_pointer_type->item_type);
+        String__append_cstring(self, "_b");
+        break;
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
+        String__append_char(self, 'p');
+        String__append_mangled_type_name(self, ((Checked_Pointer_Type *)type)->other_type);
+        break;
+    }
+    case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
+    case CHECKED_TYPE_KIND__I16:
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__I64:
+    case CHECKED_TYPE_KIND__I8:
+    case CHECKED_TYPE_KIND__STR:
+    case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
+    case CHECKED_TYPE_KIND__U16:
+    case CHECKED_TYPE_KIND__U32:
+    case CHECKED_TYPE_KIND__U64:
+    case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__UNION: {
+        Checked_Named_Type *checked_named_type = (Checked_Named_Type *)type;
+        if (checked_named_type->module != NULL) {
+            String__append_string(self, checked_named_type->module->name);
+            String__append_char(self, '_');
+        }
+        if (checked_named_type->generic_type != NULL) {
+            String__append_string(self, checked_named_type->generic_type->super.name);
+            Checked_Type_Argument *type_argument = checked_named_type->first_type_argument;
+            while (type_argument != NULL) {
+                String__append_cstring(self, "__");
+                String__append_mangled_type_name(self, type_argument->type);
+                type_argument = type_argument->next_type_argument;
+            }
+        } else {
+            String__append_string(self, checked_named_type->name);
+        }
+        break;
+    }
+    default:
+        todo("Handle unexpected Checked_Type_Kind");
+    }
+}
+
 Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression) {
     Checked_Array_Type *type = (Checked_Array_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__ARRAY, sizeof(Checked_Array_Type), location);
     type->item_type = item_type;
@@ -51,14 +103,20 @@ bool Checked_Array_Type__equals(Checked_Array_Type *self, Checked_Array_Type *ot
     panic();
 }
 
-Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, String *module) {
+Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Module *module) {
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     type->module = module;
     return type;
 }
 
-Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, String *module) {
+Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, Checked_Module *module, Parsed_Type_Statement *parsed_type_statement) {
+    Checked_Generic_Type *type = (Checked_Generic_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__GENERIC, sizeof(Checked_Generic_Type), location, name, module);
+    type->parsed_type_statement = parsed_type_statement;
+    return type;
+}
+
+Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Module *module) {
     Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, module);
     return type;
 }
@@ -136,6 +194,15 @@ bool Checked_Pointer_Type__equals(Checked_Pointer_Type *self, Checked_Pointer_Ty
     return Checked_Type__equals(self->other_type, other->other_type);
 }
 
+Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, String *name, Checked_Type *type) {
+    Checked_Type_Argument *type_argument = (Checked_Type_Argument *)malloc(sizeof(Checked_Type_Argument));
+    type_argument->location = location;
+    type_argument->name = name;
+    type_argument->type = type;
+    type_argument->next_type_argument = NULL;
+    return type_argument;
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -145,9 +212,10 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, S
     return member;
 }
 
-Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, String *module) {
+Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Module *module, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name, module);
     type->first_member = NULL;
+    type->parsed_type_specifier = parsed_type_specifier;
     return type;
 }
 
@@ -184,7 +252,7 @@ Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, Str
     return method;
 }
 
-Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, String *module) {
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, Checked_Module *module) {
     Checked_Trait_Type *type = (Checked_Trait_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TRAIT, sizeof(Checked_Trait_Type), location, name, module);
     type->struct_type = NULL;
     type->self_struct_member = NULL;
@@ -200,7 +268,7 @@ Checked_Union_Variant *Checked_Union_Variant__create(Source_Location location, C
     return member;
 }
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, String *module) {
+Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, Checked_Module *module) {
     Checked_Union_Type *type = (Checked_Union_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UNION, sizeof(Checked_Union_Type), location, name, module);
     type->first_variant = NULL;
     type->variant_count = 0;
@@ -254,12 +322,13 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__UNION: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         if (named_type->module != NULL) {
-            pWriter__write__string(self, named_type->module);
+            pWriter__write__string(self, named_type->module->name);
             pWriter__write__char(self, '.');
         }
         pWriter__write__string(self, named_type->name);
@@ -376,16 +445,25 @@ Checked_External_Symbol *Checked_External_Symbol__create(Source_Location locatio
     return external_symbol;
 }
 
+Checked_Generic_Procedure_Symbol *Checked_Generic_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *receiver_type, Parsed_Procedure_Statement *parsed_procedure_statement) {
+    Checked_Generic_Procedure_Symbol *symbol = (Checked_Generic_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE, sizeof(Checked_Generic_Procedure_Symbol), module, location, name, NULL, true);
+    symbol->receiver_type = receiver_type;
+    symbol->parsed_procedure_statement = parsed_procedure_statement;
+    return symbol;
+}
+
 Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Module *other_module) {
     Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__IMPORT, sizeof(Checked_Import_Symbol), module, location, name, type, true);
     import_symbol->other_module = other_module;
     return import_symbol;
 }
 
-Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, String *procedure_name, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
+Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *module, Source_Location location, String *symbol_name, Source_Location procedure_location, Parsed_Procedure_Statement *parsed_procedure_statement, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
     Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), module, location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type), true);
     symbol->procedure_location = procedure_location;
-    symbol->procedure_name = procedure_name;
+    symbol->parsed_procedure_statement = parsed_procedure_statement;
+    symbol->first_type_argument = NULL;
+    symbol->procedure_name = parsed_procedure_statement->super.name->lexeme;
     symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
     symbol->checked_statements = NULL;
@@ -443,6 +521,12 @@ Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(C
 Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {
     Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), module, location, name, type, true);
     symbol->named_type = named_type;
+    return symbol;
+}
+
+Checked_Type_Argument_Symbol *Checked_Type_Argument_Symbol__create(Source_Location location, String *name, Checked_Type *type, Checked_Type *argument_type) {
+    Checked_Type_Argument_Symbol *symbol = (Checked_Type_Argument_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE_ARGUMENT, sizeof(Checked_Type_Argument_Symbol), NULL, location, name, type, true);
+    symbol->argument_type = argument_type;
     return symbol;
 }
 
@@ -640,9 +724,10 @@ Checked_Group_Expression *Checked_Group_Expression__create(Source_Location locat
     return expression;
 }
 
-Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value) {
+Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base) {
     Checked_Integer_Expression *expression = (Checked_Integer_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__INTEGER, sizeof(Checked_Integer_Expression), location, type);
     expression->value = value;
+    expression->base = base;
     return expression;
 }
 
@@ -749,6 +834,12 @@ Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location
 Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location location, Checked_Type *type, Checked_Symbol *symbol) {
     Checked_Symbol_Expression *expression = (Checked_Symbol_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SYMBOL, sizeof(Checked_Symbol_Expression), location, type);
     expression->symbol = symbol;
+    return expression;
+}
+
+Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type) {
+    Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
+    expression->named_type = named_type;
     return expression;
 }
 

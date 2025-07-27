@@ -36,11 +36,19 @@ Parsed_Type *Parsed_Multi_Pointer_Type__create(Source_Location location, Parsed_
     return (Parsed_Type *)type;
 }
 
-Parsed_Type *Parsed_Named_Type__create(Token *name, Token *module) {
+Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type) {
+    Parsed_Type_Argument *type_argument = (Parsed_Type_Argument *)malloc(sizeof(Parsed_Type_Argument));
+    type_argument->type = type;
+    type_argument->next_type_argument = NULL;
+    return type_argument;
+}
+
+Parsed_Named_Type *Parsed_Named_Type__create(Token *module, Token *name) {
     Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
-    type->name = name->lexeme;
     type->module = module;
-    return (Parsed_Type *)type;
+    type->name = name->lexeme;
+    type->first_type_argument = NULL;
+    return type;
 }
 
 Parsed_Type *Parsed_Pointer_Type__create(Source_Location location, Parsed_Type *other_type) {
@@ -163,6 +171,7 @@ Parsed_Group_Expression *Parsed_Group_Expression__create(Source_Location locatio
 Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *literal, Parsed_Named_Type *type) {
     Parsed_Integer_Expression *expression = (Parsed_Integer_Expression *)Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__INTEGER, sizeof(Parsed_Integer_Expression), (Token *)literal);
     expression->value = literal->value;
+    expression->base = literal->base;
     expression->type = type;
     return expression;
 }
@@ -244,26 +253,19 @@ Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name) {
     return expression;
 }
 
+Parsed_Type_Specialization_Expression *Parsed_Type_Specialization_Expression__create(Source_Location location, Parsed_Expression *type_expression, Parsed_Type_Argument *first_type_argument) {
+    Parsed_Type_Specialization_Expression *expression = (Parsed_Type_Specialization_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION, sizeof(Parsed_Type_Specialization_Expression), location);
+    expression->type_expression = type_expression;
+    expression->first_type_argument = first_type_argument;
+    return expression;
+}
+
 Parsed_Statement *Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location location) {
     Parsed_Statement *statement = (Parsed_Statement *)malloc(kind_size);
     statement->kind = kind;
     statement->location = location;
     statement->next_statement = NULL;
     return statement;
-}
-
-bool Parsed_Statement__is_type_statement(Parsed_Statement *statement) {
-    switch (statement->kind) {
-    case PARSED_STATEMENT_KIND__BUILTIN_TYPE:
-    case PARSED_STATEMENT_KIND__EXTERNAL_TYPE:
-    case PARSED_STATEMENT_KIND__STRUCT:
-    case PARSED_STATEMENT_KIND__TRAIT:
-    case PARSED_STATEMENT_KIND__UNION:
-        return true;
-    default:
-        break;
-    }
-    return false;
 }
 
 Parsed_Named_Statement *Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location location, Token *name) {
@@ -289,22 +291,15 @@ Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
 
-Parsed_Builtin_Type_Statement *Parsed_Builtin_Type_Statement__create(Source_Location location, Token *name) {
-    return (Parsed_Builtin_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__BUILTIN_TYPE, sizeof(Parsed_Builtin_Type_Statement), location, name);
-}
-
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {
     Parsed_Expression_Statement *statement = (Parsed_Expression_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location);
     statement->expression = expression;
     return statement;
 }
 
-Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Location location, Token *name) {
-    return (Parsed_External_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__EXTERNAL_TYPE, sizeof(Parsed_External_Type_Statement), location, name);
-}
-
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
     Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
+    statement->first_type_parameter = first_type_parameter;
     statement->is_method = is_method;
     statement->first_parameter = first_parameter;
     statement->return_type = return_type;
@@ -342,17 +337,17 @@ Parsed_Statement *Parsed_Return_Statement__create(Source_Location location, Pars
     return (Parsed_Statement *)statement;
 }
 
-Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type) {
-    Parsed_Struct_Member *member = (Parsed_Struct_Member *)malloc(sizeof(Parsed_Struct_Member));
-    member->name = name;
-    member->type = type;
-    member->next_member = NULL;
-    return member;
+Parsed_Type_Parameter *Parsed_Type_Parameter__create(Token *name) {
+    Parsed_Type_Parameter *parameter = (Parsed_Type_Parameter *)malloc(sizeof(Parsed_Type_Parameter));
+    parameter->name = name;
+    parameter->next_type_parameter = NULL;
+    return parameter;
 }
 
-Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location location, Token *name) {
-    Parsed_Struct_Statement *statement = (Parsed_Struct_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
-    statement->first_member = NULL;
+Parsed_Type_Statement *Parsed_Type_Statement__create(Source_Location location, Token *name, Parsed_Type_Specifier *type_specifier, Parsed_Type_Parameter *first_type_parameter) {
+    Parsed_Type_Statement *statement = (Parsed_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__TYPE, sizeof(Parsed_Type_Statement), location, name);
+    statement->type_specifier = type_specifier;
+    statement->first_type_parameter = first_type_parameter;
     return statement;
 }
 
@@ -393,35 +388,6 @@ Parsed_Switch_Statement *Parsed_Switch_Statement__create(Source_Location locatio
     return statement;
 }
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
-    Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
-    method->location = location;
-    method->name = name;
-    method->first_parameter = first_parameter;
-    method->return_type = return_type;
-    method->next_method = NULL;
-    return method;
-}
-
-Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location location, Token *name) {
-    Parsed_Trait_Statement *statement = (Parsed_Trait_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__TRAIT, sizeof(Parsed_Trait_Statement), location, name);
-    statement->first_method = NULL;
-    return statement;
-}
-
-Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type) {
-    Parsed_Union_Variant *variant = (Parsed_Union_Variant *)malloc(sizeof(Parsed_Union_Variant));
-    variant->type = type;
-    variant->next_variant = NULL;
-    return variant;
-}
-
-Parsed_Union_Statement *Parsed_Union_Statement__create(Source_Location location, Token *name) {
-    Parsed_Union_Statement *statement = (Parsed_Union_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__UNION, sizeof(Parsed_Union_Statement), location, name);
-    statement->first_variant = NULL;
-    return statement;
-}
-
 Parsed_Variable_Statement *Parsed_Variable_Statement__create(Source_Location location, Token *name, Parsed_Type *type, bool is_external, Parsed_Expression *expression, String_Token *external_name) {
     Parsed_Variable_Statement *statement = (Parsed_Variable_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;
@@ -453,6 +419,65 @@ void Parsed_Statements__append(Parsed_Statements *self, Parsed_Statement *statem
         self->last_statement->next_statement = statement;
     }
     self->last_statement = statement;
+}
+
+Parsed_Type_Specifier *Parsed_Type_Specifier__create(Parsed_Type_Specifier_Kind kind, size_t kind_size, Source_Location location) {
+    Parsed_Type_Specifier *specifier = (Parsed_Type_Specifier *)malloc(kind_size);
+    specifier->kind = kind;
+    specifier->location = location;
+    return specifier;
+}
+
+Parsed_Builtin_Type_Specifier *Parsed_Builtin_Type_Specifier__create(Source_Location location) {
+    Parsed_Builtin_Type_Specifier *type_specifier = (Parsed_Builtin_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__BUILTIN, sizeof(Parsed_Builtin_Type_Specifier), location);
+    return type_specifier;
+}
+
+Parsed_External_Type_Specifier *Parsed_External_Type_Specifier__create(Source_Location location) {
+    return (Parsed_External_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__EXTERNAL, sizeof(Parsed_External_Type_Specifier), location);
+}
+
+Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type) {
+    Parsed_Struct_Member *member = (Parsed_Struct_Member *)malloc(sizeof(Parsed_Struct_Member));
+    member->name = name;
+    member->type = type;
+    member->next_member = NULL;
+    return member;
+}
+
+Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Location location, Parsed_Struct_Member *first_member) {
+    Parsed_Struct_Type_Specifier *type_specifier = (Parsed_Struct_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__STRUCT, sizeof(Parsed_Struct_Type_Specifier), location);
+    type_specifier->first_member = first_member;
+    return type_specifier;
+}
+
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
+    Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
+    method->location = location;
+    method->name = name;
+    method->first_parameter = first_parameter;
+    method->return_type = return_type;
+    method->next_method = NULL;
+    return method;
+}
+
+Parsed_Trait_Type_Specifier *Parsed_Trait_Type_Specifier__create(Source_Location location, Parsed_Trait_Method *first_method) {
+    Parsed_Trait_Type_Specifier *type_specifier = (Parsed_Trait_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__TRAIT, sizeof(Parsed_Trait_Type_Specifier), location);
+    type_specifier->first_method = first_method;
+    return type_specifier;
+}
+
+Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type) {
+    Parsed_Union_Variant *variant = (Parsed_Union_Variant *)malloc(sizeof(Parsed_Union_Variant));
+    variant->type = type;
+    variant->next_variant = NULL;
+    return variant;
+}
+
+Parsed_Union_Type_Specifier *Parsed_Union_Type_Specifier__create(Source_Location location, Parsed_Union_Variant *first_variant) {
+    Parsed_Union_Type_Specifier *type_specifier = (Parsed_Union_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__UNION, sizeof(Parsed_Union_Type_Specifier), location);
+    type_specifier->first_variant = first_variant;
+    return type_specifier;
 }
 
 Parsed_Source *Parsed_Source__create() {
