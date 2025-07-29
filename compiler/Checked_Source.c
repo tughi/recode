@@ -959,6 +959,13 @@ Checked_Statements *Checked_Statements__create() {
     return statements;
 }
 
+Checked_Statements *Checked_Statements__create_copy(Checked_Statements *other) {
+    Checked_Statements *statements = (Checked_Statements *)malloc(sizeof(Checked_Statements));
+    statements->first_statement = other->first_statement;
+    statements->last_statement = other->last_statement;
+    return statements;
+}
+
 void Checked_Statements__append(Checked_Statements *self, Checked_Statement *statement) {
     if (self->first_statement == NULL) {
         self->first_statement = statement;

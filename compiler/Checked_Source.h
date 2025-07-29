@@ -353,6 +353,8 @@ typedef struct Checked_Statements {
 
 Checked_Statements *Checked_Statements__create();
 
+Checked_Statements *Checked_Statements__create_copy(Checked_Statements *other);
+
 void Checked_Statements__append(Checked_Statements *self, Checked_Statement *statement);
 
 typedef struct Checked_Procedure_Symbol {
