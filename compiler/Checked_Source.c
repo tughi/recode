@@ -980,3 +980,12 @@ void Checked_Statements__append(Checked_Statements *self, Checked_Statement *sta
     }
     self->last_statement = statement;
 }
+
+void Checked_Statements__prepend(Checked_Statements *self, Checked_Statement *statement) {
+    if (self->first_statement == NULL) {
+        self->first_statement = statement;
+    } else {
+        statement->next_statement = self->first_statement;
+    }
+    self->first_statement = statement;
+}
