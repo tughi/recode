@@ -707,7 +707,13 @@ Checked_Expression *Checker__check_divide_expression(Checker *self, Parsed_Divid
 }
 
 Checked_Expression *Checker__check_equals_expression(Checker *self, Parsed_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
+    if (expected_type != NULL && expected_type->kind != CHECKED_TYPE_KIND__BOOL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected boolean type for equals expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
     Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
@@ -918,7 +924,9 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Parsed_Inte
             }
         } else {
             pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Expected numeric type");
+            pWriter__write__cstring(stderr_writer, "Expected ");
+            pWriter__write__checked_type(stderr_writer, expected_type);
+            pWriter__write__cstring(stderr_writer, " type");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
@@ -1848,18 +1856,17 @@ Checked_Expression_Statement *Checker__check_expression_statement(Checker *self,
     return Checked_Expression_Statement__create(parsed_statement->super.location, expression);
 }
 
-Checked_If_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statement *parsed_statement) {
-    Checked_Expression *condition_expression = Checker__check_expression(self, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type);
-    Checker__require_same_type(self, (Checked_Type *)self->builtin_types->bool_type, condition_expression->type, condition_expression->location);
+Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statement *parsed_statement) {
+    Decomposed_Expression condition = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type));
     Checked_Statement *true_statement;
     if (parsed_statement->variant_alias) {
-        if (condition_expression->kind != CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT) {
-            pWriter__begin_location_message(stderr_writer, condition_expression->location, WRITER_STYLE__ERROR);
+        if (condition.expression->kind != CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT) {
+            pWriter__begin_location_message(stderr_writer, condition.expression->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
-        Checked_Is_Union_Variant_Expression *is_union_variant_expression = (Checked_Is_Union_Variant_Expression *)condition_expression;
+        Checked_Is_Union_Variant_Expression *is_union_variant_expression = (Checked_Is_Union_Variant_Expression *)condition.expression;
         if (is_union_variant_expression->is_not) {
             pWriter__begin_location_message(stderr_writer, is_union_variant_expression->super.location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
@@ -1884,7 +1891,14 @@ Checked_If_Statement *Checker__check_if_statement(Checker *self, Parsed_If_State
     if (parsed_statement->false_statement != NULL) {
         false_statement = Checker__check_statement(self, parsed_statement->false_statement);
     }
-    return Checked_If_Statement__create(parsed_statement->super.location, condition_expression, true_statement, false_statement);
+    Checked_If_Statement *if_statement = Checked_If_Statement__create(parsed_statement->super.location, condition.expression, true_statement, false_statement);
+    if (condition.statements != NULL) {
+        // Create block statement
+        Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, condition.statements);
+        Checked_Statements__append(block_statement->statements, (Checked_Statement *)if_statement);
+        return (Checked_Statement *)block_statement;
+    }
+    return (Checked_Statement *)if_statement;
 }
 
 Checked_Loop_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop_Statement *parsed_statement) {
@@ -1910,10 +1924,10 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
 
     Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
     if (decomposed_expression.statements != NULL) {
-        // Create a decomposed statement
-        Checked_Decomposed_Statement *decomposed_statement = Checked_Decomposed_Statement__create(parsed_statement->super.location, decomposed_expression.statements);
-        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)return_statement);
-        return (Checked_Statement *)decomposed_statement;
+        // Create block statement
+        Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, decomposed_expression.statements);
+        Checked_Statements__append(block_statement->statements, (Checked_Statement *)return_statement);
+        return (Checked_Statement *)block_statement;
     }
     return (Checked_Statement *)return_statement;
 }
@@ -2244,7 +2258,7 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
     case PARSED_STATEMENT_KIND__EXPRESSION:
         return (Checked_Statement *)Checker__check_expression_statement(self, (Parsed_Expression_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__IF:
-        return (Checked_Statement *)Checker__check_if_statement(self, (Parsed_If_Statement *)parsed_statement);
+        return Checker__check_if_statement(self, (Parsed_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__LOOP:
         return (Checked_Statement *)Checker__check_loop_statement(self, (Parsed_Loop_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RETURN:

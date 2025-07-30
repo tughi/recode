@@ -86,9 +86,26 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_token(
         return (struct calculator__tokenizer_Token){.variant = 6, .variant_6 = (struct calculator__tokenizer_Stop){.span = (struct calculator__source_Span){.start = self->index, .end = self->index}}};
     }
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
-    if (ch >= '0' && ch <= '9') {
+    {
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+        bool __001__;
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+        bool __002__ = ch >= '0';
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+        if (__002__) {
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+            bool __003__ = ch <= '9';
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+            __001__ = __003__;
+        } else {
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+            __001__ = __002__;
+        }
+#line 33 "tests/99__calculator/calculator/tokenizer.code"
+        if (__001__) {
 #line 34 "tests/99__calculator/calculator/tokenizer.code"
-        return pcalculator__tokenizer_Tokenizer__scan_number_token(self);
+            return pcalculator__tokenizer_Tokenizer__scan_number_token(self);
+        }
     }
 #line 36 "tests/99__calculator/calculator/tokenizer.code"
     self->index = self->index + 1;
@@ -127,9 +144,26 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_number
 #line 59 "tests/99__calculator/calculator/tokenizer.code"
         uint8_t c = self->data[self->index];
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
-        if (c < '0' || c > '9') {
+        {
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+            bool __001__;
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+            bool __002__ = c < '0';
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+            if (__002__) {
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+                __001__ = __002__;
+            } else {
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+                bool __003__ = c > '9';
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+                __001__ = __003__;
+            }
+#line 60 "tests/99__calculator/calculator/tokenizer.code"
+            if (__001__) {
 #line 61 "tests/99__calculator/calculator/tokenizer.code"
-            break;
+                break;
+            }
         }
 #line 63 "tests/99__calculator/calculator/tokenizer.code"
         value = value * 10 + ((int32_t) (c - '0'));
