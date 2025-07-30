@@ -1821,20 +1821,35 @@ Checked_Named_Type *Checker__check_union_type_statement(Checker *self, Token *ty
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
 
-Checked_Assignment_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
-    Checked_Expression *object_expression = Checker__check_expression(self, parsed_statement->object_expression, NULL);
-    if (!Checked_Expression__is_mutable(object_expression)) {
-        pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
+Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
+    Decomposed_Expression object = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->object_expression, NULL));
+    if (!Checked_Expression__is_mutable(object.expression)) {
+        pWriter__begin_location_message(stderr_writer, object.expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Cannot assign to immutable expression");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_Expression *value_expression = Checker__check_expression(self, parsed_statement->value_expression, object_expression->type);
-    if (object_expression->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(object_expression->type, value_expression->type)) {
-        value_expression = (Checked_Expression *)Checker__make_union_expression(self, value_expression->location, (Checked_Union_Type *)object_expression->type, value_expression);
+    Decomposed_Expression value = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->value_expression, object.expression->type));
+    if (object.expression->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(object.expression->type, value.expression->type)) {
+        value.expression = (Checked_Expression *)Checker__make_union_expression(self, value.expression->location, (Checked_Union_Type *)object.expression->type, value.expression);
     }
-    Checker__require_same_type(self, object_expression->type, value_expression->type, value_expression->location);
-    return Checked_Assignment_Statement__create(parsed_statement->super.location, object_expression, value_expression);
+    Checker__require_same_type(self, object.expression->type, value.expression->type, value.expression->location);
+    Checked_Assignment_Statement *assignment_statement = Checked_Assignment_Statement__create(parsed_statement->super.location, object.expression, value.expression);
+    if (object.statements != NULL || value.statements != NULL) {
+        // Create block statement
+        Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, object.statements);
+        if (block_statement->statements == NULL) {
+            block_statement->statements = value.statements;
+        } else if (value.statements != NULL) {
+            // Merge the statements
+            block_statement->statements->last_statement->next_statement = value.statements->first_statement;
+            block_statement->statements->last_statement = value.statements->last_statement;
+            free(value.statements);
+        }
+        Checked_Statements__append(block_statement->statements, (Checked_Statement *)assignment_statement);
+        return (Checked_Statement *)block_statement;
+    }
+    return (Checked_Statement *)assignment_statement;
 }
 
 Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements);
@@ -2273,7 +2288,7 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
     switch (parsed_statement->kind) {
     case PARSED_STATEMENT_KIND__ASSIGNMENT:
-        return (Checked_Statement *)Checker__check_assignment_statement(self, (Parsed_Assignment_Statement *)parsed_statement);
+        return Checker__check_assignment_statement(self, (Parsed_Assignment_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__BLOCK:
         return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__BREAK:
