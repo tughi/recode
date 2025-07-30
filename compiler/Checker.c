@@ -1849,12 +1849,19 @@ Checked_Statement *Checker__check_break_statement(Checker *self, Parsed_Break_St
     return (Checked_Statement *)Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
-Checked_Expression_Statement *Checker__check_expression_statement(Checker *self, Parsed_Expression_Statement *parsed_statement) {
-    Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, NULL);
-    if (!Checked_Type__equals((Checked_Type *)self->builtin_types->nothing_type, expression->type)) {
+Checked_Statement *Checker__check_expression_statement(Checker *self, Parsed_Expression_Statement *parsed_statement) {
+    Decomposed_Expression expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, NULL));
+    if (!Checked_Type__equals((Checked_Type *)self->builtin_types->nothing_type, expression.expression->type)) {
         /* TODO: Source_Location__warning(expression->location, String__create_from("Unused result value")); */
     }
-    return Checked_Expression_Statement__create(parsed_statement->super.location, expression);
+    Checked_Expression_Statement *expression_statement = Checked_Expression_Statement__create(parsed_statement->super.location, expression.expression);
+    if (expression.statements != NULL) {
+        // Create block statement
+        Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, expression.statements);
+        Checked_Statements__append(block_statement->statements, (Checked_Statement *)expression_statement);
+        return (Checked_Statement *)block_statement;
+    }
+    return (Checked_Statement *)expression_statement;
 }
 
 Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statement *parsed_statement) {
@@ -2272,7 +2279,7 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
     case PARSED_STATEMENT_KIND__BREAK:
         return Checker__check_break_statement(self, (Parsed_Break_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__EXPRESSION:
-        return (Checked_Statement *)Checker__check_expression_statement(self, (Parsed_Expression_Statement *)parsed_statement);
+        return Checker__check_expression_statement(self, (Parsed_Expression_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__IF:
         return Checker__check_if_statement(self, (Parsed_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__LOOP:

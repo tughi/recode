@@ -104,6 +104,7 @@ def assemble(source_files, output_file, sdl=False, **kwargs):
                 '-Wno-incompatible-library-redeclaration',
                 '-Wno-pointer-sign',
                 '-Wno-return-type',
+                '-Wno-unused-value',
                 ],
                 **kwargs
             )
