@@ -528,6 +528,24 @@ void Generator__generate_break_statement(Generator *self, Checked_Break_Statemen
     pWriter__write__cstring(self->writer, "break;");
 }
 
+void Generator__generate_decomposed_statement(Generator *self, Checked_Decomposed_Statement *decomposed_statement) {
+    Checked_Statement *statement = decomposed_statement->statements->first_statement;
+    if (statement != NULL) {
+        for (;;) {
+            Generator__generate_statement(self, statement);
+
+            statement = statement->next_statement;
+            if (statement == NULL) {
+                break;
+            }
+
+            pWriter__write__cstring(self->writer, "\n");
+            Generator__write_source_location(self, statement->location);
+            Generator__write_identation(self);
+        }
+    }
+}
+
 void Generator__generate_expression_statement(Generator *self, Checked_Expression_Statement *statement) {
     Generator__generate_expression(self, statement->expression);
     pWriter__write__cstring(self->writer, ";");
@@ -653,6 +671,9 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
         break;
     case CHECKED_STATEMENT_KIND__BREAK:
         Generator__generate_break_statement(self, (Checked_Break_Statement *)statement);
+        break;
+    case CHECKED_STATEMENT_KIND__DECOMPOSED:
+        Generator__generate_decomposed_statement(self, (Checked_Decomposed_Statement *)statement);
         break;
     case CHECKED_STATEMENT_KIND__EXPRESSION:
         Generator__generate_expression_statement(self, (Checked_Expression_Statement *)statement);

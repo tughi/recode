@@ -876,6 +876,12 @@ Checked_Break_Statement *Checked_Break_Statement__create(Source_Location locatio
     return (Checked_Break_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__BREAK, sizeof(Checked_Break_Statement), location);
 }
 
+Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements) {
+    Checked_Decomposed_Statement *statement = (Checked_Decomposed_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__DECOMPOSED, sizeof(Checked_Decomposed_Statement), location);
+    statement->statements = statements;
+    return statement;
+}
+
 Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location location, Checked_Expression *expression) {
     Checked_Expression_Statement *statement = (Checked_Expression_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__EXPRESSION, sizeof(Checked_Expression_Statement), location);
     statement->expression = expression;
