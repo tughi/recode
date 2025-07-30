@@ -1335,25 +1335,72 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_binary_expression(C
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_logic_and_expression(Checked_Expression_Decomposer *self, Checked_Logic_And_Expression *expression) {
-    expression->super.left_expression = Checked_Expression_Decomposer__decompose(self, expression->super.left_expression);
-    expression->super.right_expression = Checked_Expression_Decomposer__decompose(self, expression->super.right_expression);
-    // todo("Short-circuit evaluation for right expression");
-    return (Checked_Expression *)expression;
+    // Create a temporary variable to hold the result of the logic-and expression
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.super.location, expression->super.super.type);
+
+    // Decompose and evaluate the left side, storing its value in a temp variable
+    Checked_Expression *left_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
+
+    // Create the block for the 'true' branch (when left_expression is true)
+    Checked_Block_Statement *true_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
+    // Save the current statements context
+    Checked_Statements *self_statements = self->statements;
+    // Switch to the true block's statements for further decomposition
+    self->statements = true_block->statements;
+    // Decompose and evaluate the right side, storing its value in a temp variable
+    Checked_Expression *right_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression));
+    // Assign the right_expression value to the result in the true branch
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, right_expression));
+    // Restore the previous statements context
+    self->statements = self_statements;
+
+    // Create the block for the 'false' branch (when left_expression is false)
+    Checked_Block_Statement *false_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
+    // Assign the left_expression value to the result in the false branch
+    Checked_Statements__append(false_block->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, left_expression));
+
+    // Add the if-statement that chooses between true_block and false_block based on left_expression
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, left_expression, (Checked_Statement *)true_block, (Checked_Statement *)false_block));
+
+    // Free the original logic-and expression, as it is replaced by the result_expression
+    free(expression);
+
+    // Return the result temp variable as the decomposed expression
+    return (Checked_Expression *)result_expression;
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_logic_or_expression(Checked_Expression_Decomposer *self, Checked_Logic_Or_Expression *expression) {
+    // Create a temporary variable to hold the result of the logic-or expression
     Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.super.location, expression->super.super.type);
+
+    // Decompose and evaluate the left side, storing its value in a temp variable
     Checked_Expression *left_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
+
+    // Create the block for the 'true' branch (when left_expression is true)
     Checked_Block_Statement *true_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
+    // Assign the left_expression value to the result in the true branch
     Checked_Statements__append(true_block->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, left_expression));
+
+    // Create the block for the 'false' branch (when left_expression is false)
     Checked_Block_Statement *false_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
+    // Save the current statements context
     Checked_Statements *self_statements = self->statements;
+    // Switch to the false block's statements for further decomposition
     self->statements = false_block->statements;
+    // Decompose and evaluate the right side, storing its value in a temp variable
     Checked_Expression *right_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression));
+    // Assign the right_expression value to the result in the false branch
     Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, right_expression));
+    // Restore the previous statements context
     self->statements = self_statements;
+
+    // Add the if-statement that chooses between true_block and false_block based on left_expression
     Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, left_expression, (Checked_Statement *)true_block, (Checked_Statement *)false_block));
-    free(expression); // replaced by result_expression
+
+    // Free the original logic-or expression, as it is replaced by the result_expression
+    free(expression);
+
+    // Return the result temp variable as the decomposed expression
     return (Checked_Expression *)result_expression;
 }
 
@@ -1846,27 +1893,29 @@ Checked_Loop_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop
 }
 
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
-    Checked_Expression *expression = NULL;
+    Decomposed_Expression decomposed_expression = {0};
     if (parsed_statement->expression != NULL) {
-        expression = Checker__check_expression(self, parsed_statement->expression, self->return_type);
+        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, self->return_type);
         if (self->return_type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(self->return_type, expression->type)) {
             expression = (Checked_Expression *)Checker__make_union_expression(self, expression->location, (Checked_Union_Type *)self->return_type, expression);
         }
         Checker__require_same_type(self, self->return_type, expression->type, expression->location);
-        Decomposed_Expression decomposed_expression = Checker__decompose_expression(self, expression);
-        if (decomposed_expression.statements != NULL) {
-            // Wrap the return expression in a block statement
-            Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, decomposed_expression.statements);
-            Checked_Statements__append(block_statement->statements, (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression));
-            return (Checked_Statement *)block_statement;
-        }
+        decomposed_expression = Checker__decompose_expression(self, expression);
     } else if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Missing return expression");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, expression);
+
+    Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
+    if (decomposed_expression.statements != NULL) {
+        // Create a decomposed statement
+        Checked_Decomposed_Statement *decomposed_statement = Checked_Decomposed_Statement__create(parsed_statement->super.location, decomposed_expression.statements);
+        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)return_statement);
+        return (Checked_Statement *)decomposed_statement;
+    }
+    return (Checked_Statement *)return_statement;
 }
 
 Checked_Union_Switch_Statement *Checker__check_union_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement, Checked_Expression *union_expression, Checked_Union_Type *union_type);
@@ -2038,16 +2087,17 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Parsed_Varia
         Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)external_symbol);
     }
     if (decomposed_expression.statements != NULL) {
-        Checked_Statements *decomposed_statements = Checked_Statements__create();
+        // Create a decomposed statement
+        Checked_Decomposed_Statement *decomposed_statement = Checked_Decomposed_Statement__create(parsed_statement->super.super.location, Checked_Statements__create());
         // Create variable statement without expression
-        Checked_Statements__append(decomposed_statements, (Checked_Statement *)Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, parsed_statement->is_external, NULL));
+        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, parsed_statement->is_external, NULL));
         // Put decomposed expression statements in a block statement
         Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.super.location, decomposed_expression.statements);
-        Checked_Statements__append(decomposed_statements, (Checked_Statement *)block_statement);
+        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)block_statement);
         // Assign the decomposed expression to the variable in the same block
         Checked_Statements__append(block_statement->statements, (Checked_Statement *)Checked_Assignment_Statement__create(parsed_statement->super.super.location, (Checked_Expression *)Checked_Symbol_Expression__create(variable->super.location, variable->super.type, (Checked_Symbol *)variable), decomposed_expression.expression));
         // Create a checked decomposed statement
-        return (Checked_Statement *)Checked_Decomposed_Statement__create(parsed_statement->super.super.location, decomposed_statements);
+        return (Checked_Statement *)decomposed_statement;
     }
     return (Checked_Statement *)Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, parsed_statement->is_external, decomposed_expression.expression);
 }
