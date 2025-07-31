@@ -29,9 +29,11 @@ struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String
 #line 12 "tests/99__calculator/io.code"
             struct io_Writer *__001__ = self;
 #line 12 "tests/99__calculator/io.code"
-            uint8_t __002__ = string_data[index];
+            uintmax_t __002__ = index;
 #line 12 "tests/99__calculator/io.code"
-            pio_Writer__write(__001__, __002__);
+            uint8_t __003__ = string_data[__002__];
+#line 12 "tests/99__calculator/io.code"
+            pio_Writer__write(__001__, __003__);
         }
 #line 13 "tests/99__calculator/io.code"
         index = index + 1;

@@ -1435,6 +1435,15 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_member_access_expre
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_array_access_expression(Checked_Expression_Decomposer *self, Checked_Array_Access_Expression *expression) {
+    expression->array_expression = Checked_Expression_Decomposer__decompose(self, expression->array_expression);
+    expression->index_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->index_expression));
+    if (expression->array_expression->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
+        expression->array_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, expression->array_expression);
+    }
+    return (Checked_Expression *)expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
@@ -1463,8 +1472,9 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_call_expression(self, (Checked_Call_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Checked_Expression_Decomposer__decompose_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
-    case CHECKED_EXPRESSION_KIND__ALLOC:
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+        return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__ALLOC:
     case CHECKED_EXPRESSION_KIND__BOOL:
     case CHECKED_EXPRESSION_KIND__CAST:
     case CHECKED_EXPRESSION_KIND__CHARACTER:

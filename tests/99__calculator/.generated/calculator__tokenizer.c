@@ -86,12 +86,26 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__next_token(
 #line 25 "tests/99__calculator/calculator/tokenizer.code"
 struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_token(struct calculator__tokenizer_Tokenizer *self) {
 #line 26 "tests/99__calculator/calculator/tokenizer.code"
-    while (self->data[self->index] == ' ') {
+    for (;;) {
+#line 26 "tests/99__calculator/calculator/tokenizer.code"
+        {
+#line 26 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index;
+#line 26 "tests/99__calculator/calculator/tokenizer.code"
+            if (self->data[__001__] == ' ') {} else break;
+        }
 #line 27 "tests/99__calculator/calculator/tokenizer.code"
         self->index = self->index + 1;
     }
 #line 29 "tests/99__calculator/calculator/tokenizer.code"
-    uint8_t ch = self->data[self->index];
+    uint8_t ch;
+#line 29 "tests/99__calculator/calculator/tokenizer.code"
+    {
+#line 29 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __001__ = self->index;
+#line 29 "tests/99__calculator/calculator/tokenizer.code"
+        ch = self->data[__001__];
+    }
 #line 30 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == 0) {
 #line 31 "tests/99__calculator/calculator/tokenizer.code"
@@ -159,7 +173,14 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_number
 #line 58 "tests/99__calculator/calculator/tokenizer.code"
     for (;;) {
 #line 59 "tests/99__calculator/calculator/tokenizer.code"
-        uint8_t c = self->data[self->index];
+        uint8_t c;
+#line 59 "tests/99__calculator/calculator/tokenizer.code"
+        {
+#line 59 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index;
+#line 59 "tests/99__calculator/calculator/tokenizer.code"
+            c = self->data[__001__];
+        }
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
         {
 #line 60 "tests/99__calculator/calculator/tokenizer.code"

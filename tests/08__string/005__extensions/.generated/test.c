@@ -20,7 +20,14 @@ struct String str__concat(struct String self, struct String other) {
 #line 15 "tests/08__string/005__extensions/test.code"
         while (index < self.length) {
 #line 16 "tests/08__string/005__extensions/test.code"
-            result.data[index] = self_data[index];
+            {
+#line 16 "tests/08__string/005__extensions/test.code"
+                uintmax_t __001__ = index;
+#line 16 "tests/08__string/005__extensions/test.code"
+                uintmax_t __002__ = index;
+#line 16 "tests/08__string/005__extensions/test.code"
+                result.data[__001__] = self_data[__002__];
+            }
 #line 17 "tests/08__string/005__extensions/test.code"
             index = index + 1;
         }
@@ -36,7 +43,14 @@ struct String str__concat(struct String self, struct String other) {
 #line 24 "tests/08__string/005__extensions/test.code"
         while (index < other.length) {
 #line 25 "tests/08__string/005__extensions/test.code"
-            result.data[self.length + index] = other_data[index];
+            {
+#line 25 "tests/08__string/005__extensions/test.code"
+                uintmax_t __001__ = self.length + index;
+#line 25 "tests/08__string/005__extensions/test.code"
+                uintmax_t __002__ = index;
+#line 25 "tests/08__string/005__extensions/test.code"
+                result.data[__001__] = other_data[__002__];
+            }
 #line 26 "tests/08__string/005__extensions/test.code"
             index = index + 1;
         }
@@ -70,9 +84,16 @@ bool str__equals(struct String self, struct String other) {
 #line 44 "tests/08__string/005__extensions/test.code"
     while (index < self.length) {
 #line 45 "tests/08__string/005__extensions/test.code"
-        if (self_data[index] != other_data[index]) {
+        {
+#line 45 "tests/08__string/005__extensions/test.code"
+            uintmax_t __001__ = index;
+#line 45 "tests/08__string/005__extensions/test.code"
+            uintmax_t __002__ = index;
+#line 45 "tests/08__string/005__extensions/test.code"
+            if (self_data[__001__] != other_data[__002__]) {
 #line 46 "tests/08__string/005__extensions/test.code"
-            return false;
+                return false;
+            }
         }
 #line 48 "tests/08__string/005__extensions/test.code"
         index = index + 1;

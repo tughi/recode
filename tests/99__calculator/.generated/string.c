@@ -24,7 +24,12 @@ struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8
         self->data = ((uint8_t *) realloc(((void *) self->data), ((uint64_t) self->data_size)));
     }
 #line 17 "tests/99__calculator/string.code"
-    self->data[self->length] = c;
+    {
+#line 17 "tests/99__calculator/string.code"
+        uintmax_t __001__ = self->length;
+#line 17 "tests/99__calculator/string.code"
+        self->data[__001__] = c;
+    }
 #line 18 "tests/99__calculator/string.code"
     self->length = self->length + 1;
 #line 19 "tests/99__calculator/string.code"
