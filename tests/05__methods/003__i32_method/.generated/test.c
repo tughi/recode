@@ -17,7 +17,14 @@ int32_t test__main() {
 #line 14 "tests/05__methods/003__i32_method/test.code"
     struct test_Number number = (struct test_Number){.value = 42};
 #line 15 "tests/05__methods/003__i32_method/test.code"
-    return ptest_Number__get_value(&number) - i32__get_value(42);
+    {
+#line 15 "tests/05__methods/003__i32_method/test.code"
+        struct test_Number *__001__ = &number;
+#line 15 "tests/05__methods/003__i32_method/test.code"
+        int32_t __002__ = 42;
+#line 15 "tests/05__methods/003__i32_method/test.code"
+        return ptest_Number__get_value(__001__) - i32__get_value(__002__);
+    }
 }
 
 int32_t main(int argc, const char **argv) {

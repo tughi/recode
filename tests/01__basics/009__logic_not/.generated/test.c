@@ -3,25 +3,45 @@
 #line 1 "tests/01__basics/009__logic_not/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/009__logic_not/test.code"
-    if (test__test_not(true)) {
+    {
+#line 2 "tests/01__basics/009__logic_not/test.code"
+        bool __001__ = true;
+#line 2 "tests/01__basics/009__logic_not/test.code"
+        if (test__test_not(__001__)) {
 #line 3 "tests/01__basics/009__logic_not/test.code"
-        return 1;
+            return 1;
+        }
     }
 #line 5 "tests/01__basics/009__logic_not/test.code"
-    if (test__test_not(false)) {
-    } else {
+    {
+#line 5 "tests/01__basics/009__logic_not/test.code"
+        bool __001__ = false;
+#line 5 "tests/01__basics/009__logic_not/test.code"
+        if (test__test_not(__001__)) {
+        } else {
 #line 8 "tests/01__basics/009__logic_not/test.code"
-        return 2;
+            return 2;
+        }
     }
 #line 10 "tests/01__basics/009__logic_not/test.code"
-    if (!test__test_not(false)) {
+    {
+#line 10 "tests/01__basics/009__logic_not/test.code"
+        bool __001__ = false;
+#line 10 "tests/01__basics/009__logic_not/test.code"
+        if (!test__test_not(__001__)) {
 #line 11 "tests/01__basics/009__logic_not/test.code"
-        return 3;
+            return 3;
+        }
     }
 #line 13 "tests/01__basics/009__logic_not/test.code"
-    if (!!test__test_not(true)) {
+    {
+#line 13 "tests/01__basics/009__logic_not/test.code"
+        bool __001__ = true;
+#line 13 "tests/01__basics/009__logic_not/test.code"
+        if (!!test__test_not(__001__)) {
 #line 14 "tests/01__basics/009__logic_not/test.code"
-        return 4;
+            return 4;
+        }
     }
 #line 16 "tests/01__basics/009__logic_not/test.code"
     return 0;

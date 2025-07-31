@@ -300,7 +300,7 @@ void Generator__generate_multiply_expression(Generator *self, Checked_Multiply_E
 }
 
 void Generator__generate_not_expression(Generator *self, Checked_Not_Expression *expression) {
-    pWriter__write__cstring(self->writer, "!");
+    pWriter__write__char(self->writer, '!');
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
@@ -555,7 +555,11 @@ void Generator__generate_if_statement(Generator *self, Checked_If_Statement *sta
     pWriter__write__cstring(self->writer, "if (");
     Generator__generate_expression(self, statement->condition_expression);
     pWriter__write__cstring(self->writer, ") ");
-    Generator__generate_statement(self, statement->true_statement);
+    if (statement->true_statement != NULL) {
+        Generator__generate_statement(self, statement->true_statement);
+    } else {
+        pWriter__write__cstring(self->writer, "{}");
+    }
     if (statement->false_statement != NULL) {
         pWriter__write__cstring(self->writer, " else ");
         Generator__generate_statement(self, statement->false_statement);

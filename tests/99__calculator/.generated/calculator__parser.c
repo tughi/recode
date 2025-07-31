@@ -17,13 +17,25 @@ struct calculator__parser_Parser *__alloc__calculator__parser_Parser__(struct ca
 #line 9 "tests/99__calculator/calculator/parser.code"
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_expression(struct calculator__parser_Parser *self) {
 #line 10 "tests/99__calculator/calculator/parser.code"
-    return pcalculator__parser_Parser__parse_additive_expression(self);
+    {
+#line 10 "tests/99__calculator/calculator/parser.code"
+        struct calculator__parser_Parser *__001__ = self;
+#line 10 "tests/99__calculator/calculator/parser.code"
+        return pcalculator__parser_Parser__parse_additive_expression(__001__);
+    }
 }
 
 #line 13 "tests/99__calculator/calculator/parser.code"
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_additive_expression(struct calculator__parser_Parser *self) {
 #line 14 "tests/99__calculator/calculator/parser.code"
-    struct calculator__expression_Expression parsed_expression = pcalculator__parser_Parser__parse_multiplicative_expression(self);
+    struct calculator__expression_Expression parsed_expression;
+#line 14 "tests/99__calculator/calculator/parser.code"
+    {
+#line 14 "tests/99__calculator/calculator/parser.code"
+        struct calculator__parser_Parser *__001__ = self;
+#line 14 "tests/99__calculator/calculator/parser.code"
+        parsed_expression = pcalculator__parser_Parser__parse_multiplicative_expression(__001__);
+    }
 #line 15 "tests/99__calculator/calculator/parser.code"
     for (;;) {
 #line 16 "tests/99__calculator/calculator/parser.code"
@@ -31,18 +43,42 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_addit
 #line 17 "tests/99__calculator/calculator/parser.code"
         if (__switch_16_value__.variant == 2) {
 #line 18 "tests/99__calculator/calculator/parser.code"
-            pcalculator__tokenizer_Tokenizer__next_token(&self->tokenizer);
+            {
+#line 18 "tests/99__calculator/calculator/parser.code"
+                struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 18 "tests/99__calculator/calculator/parser.code"
+                pcalculator__tokenizer_Tokenizer__next_token(__001__);
+            }
 #line 19 "tests/99__calculator/calculator/parser.code"
-            struct calculator__expression_Expression other_expression = pcalculator__parser_Parser__parse_multiplicative_expression(self);
+            struct calculator__expression_Expression other_expression;
+#line 19 "tests/99__calculator/calculator/parser.code"
+            {
+#line 19 "tests/99__calculator/calculator/parser.code"
+                struct calculator__parser_Parser *__001__ = self;
+#line 19 "tests/99__calculator/calculator/parser.code"
+                other_expression = pcalculator__parser_Parser__parse_multiplicative_expression(__001__);
+            }
 #line 20 "tests/99__calculator/calculator/parser.code"
             parsed_expression = (struct calculator__expression_Expression){.variant = 2, .variant_2 = (struct calculator__expression_Addition){.span = (struct calculator__source_Span){.start = pcalculator__expression_Expression__span(&parsed_expression).start, .end = pcalculator__expression_Expression__span(&other_expression).end}, .left = __alloc__calculator__expression_Expression__(parsed_expression), .right = __alloc__calculator__expression_Expression__(other_expression)}};
         }
 #line 26 "tests/99__calculator/calculator/parser.code"
         else if (__switch_16_value__.variant == 3) {
 #line 27 "tests/99__calculator/calculator/parser.code"
-            pcalculator__tokenizer_Tokenizer__next_token(&self->tokenizer);
+            {
+#line 27 "tests/99__calculator/calculator/parser.code"
+                struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 27 "tests/99__calculator/calculator/parser.code"
+                pcalculator__tokenizer_Tokenizer__next_token(__001__);
+            }
 #line 28 "tests/99__calculator/calculator/parser.code"
-            struct calculator__expression_Expression other_expression = pcalculator__parser_Parser__parse_multiplicative_expression(self);
+            struct calculator__expression_Expression other_expression;
+#line 28 "tests/99__calculator/calculator/parser.code"
+            {
+#line 28 "tests/99__calculator/calculator/parser.code"
+                struct calculator__parser_Parser *__001__ = self;
+#line 28 "tests/99__calculator/calculator/parser.code"
+                other_expression = pcalculator__parser_Parser__parse_multiplicative_expression(__001__);
+            }
 #line 29 "tests/99__calculator/calculator/parser.code"
             parsed_expression = (struct calculator__expression_Expression){.variant = 5, .variant_5 = (struct calculator__expression_Subtraction){.span = (struct calculator__source_Span){.start = pcalculator__expression_Expression__span(&parsed_expression).start, .end = pcalculator__expression_Expression__span(&other_expression).end}, .left = __alloc__calculator__expression_Expression__(parsed_expression), .right = __alloc__calculator__expression_Expression__(other_expression)}};
         }
@@ -59,24 +95,62 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_addit
 #line 43 "tests/99__calculator/calculator/parser.code"
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_multiplicative_expression(struct calculator__parser_Parser *self) {
 #line 44 "tests/99__calculator/calculator/parser.code"
-    struct calculator__expression_Expression parsed_expression = pcalculator__parser_Parser__parse_primary_expression(self);
+    struct calculator__expression_Expression parsed_expression;
+#line 44 "tests/99__calculator/calculator/parser.code"
+    {
+#line 44 "tests/99__calculator/calculator/parser.code"
+        struct calculator__parser_Parser *__001__ = self;
+#line 44 "tests/99__calculator/calculator/parser.code"
+        parsed_expression = pcalculator__parser_Parser__parse_primary_expression(__001__);
+    }
 #line 45 "tests/99__calculator/calculator/parser.code"
     for (;;) {
 #line 46 "tests/99__calculator/calculator/parser.code"
-        struct calculator__tokenizer_Token token = pcalculator__tokenizer_Tokenizer__peek_token(&self->tokenizer);
+        struct calculator__tokenizer_Token token;
+#line 46 "tests/99__calculator/calculator/parser.code"
+        {
+#line 46 "tests/99__calculator/calculator/parser.code"
+            struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 46 "tests/99__calculator/calculator/parser.code"
+            token = pcalculator__tokenizer_Tokenizer__peek_token(__001__);
+        }
 #line 47 "tests/99__calculator/calculator/parser.code"
         if (token.variant == 4) {
 #line 48 "tests/99__calculator/calculator/parser.code"
-            pcalculator__tokenizer_Tokenizer__next_token(&self->tokenizer);
+            {
+#line 48 "tests/99__calculator/calculator/parser.code"
+                struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 48 "tests/99__calculator/calculator/parser.code"
+                pcalculator__tokenizer_Tokenizer__next_token(__001__);
+            }
 #line 49 "tests/99__calculator/calculator/parser.code"
-            struct calculator__expression_Expression other_expression = pcalculator__parser_Parser__parse_primary_expression(self);
+            struct calculator__expression_Expression other_expression;
+#line 49 "tests/99__calculator/calculator/parser.code"
+            {
+#line 49 "tests/99__calculator/calculator/parser.code"
+                struct calculator__parser_Parser *__001__ = self;
+#line 49 "tests/99__calculator/calculator/parser.code"
+                other_expression = pcalculator__parser_Parser__parse_primary_expression(__001__);
+            }
 #line 50 "tests/99__calculator/calculator/parser.code"
             parsed_expression = (struct calculator__expression_Expression){.variant = 4, .variant_4 = (struct calculator__expression_Multiplication){.span = (struct calculator__source_Span){.start = pcalculator__expression_Expression__span(&parsed_expression).start, .end = pcalculator__expression_Expression__span(&other_expression).end}, .left = __alloc__calculator__expression_Expression__(parsed_expression), .right = __alloc__calculator__expression_Expression__(other_expression)}};
         } else if (token.variant == 5) {
 #line 56 "tests/99__calculator/calculator/parser.code"
-            pcalculator__tokenizer_Tokenizer__next_token(&self->tokenizer);
+            {
+#line 56 "tests/99__calculator/calculator/parser.code"
+                struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 56 "tests/99__calculator/calculator/parser.code"
+                pcalculator__tokenizer_Tokenizer__next_token(__001__);
+            }
 #line 57 "tests/99__calculator/calculator/parser.code"
-            struct calculator__expression_Expression other_expression = pcalculator__parser_Parser__parse_primary_expression(self);
+            struct calculator__expression_Expression other_expression;
+#line 57 "tests/99__calculator/calculator/parser.code"
+            {
+#line 57 "tests/99__calculator/calculator/parser.code"
+                struct calculator__parser_Parser *__001__ = self;
+#line 57 "tests/99__calculator/calculator/parser.code"
+                other_expression = pcalculator__parser_Parser__parse_primary_expression(__001__);
+            }
 #line 58 "tests/99__calculator/calculator/parser.code"
             parsed_expression = (struct calculator__expression_Expression){.variant = 3, .variant_3 = (struct calculator__expression_Division){.span = (struct calculator__source_Span){.start = pcalculator__expression_Expression__span(&parsed_expression).start, .end = pcalculator__expression_Expression__span(&other_expression).end}, .left = __alloc__calculator__expression_Expression__(parsed_expression), .right = __alloc__calculator__expression_Expression__(other_expression)}};
         } else {
@@ -91,7 +165,14 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_multi
 #line 70 "tests/99__calculator/calculator/parser.code"
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_primary_expression(struct calculator__parser_Parser *self) {
 #line 71 "tests/99__calculator/calculator/parser.code"
-    struct calculator__tokenizer_Token token = pcalculator__tokenizer_Tokenizer__next_token(&self->tokenizer);
+    struct calculator__tokenizer_Token token;
+#line 71 "tests/99__calculator/calculator/parser.code"
+    {
+#line 71 "tests/99__calculator/calculator/parser.code"
+        struct calculator__tokenizer_Tokenizer *__001__ = &self->tokenizer;
+#line 71 "tests/99__calculator/calculator/parser.code"
+        token = pcalculator__tokenizer_Tokenizer__next_token(__001__);
+    }
 #line 72 "tests/99__calculator/calculator/parser.code"
     if (token.variant == 1) {
 #line 73 "tests/99__calculator/calculator/parser.code"

@@ -34,7 +34,14 @@ struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8
 #line 22 "tests/99__calculator/string.code"
 struct String pstring_Builder__build(struct string_Builder *self) {
 #line 23 "tests/99__calculator/string.code"
-    pstring_Builder__write(self, 0);
+    {
+#line 23 "tests/99__calculator/string.code"
+        struct string_Builder *__001__ = self;
+#line 23 "tests/99__calculator/string.code"
+        uint8_t __002__ = 0;
+#line 23 "tests/99__calculator/string.code"
+        pstring_Builder__write(__001__, __002__);
+    }
 #line 24 "tests/99__calculator/string.code"
     struct String string = (struct String){.data = self->data, .length = self->length - 1};
 #line 28 "tests/99__calculator/string.code"
@@ -44,7 +51,12 @@ struct String pstring_Builder__build(struct string_Builder *self) {
 #line 31 "tests/99__calculator/string.code"
 struct string_Builder string__make_string_builder() {
 #line 32 "tests/99__calculator/string.code"
-    return string__make_string_builder_with_data_size(4);
+    {
+#line 32 "tests/99__calculator/string.code"
+        uintmax_t __001__ = 4;
+#line 32 "tests/99__calculator/string.code"
+        return string__make_string_builder_with_data_size(__001__);
+    }
 }
 
 #line 35 "tests/99__calculator/string.code"
@@ -56,6 +68,13 @@ struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_
 #line 43 "tests/99__calculator/string.code"
 void pstring_Builder__write_char(struct string_Builder *self, uint8_t c) {
 #line 44 "tests/99__calculator/string.code"
-    pstring_Builder__write(self, c);
+    {
+#line 44 "tests/99__calculator/string.code"
+        struct string_Builder *__001__ = self;
+#line 44 "tests/99__calculator/string.code"
+        uint8_t __002__ = c;
+#line 44 "tests/99__calculator/string.code"
+        pstring_Builder__write(__001__, __002__);
+    }
 }
 

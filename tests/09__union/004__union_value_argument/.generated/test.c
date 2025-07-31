@@ -11,7 +11,14 @@ int32_t test__main() {
 #line 10 "tests/09__union/004__union_value_argument/test.code"
     other_value = value;
 #line 11 "tests/09__union/004__union_value_argument/test.code"
-    struct test_Value another_value = test__demo((struct test_Value){.variant = 1, .variant_1 = true});
+    struct test_Value another_value;
+#line 11 "tests/09__union/004__union_value_argument/test.code"
+    {
+#line 11 "tests/09__union/004__union_value_argument/test.code"
+        struct test_Value __001__ = (struct test_Value){.variant = 1, .variant_1 = true};
+#line 11 "tests/09__union/004__union_value_argument/test.code"
+        another_value = test__demo(__001__);
+    }
 #line 12 "tests/09__union/004__union_value_argument/test.code"
     return 0;
 }

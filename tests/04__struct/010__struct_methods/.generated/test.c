@@ -17,9 +17,21 @@ int32_t test__main() {
 #line 14 "tests/04__struct/010__struct_methods/test.code"
     struct test_Number number = (struct test_Number){.value = 0};
 #line 16 "tests/04__struct/010__struct_methods/test.code"
-    ptest_Number__set_value(&number, 42);
+    {
+#line 16 "tests/04__struct/010__struct_methods/test.code"
+        struct test_Number *__001__ = &number;
+#line 16 "tests/04__struct/010__struct_methods/test.code"
+        int32_t __002__ = 42;
+#line 16 "tests/04__struct/010__struct_methods/test.code"
+        ptest_Number__set_value(__001__, __002__);
+    }
 #line 18 "tests/04__struct/010__struct_methods/test.code"
-    return ptest_Number__get_value(&number) - 42;
+    {
+#line 18 "tests/04__struct/010__struct_methods/test.code"
+        struct test_Number *__001__ = &number;
+#line 18 "tests/04__struct/010__struct_methods/test.code"
+        return ptest_Number__get_value(__001__) - 42;
+    }
 }
 
 int32_t main(int argc, const char **argv) {

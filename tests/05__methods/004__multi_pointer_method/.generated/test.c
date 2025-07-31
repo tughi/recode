@@ -21,9 +21,14 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         return 1;
     }
 #line 13 "tests/05__methods/004__multi_pointer_method/test.code"
-    if (d_u8_b__length(argv[1]) != 4) {
+    {
+#line 13 "tests/05__methods/004__multi_pointer_method/test.code"
+        uint8_t *__001__ = argv[1];
+#line 13 "tests/05__methods/004__multi_pointer_method/test.code"
+        if (d_u8_b__length(__001__) != 4) {
 #line 14 "tests/05__methods/004__multi_pointer_method/test.code"
-        return 2;
+            return 2;
+        }
     }
 #line 16 "tests/05__methods/004__multi_pointer_method/test.code"
     return 0;

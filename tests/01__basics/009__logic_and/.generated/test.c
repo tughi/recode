@@ -3,9 +3,23 @@
 #line 1 "tests/01__basics/009__logic_and/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/009__logic_and/test.code"
-    bool t = test__echo(true);
+    bool t;
+#line 2 "tests/01__basics/009__logic_and/test.code"
+    {
+#line 2 "tests/01__basics/009__logic_and/test.code"
+        bool __001__ = true;
+#line 2 "tests/01__basics/009__logic_and/test.code"
+        t = test__echo(__001__);
+    }
 #line 3 "tests/01__basics/009__logic_and/test.code"
-    bool f = test__echo(false);
+    bool f;
+#line 3 "tests/01__basics/009__logic_and/test.code"
+    {
+#line 3 "tests/01__basics/009__logic_and/test.code"
+        bool __001__ = false;
+#line 3 "tests/01__basics/009__logic_and/test.code"
+        f = test__echo(__001__);
+    }
 #line 4 "tests/01__basics/009__logic_and/test.code"
     {
 #line 4 "tests/01__basics/009__logic_and/test.code"

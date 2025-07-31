@@ -84,16 +84,39 @@ bool str__equals(struct String self, struct String other) {
 #line 53 "tests/08__string/005__extensions/test.code"
 int32_t test__main() {
 #line 54 "tests/08__string/005__extensions/test.code"
-    struct String message = str__concat((struct String){.data = "Hello", .length = 5}, (struct String){.data = " world!", .length = 7});
+    struct String message;
+#line 54 "tests/08__string/005__extensions/test.code"
+    {
+#line 54 "tests/08__string/005__extensions/test.code"
+        struct String __001__ = (struct String){.data = "Hello", .length = 5};
+#line 54 "tests/08__string/005__extensions/test.code"
+        struct String __002__ = (struct String){.data = " world!", .length = 7};
+#line 54 "tests/08__string/005__extensions/test.code"
+        message = str__concat(__001__, __002__);
+    }
 #line 55 "tests/08__string/005__extensions/test.code"
-    if (!str__equals(message, (struct String){.data = "Hello world!", .length = 12})) {
+    {
+#line 55 "tests/08__string/005__extensions/test.code"
+        struct String __001__ = message;
+#line 55 "tests/08__string/005__extensions/test.code"
+        struct String __002__ = (struct String){.data = "Hello world!", .length = 12};
+#line 55 "tests/08__string/005__extensions/test.code"
+        if (!str__equals(__001__, __002__)) {
 #line 56 "tests/08__string/005__extensions/test.code"
-        return 1;
+            return 1;
+        }
     }
 #line 58 "tests/08__string/005__extensions/test.code"
-    if (!str__equals((struct String){.data = "Hello", .length = 5}, (struct String){.data = "Hello", .length = 5})) {
+    {
+#line 58 "tests/08__string/005__extensions/test.code"
+        struct String __001__ = (struct String){.data = "Hello", .length = 5};
+#line 58 "tests/08__string/005__extensions/test.code"
+        struct String __002__ = (struct String){.data = "Hello", .length = 5};
+#line 58 "tests/08__string/005__extensions/test.code"
+        if (!str__equals(__001__, __002__)) {
 #line 59 "tests/08__string/005__extensions/test.code"
-        return 2;
+            return 2;
+        }
     }
 #line 61 "tests/08__string/005__extensions/test.code"
     if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0) {

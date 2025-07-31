@@ -6,9 +6,23 @@ int32_t test__main() {
 #line 15 "tests/11__generics/005__method/test.code"
     struct collections_List__i32 list = (struct collections_List__i32){.first_item = NULL, .last_item = NULL, .length = 0};
 #line 16 "tests/11__generics/005__method/test.code"
-    pcollections_List__i32__append(&list, 42);
+    {
+#line 16 "tests/11__generics/005__method/test.code"
+        struct collections_List__i32 *__001__ = &list;
+#line 16 "tests/11__generics/005__method/test.code"
+        int32_t __002__ = 42;
+#line 16 "tests/11__generics/005__method/test.code"
+        pcollections_List__i32__append(__001__, __002__);
+    }
 #line 17 "tests/11__generics/005__method/test.code"
-    pcollections_List__i32__prepend(&list, 24);
+    {
+#line 17 "tests/11__generics/005__method/test.code"
+        struct collections_List__i32 *__001__ = &list;
+#line 17 "tests/11__generics/005__method/test.code"
+        int32_t __002__ = 24;
+#line 17 "tests/11__generics/005__method/test.code"
+        pcollections_List__i32__prepend(__001__, __002__);
+    }
 #line 18 "tests/11__generics/005__method/test.code"
     return list.last_item->data - list.first_item->data - 18;
 }
