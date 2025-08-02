@@ -8,6 +8,8 @@
 #include "os.h"
 #include "string.h"
 
+void *malloc(uintmax_t size);
+
 #line 10 "tests/99__calculator/test.code"
 int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 11 "tests/99__calculator/test.code"

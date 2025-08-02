@@ -14,12 +14,8 @@ struct test_Line {
     struct test_Point p2;
 };
 
-struct test_Point *__alloc__test_Point__(struct test_Point value);
-
-struct test_Line *__alloc__test_Line__(struct test_Line value);
-
 int32_t test__main();
 
-void *malloc(uint64_t size);
+void *malloc(uintmax_t size);
 
 #endif // __test_H__

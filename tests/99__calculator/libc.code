@@ -6,7 +6,7 @@ let stderr: ^FILE = external "__stderrp"
 
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external
 
-proc malloc(anon size: u64) -> ^Any = external
-proc realloc(anon block: ^Any, anon size: u64) -> ^Any = external
+proc malloc(anon size: usize) -> ^Any = external
+proc realloc(anon block: ^Any, anon size: usize) -> ^Any = external
 
 proc exit(anon code: i32) = external

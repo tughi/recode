@@ -1,6 +1,8 @@
 #include "test.h"
 #include "source.h"
 
+void *malloc(uintmax_t size);
+
 #line 7 "tests/10__import/004__struct_member/test.code"
 int32_t test__main() {
 #line 8 "tests/10__import/004__struct_member/test.code"

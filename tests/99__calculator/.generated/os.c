@@ -10,12 +10,28 @@
 
 struct io_Writer *os__stdout;
 struct io_Writer *os__stderr;
+void *malloc(uintmax_t size);
+
 #line 7 "tests/99__calculator/os.code"
 void os__init() {
 #line 8 "tests/99__calculator/os.code"
-    os__stdout = __alloc__io_Writer__((struct io_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)});
+    {
+#line 8 "tests/99__calculator/os.code"
+        struct io_Writer *__001__ = (struct io_Writer *)malloc(sizeof(struct io_Writer));
+#line 8 "tests/99__calculator/os.code"
+        *__001__ = (struct io_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)};
+#line 8 "tests/99__calculator/os.code"
+        os__stdout = __001__;
+    }
 #line 9 "tests/99__calculator/os.code"
-    os__stderr = __alloc__io_Writer__((struct io_Writer){.self = __stderrp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)});
+    {
+#line 9 "tests/99__calculator/os.code"
+        struct io_Writer *__001__ = (struct io_Writer *)malloc(sizeof(struct io_Writer));
+#line 9 "tests/99__calculator/os.code"
+        *__001__ = (struct io_Writer){.self = __stderrp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)};
+#line 9 "tests/99__calculator/os.code"
+        os__stderr = __001__;
+    }
 }
 
 #line 12 "tests/99__calculator/os.code"

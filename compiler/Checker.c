@@ -1410,6 +1410,14 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_make_struct_express
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_alloc_expression(Checked_Expression_Decomposer *self, Checked_Alloc_Expression *expression) {
+    Checked_Expression *value_expression = expression->value_expression;
+    expression->value_expression = NULL;
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, (Checked_Expression *)expression);
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(value_expression->location, (Checked_Expression *)Checked_Dereference_Expression__create(expression->super.location, value_expression->type, result_expression), value_expression));
+    return result_expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
@@ -1417,7 +1425,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__ADDRESS_OF:
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__ALLOC:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_alloc_expression(self, (Checked_Alloc_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__BOOL:

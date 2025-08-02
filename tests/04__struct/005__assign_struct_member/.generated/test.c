@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 11 "tests/04__struct/005__assign_struct_member/test.code"
 int32_t test__main() {
 #line 12 "tests/04__struct/005__assign_struct_member/test.code"

@@ -8,11 +8,7 @@
 #include "os.h"
 #include "string.h"
 
-struct calculator__parser_Parser *__alloc__calculator__parser_Parser__(struct calculator__parser_Parser value) {
-    struct calculator__parser_Parser *result = (struct calculator__parser_Parser *)malloc(sizeof(struct calculator__parser_Parser));
-    *result = value;
-    return result;
-}
+void *malloc(uintmax_t size);
 
 #line 9 "tests/99__calculator/calculator/parser.code"
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_expression(struct calculator__parser_Parser *self) {
@@ -75,11 +71,19 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_addit
 #line 21 "tests/99__calculator/calculator/parser.code"
                 struct calculator__source_Span __007__ = (struct calculator__source_Span){.start = __003__, .end = __006__};
 #line 22 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__008__ = __alloc__calculator__expression_Expression__(parsed_expression);
+                struct calculator__expression_Expression *__008__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 22 "tests/99__calculator/calculator/parser.code"
+                *__008__ = parsed_expression;
+#line 22 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__009__ = __008__;
 #line 23 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__009__ = __alloc__calculator__expression_Expression__(other_expression);
+                struct calculator__expression_Expression *__010__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 23 "tests/99__calculator/calculator/parser.code"
+                *__010__ = other_expression;
+#line 23 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__011__ = __010__;
 #line 20 "tests/99__calculator/calculator/parser.code"
-                parsed_expression = (struct calculator__expression_Expression){.variant = 2, .variant_2 = (struct calculator__expression_Addition){.span = __007__, .left = __008__, .right = __009__}};
+                parsed_expression = (struct calculator__expression_Expression){.variant = 2, .variant_2 = (struct calculator__expression_Addition){.span = __007__, .left = __009__, .right = __011__}};
             }
         }
 #line 26 "tests/99__calculator/calculator/parser.code"
@@ -117,11 +121,19 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_addit
 #line 30 "tests/99__calculator/calculator/parser.code"
                 struct calculator__source_Span __007__ = (struct calculator__source_Span){.start = __003__, .end = __006__};
 #line 31 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__008__ = __alloc__calculator__expression_Expression__(parsed_expression);
+                struct calculator__expression_Expression *__008__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 31 "tests/99__calculator/calculator/parser.code"
+                *__008__ = parsed_expression;
+#line 31 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__009__ = __008__;
 #line 32 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__009__ = __alloc__calculator__expression_Expression__(other_expression);
+                struct calculator__expression_Expression *__010__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 32 "tests/99__calculator/calculator/parser.code"
+                *__010__ = other_expression;
+#line 32 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__011__ = __010__;
 #line 29 "tests/99__calculator/calculator/parser.code"
-                parsed_expression = (struct calculator__expression_Expression){.variant = 5, .variant_5 = (struct calculator__expression_Subtraction){.span = __007__, .left = __008__, .right = __009__}};
+                parsed_expression = (struct calculator__expression_Expression){.variant = 5, .variant_5 = (struct calculator__expression_Subtraction){.span = __007__, .left = __009__, .right = __011__}};
             }
         }
 #line 35 "tests/99__calculator/calculator/parser.code"
@@ -191,11 +203,19 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_multi
 #line 51 "tests/99__calculator/calculator/parser.code"
                 struct calculator__source_Span __007__ = (struct calculator__source_Span){.start = __003__, .end = __006__};
 #line 52 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__008__ = __alloc__calculator__expression_Expression__(parsed_expression);
+                struct calculator__expression_Expression *__008__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 52 "tests/99__calculator/calculator/parser.code"
+                *__008__ = parsed_expression;
+#line 52 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__009__ = __008__;
 #line 53 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__009__ = __alloc__calculator__expression_Expression__(other_expression);
+                struct calculator__expression_Expression *__010__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 53 "tests/99__calculator/calculator/parser.code"
+                *__010__ = other_expression;
+#line 53 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__011__ = __010__;
 #line 50 "tests/99__calculator/calculator/parser.code"
-                parsed_expression = (struct calculator__expression_Expression){.variant = 4, .variant_4 = (struct calculator__expression_Multiplication){.span = __007__, .left = __008__, .right = __009__}};
+                parsed_expression = (struct calculator__expression_Expression){.variant = 4, .variant_4 = (struct calculator__expression_Multiplication){.span = __007__, .left = __009__, .right = __011__}};
             }
         } else if (token.variant == 5) {
 #line 56 "tests/99__calculator/calculator/parser.code"
@@ -231,11 +251,19 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_multi
 #line 59 "tests/99__calculator/calculator/parser.code"
                 struct calculator__source_Span __007__ = (struct calculator__source_Span){.start = __003__, .end = __006__};
 #line 60 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__008__ = __alloc__calculator__expression_Expression__(parsed_expression);
+                struct calculator__expression_Expression *__008__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 60 "tests/99__calculator/calculator/parser.code"
+                *__008__ = parsed_expression;
+#line 60 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__009__ = __008__;
 #line 61 "tests/99__calculator/calculator/parser.code"
-                struct calculator__expression_Expression *__009__ = __alloc__calculator__expression_Expression__(other_expression);
+                struct calculator__expression_Expression *__010__ = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
+#line 61 "tests/99__calculator/calculator/parser.code"
+                *__010__ = other_expression;
+#line 61 "tests/99__calculator/calculator/parser.code"
+                struct calculator__expression_Expression *__011__ = __010__;
 #line 58 "tests/99__calculator/calculator/parser.code"
-                parsed_expression = (struct calculator__expression_Expression){.variant = 3, .variant_3 = (struct calculator__expression_Division){.span = __007__, .left = __008__, .right = __009__}};
+                parsed_expression = (struct calculator__expression_Expression){.variant = 3, .variant_3 = (struct calculator__expression_Division){.span = __007__, .left = __009__, .right = __011__}};
             }
         } else {
 #line 64 "tests/99__calculator/calculator/parser.code"

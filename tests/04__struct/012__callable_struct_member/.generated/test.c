@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 5 "tests/04__struct/012__callable_struct_member/test.code"
 int32_t test__forty_two() {
 #line 6 "tests/04__struct/012__callable_struct_member/test.code"

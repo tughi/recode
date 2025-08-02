@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 5 "tests/04__struct/011__struct_method_overriding/test.code"
 int32_t ptest_Number__get_value(struct test_Number *self) {
 #line 6 "tests/04__struct/011__struct_method_overriding/test.code"

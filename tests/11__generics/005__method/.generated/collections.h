@@ -17,10 +17,6 @@ struct collections_List_Item__i32 {
 
 void *malloc(uintmax_t size);
 
-struct collections_List__i32 *__alloc__collections_List__i32__(struct collections_List__i32 value);
-
-struct collections_List_Item__i32 *__alloc__collections_List_Item__i32__(struct collections_List_Item__i32 value);
-
 void pcollections_List__i32__prepend(struct collections_List__i32 *self, int32_t data);
 
 #endif // __collections_H__

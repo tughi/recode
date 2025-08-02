@@ -8,20 +8,16 @@
 #include "os.h"
 #include "string.h"
 
-struct string_Builder *__alloc__string_Builder__(struct string_Builder value) {
-    struct string_Builder *result = (struct string_Builder *)malloc(sizeof(struct string_Builder));
-    *result = value;
-    return result;
-}
+void *malloc(uintmax_t size);
 
 #line 9 "tests/99__calculator/string.code"
 struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8_t c) {
 #line 10 "tests/99__calculator/string.code"
     if (self->length == self->data_size) {
 #line 11 "tests/99__calculator/string.code"
-        self->data_size = self->data_size + 8;
+        self->data_size = self->data_size + 8u;
 #line 12 "tests/99__calculator/string.code"
-        self->data = ((uint8_t *) realloc(((void *) self->data), ((uint64_t) self->data_size)));
+        self->data = ((uint8_t *) realloc(((void *) self->data), self->data_size));
     }
 #line 17 "tests/99__calculator/string.code"
     {
@@ -31,7 +27,7 @@ struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8
         self->data[__001__] = c;
     }
 #line 18 "tests/99__calculator/string.code"
-    self->length = self->length + 1;
+    self->length = self->length + 1u;
 #line 19 "tests/99__calculator/string.code"
     return self;
 }
@@ -54,7 +50,7 @@ struct String pstring_Builder__build(struct string_Builder *self) {
 #line 25 "tests/99__calculator/string.code"
         uint8_t *__001__ = self->data;
 #line 26 "tests/99__calculator/string.code"
-        uintmax_t __002__ = self->length - 1;
+        uintmax_t __002__ = self->length - 1u;
 #line 24 "tests/99__calculator/string.code"
         string = (struct String){.data = __001__, .length = __002__};
     }
@@ -67,7 +63,7 @@ struct string_Builder string__make_string_builder() {
 #line 32 "tests/99__calculator/string.code"
     {
 #line 32 "tests/99__calculator/string.code"
-        uintmax_t __001__ = 4;
+        uintmax_t __001__ = 4u;
 #line 32 "tests/99__calculator/string.code"
         return string__make_string_builder_with_data_size(__001__);
     }
@@ -78,11 +74,11 @@ struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_
 #line 36 "tests/99__calculator/string.code"
     {
 #line 37 "tests/99__calculator/string.code"
-        uint8_t *__001__ = ((uint8_t *) malloc(((uint64_t) data_size)));
+        uint8_t *__001__ = ((uint8_t *) malloc(data_size));
 #line 38 "tests/99__calculator/string.code"
         uintmax_t __002__ = data_size;
 #line 39 "tests/99__calculator/string.code"
-        uintmax_t __003__ = 0;
+        uintmax_t __003__ = 0u;
 #line 36 "tests/99__calculator/string.code"
         return (struct string_Builder){.data = __001__, .data_size = __002__, .length = __003__};
     }

@@ -10,8 +10,6 @@ struct io_Writer {
     void (*write_char)(void *self, uint8_t c);
 };
 
-struct io_Writer *__alloc__io_Writer__(struct io_Writer value);
-
 struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String string);
 
 struct io_Writer *pio_Writer__write(struct io_Writer *self, uint8_t c);

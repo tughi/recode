@@ -1,9 +1,11 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 3 "tests/08__string/005__extensions/test.code"
 struct String str__concat(struct String self, struct String other) {
 #line 4 "tests/08__string/005__extensions/test.code"
-    if (self.length == 0) {
+    if (self.length == 0u) {
 #line 5 "tests/08__string/005__extensions/test.code"
         return other;
     }
@@ -19,13 +21,13 @@ struct String str__concat(struct String self, struct String other) {
         result = (struct String){.data = __001__, .length = __002__};
     }
 #line 11 "tests/08__string/005__extensions/test.code"
-    if (self.length > 0) {
+    if (self.length > 0u) {
 #line 12 "tests/08__string/005__extensions/test.code"
         struct String self_copy = self;
 #line 13 "tests/08__string/005__extensions/test.code"
         uint8_t *self_data = ((struct String *) (&self_copy))->data;
 #line 14 "tests/08__string/005__extensions/test.code"
-        uintmax_t index = 0;
+        uintmax_t index = 0u;
 #line 15 "tests/08__string/005__extensions/test.code"
         while (index < self.length) {
 #line 16 "tests/08__string/005__extensions/test.code"
@@ -38,17 +40,17 @@ struct String str__concat(struct String self, struct String other) {
                 result.data[__001__] = self_data[__002__];
             }
 #line 17 "tests/08__string/005__extensions/test.code"
-            index = index + 1;
+            index = index + 1u;
         }
     }
 #line 20 "tests/08__string/005__extensions/test.code"
-    if (other.length > 0) {
+    if (other.length > 0u) {
 #line 21 "tests/08__string/005__extensions/test.code"
         struct String other_copy = other;
 #line 22 "tests/08__string/005__extensions/test.code"
         uint8_t *other_data = ((struct String *) (&other_copy))->data;
 #line 23 "tests/08__string/005__extensions/test.code"
-        uintmax_t index = 0;
+        uintmax_t index = 0u;
 #line 24 "tests/08__string/005__extensions/test.code"
         while (index < other.length) {
 #line 25 "tests/08__string/005__extensions/test.code"
@@ -61,7 +63,7 @@ struct String str__concat(struct String self, struct String other) {
                 result.data[__001__] = other_data[__002__];
             }
 #line 26 "tests/08__string/005__extensions/test.code"
-            index = index + 1;
+            index = index + 1u;
         }
     }
 #line 29 "tests/08__string/005__extensions/test.code"
@@ -89,7 +91,7 @@ bool str__equals(struct String self, struct String other) {
         return true;
     }
 #line 43 "tests/08__string/005__extensions/test.code"
-    uintmax_t index = 0;
+    uintmax_t index = 0u;
 #line 44 "tests/08__string/005__extensions/test.code"
     while (index < self.length) {
 #line 45 "tests/08__string/005__extensions/test.code"
@@ -105,7 +107,7 @@ bool str__equals(struct String self, struct String other) {
             }
         }
 #line 48 "tests/08__string/005__extensions/test.code"
-        index = index + 1;
+        index = index + 1u;
     }
 #line 50 "tests/08__string/005__extensions/test.code"
     return true;
@@ -149,7 +151,7 @@ int32_t test__main() {
         }
     }
 #line 61 "tests/08__string/005__extensions/test.code"
-    if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0) {
+    if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
 #line 62 "tests/08__string/005__extensions/test.code"
         return 3;
     }

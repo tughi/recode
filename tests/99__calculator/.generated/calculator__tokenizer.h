@@ -46,20 +46,6 @@ struct calculator__tokenizer_Tokenizer {
     struct calculator__tokenizer_Token current_token;
 };
 
-struct calculator__tokenizer_Tokenizer *__alloc__calculator__tokenizer_Tokenizer__(struct calculator__tokenizer_Tokenizer value);
-
-struct calculator__tokenizer_Token *__alloc__calculator__tokenizer_Token__(struct calculator__tokenizer_Token value);
-
-struct calculator__tokenizer_Plus *__alloc__calculator__tokenizer_Plus__(struct calculator__tokenizer_Plus value);
-
-struct calculator__tokenizer_Minus *__alloc__calculator__tokenizer_Minus__(struct calculator__tokenizer_Minus value);
-
-struct calculator__tokenizer_Multiply *__alloc__calculator__tokenizer_Multiply__(struct calculator__tokenizer_Multiply value);
-
-struct calculator__tokenizer_Divide *__alloc__calculator__tokenizer_Divide__(struct calculator__tokenizer_Divide value);
-
-struct calculator__tokenizer_Stop *__alloc__calculator__tokenizer_Stop__(struct calculator__tokenizer_Stop value);
-
 struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__peek_token(struct calculator__tokenizer_Tokenizer *self);
 
 struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__next_token(struct calculator__tokenizer_Tokenizer *self);

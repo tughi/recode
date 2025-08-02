@@ -8,3 +8,5 @@
 #include "os.h"
 #include "string.h"
 
+void *malloc(uintmax_t size);
+

@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 5 "tests/07__trait/002__make_local_trait_variable/test.code"
 int32_t ptest_Dog__legs(struct test_Dog *self) {
 #line 6 "tests/07__trait/002__make_local_trait_variable/test.code"

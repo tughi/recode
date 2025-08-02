@@ -11,8 +11,6 @@ struct calculator__parser_Parser {
     struct calculator__tokenizer_Tokenizer tokenizer;
 };
 
-struct calculator__parser_Parser *__alloc__calculator__parser_Parser__(struct calculator__parser_Parser value);
-
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_expression(struct calculator__parser_Parser *self);
 
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_additive_expression(struct calculator__parser_Parser *self);

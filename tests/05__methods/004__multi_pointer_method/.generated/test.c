@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 1 "tests/05__methods/004__multi_pointer_method/test.code"
 int32_t d_u8_b__length(uint8_t *self) {
 #line 2 "tests/05__methods/004__multi_pointer_method/test.code"

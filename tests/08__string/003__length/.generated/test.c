@@ -1,11 +1,13 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 1 "tests/08__string/003__length/test.code"
 int32_t test__main() {
 #line 2 "tests/08__string/003__length/test.code"
     struct String message = (struct String){.data = "I have a length!", .length = 16};
 #line 3 "tests/08__string/003__length/test.code"
-    if (message.length != 16) {
+    if (message.length != 16u) {
 #line 4 "tests/08__string/003__length/test.code"
         return 1;
     }
