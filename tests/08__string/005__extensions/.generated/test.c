@@ -14,11 +14,13 @@ struct String str__concat(struct String self, struct String other) {
 #line 7 "tests/08__string/005__extensions/test.code"
     {
 #line 8 "tests/08__string/005__extensions/test.code"
-        uint8_t *__001__ = ((uint8_t *) malloc(self.length + other.length));
+        uintmax_t __001__ = self.length + other.length;
+#line 8 "tests/08__string/005__extensions/test.code"
+        uint8_t *__002__ = ((uint8_t *) malloc(__001__));
 #line 9 "tests/08__string/005__extensions/test.code"
-        uintmax_t __002__ = self.length + other.length;
+        uintmax_t __003__ = self.length + other.length;
 #line 7 "tests/08__string/005__extensions/test.code"
-        result = (struct String){.data = __001__, .length = __002__};
+        result = (struct String){.data = __002__, .length = __003__};
     }
 #line 11 "tests/08__string/005__extensions/test.code"
     if (self.length > 0u) {
@@ -151,9 +153,16 @@ int32_t test__main() {
         }
     }
 #line 61 "tests/08__string/005__extensions/test.code"
-    if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
+    {
+#line 61 "tests/08__string/005__extensions/test.code"
+        struct String __001__ = (struct String){.data = 0, .length = 0};
+#line 61 "tests/08__string/005__extensions/test.code"
+        struct String __002__ = (struct String){.data = 0, .length = 0};
+#line 61 "tests/08__string/005__extensions/test.code"
+        if (str__concat(__001__, __002__).length != 0u) {
 #line 62 "tests/08__string/005__extensions/test.code"
-        return 3;
+            return 3;
+        }
     }
 #line 64 "tests/08__string/005__extensions/test.code"
     return 0;

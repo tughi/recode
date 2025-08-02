@@ -1433,7 +1433,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__CALL:
         return Checked_Expression_Decomposer__decompose_call_expression(self, (Checked_Call_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__CAST:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__CHARACTER:
         return expression;
     case CHECKED_EXPRESSION_KIND__DEREFERENCE:
@@ -1447,7 +1447,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__GREATER:
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__GROUP:
-        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Handle group expressions as unary expressions
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__INTEGER:
         return expression;
     case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
@@ -1478,19 +1478,15 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__NULL:
         return expression;
-    case CHECKED_EXPRESSION_KIND__RECEIVER_METHOD:
-        return expression;
     case CHECKED_EXPRESSION_KIND__SIZEOF:
         return expression;
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__STRING:
         return expression;
     case CHECKED_EXPRESSION_KIND__SUBTRACT:
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
-        return expression;
-    case CHECKED_EXPRESSION_KIND__TYPE:
         return expression;
     default:
         pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);

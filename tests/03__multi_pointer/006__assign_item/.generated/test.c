@@ -5,7 +5,14 @@ void *malloc(uintmax_t size);
 #line 1 "tests/03__multi_pointer/006__assign_item/test.code"
 int32_t test__main() {
 #line 2 "tests/03__multi_pointer/006__assign_item/test.code"
-    int32_t *array = ((int32_t *) malloc(32u));
+    int32_t *array;
+#line 2 "tests/03__multi_pointer/006__assign_item/test.code"
+    {
+#line 2 "tests/03__multi_pointer/006__assign_item/test.code"
+        uintmax_t __001__ = 32u;
+#line 2 "tests/03__multi_pointer/006__assign_item/test.code"
+        array = ((int32_t *) malloc(__001__));
+    }
 #line 3 "tests/03__multi_pointer/006__assign_item/test.code"
     {
 #line 3 "tests/03__multi_pointer/006__assign_item/test.code"

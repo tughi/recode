@@ -5,7 +5,14 @@ void *malloc(uintmax_t size);
 #line 1 "tests/03__multi_pointer/005__convert_any/test.code"
 int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 2 "tests/03__multi_pointer/005__convert_any/test.code"
-    void *any = ((void *) argv[0]);
+    void *any;
+#line 2 "tests/03__multi_pointer/005__convert_any/test.code"
+    {
+#line 2 "tests/03__multi_pointer/005__convert_any/test.code"
+        int32_t __001__ = 0;
+#line 2 "tests/03__multi_pointer/005__convert_any/test.code"
+        any = ((void *) argv[__001__]);
+    }
 #line 3 "tests/03__multi_pointer/005__convert_any/test.code"
     uint8_t *name = ((uint8_t *) any);
 #line 4 "tests/03__multi_pointer/005__convert_any/test.code"
