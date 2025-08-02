@@ -1,0 +1,10 @@
+proc main() -> i32 {
+    return deref(null)
+}
+
+proc deref(anon ptr: ^i32) -> i32 {
+    if ptr == null {
+        return 0
+    }
+    return ptr.^
+}

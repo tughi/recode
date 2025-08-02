@@ -590,7 +590,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
         }
         if (receiver_expression != NULL) {
             Checker__require_same_type(self, procedure_parameter->type, receiver_expression->type, receiver_expression->location);
-            first_argument = last_argument = Checked_Call_Argument__create(receiver_expression);
+            first_argument = last_argument = Checked_Call_Argument__create(receiver_expression, procedure_parameter->type);
             procedure_parameter = procedure_parameter->next_parameter;
         }
         Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument;
@@ -620,7 +620,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
                 argument_expression = (Checked_Expression *)Checker__make_union_expression(self, argument_expression->location, (Checked_Union_Type *)procedure_parameter->type, argument_expression);
             }
             Checker__require_same_type(self, procedure_parameter->type, argument_expression->type, argument_expression->location);
-            Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression);
+            Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression, procedure_parameter->type);
             if (last_argument == NULL) {
                 first_argument = argument;
             } else {
@@ -1378,7 +1378,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_call_expression(Che
     expression->callee_expression = Checked_Expression_Decomposer__decompose(self, expression->callee_expression);
     Checked_Call_Argument *call_argument = expression->first_argument;
     while (call_argument != NULL) {
-        call_argument->expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, call_argument->expression));
+        call_argument->expression = Checked_Expression_Decomposer__create_temp_variable_with_type(self, Checked_Expression_Decomposer__decompose(self, call_argument->expression), call_argument->parameter_type);
         call_argument = call_argument->next_argument;
     }
     return (Checked_Expression *)expression;

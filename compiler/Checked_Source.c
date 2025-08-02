@@ -672,9 +672,10 @@ Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location locatio
     return expression;
 }
 
-Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression) {
+Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression, Checked_Type *parameter_type) {
     Checked_Call_Argument *argument = (Checked_Call_Argument *)malloc(sizeof(Checked_Call_Argument));
     argument->expression = expression;
+    argument->parameter_type = parameter_type;
     argument->next_argument = NULL;
     return argument;
 }

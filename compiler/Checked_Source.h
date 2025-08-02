@@ -481,10 +481,11 @@ Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location locatio
 
 typedef struct Checked_Call_Argument {
     Checked_Expression *expression;
+    Checked_Type *parameter_type;
     struct Checked_Call_Argument *next_argument;
 } Checked_Call_Argument;
 
-Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression);
+Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression, Checked_Type *parameter_type);
 
 typedef struct Checked_Call_Expression {
     Checked_Expression super;
