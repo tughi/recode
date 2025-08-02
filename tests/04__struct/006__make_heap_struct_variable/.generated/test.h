@@ -16,6 +16,4 @@ struct test_Line {
 
 int32_t test__main();
 
-void *malloc(uintmax_t size);
-
 #endif // __test_H__

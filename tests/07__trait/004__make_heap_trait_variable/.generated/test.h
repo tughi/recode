@@ -23,6 +23,4 @@ int32_t ptest_Circle__area(struct test_Circle *self);
 
 int32_t test__main();
 
-void *malloc(uintmax_t size);
-
 #endif // __test_H__

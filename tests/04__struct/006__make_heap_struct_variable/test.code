@@ -15,5 +15,3 @@ proc main() -> i32 {
     )
     return line.p1.x + line.p1.y + line.p2.x + line.p2.y - 160
 }
-
-proc malloc(anon size: usize) -> ^Any = external

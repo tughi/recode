@@ -15,8 +15,6 @@ struct collections_List_Item__i32 {
     struct collections_List_Item__i32 *next;
 };
 
-void *malloc(uintmax_t size);
-
 void pcollections_List__i32__prepend(struct collections_List__i32 *self, int32_t data);
 
 #endif // __collections_H__

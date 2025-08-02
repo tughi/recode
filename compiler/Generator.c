@@ -30,7 +30,10 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
 
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
     if (expression->value_expression != NULL) {
-        panic(); // expression was not properly decomposed
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Alloc expression was not properly decomposed");
+        pWriter__end_location_message(stderr_writer);
+        panic();
     }
     pWriter__write__char(self->writer, '(');
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->super.type);
@@ -495,7 +498,7 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     }
 }
 
-void Generator__write_identation(Generator *self) {
+void Generator__write_indentation(Generator *self) {
     uint16_t identation = self->identation;
     while (identation > 0) {
         pWriter__write__cstring(self->writer, "    ");
@@ -516,7 +519,7 @@ void Generator__generate_assignment_statement(Generator *self, Checked_Assignmen
 void Generator__generate_block_statement(Generator *self, Checked_Block_Statement *statement) {
     pWriter__write__cstring(self->writer, "{\n");
     Generator__generate_statements(self, statement->statements);
-    Generator__write_identation(self);
+    Generator__write_indentation(self);
     pWriter__write__cstring(self->writer, "}");
 }
 
@@ -537,7 +540,7 @@ void Generator__generate_decomposed_statement(Generator *self, Checked_Decompose
 
             pWriter__write__cstring(self->writer, "\n");
             Generator__write_source_location(self, statement->location);
-            Generator__write_identation(self);
+            Generator__write_indentation(self);
         }
     }
 }
@@ -606,7 +609,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     for (; union_switch_case != NULL; union_switch_case = union_switch_case->next_union_switch_case) {
         pWriter__end_line(self->writer);
         Generator__write_source_location(self, union_switch_case->location);
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
         if (union_switch_case != statement->first_union_switch_case) {
             pWriter__write__cstring(self->writer, "else ");
         }
@@ -626,7 +629,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     if (statement->switch_else) {
         pWriter__end_line(self->writer);
         Generator__write_source_location(self, statement->switch_else->location);
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
         if (statement->first_union_switch_case != NULL) {
             pWriter__write__cstring(self->writer, "else ");
         }
@@ -714,7 +717,7 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
     while (statement != NULL) {
         Generator__write_source_location(self, statement->location);
 
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
 
         Generator__generate_statement(self, statement);
 
