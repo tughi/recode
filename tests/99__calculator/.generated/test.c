@@ -38,7 +38,14 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         input_tokenizer = (struct calculator__tokenizer_Tokenizer){.data = __002__, .index = __003__};
     }
 #line 22 "tests/99__calculator/test.code"
-    while (pcalculator__tokenizer_Tokenizer__peek_token(&input_tokenizer).variant != 6) {
+    for (;;) {
+#line 22 "tests/99__calculator/test.code"
+        {
+#line 22 "tests/99__calculator/test.code"
+            struct calculator__tokenizer_Tokenizer *__001__ = &input_tokenizer;
+#line 22 "tests/99__calculator/test.code"
+            if (pcalculator__tokenizer_Tokenizer__peek_token(__001__).variant != 6) {} else break;
+        }
 #line 23 "tests/99__calculator/test.code"
         struct calculator__tokenizer_Token token;
 #line 23 "tests/99__calculator/test.code"

@@ -1425,6 +1425,11 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_alloc_expression(Ch
     return result_expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_is_union_variant_expression(Checked_Expression_Decomposer *self, Checked_Is_Union_Variant_Expression *expression) {
+    expression->union_expression = Checked_Expression_Decomposer__decompose(self, expression->union_expression);
+    return (Checked_Expression *)expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
@@ -1458,7 +1463,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__INTEGER:
         return expression;
     case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_is_union_variant_expression(self, (Checked_Is_Union_Variant_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__LESS:
