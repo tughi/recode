@@ -240,7 +240,14 @@ struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calcula
 #line 125 "tests/99__calculator/calculator/tokenizer.code"
     else if (__switch_103_value__->variant == 0) {
 #line 126 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__source_Span){.start = 0, .end = 0};
+        {
+#line 126 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = 0;
+#line 126 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = 0;
+#line 126 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__source_Span){.start = __001__, .end = __002__};
+        }
     }
 }
 

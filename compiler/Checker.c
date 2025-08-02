@@ -1318,13 +1318,17 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
     return temp_variable_symbol;
 }
 
-Checked_Expression *Checked_Expression_Decomposer__create_temp_variable(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
-    Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, expression->location, expression->type);
+Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_with_type(Checked_Expression_Decomposer *self, Checked_Expression *expression, Checked_Type *type) {
+    Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, expression->location, type);
 
     Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(expression->location, temp_variable_symbol, false, expression);
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
 
     return (Checked_Expression *)Checked_Symbol_Expression__create(expression->location, expression->type, (Checked_Symbol *)temp_variable_symbol);
+}
+
+Checked_Expression *Checked_Expression_Decomposer__create_temp_variable(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
+    return Checked_Expression_Decomposer__create_temp_variable_with_type(self, expression, expression->type);
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_binary_expression(Checked_Expression_Decomposer *self, Checked_Binary_Expression *expression) {
@@ -1397,6 +1401,15 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_array_access_expres
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_make_struct_expression(Checked_Expression_Decomposer *self, Checked_Make_Struct_Expression *expression) {
+    Checked_Make_Struct_Argument *argument = expression->first_argument;
+    while (argument != NULL) {
+        argument->expression = Checked_Expression_Decomposer__create_temp_variable_with_type(self, Checked_Expression_Decomposer__decompose(self, argument->expression), argument->struct_member->type);
+        argument = argument->next_argument;
+    }
+    return (Checked_Expression *)expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
@@ -1440,7 +1453,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__LOGIC_OR:
         return Checked_Expression_Decomposer__decompose_logic_or_expression(self, (Checked_Logic_Or_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_make_struct_expression(self, (Checked_Make_Struct_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MAKE_UNION:
         return expression;
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:

@@ -3,7 +3,16 @@
 #line 6 "tests/04__struct/009__struct_reference_argument/test.code"
 int32_t test__main() {
 #line 7 "tests/04__struct/009__struct_reference_argument/test.code"
-    struct test_Point point = (struct test_Point){.x = 16, .y = 32};
+    struct test_Point point;
+#line 7 "tests/04__struct/009__struct_reference_argument/test.code"
+    {
+#line 7 "tests/04__struct/009__struct_reference_argument/test.code"
+        int32_t __001__ = 16;
+#line 7 "tests/04__struct/009__struct_reference_argument/test.code"
+        int32_t __002__ = 32;
+#line 7 "tests/04__struct/009__struct_reference_argument/test.code"
+        point = (struct test_Point){.x = __001__, .y = __002__};
+    }
 #line 8 "tests/04__struct/009__struct_reference_argument/test.code"
     {
 #line 8 "tests/04__struct/009__struct_reference_argument/test.code"

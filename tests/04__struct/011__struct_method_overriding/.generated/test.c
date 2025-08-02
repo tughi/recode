@@ -21,7 +21,14 @@ bool ptest_Boolean__get_value(struct test_Boolean *self) {
 #line 21 "tests/04__struct/011__struct_method_overriding/test.code"
 int32_t test__main() {
 #line 22 "tests/04__struct/011__struct_method_overriding/test.code"
-    struct test_Number number = (struct test_Number){.value = 0};
+    struct test_Number number;
+#line 22 "tests/04__struct/011__struct_method_overriding/test.code"
+    {
+#line 22 "tests/04__struct/011__struct_method_overriding/test.code"
+        int32_t __001__ = 0;
+#line 22 "tests/04__struct/011__struct_method_overriding/test.code"
+        number = (struct test_Number){.value = __001__};
+    }
 #line 24 "tests/04__struct/011__struct_method_overriding/test.code"
     {
 #line 24 "tests/04__struct/011__struct_method_overriding/test.code"

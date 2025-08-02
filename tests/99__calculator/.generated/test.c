@@ -23,7 +23,18 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         }
     }
 #line 17 "tests/99__calculator/test.code"
-    struct calculator__tokenizer_Tokenizer input_tokenizer = (struct calculator__tokenizer_Tokenizer){.data = argv[1], .index = 0};
+    struct calculator__tokenizer_Tokenizer input_tokenizer;
+#line 17 "tests/99__calculator/test.code"
+    {
+#line 18 "tests/99__calculator/test.code"
+        int32_t __001__ = 1;
+#line 18 "tests/99__calculator/test.code"
+        uint8_t *__002__ = argv[__001__];
+#line 19 "tests/99__calculator/test.code"
+        int32_t __003__ = 0;
+#line 17 "tests/99__calculator/test.code"
+        input_tokenizer = (struct calculator__tokenizer_Tokenizer){.data = __002__, .index = __003__};
+    }
 #line 22 "tests/99__calculator/test.code"
     while (pcalculator__tokenizer_Tokenizer__peek_token(&input_tokenizer).variant != 6) {
 #line 23 "tests/99__calculator/test.code"
@@ -48,7 +59,20 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         }
     }
 #line 27 "tests/99__calculator/test.code"
-    struct calculator__parser_Parser input_parser = (struct calculator__parser_Parser){.tokenizer = (struct calculator__tokenizer_Tokenizer){.data = argv[1], .index = 0}};
+    struct calculator__parser_Parser input_parser;
+#line 27 "tests/99__calculator/test.code"
+    {
+#line 28 "tests/99__calculator/test.code"
+        int32_t __001__ = 1;
+#line 28 "tests/99__calculator/test.code"
+        uint8_t *__002__ = argv[__001__];
+#line 29 "tests/99__calculator/test.code"
+        int32_t __003__ = 0;
+#line 27 "tests/99__calculator/test.code"
+        struct calculator__tokenizer_Tokenizer __004__ = (struct calculator__tokenizer_Tokenizer){.data = __002__, .index = __003__};
+#line 27 "tests/99__calculator/test.code"
+        input_parser = (struct calculator__parser_Parser){.tokenizer = __004__};
+    }
 #line 31 "tests/99__calculator/test.code"
     struct calculator__expression_Expression expression;
 #line 31 "tests/99__calculator/test.code"

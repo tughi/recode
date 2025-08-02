@@ -15,7 +15,14 @@ void ptest_Number__set_value(struct test_Number *self, int32_t value) {
 #line 13 "tests/04__struct/010__struct_methods/test.code"
 int32_t test__main() {
 #line 14 "tests/04__struct/010__struct_methods/test.code"
-    struct test_Number number = (struct test_Number){.value = 0};
+    struct test_Number number;
+#line 14 "tests/04__struct/010__struct_methods/test.code"
+    {
+#line 14 "tests/04__struct/010__struct_methods/test.code"
+        int32_t __001__ = 0;
+#line 14 "tests/04__struct/010__struct_methods/test.code"
+        number = (struct test_Number){.value = __001__};
+    }
 #line 16 "tests/04__struct/010__struct_methods/test.code"
     {
 #line 16 "tests/04__struct/010__struct_methods/test.code"

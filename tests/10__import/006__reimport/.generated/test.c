@@ -5,7 +5,16 @@
 #line 4 "tests/10__import/006__reimport/test.code"
 int32_t test__main() {
 #line 5 "tests/10__import/006__reimport/test.code"
-    struct io_Writer stdout = (struct io_Writer){.self = __stdoutp, .write_char = ((int32_t (*)(void *self, int32_t c)) plibc_FILE__write_char)};
+    struct io_Writer stdout;
+#line 5 "tests/10__import/006__reimport/test.code"
+    {
+#line 5 "tests/10__import/006__reimport/test.code"
+        void *__001__ = __stdoutp;
+#line 5 "tests/10__import/006__reimport/test.code"
+        int32_t (*__002__)(void *self, int32_t c) = ((int32_t (*)(void *self, int32_t c)) plibc_FILE__write_char);
+#line 5 "tests/10__import/006__reimport/test.code"
+        stdout = (struct io_Writer){.self = __001__, .write_char = __002__};
+    }
 #line 7 "tests/10__import/006__reimport/test.code"
     {
 #line 7 "tests/10__import/006__reimport/test.code"

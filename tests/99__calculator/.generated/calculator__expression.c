@@ -81,7 +81,14 @@ struct calculator__source_Span pcalculator__expression_Expression__span(struct c
 #line 62 "tests/99__calculator/calculator/expression.code"
     else if (__switch_43_value__->variant == 0) {
 #line 63 "tests/99__calculator/calculator/expression.code"
-        return (struct calculator__source_Span){.start = 0, .end = 0};
+        {
+#line 63 "tests/99__calculator/calculator/expression.code"
+            int32_t __001__ = 0;
+#line 63 "tests/99__calculator/calculator/expression.code"
+            int32_t __002__ = 0;
+#line 63 "tests/99__calculator/calculator/expression.code"
+            return (struct calculator__source_Span){.start = __001__, .end = __002__};
+        }
     }
 }
 

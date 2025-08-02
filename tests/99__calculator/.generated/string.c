@@ -48,7 +48,16 @@ struct String pstring_Builder__build(struct string_Builder *self) {
         pstring_Builder__write(__001__, __002__);
     }
 #line 24 "tests/99__calculator/string.code"
-    struct String string = (struct String){.data = self->data, .length = self->length - 1};
+    struct String string;
+#line 24 "tests/99__calculator/string.code"
+    {
+#line 25 "tests/99__calculator/string.code"
+        uint8_t *__001__ = self->data;
+#line 26 "tests/99__calculator/string.code"
+        uintmax_t __002__ = self->length - 1;
+#line 24 "tests/99__calculator/string.code"
+        string = (struct String){.data = __001__, .length = __002__};
+    }
 #line 28 "tests/99__calculator/string.code"
     return *((struct String *) (&string));
 }
@@ -67,7 +76,16 @@ struct string_Builder string__make_string_builder() {
 #line 35 "tests/99__calculator/string.code"
 struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_size) {
 #line 36 "tests/99__calculator/string.code"
-    return (struct string_Builder){.data = ((uint8_t *) malloc(((uint64_t) data_size))), .data_size = data_size, .length = 0};
+    {
+#line 37 "tests/99__calculator/string.code"
+        uint8_t *__001__ = ((uint8_t *) malloc(((uint64_t) data_size)));
+#line 38 "tests/99__calculator/string.code"
+        uintmax_t __002__ = data_size;
+#line 39 "tests/99__calculator/string.code"
+        uintmax_t __003__ = 0;
+#line 36 "tests/99__calculator/string.code"
+        return (struct string_Builder){.data = __001__, .data_size = __002__, .length = __003__};
+    }
 }
 
 #line 43 "tests/99__calculator/string.code"

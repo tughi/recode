@@ -8,7 +8,16 @@ struct String str__concat(struct String self, struct String other) {
         return other;
     }
 #line 7 "tests/08__string/005__extensions/test.code"
-    struct String result = (struct String){.data = ((uint8_t *) malloc(self.length + other.length)), .length = self.length + other.length};
+    struct String result;
+#line 7 "tests/08__string/005__extensions/test.code"
+    {
+#line 8 "tests/08__string/005__extensions/test.code"
+        uint8_t *__001__ = ((uint8_t *) malloc(self.length + other.length));
+#line 9 "tests/08__string/005__extensions/test.code"
+        uintmax_t __002__ = self.length + other.length;
+#line 7 "tests/08__string/005__extensions/test.code"
+        result = (struct String){.data = __001__, .length = __002__};
+    }
 #line 11 "tests/08__string/005__extensions/test.code"
     if (self.length > 0) {
 #line 12 "tests/08__string/005__extensions/test.code"
