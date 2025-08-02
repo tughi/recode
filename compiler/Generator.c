@@ -28,20 +28,18 @@ void Generator__generate_address_of_expression(Generator *self, Checked_Address_
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
-void Generator__generate_alloc_procedure_name(Generator *self, Checked_Named_Type *type) {
-    String *mangled_name = String__create();
-    String__append_mangled_type_name(mangled_name, (Checked_Type *)type);
-    pWriter__write__cstring(self->writer, "__alloc__");
-    pWriter__write__string(self->writer, mangled_name);
-    pWriter__write__cstring(self->writer, "__");
-    String__delete(mangled_name);
-}
-
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
-    Generator__generate_alloc_procedure_name(self, (Checked_Named_Type *)expression->value_expression->type);
+    if (expression->value_expression != NULL) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Alloc expression was not properly decomposed");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     pWriter__write__char(self->writer, '(');
-    Generator__generate_expression(self, expression->value_expression);
-    pWriter__write__char(self->writer, ')');
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->super.type);
+    pWriter__write__cstring(self->writer, ")malloc(sizeof(");
+    pWriter__write__cdecl(self->writer, NULL, ((Checked_Pointer_Type *)expression->super.type)->other_type);
+    pWriter__write__cstring(self->writer, "))");
 }
 
 void Generator__generate_array_access_expression(Generator *self, Checked_Array_Access_Expression *expression) {
@@ -194,6 +192,7 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
     switch (expression->super.type->kind) {
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
+    case CHECKED_TYPE_KIND__USIZE:
         pWriter__write__cstring(self->writer, "u");
         break;
     case CHECKED_TYPE_KIND__I64:
@@ -300,7 +299,7 @@ void Generator__generate_multiply_expression(Generator *self, Checked_Multiply_E
 }
 
 void Generator__generate_not_expression(Generator *self, Checked_Not_Expression *expression) {
-    pWriter__write__cstring(self->writer, "!");
+    pWriter__write__char(self->writer, '!');
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
@@ -499,7 +498,7 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     }
 }
 
-void Generator__write_identation(Generator *self) {
+void Generator__write_indentation(Generator *self) {
     uint16_t identation = self->identation;
     while (identation > 0) {
         pWriter__write__cstring(self->writer, "    ");
@@ -520,12 +519,30 @@ void Generator__generate_assignment_statement(Generator *self, Checked_Assignmen
 void Generator__generate_block_statement(Generator *self, Checked_Block_Statement *statement) {
     pWriter__write__cstring(self->writer, "{\n");
     Generator__generate_statements(self, statement->statements);
-    Generator__write_identation(self);
+    Generator__write_indentation(self);
     pWriter__write__cstring(self->writer, "}");
 }
 
 void Generator__generate_break_statement(Generator *self, Checked_Break_Statement *statement) {
     pWriter__write__cstring(self->writer, "break;");
+}
+
+void Generator__generate_decomposed_statement(Generator *self, Checked_Decomposed_Statement *decomposed_statement) {
+    Checked_Statement *statement = decomposed_statement->statements->first_statement;
+    if (statement != NULL) {
+        for (;;) {
+            Generator__generate_statement(self, statement);
+
+            statement = statement->next_statement;
+            if (statement == NULL) {
+                break;
+            }
+
+            pWriter__write__cstring(self->writer, "\n");
+            Generator__write_source_location(self, statement->location);
+            Generator__write_indentation(self);
+        }
+    }
 }
 
 void Generator__generate_expression_statement(Generator *self, Checked_Expression_Statement *statement) {
@@ -537,7 +554,11 @@ void Generator__generate_if_statement(Generator *self, Checked_If_Statement *sta
     pWriter__write__cstring(self->writer, "if (");
     Generator__generate_expression(self, statement->condition_expression);
     pWriter__write__cstring(self->writer, ") ");
-    Generator__generate_statement(self, statement->true_statement);
+    if (statement->true_statement != NULL) {
+        Generator__generate_statement(self, statement->true_statement);
+    } else {
+        pWriter__write__cstring(self->writer, "{}");
+    }
     if (statement->false_statement != NULL) {
         pWriter__write__cstring(self->writer, " else ");
         Generator__generate_statement(self, statement->false_statement);
@@ -588,7 +609,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     for (; union_switch_case != NULL; union_switch_case = union_switch_case->next_union_switch_case) {
         pWriter__end_line(self->writer);
         Generator__write_source_location(self, union_switch_case->location);
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
         if (union_switch_case != statement->first_union_switch_case) {
             pWriter__write__cstring(self->writer, "else ");
         }
@@ -608,7 +629,7 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     if (statement->switch_else) {
         pWriter__end_line(self->writer);
         Generator__write_source_location(self, statement->switch_else->location);
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
         if (statement->first_union_switch_case != NULL) {
             pWriter__write__cstring(self->writer, "else ");
         }
@@ -654,6 +675,9 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
     case CHECKED_STATEMENT_KIND__BREAK:
         Generator__generate_break_statement(self, (Checked_Break_Statement *)statement);
         break;
+    case CHECKED_STATEMENT_KIND__DECOMPOSED:
+        Generator__generate_decomposed_statement(self, (Checked_Decomposed_Statement *)statement);
+        break;
     case CHECKED_STATEMENT_KIND__EXPRESSION:
         Generator__generate_expression_statement(self, (Checked_Expression_Statement *)statement);
         break;
@@ -693,7 +717,7 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
     while (statement != NULL) {
         Generator__write_source_location(self, statement->location);
 
-        Generator__write_identation(self);
+        Generator__write_indentation(self);
 
         Generator__generate_statement(self, statement);
 
@@ -750,41 +774,6 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
-void Generator__generate_alloc_procedure_signature(Generator *self, Checked_Named_Type *type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)type);
-    pWriter__write__cstring(self->writer, " *");
-    Generator__generate_alloc_procedure_name(self, type);
-    pWriter__write__char(self->writer, '(');
-    String value = {
-        .data = "value",
-        .data_size = 5,
-        .length = 5,
-    };
-    CDECL_Local_Name value_name = CDECL_Local_Name__create(&value);
-    pWriter__write__cdecl(self->writer, (CDECL_Name *)&value_name, (Checked_Type *)type);
-    pWriter__write__char(self->writer, ')');
-}
-
-void Generator__declare_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
-    pWriter__write__cstring(self->writer, ";\n");
-}
-
-void Generator__generate_alloc_struct_procedure(Generator *self, Checked_Struct_Type *struct_type) {
-    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " {\n");
-    pWriter__write__cstring(self->writer, "    ");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *result = (");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, " *)malloc(sizeof(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
-    pWriter__write__cstring(self->writer, "));\n");
-    pWriter__write__cstring(self->writer, "    *result = value;\n");
-    pWriter__write__cstring(self->writer, "    return result;\n");
-    pWriter__write__cstring(self->writer, "}\n\n");
-}
-
 void Generator__declare_trait(Generator *self, Checked_Trait_Type *trait_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)trait_type);
     pWriter__write__cstring(self->writer, ";\n");
@@ -835,25 +824,6 @@ void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) 
         pWriter__write__cstring(self->writer, "    };\n");
     }
     pWriter__write__cstring(self->writer, "};\n\n");
-}
-
-void Generator__declare_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
-    pWriter__write__cstring(self->writer, ";\n");
-}
-
-void Generator__define_alloc_union_procedure(Generator *self, Checked_Union_Type *union_type) {
-    Generator__generate_alloc_procedure_signature(self, (Checked_Named_Type *)union_type);
-    pWriter__write__cstring(self->writer, " {\n");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *result = (");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, " *)malloc(sizeof(");
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
-    pWriter__write__cstring(self->writer, "));\n");
-    pWriter__write__cstring(self->writer, "    *result = value;\n");
-    pWriter__write__cstring(self->writer, "    return result;\n");
-    pWriter__write__cstring(self->writer, "}\n\n");
 }
 
 void Generator__declare_type(Generator *self, Checked_Type *type) {
@@ -1013,16 +983,6 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
                 pWriter__end_line(generator.writer);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-                if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
-                    Generator__declare_alloc_struct_procedure(&generator, (Checked_Struct_Type *)named_type);
-                    pWriter__end_line(generator.writer);
-                } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
-                    Generator__declare_alloc_struct_procedure(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
-                    pWriter__end_line(generator.writer);
-                } else if (named_type->super.kind == CHECKED_TYPE_KIND__UNION) {
-                    Generator__declare_alloc_union_procedure(&generator, (Checked_Union_Type *)named_type);
-                    pWriter__end_line(generator.writer);
-                }
             }
         }
         checked_symbol = checked_symbol->next_symbol;
@@ -1047,7 +1007,6 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     generator.identation = 0;
 
     Checked_Symbol *checked_symbol;
-    Checked_Procedure_Symbol *malloc_procedure = NULL;
     Checked_Procedure_Symbol *main_procedure = NULL;
 
     /* Include all headers to have all methods available */
@@ -1069,11 +1028,12 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
                 Generator__generate_variable_statement(&generator, variable_symbol->statement);
                 pWriter__end_line(generator.writer);
             }
-        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
-            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
         }
         checked_symbol = checked_symbol->next_symbol;
     }
+
+    /* Declare malloc procedure */
+    pWriter__write__cstring(generator.writer, "void *malloc(uintmax_t size);\n\n");
 
     /* Generate all defined procedures */
     checked_symbol = checked_source->symbols->first_symbol;
@@ -1085,15 +1045,6 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
                     main_procedure = checked_procedure;
                 }
                 Generator__generate_procedure(&generator, checked_procedure);
-            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_procedure != NULL) {
-                Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-                if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
-                    Generator__generate_alloc_struct_procedure(&generator, (Checked_Struct_Type *)named_type);
-                } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
-                    Generator__generate_alloc_struct_procedure(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
-                } else if (named_type->super.kind == CHECKED_TYPE_KIND__UNION) {
-                    Generator__define_alloc_union_procedure(&generator, (Checked_Union_Type *)named_type);
-                }
             }
         }
         checked_symbol = checked_symbol->next_symbol;

@@ -1296,17 +1296,17 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
         return Parser__parse_switch_statement(self);
     }
 
-    Parsed_Expression *expresion = Parser__parse_access_expression(self);
+    Parsed_Expression *expression = Parser__parse_expression(self);
 
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
         Parsed_Expression *value_expression = Parser__parse_expression(self);
-        return (Parsed_Statement *)Parsed_Assignment_Statement__create(expresion, value_expression);
+        return (Parsed_Statement *)Parsed_Assignment_Statement__create(expression, value_expression);
     }
 
-    return (Parsed_Statement *)Parsed_Expression_Statement__create(expresion);
+    return (Parsed_Statement *)Parsed_Expression_Statement__create(expression);
 }
 
 /*

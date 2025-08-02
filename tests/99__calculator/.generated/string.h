@@ -11,8 +11,6 @@ struct string_Builder {
     uintmax_t length;
 };
 
-struct string_Builder *__alloc__string_Builder__(struct string_Builder value);
-
 struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8_t c);
 
 struct String pstring_Builder__build(struct string_Builder *self);

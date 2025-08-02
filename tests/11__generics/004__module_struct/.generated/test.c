@@ -1,6 +1,8 @@
 #include "test.h"
 #include "collections.h"
 
+void *malloc(uintmax_t size);
+
 #line 3 "tests/11__generics/004__module_struct/test.code"
 int32_t test__main() {
 #line 4 "tests/11__generics/004__module_struct/test.code"

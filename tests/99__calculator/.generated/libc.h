@@ -12,9 +12,9 @@ extern struct libc_FILE *__stderrp;
 
 int32_t fputc(int32_t c, struct libc_FILE *file);
 
-void *malloc(uint64_t size);
+void *malloc(uintmax_t size);
 
-void *realloc(void *block, uint64_t size);
+void *realloc(void *block, uintmax_t size);
 
 void exit(int32_t code);
 

@@ -8,11 +8,7 @@
 #include "os.h"
 #include "string.h"
 
-struct io_Writer *__alloc__io_Writer__(struct io_Writer value) {
-    struct io_Writer *result = (struct io_Writer *)malloc(sizeof(struct io_Writer));
-    *result = value;
-    return result;
-}
+void *malloc(uintmax_t size);
 
 #line 7 "tests/99__calculator/io.code"
 struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String string) {
@@ -21,13 +17,13 @@ struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String
 #line 9 "tests/99__calculator/io.code"
     uint8_t *string_data = ((struct String *) (&string_copy))->data;
 #line 10 "tests/99__calculator/io.code"
-    uintmax_t index = 0;
+    uintmax_t index = 0u;
 #line 11 "tests/99__calculator/io.code"
     while (index < string.length) {
 #line 12 "tests/99__calculator/io.code"
         pio_Writer__write(self, string_data[index]);
 #line 13 "tests/99__calculator/io.code"
-        index = index + 1;
+        index = index + 1u;
     }
 #line 15 "tests/99__calculator/io.code"
     return self;

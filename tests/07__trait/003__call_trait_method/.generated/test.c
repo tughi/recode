@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 9 "tests/07__trait/003__call_trait_method/test.code"
 int32_t ptest_Square__area(struct test_Square *self) {
 #line 10 "tests/07__trait/003__call_trait_method/test.code"

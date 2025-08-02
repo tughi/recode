@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 1 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/024__call_procedure_pointer_variable/test.code"

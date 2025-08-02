@@ -672,9 +672,10 @@ Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location locatio
     return expression;
 }
 
-Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression) {
+Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression, Checked_Type *parameter_type) {
     Checked_Call_Argument *argument = (Checked_Call_Argument *)malloc(sizeof(Checked_Call_Argument));
     argument->expression = expression;
+    argument->parameter_type = parameter_type;
     argument->next_argument = NULL;
     return argument;
 }
@@ -876,6 +877,12 @@ Checked_Break_Statement *Checked_Break_Statement__create(Source_Location locatio
     return (Checked_Break_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__BREAK, sizeof(Checked_Break_Statement), location);
 }
 
+Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements) {
+    Checked_Decomposed_Statement *statement = (Checked_Decomposed_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__DECOMPOSED, sizeof(Checked_Decomposed_Statement), location);
+    statement->statements = statements;
+    return statement;
+}
+
 Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location location, Checked_Expression *expression) {
     Checked_Expression_Statement *statement = (Checked_Expression_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__EXPRESSION, sizeof(Checked_Expression_Statement), location);
     statement->expression = expression;
@@ -959,6 +966,13 @@ Checked_Statements *Checked_Statements__create() {
     return statements;
 }
 
+Checked_Statements *Checked_Statements__create_copy(Checked_Statements *other) {
+    Checked_Statements *statements = (Checked_Statements *)malloc(sizeof(Checked_Statements));
+    statements->first_statement = other->first_statement;
+    statements->last_statement = other->last_statement;
+    return statements;
+}
+
 void Checked_Statements__append(Checked_Statements *self, Checked_Statement *statement) {
     if (self->first_statement == NULL) {
         self->first_statement = statement;
@@ -966,4 +980,13 @@ void Checked_Statements__append(Checked_Statements *self, Checked_Statement *sta
         self->last_statement->next_statement = statement;
     }
     self->last_statement = statement;
+}
+
+void Checked_Statements__prepend(Checked_Statements *self, Checked_Statement *statement) {
+    if (self->first_statement == NULL) {
+        self->first_statement = statement;
+    } else {
+        statement->next_statement = self->first_statement;
+    }
+    self->first_statement = statement;
 }

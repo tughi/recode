@@ -8,41 +8,7 @@
 #include "os.h"
 #include "string.h"
 
-struct calculator__expression_Expression *__alloc__calculator__expression_Expression__(struct calculator__expression_Expression value) {
-struct calculator__expression_Expression *result = (struct calculator__expression_Expression *)malloc(sizeof(struct calculator__expression_Expression));
-    *result = value;
-    return result;
-}
-
-struct calculator__expression_Number *__alloc__calculator__expression_Number__(struct calculator__expression_Number value) {
-    struct calculator__expression_Number *result = (struct calculator__expression_Number *)malloc(sizeof(struct calculator__expression_Number));
-    *result = value;
-    return result;
-}
-
-struct calculator__expression_Addition *__alloc__calculator__expression_Addition__(struct calculator__expression_Addition value) {
-    struct calculator__expression_Addition *result = (struct calculator__expression_Addition *)malloc(sizeof(struct calculator__expression_Addition));
-    *result = value;
-    return result;
-}
-
-struct calculator__expression_Division *__alloc__calculator__expression_Division__(struct calculator__expression_Division value) {
-    struct calculator__expression_Division *result = (struct calculator__expression_Division *)malloc(sizeof(struct calculator__expression_Division));
-    *result = value;
-    return result;
-}
-
-struct calculator__expression_Multiplication *__alloc__calculator__expression_Multiplication__(struct calculator__expression_Multiplication value) {
-    struct calculator__expression_Multiplication *result = (struct calculator__expression_Multiplication *)malloc(sizeof(struct calculator__expression_Multiplication));
-    *result = value;
-    return result;
-}
-
-struct calculator__expression_Subtraction *__alloc__calculator__expression_Subtraction__(struct calculator__expression_Subtraction value) {
-    struct calculator__expression_Subtraction *result = (struct calculator__expression_Subtraction *)malloc(sizeof(struct calculator__expression_Subtraction));
-    *result = value;
-    return result;
-}
+void *malloc(uintmax_t size);
 
 #line 42 "tests/99__calculator/calculator/expression.code"
 struct calculator__source_Span pcalculator__expression_Expression__span(struct calculator__expression_Expression *self) {

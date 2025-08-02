@@ -8,47 +8,7 @@
 #include "os.h"
 #include "string.h"
 
-struct calculator__tokenizer_Tokenizer *__alloc__calculator__tokenizer_Tokenizer__(struct calculator__tokenizer_Tokenizer value) {
-    struct calculator__tokenizer_Tokenizer *result = (struct calculator__tokenizer_Tokenizer *)malloc(sizeof(struct calculator__tokenizer_Tokenizer));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Token *__alloc__calculator__tokenizer_Token__(struct calculator__tokenizer_Token value) {
-struct calculator__tokenizer_Token *result = (struct calculator__tokenizer_Token *)malloc(sizeof(struct calculator__tokenizer_Token));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Plus *__alloc__calculator__tokenizer_Plus__(struct calculator__tokenizer_Plus value) {
-    struct calculator__tokenizer_Plus *result = (struct calculator__tokenizer_Plus *)malloc(sizeof(struct calculator__tokenizer_Plus));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Minus *__alloc__calculator__tokenizer_Minus__(struct calculator__tokenizer_Minus value) {
-    struct calculator__tokenizer_Minus *result = (struct calculator__tokenizer_Minus *)malloc(sizeof(struct calculator__tokenizer_Minus));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Multiply *__alloc__calculator__tokenizer_Multiply__(struct calculator__tokenizer_Multiply value) {
-    struct calculator__tokenizer_Multiply *result = (struct calculator__tokenizer_Multiply *)malloc(sizeof(struct calculator__tokenizer_Multiply));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Divide *__alloc__calculator__tokenizer_Divide__(struct calculator__tokenizer_Divide value) {
-    struct calculator__tokenizer_Divide *result = (struct calculator__tokenizer_Divide *)malloc(sizeof(struct calculator__tokenizer_Divide));
-    *result = value;
-    return result;
-}
-
-struct calculator__tokenizer_Stop *__alloc__calculator__tokenizer_Stop__(struct calculator__tokenizer_Stop value) {
-    struct calculator__tokenizer_Stop *result = (struct calculator__tokenizer_Stop *)malloc(sizeof(struct calculator__tokenizer_Stop));
-    *result = value;
-    return result;
-}
+void *malloc(uintmax_t size);
 
 #line 12 "tests/99__calculator/calculator/tokenizer.code"
 struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__peek_token(struct calculator__tokenizer_Tokenizer *self) {

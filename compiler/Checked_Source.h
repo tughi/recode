@@ -328,6 +328,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
     CHECKED_STATEMENT_KIND__BLOCK,
     CHECKED_STATEMENT_KIND__BREAK,
+    CHECKED_STATEMENT_KIND__DECOMPOSED,
     CHECKED_STATEMENT_KIND__EXPRESSION,
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
@@ -353,7 +354,11 @@ typedef struct Checked_Statements {
 
 Checked_Statements *Checked_Statements__create();
 
+Checked_Statements *Checked_Statements__create_copy(Checked_Statements *other);
+
 void Checked_Statements__append(Checked_Statements *self, Checked_Statement *statement);
+
+void Checked_Statements__prepend(Checked_Statements *self, Checked_Statement *statement);
 
 typedef struct Checked_Procedure_Symbol {
     Checked_Symbol super;
@@ -476,10 +481,11 @@ Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location locatio
 
 typedef struct Checked_Call_Argument {
     Checked_Expression *expression;
+    Checked_Type *parameter_type;
     struct Checked_Call_Argument *next_argument;
 } Checked_Call_Argument;
 
-Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression);
+Checked_Call_Argument *Checked_Call_Argument__create(Checked_Expression *expression, Checked_Type *parameter_type);
 
 typedef struct Checked_Call_Expression {
     Checked_Expression super;
@@ -720,6 +726,13 @@ typedef struct Checked_Break_Statement {
 } Checked_Break_Statement;
 
 Checked_Break_Statement *Checked_Break_Statement__create(Source_Location location);
+
+typedef struct Checked_Decomposed_Statement {
+    Checked_Statement super;
+    Checked_Statements *statements;
+} Checked_Decomposed_Statement;
+
+Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements);
 
 typedef struct Checked_Expression_Statement {
     Checked_Statement super;

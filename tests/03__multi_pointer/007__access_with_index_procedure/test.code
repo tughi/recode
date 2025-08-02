@@ -1,0 +1,14 @@
+proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
+    if argc < 2 {
+        return 1
+    }
+    let i = 1
+    if argv[index(i)][index(i)] != '0' {
+        return 2
+    }
+    return 0
+}
+
+proc index(anon value: i32) -> i32 {
+    return value
+}

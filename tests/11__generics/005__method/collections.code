@@ -17,5 +17,3 @@ proc (^List<T>).prepend<T>(self, data: T) {
     self.first_item = new_item
     self.length = self.length + 1
 }
-
-proc malloc(anon size: usize) -> ^Any = external

@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-void *malloc(uint64_t size);
+void *malloc(uintmax_t size);
 
 #endif // __test_H__

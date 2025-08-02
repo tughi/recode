@@ -11,7 +11,7 @@ proc (^Builder).write(self, char c: u8) -> ^Builder {
         self.data_size = self.data_size + 8
         self.data = libc.realloc(
             self.data.as(^Any)
-            self.data_size.as(u64)
+            self.data_size
         ).as([^]u8)
     }
     self.data[self.length] = c
@@ -34,7 +34,7 @@ proc make_string_builder() -> Builder {
 
 proc make_string_builder_with_data_size(anon data_size: usize) -> Builder {
     return Builder(
-        data: libc.malloc(data_size.as(u64)).as([^]u8)
+        data: libc.malloc(data_size).as([^]u8)
         data_size: data_size
         length: 0
     )

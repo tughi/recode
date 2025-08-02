@@ -47,18 +47,6 @@ struct calculator__expression_Expression {
     };
 };
 
-struct calculator__expression_Expression *__alloc__calculator__expression_Expression__(struct calculator__expression_Expression value);
-
-struct calculator__expression_Number *__alloc__calculator__expression_Number__(struct calculator__expression_Number value);
-
-struct calculator__expression_Addition *__alloc__calculator__expression_Addition__(struct calculator__expression_Addition value);
-
-struct calculator__expression_Division *__alloc__calculator__expression_Division__(struct calculator__expression_Division value);
-
-struct calculator__expression_Multiplication *__alloc__calculator__expression_Multiplication__(struct calculator__expression_Multiplication value);
-
-struct calculator__expression_Subtraction *__alloc__calculator__expression_Subtraction__(struct calculator__expression_Subtraction value);
-
 struct calculator__source_Span pcalculator__expression_Expression__span(struct calculator__expression_Expression *self);
 
 struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct calculator__expression_Expression *expression);

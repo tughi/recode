@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 1 "tests/01__basics/003__calling_coding_style/test.code"
 void test__test(int32_t one, int32_t two, int32_t three, int32_t four, int32_t five) {
 }

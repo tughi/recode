@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 3 "tests/01__basics/013__external_procedure/test.code"
 int32_t test__main() {
 #line 4 "tests/01__basics/013__external_procedure/test.code"

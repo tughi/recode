@@ -1,5 +1,7 @@
 #include "test.h"
 
+void *malloc(uintmax_t size);
+
 #line 11 "tests/09__union/005__make_union_value/test.code"
 int32_t test__main() {
 #line 12 "tests/09__union/005__make_union_value/test.code"
