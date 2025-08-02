@@ -1318,22 +1318,13 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
     return temp_variable_symbol;
 }
 
-Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_with_value(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
+Checked_Expression *Checked_Expression_Decomposer__create_temp_variable(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, expression->location, expression->type);
 
     Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(expression->location, temp_variable_symbol, false, expression);
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
 
     return (Checked_Expression *)Checked_Symbol_Expression__create(expression->location, expression->type, (Checked_Symbol *)temp_variable_symbol);
-}
-
-Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_without_value(Checked_Expression_Decomposer *self, Source_Location location, Checked_Type *type) {
-    Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, location, type);
-
-    Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(location, temp_variable_symbol, false, NULL);
-    Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
-
-    return (Checked_Expression *)Checked_Symbol_Expression__create(location, type, (Checked_Symbol *)temp_variable_symbol);
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_binary_expression(Checked_Expression_Decomposer *self, Checked_Binary_Expression *expression) {
@@ -1343,72 +1334,34 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_binary_expression(C
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_logic_and_expression(Checked_Expression_Decomposer *self, Checked_Logic_And_Expression *expression) {
-    // Create a temporary variable to hold the result of the logic-and expression
-    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.super.location, expression->super.super.type);
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
 
-    // Decompose and evaluate the left side, storing its value in a temp variable
-    Checked_Expression *left_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
-
-    // Create the block for the 'true' branch (when left_expression is true)
     Checked_Block_Statement *true_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
-    // Save the current statements context
     Checked_Statements *self_statements = self->statements;
-    // Switch to the true block's statements for further decomposition
     self->statements = true_block->statements;
-    // Decompose and evaluate the right side, storing its value in a temp variable
-    Checked_Expression *right_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression));
-    // Assign the right_expression value to the result in the true branch
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, right_expression));
-    // Restore the previous statements context
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression)));
     self->statements = self_statements;
 
-    // Create the block for the 'false' branch (when left_expression is false)
-    Checked_Block_Statement *false_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
-    // Assign the left_expression value to the result in the false branch
-    Checked_Statements__append(false_block->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, left_expression));
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, result_expression, (Checked_Statement *)true_block, NULL));
 
-    // Add the if-statement that chooses between true_block and false_block based on left_expression
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, left_expression, (Checked_Statement *)true_block, (Checked_Statement *)false_block));
+    free(expression); // replaced by result_expression
 
-    // Free the original logic-and expression, as it is replaced by the result_expression
-    free(expression);
-
-    // Return the result temp variable as the decomposed expression
     return (Checked_Expression *)result_expression;
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_logic_or_expression(Checked_Expression_Decomposer *self, Checked_Logic_Or_Expression *expression) {
-    // Create a temporary variable to hold the result of the logic-or expression
-    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.super.location, expression->super.super.type);
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
 
-    // Decompose and evaluate the left side, storing its value in a temp variable
-    Checked_Expression *left_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.left_expression));
-
-    // Create the block for the 'true' branch (when left_expression is true)
-    Checked_Block_Statement *true_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
-    // Assign the left_expression value to the result in the true branch
-    Checked_Statements__append(true_block->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, left_expression));
-
-    // Create the block for the 'false' branch (when left_expression is false)
     Checked_Block_Statement *false_block = Checked_Block_Statement__create(result_expression->location, Checked_Statements__create());
-    // Save the current statements context
     Checked_Statements *self_statements = self->statements;
-    // Switch to the false block's statements for further decomposition
     self->statements = false_block->statements;
-    // Decompose and evaluate the right side, storing its value in a temp variable
-    Checked_Expression *right_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression));
-    // Assign the right_expression value to the result in the false branch
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, right_expression));
-    // Restore the previous statements context
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(result_expression->location, result_expression, Checked_Expression_Decomposer__decompose(self, expression->super.right_expression)));
     self->statements = self_statements;
 
-    // Add the if-statement that chooses between true_block and false_block based on left_expression
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, left_expression, (Checked_Statement *)true_block, (Checked_Statement *)false_block));
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(result_expression->location, result_expression, NULL, (Checked_Statement *)false_block));
 
-    // Free the original logic-or expression, as it is replaced by the result_expression
-    free(expression);
+    free(expression); // replaced by result_expression
 
-    // Return the result temp variable as the decomposed expression
     return (Checked_Expression *)result_expression;
 }
 
@@ -1421,7 +1374,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_call_expression(Che
     expression->callee_expression = Checked_Expression_Decomposer__decompose(self, expression->callee_expression);
     Checked_Call_Argument *call_argument = expression->first_argument;
     while (call_argument != NULL) {
-        call_argument->expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, call_argument->expression));
+        call_argument->expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, call_argument->expression));
         call_argument = call_argument->next_argument;
     }
     return (Checked_Expression *)expression;
@@ -1430,16 +1383,16 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_call_expression(Che
 Checked_Expression *Checked_Expression_Decomposer__decompose_member_access_expression(Checked_Expression_Decomposer *self, Checked_Member_Access_Expression *expression) {
     expression->object_expression = Checked_Expression_Decomposer__decompose(self, expression->object_expression);
     if (expression->object_expression->kind == CHECKED_EXPRESSION_KIND__CALL) {
-        expression->object_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, expression->object_expression);
+        expression->object_expression = Checked_Expression_Decomposer__create_temp_variable(self, expression->object_expression);
     }
     return (Checked_Expression *)expression;
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_array_access_expression(Checked_Expression_Decomposer *self, Checked_Array_Access_Expression *expression) {
     expression->array_expression = Checked_Expression_Decomposer__decompose(self, expression->array_expression);
-    expression->index_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, Checked_Expression_Decomposer__decompose(self, expression->index_expression));
+    expression->index_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, expression->index_expression));
     if (expression->array_expression->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
-        expression->array_expression = Checked_Expression_Decomposer__create_temp_variable_with_value(self, expression->array_expression);
+        expression->array_expression = Checked_Expression_Decomposer__create_temp_variable(self, expression->array_expression);
     }
     return (Checked_Expression *)expression;
 }
@@ -1447,47 +1400,75 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_array_access_expres
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
-    case CHECKED_EXPRESSION_KIND__DIVIDE:
-    case CHECKED_EXPRESSION_KIND__EQUALS:
-    case CHECKED_EXPRESSION_KIND__GREATER:
-    case CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS:
-    case CHECKED_EXPRESSION_KIND__LESS:
-    case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
-    case CHECKED_EXPRESSION_KIND__MODULO:
-    case CHECKED_EXPRESSION_KIND__MULTIPLY:
-    case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
-    case CHECKED_EXPRESSION_KIND__SUBTRACT:
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__ADDRESS_OF:
-    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
-    case CHECKED_EXPRESSION_KIND__GROUP: // Handle group expressions as unary expressions
-    case CHECKED_EXPRESSION_KIND__MINUS:
-    case CHECKED_EXPRESSION_KIND__NOT:
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__ALLOC:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+        return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__BOOL:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__CALL:
+        return Checked_Expression_Decomposer__decompose_call_expression(self, (Checked_Call_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__CAST:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__DIVIDE:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__EQUALS:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__GREATER:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__GROUP:
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Handle group expressions as unary expressions
+    case CHECKED_EXPRESSION_KIND__INTEGER:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__LESS:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__LOGIC_AND:
         return Checked_Expression_Decomposer__decompose_logic_and_expression(self, (Checked_Logic_And_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__LOGIC_OR:
         return Checked_Expression_Decomposer__decompose_logic_or_expression(self, (Checked_Logic_Or_Expression *)expression);
-    case CHECKED_EXPRESSION_KIND__CALL:
-        return Checked_Expression_Decomposer__decompose_call_expression(self, (Checked_Call_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__MAKE_UNION:
+        return expression;
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Checked_Expression_Decomposer__decompose_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
-    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
-        return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
-    case CHECKED_EXPRESSION_KIND__ALLOC:
-    case CHECKED_EXPRESSION_KIND__BOOL:
-    case CHECKED_EXPRESSION_KIND__CAST:
-    case CHECKED_EXPRESSION_KIND__CHARACTER:
-    case CHECKED_EXPRESSION_KIND__INTEGER:
-    case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
-    case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
-    case CHECKED_EXPRESSION_KIND__MAKE_UNION:
+    case CHECKED_EXPRESSION_KIND__MINUS:
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__MODULO:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__MULTIPLY:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__NOT:
+        return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__NULL:
+        return expression;
     case CHECKED_EXPRESSION_KIND__RECEIVER_METHOD:
+        return expression;
     case CHECKED_EXPRESSION_KIND__SIZEOF:
+        return expression;
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
+        return expression;
     case CHECKED_EXPRESSION_KIND__STRING:
+        return expression;
+    case CHECKED_EXPRESSION_KIND__SUBTRACT:
+        return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
+        return expression;
     case CHECKED_EXPRESSION_KIND__TYPE:
         return expression;
     default:

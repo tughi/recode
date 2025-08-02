@@ -114,18 +114,11 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_token(
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
     {
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
-        bool __001__;
+        bool __001__ = ch >= '0';
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
-        bool __002__ = ch >= '0';
+        if (__001__) {
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
-        if (__002__) {
-#line 33 "tests/99__calculator/calculator/tokenizer.code"
-            bool __003__ = ch <= '9';
-#line 33 "tests/99__calculator/calculator/tokenizer.code"
-            __001__ = __003__;
-        } else {
-#line 33 "tests/99__calculator/calculator/tokenizer.code"
-            __001__ = __002__;
+            __001__ = ch <= '9';
         }
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
         if (__001__) {
@@ -184,18 +177,11 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_number
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
         {
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
-            bool __001__;
+            bool __001__ = c < '0';
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
-            bool __002__ = c < '0';
+            if (__001__) {} else {
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
-            if (__002__) {
-#line 60 "tests/99__calculator/calculator/tokenizer.code"
-                __001__ = __002__;
-            } else {
-#line 60 "tests/99__calculator/calculator/tokenizer.code"
-                bool __003__ = c > '9';
-#line 60 "tests/99__calculator/calculator/tokenizer.code"
-                __001__ = __003__;
+                __001__ = c > '9';
             }
 #line 60 "tests/99__calculator/calculator/tokenizer.code"
             if (__001__) {
