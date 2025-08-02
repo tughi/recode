@@ -647,7 +647,9 @@ Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Ex
     bool can_cast = false;
     if (expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
         Checked_Pointer_Type *expression_pointer_type = (Checked_Pointer_Type *)expression_type;
-        if (other_expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
+        if (other_expression_type->kind == CHECKED_TYPE_KIND__NULL) {
+            can_cast = true;
+        } else if (other_expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
             can_cast = true;
         } else if (expression_pointer_type->other_type->kind == CHECKED_TYPE_KIND__ANY) {
             if (other_expression_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
@@ -1410,6 +1412,11 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_make_struct_express
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_make_union_expression(Checked_Expression_Decomposer *self, Checked_Make_Union_Expression *expression) {
+    expression->expression = Checked_Expression_Decomposer__decompose(self, expression->expression);
+    return (Checked_Expression *)expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose_alloc_expression(Checked_Expression_Decomposer *self, Checked_Alloc_Expression *expression) {
     Checked_Expression *value_expression = expression->value_expression;
     expression->value_expression = NULL;
@@ -1463,7 +1470,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
         return Checked_Expression_Decomposer__decompose_make_struct_expression(self, (Checked_Make_Struct_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MAKE_UNION:
-        return expression;
+        return Checked_Expression_Decomposer__decompose_make_union_expression(self, (Checked_Make_Union_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Checked_Expression_Decomposer__decompose_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MINUS:

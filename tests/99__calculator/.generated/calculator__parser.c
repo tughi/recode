@@ -291,6 +291,15 @@ struct calculator__expression_Expression pcalculator__parser_Parser__parse_prima
         return (struct calculator__expression_Expression){.variant = 1, .variant_1 = token.variant_1};
     }
 #line 75 "tests/99__calculator/calculator/parser.code"
-    return (struct calculator__expression_Expression){.variant = 6, .variant_6 = (struct calculator__source_Error){.span = pcalculator__tokenizer_Token__span(&token), .message = (struct String){.data = "Expected number", .length = 15}}};
+    {
+#line 76 "tests/99__calculator/calculator/parser.code"
+        struct calculator__tokenizer_Token *__001__ = &token;
+#line 76 "tests/99__calculator/calculator/parser.code"
+        struct calculator__source_Span __002__ = pcalculator__tokenizer_Token__span(__001__);
+#line 77 "tests/99__calculator/calculator/parser.code"
+        struct String __003__ = (struct String){.data = "Expected number", .length = 15};
+#line 75 "tests/99__calculator/calculator/parser.code"
+        return (struct calculator__expression_Expression){.variant = 6, .variant_6 = (struct calculator__source_Error){.span = __002__, .message = __003__}};
+    }
 }
 

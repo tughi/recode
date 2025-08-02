@@ -69,7 +69,16 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_token(
 #line 30 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == 0) {
 #line 31 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__tokenizer_Token){.variant = 6, .variant_6 = (struct calculator__tokenizer_Stop){.span = (struct calculator__source_Span){.start = self->index, .end = self->index}}};
+        {
+#line 31 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index;
+#line 31 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = self->index;
+#line 31 "tests/99__calculator/calculator/tokenizer.code"
+            struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 31 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__tokenizer_Token){.variant = 6, .variant_6 = (struct calculator__tokenizer_Stop){.span = __003__}};
+        }
     }
 #line 33 "tests/99__calculator/calculator/tokenizer.code"
     {
@@ -96,25 +105,72 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_token(
 #line 37 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == '+') {
 #line 38 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__tokenizer_Token){.variant = 2, .variant_2 = (struct calculator__tokenizer_Plus){.span = (struct calculator__source_Span){.start = self->index - 1, .end = self->index}}};
+        {
+#line 38 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index - 1;
+#line 38 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = self->index;
+#line 38 "tests/99__calculator/calculator/tokenizer.code"
+            struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 38 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__tokenizer_Token){.variant = 2, .variant_2 = (struct calculator__tokenizer_Plus){.span = __003__}};
+        }
     }
 #line 40 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == '-') {
 #line 41 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__tokenizer_Token){.variant = 3, .variant_3 = (struct calculator__tokenizer_Minus){.span = (struct calculator__source_Span){.start = self->index - 1, .end = self->index}}};
+        {
+#line 41 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index - 1;
+#line 41 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = self->index;
+#line 41 "tests/99__calculator/calculator/tokenizer.code"
+            struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 41 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__tokenizer_Token){.variant = 3, .variant_3 = (struct calculator__tokenizer_Minus){.span = __003__}};
+        }
     }
 #line 43 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == '*') {
 #line 44 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__tokenizer_Token){.variant = 4, .variant_4 = (struct calculator__tokenizer_Multiply){.span = (struct calculator__source_Span){.start = self->index - 1, .end = self->index}}};
+        {
+#line 44 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index - 1;
+#line 44 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = self->index;
+#line 44 "tests/99__calculator/calculator/tokenizer.code"
+            struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 44 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__tokenizer_Token){.variant = 4, .variant_4 = (struct calculator__tokenizer_Multiply){.span = __003__}};
+        }
     }
 #line 46 "tests/99__calculator/calculator/tokenizer.code"
     if (ch == '/') {
 #line 47 "tests/99__calculator/calculator/tokenizer.code"
-        return (struct calculator__tokenizer_Token){.variant = 5, .variant_5 = (struct calculator__tokenizer_Divide){.span = (struct calculator__source_Span){.start = self->index - 1, .end = self->index}}};
+        {
+#line 47 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __001__ = self->index - 1;
+#line 47 "tests/99__calculator/calculator/tokenizer.code"
+            int32_t __002__ = self->index;
+#line 47 "tests/99__calculator/calculator/tokenizer.code"
+            struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 47 "tests/99__calculator/calculator/tokenizer.code"
+            return (struct calculator__tokenizer_Token){.variant = 5, .variant_5 = (struct calculator__tokenizer_Divide){.span = __003__}};
+        }
     }
 #line 49 "tests/99__calculator/calculator/tokenizer.code"
-    return (struct calculator__tokenizer_Token){.variant = 7, .variant_7 = (struct calculator__source_Error){.span = (struct calculator__source_Span){.start = self->index - 1, .end = self->index}, .message = (struct String){.data = "Unexpected character", .length = 20}}};
+    {
+#line 50 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __001__ = self->index - 1;
+#line 50 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __002__ = self->index;
+#line 50 "tests/99__calculator/calculator/tokenizer.code"
+        struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 51 "tests/99__calculator/calculator/tokenizer.code"
+        struct String __004__ = (struct String){.data = "Unexpected character", .length = 20};
+#line 49 "tests/99__calculator/calculator/tokenizer.code"
+        return (struct calculator__tokenizer_Token){.variant = 7, .variant_7 = (struct calculator__source_Error){.span = __003__, .message = __004__}};
+    }
 }
 
 #line 55 "tests/99__calculator/calculator/tokenizer.code"
@@ -155,7 +211,18 @@ struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__scan_number
         self->index = self->index + 1;
     }
 #line 66 "tests/99__calculator/calculator/tokenizer.code"
-    return (struct calculator__tokenizer_Token){.variant = 1, .variant_1 = (struct calculator__expression_Number){.span = (struct calculator__source_Span){.start = start, .end = self->index}, .value = value}};
+    {
+#line 67 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __001__ = start;
+#line 67 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __002__ = self->index;
+#line 67 "tests/99__calculator/calculator/tokenizer.code"
+        struct calculator__source_Span __003__ = (struct calculator__source_Span){.start = __001__, .end = __002__};
+#line 68 "tests/99__calculator/calculator/tokenizer.code"
+        int32_t __004__ = value;
+#line 66 "tests/99__calculator/calculator/tokenizer.code"
+        return (struct calculator__tokenizer_Token){.variant = 1, .variant_1 = (struct calculator__expression_Number){.span = __003__, .value = __004__}};
+    }
 }
 
 #line 102 "tests/99__calculator/calculator/tokenizer.code"
