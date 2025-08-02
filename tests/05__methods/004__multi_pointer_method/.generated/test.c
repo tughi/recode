@@ -7,14 +7,7 @@ int32_t d_u8_b__length(uint8_t *self) {
 #line 2 "tests/05__methods/004__multi_pointer_method/test.code"
     int32_t length = 0;
 #line 3 "tests/05__methods/004__multi_pointer_method/test.code"
-    for (;;) {
-#line 3 "tests/05__methods/004__multi_pointer_method/test.code"
-        {
-#line 3 "tests/05__methods/004__multi_pointer_method/test.code"
-            int32_t __001__ = length;
-#line 3 "tests/05__methods/004__multi_pointer_method/test.code"
-            if (self[__001__] != 0) {} else break;
-        }
+    while (self[length] != 0) {
 #line 4 "tests/05__methods/004__multi_pointer_method/test.code"
         length = length + 1;
     }
@@ -30,16 +23,9 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         return 1;
     }
 #line 13 "tests/05__methods/004__multi_pointer_method/test.code"
-    {
-#line 13 "tests/05__methods/004__multi_pointer_method/test.code"
-        int32_t __001__ = 1;
-#line 13 "tests/05__methods/004__multi_pointer_method/test.code"
-        uint8_t *__002__ = argv[__001__];
-#line 13 "tests/05__methods/004__multi_pointer_method/test.code"
-        if (d_u8_b__length(__002__) != 4) {
+    if (d_u8_b__length(argv[1]) != 4) {
 #line 14 "tests/05__methods/004__multi_pointer_method/test.code"
-            return 2;
-        }
+        return 2;
     }
 #line 16 "tests/05__methods/004__multi_pointer_method/test.code"
     return 0;

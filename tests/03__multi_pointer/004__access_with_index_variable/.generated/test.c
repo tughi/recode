@@ -12,18 +12,9 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 5 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
     int32_t i = 1;
 #line 6 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-    {
-#line 6 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-        int32_t __001__ = i;
-#line 6 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-        int32_t __002__ = i;
-#line 6 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-        uint8_t *__003__ = argv[__001__];
-#line 6 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-        if (__003__[__002__] != '0') {
+    if (argv[i][i] != '0') {
 #line 7 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
-            return 2;
-        }
+        return 2;
     }
 #line 9 "tests/03__multi_pointer/004__access_with_index_variable/test.code"
     return 0;

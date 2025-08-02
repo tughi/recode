@@ -15,12 +15,7 @@ void test__finish() {
 #line 9 "tests/01__basics/012__procedure_without_return/test.code"
     test__nothing();
 #line 10 "tests/01__basics/012__procedure_without_return/test.code"
-    {
-#line 10 "tests/01__basics/012__procedure_without_return/test.code"
-        int32_t __001__ = 0;
-#line 10 "tests/01__basics/012__procedure_without_return/test.code"
-        exit(__001__);
-    }
+    exit(0);
 }
 
 #line 13 "tests/01__basics/012__procedure_without_return/test.code"

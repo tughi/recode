@@ -5,12 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/014__while/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/014__while/test.code"
-    {
-#line 2 "tests/01__basics/014__while/test.code"
-        int32_t __001__ = 12;
-#line 2 "tests/01__basics/014__while/test.code"
-        return test__fibonacci(__001__) - 144;
-    }
+    return test__fibonacci(12) - 144;
 }
 
 #line 5 "tests/01__basics/014__while/test.code"

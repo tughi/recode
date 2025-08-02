@@ -5,12 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
-    {
-#line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
-        int32_t *__001__ = NULL;
-#line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
-        return test__deref(__001__);
-    }
+    return test__deref(NULL);
 }
 
 #line 5 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"

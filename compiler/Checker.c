@@ -1334,7 +1334,7 @@ Checked_Expression *Checked_Expression_Decomposer__create_temp_variable(Checked_
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_binary_expression(Checked_Expression_Decomposer *self, Checked_Binary_Expression *expression) {
-    expression->left_expression = Checked_Expression_Decomposer__decompose(self, expression->left_expression);
+    expression->left_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, expression->left_expression));
     expression->right_expression = Checked_Expression_Decomposer__decompose(self, expression->right_expression);
     return (Checked_Expression *)expression;
 }
@@ -1421,7 +1421,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_alloc_expression(Ch
     Checked_Expression *value_expression = expression->value_expression;
     expression->value_expression = NULL;
     Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, (Checked_Expression *)expression);
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(value_expression->location, (Checked_Expression *)Checked_Dereference_Expression__create(expression->super.location, value_expression->type, result_expression), value_expression));
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(value_expression->location, (Checked_Expression *)Checked_Dereference_Expression__create(expression->super.location, value_expression->type, result_expression), Checked_Expression_Decomposer__decompose(self, value_expression)));
     return result_expression;
 }
 
@@ -1430,7 +1430,12 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_is_union_variant_ex
     return (Checked_Expression *)expression;
 }
 
+bool Checked_Expression__needs_decomposition(Checked_Expression *self);
+
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
+    if (!Checked_Expression__needs_decomposition(expression)) {
+        return expression;
+    }
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__ADD:
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
@@ -1504,6 +1509,131 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Cannot decompose expression kind: ");
         pWriter__write__int64(stderr_writer, expression->kind);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+}
+
+bool Checked_Array_Access_Expression__needs_decomposition(Checked_Array_Access_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->array_expression) || Checked_Expression__needs_decomposition(self->index_expression);
+}
+
+bool Checked_Binary_Expression__needs_decomposition(Checked_Binary_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->left_expression) || Checked_Expression__needs_decomposition(self->right_expression);
+}
+
+bool Checked_Call_Expression__needs_decomposition(Checked_Call_Expression *self) {
+    Checked_Call_Argument *argument = self->first_argument;
+    while (argument != NULL) {
+        if (Checked_Expression__needs_decomposition(argument->expression)) {
+            return true;
+        }
+        argument = argument->next_argument;
+    }
+    return Checked_Expression__needs_decomposition(self->callee_expression);
+}
+
+bool Checked_Is_Union_Variant_Expression__needs_decomposition(Checked_Is_Union_Variant_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->union_expression);
+}
+
+bool Checked_Make_Struct_Expression__needs_decomposition(Checked_Make_Struct_Expression *self) {
+    Checked_Make_Struct_Argument *argument = self->first_argument;
+    while (argument != NULL) {
+        if (Checked_Expression__needs_decomposition(argument->expression)) {
+            return true;
+        }
+        argument = argument->next_argument;
+    }
+    return false;
+}
+
+bool Checked_Make_Union_Expression__needs_decomposition(Checked_Make_Union_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->expression);
+}
+
+bool Checked_Member_Access_Expression__needs_decomposition(Checked_Member_Access_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->object_expression);
+}
+
+bool Checked_Unary_Expression__needs_decomposition(Checked_Unary_Expression *self) {
+    return Checked_Expression__needs_decomposition(self->other_expression);
+}
+
+bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
+    switch (self->kind) {
+    case CHECKED_EXPRESSION_KIND__ADD:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__ADDRESS_OF:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__ALLOC:
+        return true;
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+        return Checked_Array_Access_Expression__needs_decomposition((Checked_Array_Access_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__BOOL:
+        return false;
+    case CHECKED_EXPRESSION_KIND__CALL:
+        return Checked_Call_Expression__needs_decomposition((Checked_Call_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__CAST:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self); // Treat as unary expressions
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
+        return false;
+    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__DIVIDE:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__EQUALS:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__GREATER:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__GROUP:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self); // Treat as unary expressions
+    case CHECKED_EXPRESSION_KIND__INTEGER:
+        return false;
+    case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
+        return Checked_Is_Union_Variant_Expression__needs_decomposition((Checked_Is_Union_Variant_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__LESS:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__LOGIC_AND:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__LOGIC_OR:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
+        return Checked_Make_Struct_Expression__needs_decomposition((Checked_Make_Struct_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MAKE_UNION:
+        return Checked_Make_Union_Expression__needs_decomposition((Checked_Make_Union_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
+        return Checked_Member_Access_Expression__needs_decomposition((Checked_Member_Access_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MINUS:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MODULO:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__MULTIPLY:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__NOT:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__NULL:
+        return false;
+    case CHECKED_EXPRESSION_KIND__SIZEOF:
+        return false;
+    case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
+        return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self); // Treat as unary expressions
+    case CHECKED_EXPRESSION_KIND__STRING:
+        return false;
+    case CHECKED_EXPRESSION_KIND__SUBTRACT:
+        return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__SYMBOL:
+        return false;
+    default:
+        pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported expression kind: ");
+        pWriter__write__int64(stderr_writer, self->kind);
         pWriter__end_location_message(stderr_writer);
         panic();
     }

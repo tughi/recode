@@ -5,18 +5,7 @@ void *malloc(uintmax_t size);
 #line 7 "tests/11__generics/003__struct_init/test.code"
 int32_t test__main() {
 #line 8 "tests/11__generics/003__struct_init/test.code"
-    struct test_Array__i32 array;
-#line 8 "tests/11__generics/003__struct_init/test.code"
-    {
-#line 9 "tests/11__generics/003__struct_init/test.code"
-        int32_t *__001__ = NULL;
-#line 10 "tests/11__generics/003__struct_init/test.code"
-        uintmax_t __002__ = 0u;
-#line 11 "tests/11__generics/003__struct_init/test.code"
-        uintmax_t __003__ = 0u;
-#line 8 "tests/11__generics/003__struct_init/test.code"
-        array = (struct test_Array__i32){.items = __001__, .length = __002__, .capacity = __003__};
-    }
+    struct test_Array__i32 array = (struct test_Array__i32){.items = NULL, .length = 0u, .capacity = 0u};
 #line 13 "tests/11__generics/003__struct_init/test.code"
     return ((int32_t) array.length);
 }

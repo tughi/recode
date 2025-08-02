@@ -61,24 +61,14 @@ int32_t test__main() {
         circle_shape = __001__;
     }
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    {
-#line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        void *__001__ = square_shape->self;
-#line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        if (square_shape->area(__001__) != 100) {
+    if (square_shape->area(square_shape->self) != 100) {
 #line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
-            return 1;
-        }
+        return 1;
     }
 #line 31 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    {
-#line 31 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        void *__001__ = circle_shape->self;
-#line 31 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        if (circle_shape->area(__001__) != 312) {
+    if (circle_shape->area(circle_shape->self) != 312) {
 #line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
-            return 2;
-        }
+        return 2;
     }
 #line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
     return 0;

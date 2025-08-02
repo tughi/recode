@@ -5,32 +5,11 @@ void *malloc(uintmax_t size);
 #line 7 "tests/01__basics/019__external_type/test.code"
 int32_t test__main() {
 #line 8 "tests/01__basics/019__external_type/test.code"
-    {
-#line 8 "tests/01__basics/019__external_type/test.code"
-        int32_t __001__ = 52;
-#line 8 "tests/01__basics/019__external_type/test.code"
-        struct test_FILE *__002__ = __stdoutp;
-#line 8 "tests/01__basics/019__external_type/test.code"
-        fputc(__001__, __002__);
-    }
+    fputc(52, __stdoutp);
 #line 9 "tests/01__basics/019__external_type/test.code"
-    {
-#line 9 "tests/01__basics/019__external_type/test.code"
-        int32_t __001__ = 50;
-#line 9 "tests/01__basics/019__external_type/test.code"
-        struct test_FILE *__002__ = __stdoutp;
-#line 9 "tests/01__basics/019__external_type/test.code"
-        fputc(__001__, __002__);
-    }
+    fputc(50, __stdoutp);
 #line 10 "tests/01__basics/019__external_type/test.code"
-    {
-#line 10 "tests/01__basics/019__external_type/test.code"
-        int32_t __001__ = 10;
-#line 10 "tests/01__basics/019__external_type/test.code"
-        struct test_FILE *__002__ = __stdoutp;
-#line 10 "tests/01__basics/019__external_type/test.code"
-        fputc(__001__, __002__);
-    }
+    fputc(10, __stdoutp);
 #line 11 "tests/01__basics/019__external_type/test.code"
     return 0;
 }
