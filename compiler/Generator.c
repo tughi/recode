@@ -24,8 +24,19 @@ void Generator__generate_add_expression(Generator *self, Checked_Add_Expression 
 }
 
 void Generator__generate_address_of_expression(Generator *self, Checked_Address_Of_Expression *expression) {
-    pWriter__write__cstring(self->writer, "&");
-    Generator__generate_expression(self, expression->super.other_expression);
+    Checked_Expression *other_expression = expression->super.other_expression;
+    switch (other_expression->kind) {
+    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
+    case CHECKED_EXPRESSION_KIND__SYMBOL:
+        pWriter__write__cstring(self->writer, "&");
+        Generator__generate_expression(self, other_expression);
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, other_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Address-of expression was not properly decomposed");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
 }
 
 void Generator__generate_alloc_expression(Generator *self, Checked_Alloc_Expression *expression) {
