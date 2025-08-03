@@ -410,10 +410,12 @@ Checked_Procedure_Symbol *Checker__resolve_reference_method_symbol(Checker *self
 }
 
 Checked_Expression *Checker__check_add_expression(Checker *self, Parsed_Add_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Add_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
@@ -616,10 +618,6 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
                 panic();
             }
             Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, procedure_parameter->type);
-            if (procedure_parameter->type->kind == CHECKED_TYPE_KIND__UNION && !Checked_Type__equals(procedure_parameter->type, argument_expression->type)) {
-                argument_expression = (Checked_Expression *)Checker__make_union_expression(self, argument_expression->location, (Checked_Union_Type *)procedure_parameter->type, argument_expression);
-            }
-            Checker__require_same_type(self, procedure_parameter->type, argument_expression->type, argument_expression->location);
             Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression, procedure_parameter->type);
             if (last_argument == NULL) {
                 first_argument = argument;
@@ -701,39 +699,38 @@ Checked_Expression *Checker__check_dereference_expression(Checker *self, Parsed_
 }
 
 Checked_Expression *Checker__check_divide_expression(Checker *self, Parsed_Divide_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Divide_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
-Checked_Expression *Checker__check_equals_expression(Checker *self, Parsed_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    if (expected_type != NULL && expected_type->kind != CHECKED_TYPE_KIND__BOOL) {
-        pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Expected boolean type for equals expression");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
+Checked_Expression *Checker__check_equals_expression(Checker *self, Parsed_Equals_Expression *parsed_expression) {
     Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_greater_expression(Checker *self, Parsed_Greater_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Greater_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_greater_or_equals_expression(Checker *self, Parsed_Greater_Or_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Greater_Or_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
@@ -762,7 +759,6 @@ Checked_Expression *Checker__check_init_struct_expression(Checker *self, Checked
                 panic();
             }
             Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, struct_member->type);
-            Checker__require_same_type(self, struct_member->type, argument_expression->type, argument_expression->location);
             Checked_Make_Struct_Argument *argument = first_checked_argument;
             while (argument != NULL) {
                 if (argument->struct_member == struct_member) {
@@ -953,34 +949,34 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Parsed_Is_Expres
 }
 
 Checked_Expression *Checker__check_less_expression(Checker *self, Parsed_Less_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Less_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_less_or_equals_expression(Checker *self, Parsed_Less_Or_Equals_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Less_Or_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_logic_and_expression(Checker *self, Parsed_Logic_And_Expression *parsed_expression) {
     Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, (Checked_Type *)self->builtin_types->bool_type);
-    Checker__require_same_type(self, (Checked_Type *)self->builtin_types->bool_type, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Logic_And_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_logic_or_expression(Checker *self, Parsed_Logic_Or_Expression *parsed_expression) {
     Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, (Checked_Type *)self->builtin_types->bool_type);
-    Checker__require_same_type(self, (Checked_Type *)self->builtin_types->bool_type, left_expression->type, left_expression->location);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
@@ -1086,32 +1082,33 @@ Checked_Expression *Checker__check_minus_expression(Checker *self, Parsed_Minus_
 }
 
 Checked_Expression *Checker__check_modulo_expression(Checker *self, Parsed_Modulo_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Modulo_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_multiply_expression(Checker *self, Parsed_Multiply_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Multiply_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
 Checked_Expression *Checker__check_not_expression(Checker *self, Parsed_Not_Expression *parsed_expression) {
     Checked_Expression *other_expression = Checker__check_expression(self, parsed_expression->super.other_expression, (Checked_Type *)self->builtin_types->bool_type);
-    Checked_Type *other_expression_type = other_expression->type;
-    Checker__require_same_type(self, (Checked_Type *)self->builtin_types->bool_type, other_expression_type, other_expression->location);
-    return (Checked_Expression *)Checked_Not_Expression__create(parsed_expression->super.super.location, other_expression_type, other_expression);
+    return (Checked_Expression *)Checked_Not_Expression__create(parsed_expression->super.super.location, other_expression->type, other_expression);
 }
 
 Checked_Expression *Checker__check_not_equals_expression(Checker *self, Parsed_Not_Equals_Expression *parsed_expression) {
     Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, NULL);
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Not_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
@@ -1133,10 +1130,12 @@ Checked_Expression *Checker__check_string_expression(Checker *self, Parsed_Strin
 }
 
 Checked_Expression *Checker__check_subtract_expression(Checker *self, Parsed_Subtract_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_type);
-    Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    Checked_Type *expected_numeric_type = expected_type && Checked_Type__is_numeric_type(expected_type) ? expected_type : NULL;
+    Checked_Expression *left_expression = Checker__check_expression(self, parsed_expression->super.left_expression, expected_numeric_type);
+    if (expected_numeric_type == NULL) {
+        Checker__require_numeric_type(self, left_expression->type, left_expression->location);
+    }
     Checked_Expression *right_expression = Checker__check_expression(self, parsed_expression->super.right_expression, left_expression->type);
-    Checker__require_same_type(self, left_expression->type, right_expression->type, right_expression->location);
     return (Checked_Expression *)Checked_Subtract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
@@ -1229,7 +1228,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         expression = Checker__check_divide_expression(self, (Parsed_Divide_Expression *)parsed_expression, expected_type);
         break;
     case PARSED_EXPRESSION_KIND__EQUALS:
-        expression = Checker__check_equals_expression(self, (Parsed_Equals_Expression *)parsed_expression, expected_type);
+        expression = Checker__check_equals_expression(self, (Parsed_Equals_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__GREATER:
         expression = Checker__check_greater_expression(self, (Parsed_Greater_Expression *)parsed_expression, expected_type);
@@ -1318,6 +1317,11 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         }
 
         Checker__require_same_type(self, expected_type, expression->type, expression->location);
+    } else if (expression->type->kind == CHECKED_TYPE_KIND__NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot infer type from null expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
     }
 
     return expression;
@@ -2304,20 +2308,7 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Parsed_Varia
     Decomposed_Expression decomposed_expression = {0};
     if (parsed_statement->expression != NULL) {
         Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, variable_type);
-        if (variable_type == NULL) {
-            switch (expression->type->kind) {
-            case CHECKED_TYPE_KIND__NULL:
-                pWriter__begin_location_message(stderr_writer, parsed_statement->expression->location, WRITER_STYLE__ERROR);
-                pWriter__write__cstring(stderr_writer, "Cannot infer type from null expression");
-                pWriter__end_location_message(stderr_writer);
-                panic();
-            default:
-                break;
-            }
-            variable_type = expression->type;
-        } else {
-            Checker__require_same_type(self, variable_type, expression->type, expression->location);
-        }
+        variable_type = expression->type;
         decomposed_expression = Checker__decompose_expression(self, expression);
     }
     bool is_global = self->symbols == self->global_symbols;
