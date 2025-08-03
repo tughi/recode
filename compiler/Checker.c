@@ -473,6 +473,7 @@ Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Ex
 Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Source_Location location, Checked_Union_Type *union_type, Checked_Expression *expression) {
     Checked_Union_Variant *union_variant = union_type->first_variant;
     if (expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+        // Check if this is the nil symbol
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
         if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
             Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
@@ -481,9 +482,25 @@ Checked_Make_Union_Expression *Checker__make_union_expression(Checker *self, Sou
             }
         }
     }
-    for (; union_variant != NULL; union_variant = union_variant->next_variant) {
-        if (Checked_Type__equals(union_variant->type, expression->type)) {
-            break;
+    if (expression->type->kind == CHECKED_TYPE_KIND__NULL) {
+        Checked_Union_Variant *null_variant = NULL;
+        for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+            if (union_variant->type->kind == CHECKED_TYPE_KIND__POINTER || union_variant->type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+                if (null_variant != NULL) {
+                    pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Too many union variants accepting null value");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
+                null_variant = union_variant;
+            }
+        }
+        union_variant = null_variant;
+    } else {
+        for (; union_variant != NULL; union_variant = union_variant->next_variant) {
+            if (Checked_Type__equals(union_variant->type, expression->type)) {
+                break;
+            }
         }
     }
     if (union_variant == NULL) {
@@ -1317,11 +1334,6 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
         }
 
         Checker__require_same_type(self, expected_type, expression->type, expression->location);
-    } else if (expression->type->kind == CHECKED_TYPE_KIND__NULL) {
-        pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Cannot infer type from null expression");
-        pWriter__end_location_message(stderr_writer);
-        panic();
     }
 
     return expression;
@@ -2308,7 +2320,18 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Parsed_Varia
     Decomposed_Expression decomposed_expression = {0};
     if (parsed_statement->expression != NULL) {
         Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, variable_type);
-        variable_type = expression->type;
+        if (variable_type == NULL) {
+            switch (expression->type->kind) {
+            case CHECKED_TYPE_KIND__NULL:
+                pWriter__begin_location_message(stderr_writer, parsed_statement->expression->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Cannot infer type from null expression");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            default:
+                break;
+            }
+            variable_type = expression->type;
+        }
         decomposed_expression = Checker__decompose_expression(self, expression);
     }
     bool is_global = self->symbols == self->global_symbols;

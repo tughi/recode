@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__union/010__make_union_from_null/test.code:8:23-27: Too many union variants accepting null value"
+        ]
+    }
+}
