@@ -75,7 +75,7 @@ Parsed_Alloc_Expression *Parsed_Alloc_Expression__create(Source_Location locatio
 }
 
 Parsed_Binary_Expression *Parsed_Binary_Expression__create_kind(Parsed_Expression_Kind kind, Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
-    Parsed_Binary_Expression *expression = (Parsed_Binary_Expression *)Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), Source_Location__union(left_expression->location, right_expression->location));
+    Parsed_Binary_Expression *expression = (Parsed_Binary_Expression *)Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), Source_Location__merge(left_expression->location, right_expression->location));
     expression->left_expression = left_expression;
     expression->right_expression = right_expression;
     return expression;
@@ -177,7 +177,7 @@ Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *lite
 }
 
 Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *value_expression, Parsed_Type *runtime_type, bool is_not) {
-    Parsed_Is_Expression *expression = (Parsed_Is_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__IS, sizeof(Parsed_Is_Expression), Source_Location__union(value_expression->location, runtime_type->location));
+    Parsed_Is_Expression *expression = (Parsed_Is_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__IS, sizeof(Parsed_Is_Expression), Source_Location__merge(value_expression->location, runtime_type->location));
     expression->value_expression = value_expression;
     expression->runtime_type = runtime_type;
     expression->is_not = is_not;
@@ -201,7 +201,7 @@ Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression
 }
 
 Parsed_Member_Access_Expression *Parsed_Member_Access_Expression__create(Parsed_Expression *object_expression, Token *member_name) {
-    Parsed_Member_Access_Expression *expression = (Parsed_Member_Access_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), Source_Location__union(object_expression->location, member_name->location));
+    Parsed_Member_Access_Expression *expression = (Parsed_Member_Access_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), Source_Location__merge(object_expression->location, member_name->location));
     expression->object_expression = object_expression;
     expression->member_name = member_name;
     return expression;
@@ -275,7 +275,7 @@ Parsed_Named_Statement *Parsed_Named_Statement__create_kind(Parsed_Statement_Kin
 }
 
 Parsed_Assignment_Statement *Parsed_Assignment_Statement__create(Parsed_Expression *object_expression, Parsed_Expression *value_expression) {
-    Parsed_Assignment_Statement *statement = (Parsed_Assignment_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__ASSIGNMENT, sizeof(Parsed_Assignment_Statement), Source_Location__union(object_expression->location, value_expression->location));
+    Parsed_Assignment_Statement *statement = (Parsed_Assignment_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__ASSIGNMENT, sizeof(Parsed_Assignment_Statement), Source_Location__merge(object_expression->location, value_expression->location));
     statement->object_expression = object_expression;
     statement->value_expression = value_expression;
     return statement;
@@ -467,16 +467,16 @@ Parsed_Trait_Type_Specifier *Parsed_Trait_Type_Specifier__create(Source_Location
     return type_specifier;
 }
 
-Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type) {
-    Parsed_Union_Variant *variant = (Parsed_Union_Variant *)malloc(sizeof(Parsed_Union_Variant));
+Parsed_Variant_Case *Parsed_Variant_Case__create(Parsed_Type *type) {
+    Parsed_Variant_Case *variant = (Parsed_Variant_Case *)malloc(sizeof(Parsed_Variant_Case));
     variant->type = type;
     variant->next_variant = NULL;
     return variant;
 }
 
-Parsed_Union_Type_Specifier *Parsed_Union_Type_Specifier__create(Source_Location location, Parsed_Union_Variant *first_variant) {
-    Parsed_Union_Type_Specifier *type_specifier = (Parsed_Union_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__UNION, sizeof(Parsed_Union_Type_Specifier), location);
-    type_specifier->first_variant = first_variant;
+Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Location location, Parsed_Variant_Case *first_variant) {
+    Parsed_Variant_Type_Specifier *type_specifier = (Parsed_Variant_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__VARIANT, sizeof(Parsed_Variant_Type_Specifier), location);
+    type_specifier->first_variant_case = first_variant;
     return type_specifier;
 }
 

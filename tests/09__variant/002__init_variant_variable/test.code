@@ -1,0 +1,16 @@
+type Integer = variant {
+    i8
+    i32
+}
+
+type Value = variant {
+    bool
+    Integer
+}
+
+proc main() -> i32 {
+    let value: Value = false
+    let other_value: Value = value
+    let another_value = other_value
+    return 0
+}

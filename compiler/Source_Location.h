@@ -13,7 +13,7 @@ typedef struct Source_Location {
     uint16_t end_column;
 } Source_Location;
 
-Source_Location Source_Location__union(Source_Location self, Source_Location other);
+Source_Location Source_Location__merge(Source_Location self, Source_Location other);
 
 bool Source_Location__equals(Source_Location self, Source_Location other);
 

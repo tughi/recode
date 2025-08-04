@@ -89,7 +89,7 @@ type Stop = struct {
     span: source.Span
 }
 
-type Token = union {
+type Token = variant {
     expression.Number
     Plus
     Minus

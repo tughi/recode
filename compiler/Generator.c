@@ -215,15 +215,15 @@ void Generator__generate_integer_expression(Generator *self, Checked_Integer_Exp
     }
 }
 
-void Generator__generate_is_union_variant_expression(Generator *self, Checked_Is_Union_Variant_Expression *expression) {
-    Generator__generate_expression(self, expression->union_expression);
+void Generator__generate_is_variant_case_expression(Generator *self, Checked_Is_Variant_Case_Expression *expression) {
+    Generator__generate_expression(self, expression->variant_expression);
     pWriter__write__cstring(self->writer, ".variant");
     if (expression->is_not) {
         pWriter__write__cstring(self->writer, " != ");
     } else {
         pWriter__write__cstring(self->writer, " == ");
     }
-    pWriter__write__int64(self->writer, expression->union_variant->index);
+    pWriter__write__int64(self->writer, expression->variant_case->index);
 }
 
 void Generator__generate_less_expression(Generator *self, Checked_Less_Expression *expression) {
@@ -268,14 +268,14 @@ void Generator__generate_make_struct_expression(Generator *self, Checked_Make_St
     pWriter__write__char(self->writer, '}');
 }
 
-void Generator__generate_make_union_expression(Generator *self, Checked_Make_Union_Expression *expression) {
+void Generator__generate_make_variant_expression(Generator *self, Checked_Make_Variant_Expression *expression) {
     pWriter__write__char(self->writer, '(');
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->union_type);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->variant_type);
     pWriter__write__cstring(self->writer, "){.variant = ");
-    pWriter__write__int64(self->writer, expression->union_variant->index);
-    if (expression->union_variant->index > 0) {
+    pWriter__write__int64(self->writer, expression->variant_case->index);
+    if (expression->variant_case->index > 0) {
         pWriter__write__cstring(self->writer, ", .variant_");
-        pWriter__write__int64(self->writer, expression->union_variant->index);
+        pWriter__write__int64(self->writer, expression->variant_case->index);
         pWriter__write__cstring(self->writer, " = ");
         Generator__generate_expression(self, expression->expression);
     }
@@ -371,20 +371,20 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
         procedure_name.super.write((CDECL_Name *)&procedure_name, self->writer);
         break;
     }
-    case CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT: {
-        Checked_Union_Switch_Variant_Symbol *variant_symbol = (Checked_Union_Switch_Variant_Symbol *)expression->symbol;
-        if (variant_symbol->union_expression->temp_variable_name == NULL) {
-            Generator__generate_expression(self, variant_symbol->union_expression);
+    case CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE: {
+        Checked_Variant_Switch_Case_Symbol *variant_symbol = (Checked_Variant_Switch_Case_Symbol *)expression->symbol;
+        if (variant_symbol->variant_expression->temp_variable_name == NULL) {
+            Generator__generate_expression(self, variant_symbol->variant_expression);
         } else {
-            pWriter__write__string(self->writer, variant_symbol->union_expression->temp_variable_name);
+            pWriter__write__string(self->writer, variant_symbol->variant_expression->temp_variable_name);
         }
-        if (variant_symbol->union_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+        if (variant_symbol->variant_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
             pWriter__write__cstring(self->writer, "->");
         } else {
             pWriter__write__char(self->writer, '.');
         }
         pWriter__write__cstring(self->writer, "variant_");
-        pWriter__write__int64(self->writer, variant_symbol->union_variant->index);
+        pWriter__write__int64(self->writer, variant_symbol->variant_case->index);
         break;
     }
     case CHECKED_SYMBOL_KIND__VARIABLE: {
@@ -444,8 +444,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__INTEGER:
         Generator__generate_integer_expression(self, (Checked_Integer_Expression *)expression);
         break;
-    case CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT:
-        Generator__generate_is_union_variant_expression(self, (Checked_Is_Union_Variant_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__IS_VARIANT_CASE:
+        Generator__generate_is_variant_case_expression(self, (Checked_Is_Variant_Case_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__LESS:
         Generator__generate_less_expression(self, (Checked_Less_Expression *)expression);
@@ -462,8 +462,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
         Generator__generate_make_struct_expression(self, (Checked_Make_Struct_Expression *)expression);
         break;
-    case CHECKED_EXPRESSION_KIND__MAKE_UNION:
-        Generator__generate_make_union_expression(self, (Checked_Make_Union_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__MAKE_VARIANT:
+        Generator__generate_make_variant_expression(self, (Checked_Make_Variant_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         Generator__generate_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
@@ -590,11 +590,11 @@ void Generator__generate_return_statement(Generator *self, Checked_Return_Statem
     pWriter__write__cstring(self->writer, ";");
 }
 
-void Generator__generate_union_if_statement(Generator *self, Checked_Union_If_Statement *statement) {
+void Generator__generate_if_variant_case_statement(Generator *self, Checked_If_Variant_Case_Statement *statement) {
     pWriter__write__cstring(self->writer, "if (");
-    Generator__generate_expression(self, statement->union_expression);
+    Generator__generate_expression(self, statement->variant_expression);
     pWriter__write__cstring(self->writer, ".variant == ");
-    pWriter__write__int64(self->writer, statement->union_variant->index);
+    pWriter__write__int64(self->writer, statement->variant_case->index);
     pWriter__write__cstring(self->writer, ") ");
     Generator__generate_statement(self, statement->true_statement);
     if (statement->false_statement != NULL) {
@@ -603,7 +603,7 @@ void Generator__generate_union_if_statement(Generator *self, Checked_Union_If_St
     }
 }
 
-void Generator__generate_union_switch_statement(Generator *self, Checked_Union_Switch_Statement *statement) {
+void Generator__generate_variant_switch_statement(Generator *self, Checked_Variant_Switch_Statement *statement) {
     // The switch statement is generated as if-else statements to allow the use of break statements within the cases.
 
     // Store the expression in a variable to avoid evaluating it multiple times.
@@ -616,12 +616,12 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
     Generator__generate_expression(self, statement->expression);
     pWriter__write__char(self->writer, ';');
 
-    Checked_Union_Switch_Case *union_switch_case = statement->first_union_switch_case;
-    for (; union_switch_case != NULL; union_switch_case = union_switch_case->next_union_switch_case) {
+    Checked_Variant_Switch_Case *variant_switch_case = statement->first_variant_switch_case;
+    for (; variant_switch_case != NULL; variant_switch_case = variant_switch_case->next_switch_variant_case) {
         pWriter__end_line(self->writer);
-        Generator__write_source_location(self, union_switch_case->location);
+        Generator__write_source_location(self, variant_switch_case->location);
         Generator__write_indentation(self);
-        if (union_switch_case != statement->first_union_switch_case) {
+        if (variant_switch_case != statement->first_variant_switch_case) {
             pWriter__write__cstring(self->writer, "else ");
         }
         pWriter__write__cstring(self->writer, "if (");
@@ -632,16 +632,16 @@ void Generator__generate_union_switch_statement(Generator *self, Checked_Union_S
             pWriter__write__char(self->writer, '.');
         }
         pWriter__write__cstring(self->writer, "variant == ");
-        pWriter__write__int64(self->writer, union_switch_case->union_variant->index);
+        pWriter__write__int64(self->writer, variant_switch_case->variant_case->index);
         pWriter__write__cstring(self->writer, ") ");
-        Generator__generate_statement(self, union_switch_case->statement);
+        Generator__generate_statement(self, variant_switch_case->statement);
     }
 
     if (statement->switch_else) {
         pWriter__end_line(self->writer);
         Generator__write_source_location(self, statement->switch_else->location);
         Generator__write_indentation(self);
-        if (statement->first_union_switch_case != NULL) {
+        if (statement->first_variant_switch_case != NULL) {
             pWriter__write__cstring(self->writer, "else ");
         }
         Generator__generate_statement(self, statement->switch_else->statement);
@@ -701,11 +701,11 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
     case CHECKED_STATEMENT_KIND__RETURN:
         Generator__generate_return_statement(self, (Checked_Return_Statement *)statement);
         break;
-    case CHECKED_STATEMENT_KIND__UNION_IF:
-        Generator__generate_union_if_statement(self, (Checked_Union_If_Statement *)statement);
+    case CHECKED_STATEMENT_KIND__VARIANT_IF:
+        Generator__generate_if_variant_case_statement(self, (Checked_If_Variant_Case_Statement *)statement);
         break;
-    case CHECKED_STATEMENT_KIND__UNION_SWITCH:
-        Generator__generate_union_switch_statement(self, (Checked_Union_Switch_Statement *)statement);
+    case CHECKED_STATEMENT_KIND__VARIANT_SWITCH:
+        Generator__generate_variant_switch_statement(self, (Checked_Variant_Switch_Statement *)statement);
         break;
     case CHECKED_STATEMENT_KIND__VARIABLE:
         Generator__generate_variable_statement(self, (Checked_Variable_Statement *)statement);
@@ -794,39 +794,39 @@ void Generator__generate_trait(Generator *self, Checked_Trait_Type *trait_type) 
     Generator__generate_struct(self, trait_type->struct_type);
 }
 
-void Generator__declare_union(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
+void Generator__declare_variant(Generator *self, Checked_Variant_Type *variant_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)variant_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
-typedef struct CDECL_Union_Variant_Name {
+typedef struct CDECL_Variant_Case_Name {
     CDECL_Name super;
     int32_t variant_index;
-} CDECL_Union_Variant_Name;
+} CDECL_Variant_Case_Name;
 
-void CDECL_Union_Variant_Name__write(CDECL_Union_Variant_Name *self, Writer *writer) {
+void CDECL_Variant_Case_Name__write(CDECL_Variant_Case_Name *self, Writer *writer) {
     pWriter__write__cstring(writer, "variant_");
     pWriter__write__int64(writer, self->variant_index);
 }
 
-CDECL_Union_Variant_Name CDECL_Union_Variant_Name__create(int32_t variant_index) {
-    CDECL_Union_Variant_Name name;
-    name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Union_Variant_Name__write;
+CDECL_Variant_Case_Name CDECL_Variant_Case_Name__create(int32_t variant_index) {
+    CDECL_Variant_Case_Name name;
+    name.super.write = (void (*)(CDECL_Name *, Writer *))CDECL_Variant_Case_Name__write;
     name.variant_index = variant_index;
     return name;
 }
 
-void Generator__generate_union(Generator *self, Checked_Union_Type *union_type) {
-    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)union_type);
+void Generator__generate_variant(Generator *self, Checked_Variant_Type *variant_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)variant_type);
     pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    int32_t variant;\n");
-    Checked_Union_Variant *variant = union_type->first_variant;
+    Checked_Variant_Case *variant = variant_type->first_variant_case;
     if (variant != NULL) {
         pWriter__write__cstring(self->writer, "    union {\n");
         while (variant != NULL) {
             if (variant->index != 0) {
                 pWriter__write__cstring(self->writer, "        ");
-                CDECL_Union_Variant_Name variant_name = CDECL_Union_Variant_Name__create(variant->index);
+                CDECL_Variant_Case_Name variant_name = CDECL_Variant_Case_Name__create(variant->index);
                 pWriter__write__cdecl(self->writer, (CDECL_Name *)&variant_name, variant->type);
                 pWriter__write__cstring(self->writer, ";\n");
             }
@@ -848,8 +848,8 @@ void Generator__declare_type(Generator *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__TRAIT:
         Generator__declare_trait(self, (Checked_Trait_Type *)type);
         break;
-    case CHECKED_TYPE_KIND__UNION:
-        Generator__declare_union(self, (Checked_Union_Type *)type);
+    case CHECKED_TYPE_KIND__VARIANT:
+        Generator__declare_variant(self, (Checked_Variant_Type *)type);
         break;
     default:
         panic();
@@ -872,8 +872,8 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__TRAIT:
         Generator__generate_trait(self, (Checked_Trait_Type *)type);
         break;
-    case CHECKED_TYPE_KIND__UNION:
-        Generator__generate_union(self, (Checked_Union_Type *)type);
+    case CHECKED_TYPE_KIND__VARIANT:
+        Generator__generate_variant(self, (Checked_Variant_Type *)type);
         break;
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__GENERIC:

@@ -1,0 +1,16 @@
+type Value = variant {
+    bool
+    i8
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = true
+
+    switch value {
+        is bool {
+        }
+        is i8 {
+        }
+    }
+}

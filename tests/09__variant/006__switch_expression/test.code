@@ -1,0 +1,21 @@
+type Value = variant {
+    bool
+    i8
+    i32
+}
+
+type Literal = struct {
+    value: Value
+}
+
+proc main() -> i32 {
+    let literal = Literal(value: Value(42))
+    switch literal.value {
+        is i32 as value {
+            return value - 42
+        }
+        else {
+            return 1
+        }
+    }
+}

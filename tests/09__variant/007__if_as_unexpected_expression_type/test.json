@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/007__if_as_unexpected_expression_type/test.code:4:8-20: The is opearator doesn't work with i32 values"
+        ]
+    }
+}

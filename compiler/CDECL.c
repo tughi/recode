@@ -186,7 +186,7 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
-    case CHECKED_TYPE_KIND__UNION: {
+    case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)symbol_type;
         cdecl->type = String__create_from("struct ");
         if (named_type->module != NULL) {

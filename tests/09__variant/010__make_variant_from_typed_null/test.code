@@ -1,0 +1,10 @@
+type Value = variant {
+    usize
+    ^i32
+    ^i64
+}
+
+proc main() -> i32 {
+    let vale: Value = null.as(^i32)
+    return 0
+}
