@@ -48,7 +48,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__PROCEDURE,
     CHECKED_TYPE_KIND__STRUCT,
     CHECKED_TYPE_KIND__TRAIT,
-    CHECKED_TYPE_KIND__UNION,
+    CHECKED_TYPE_KIND__VARIANT,
     /* Dynamic */
     CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
@@ -91,28 +91,28 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__DEREFERENCE,
     CHECKED_EXPRESSION_KIND__DIVIDE,
     CHECKED_EXPRESSION_KIND__EQUALS,
-    CHECKED_EXPRESSION_KIND__GREATER,
     CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
+    CHECKED_EXPRESSION_KIND__GREATER,
     CHECKED_EXPRESSION_KIND__GROUP,
     CHECKED_EXPRESSION_KIND__INTEGER,
-    CHECKED_EXPRESSION_KIND__IS_UNION_VARIANT,
-    CHECKED_EXPRESSION_KIND__LESS,
+    CHECKED_EXPRESSION_KIND__IS_VARIANT_CASE,
     CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS,
+    CHECKED_EXPRESSION_KIND__LESS,
     CHECKED_EXPRESSION_KIND__LOGIC_AND,
     CHECKED_EXPRESSION_KIND__LOGIC_OR,
     CHECKED_EXPRESSION_KIND__MAKE_STRUCT,
-    CHECKED_EXPRESSION_KIND__MAKE_UNION,
+    CHECKED_EXPRESSION_KIND__MAKE_VARIANT,
     CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
     CHECKED_EXPRESSION_KIND__MINUS,
     CHECKED_EXPRESSION_KIND__MODULO,
     CHECKED_EXPRESSION_KIND__MULTIPLY,
-    CHECKED_EXPRESSION_KIND__NOT,
     CHECKED_EXPRESSION_KIND__NOT_EQUALS,
+    CHECKED_EXPRESSION_KIND__NOT,
     CHECKED_EXPRESSION_KIND__NULL,
     CHECKED_EXPRESSION_KIND__RECEIVER_METHOD,
     CHECKED_EXPRESSION_KIND__SIZEOF,
-    CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
+    CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
     CHECKED_EXPRESSION_KIND__TYPE,
@@ -250,21 +250,21 @@ typedef struct Checked_Trait_Type {
 
 Checked_Trait_Type *Checked_Trait_Type__create(Source_Location location, String *name, Checked_Module *module);
 
-typedef struct Checked_Union_Variant {
+typedef struct Checked_Variant_Case {
     Checked_Type *type;
     int32_t index;
-    struct Checked_Union_Variant *next_variant;
-} Checked_Union_Variant;
+    struct Checked_Variant_Case *next_variant;
+} Checked_Variant_Case;
 
-Checked_Union_Variant *Checked_Union_Variant__create(Source_Location location, Checked_Type *type, int32_t index);
+Checked_Variant_Case *Checked_Variant_Case__create(Source_Location location, Checked_Type *type, int32_t index);
 
-typedef struct Checked_Union_Type {
+typedef struct Checked_Variant_Type {
     Checked_Named_Type super;
-    Checked_Union_Variant *first_variant;
+    Checked_Variant_Case *first_variant_case;
     int32_t variant_count;
-} Checked_Union_Type;
+} Checked_Variant_Type;
 
-Checked_Union_Type *Checked_Union_Type__create(Source_Location location, String *name, Checked_Module *module);
+Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Module *module);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -277,10 +277,10 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
-    CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__TYPE_ARGUMENT,
-    CHECKED_SYMBOL_KIND__UNION_SWITCH_VARIANT,
+    CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__VARIABLE,
+    CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE,
 } Checked_Symbol_Kind;
 
 typedef struct Checked_Symbol {
@@ -333,9 +333,9 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
     CHECKED_STATEMENT_KIND__RETURN,
-    CHECKED_STATEMENT_KIND__UNION_IF,
-    CHECKED_STATEMENT_KIND__UNION_SWITCH,
     CHECKED_STATEMENT_KIND__VARIABLE,
+    CHECKED_STATEMENT_KIND__VARIANT_IF,
+    CHECKED_STATEMENT_KIND__VARIANT_SWITCH,
     CHECKED_STATEMENT_KIND__WHILE
 } Checked_Statement_Kind;
 
@@ -406,13 +406,13 @@ typedef struct Checked_Variable_Symbol {
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
-typedef struct Checked_Union_Switch_Variant_Symbol {
+typedef struct Checked_Variant_Switch_Case_Symbol {
     Checked_Symbol super;
-    Checked_Expression *union_expression;
-    Checked_Union_Variant *union_variant;
-} Checked_Union_Switch_Variant_Symbol;
+    Checked_Expression *variant_expression;
+    Checked_Variant_Case *variant_case;
+} Checked_Variant_Switch_Case_Symbol;
 
-Checked_Union_Switch_Variant_Symbol *Checked_Union_Switch_Variant_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *union_expression, Checked_Union_Variant *union_variant);
+Checked_Variant_Switch_Case_Symbol *Checked_Variant_Switch_Case_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -554,14 +554,14 @@ typedef struct Checked_Integer_Expression {
 
 Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base);
 
-typedef struct Checked_Is_Union_Variant_Expression {
+typedef struct Checked_Is_Variant_Case_Expression {
     Checked_Expression super;
-    Checked_Expression *union_expression;
-    Checked_Union_Variant *union_variant;
+    Checked_Expression *variant_expression;
+    Checked_Variant_Case *variant_case;
     bool is_not;
-} Checked_Is_Union_Variant_Expression;
+} Checked_Is_Variant_Case_Expression;
 
-Checked_Is_Union_Variant_Expression *Checked_Is_Union_Variant_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, bool is_not);
+Checked_Is_Variant_Case_Expression *Checked_Is_Variant_Case_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, bool is_not);
 
 typedef struct Checked_Less_Expression {
     Checked_Binary_Expression super;
@@ -603,14 +603,14 @@ typedef struct Checked_Make_Struct_Expression {
 
 Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument);
 
-typedef struct Checked_Make_Union_Expression {
+typedef struct Checked_Make_Variant_Expression {
     Checked_Expression super;
-    Checked_Union_Type *union_type;
-    Checked_Union_Variant *union_variant;
+    Checked_Variant_Type *variant_type;
+    Checked_Variant_Case *variant_case;
     Checked_Expression *expression;
-} Checked_Make_Union_Expression;
+} Checked_Make_Variant_Expression;
 
-Checked_Make_Union_Expression *Checked_Make_Union_Expression__create(Source_Location location, Checked_Type *type, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Expression *expression);
+Checked_Make_Variant_Expression *Checked_Make_Variant_Expression__create(Source_Location location, Checked_Type *type, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_variant, Checked_Expression *expression);
 
 typedef struct Checked_Member_Access_Expression {
     Checked_Expression super;
@@ -764,15 +764,15 @@ typedef struct Checked_Return_Statement {
 
 Checked_Return_Statement *Checked_Return_Statement__create(Source_Location location, Checked_Expression *expression);
 
-typedef struct Checked_Union_If_Statement {
+typedef struct Checked_If_Variant_Case_Statement {
     Checked_Statement super;
-    Checked_Expression *union_expression;
-    Checked_Union_Variant *union_variant;
+    Checked_Expression *variant_expression;
+    Checked_Variant_Case *variant_case;
     Checked_Statement *true_statement;
     Checked_Statement *false_statement;
-} Checked_Union_If_Statement;
+} Checked_If_Variant_Case_Statement;
 
-Checked_Union_If_Statement *Checked_Union_If_Statement__create(Source_Location location, Checked_Expression *union_expression, Checked_Union_Variant *union_variant, Checked_Statement *true_statement, Checked_Statement *false_statement);
+Checked_If_Variant_Case_Statement *Checked_If_Variant_Case_Statement__create(Source_Location location, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, Checked_Statement *true_statement, Checked_Statement *false_statement);
 
 typedef struct Checked_Switch_Else {
     Source_Location location;
@@ -781,24 +781,24 @@ typedef struct Checked_Switch_Else {
 
 Checked_Switch_Else *Checked_Switch_Else__create(Source_Location location, Checked_Statement *statement);
 
-typedef struct Checked_Union_Switch_Case {
+typedef struct Checked_Variant_Switch_Case {
     Source_Location location;
-    Checked_Union_Type *union_type;
-    Checked_Union_Variant *union_variant;
+    Checked_Variant_Type *variant_type;
+    Checked_Variant_Case *variant_case;
     Checked_Statement *statement;
-    struct Checked_Union_Switch_Case *next_union_switch_case;
-} Checked_Union_Switch_Case;
+    struct Checked_Variant_Switch_Case *next_switch_variant_case;
+} Checked_Variant_Switch_Case;
 
-Checked_Union_Switch_Case *Checked_Union_Switch_Case__create(Source_Location location, Checked_Union_Type *union_type, Checked_Union_Variant *union_variant, Checked_Statement *statement);
+Checked_Variant_Switch_Case *Checked_Variant_Switch_Case__create(Source_Location location, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_case, Checked_Statement *statement);
 
-typedef struct Checked_Union_Switch_Statement {
+typedef struct Checked_Variant_Switch_Statement {
     Checked_Statement super;
     Checked_Expression *expression;
-    Checked_Union_Switch_Case *first_union_switch_case;
+    Checked_Variant_Switch_Case *first_variant_switch_case;
     Checked_Switch_Else *switch_else;
-} Checked_Union_Switch_Statement;
+} Checked_Variant_Switch_Statement;
 
-Checked_Union_Switch_Statement *Checked_Union_Switch_Statement__create(Source_Location location, Checked_Expression *expression, Checked_Union_Switch_Case *first_union_switch_case, Checked_Switch_Else *switch_else);
+Checked_Variant_Switch_Statement *Checked_Variant_Switch_Statement__create(Source_Location location, Checked_Expression *expression, Checked_Variant_Switch_Case *first_variant_switch_case, Checked_Switch_Else *switch_else);
 
 typedef struct Checked_Variable_Statement {
     Checked_Statement super;

@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/006__switch_in_unexpected_expression_type/test.code:3:12-33: Switch doesn't support i32 expressions"
+        ]
+    }
+}

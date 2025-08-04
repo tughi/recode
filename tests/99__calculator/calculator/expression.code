@@ -1,7 +1,7 @@
 import calculator.source
 import io
 
-type Expression = union {
+type Expression = variant {
     Number
     Addition
     Division

@@ -1,7 +1,7 @@
 #include "Source_Location.h"
 #include "File.h"
 
-Source_Location Source_Location__union(Source_Location self, Source_Location other) {
+Source_Location Source_Location__merge(Source_Location self, Source_Location other) {
     uint16_t start_line;
     uint16_t start_column;
     if (self.start_line < other.start_line) {

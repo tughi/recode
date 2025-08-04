@@ -134,7 +134,7 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Token *first_token = Parser__consume_token(self, Token__is_alloc);
         Parser__consume_space(self, 1);
         Parsed_Expression *expression = Parser__parse_expression(self);
-        return (Parsed_Expression *)Parsed_Alloc_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
+        return (Parsed_Expression *)Parsed_Alloc_Expression__create(Source_Location__merge(first_token->location, expression->location), expression);
     }
     if (Parser__matches_one(self, Token__is_null)) {
         return (Parsed_Expression *)Parsed_Null_Expression__create(Parser__consume_token(self, Token__is_null));
@@ -185,7 +185,7 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parsed_Expression *expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__union(first_token->location, last_token->location), expression);
+        return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__merge(first_token->location, last_token->location), expression);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unexpected token");
@@ -208,7 +208,7 @@ Parsed_Call_Argument *Parser__parse_call_argument(Parser *self) {
     Parsed_Expression *argument_expression = Parser__parse_expression(self);
     Source_Location argument_location;
     if (argument_name != NULL) {
-        argument_location = Source_Location__union(argument_name->super.location, argument_expression->location);
+        argument_location = Source_Location__merge(argument_name->super.location, argument_expression->location);
     } else {
         argument_location = argument_expression->location;
     }
@@ -314,7 +314,7 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             Parser__consume_space(self, 0);
             if (Parser__matches_one(self, Token__is_caret)) {
                 Token *last_token = Parser__consume_token(self, Token__is_caret);
-                expression = (Parsed_Expression *)Parsed_Dereference_Expression__create(Source_Location__union(expression->location, last_token->location), expression);
+                expression = (Parsed_Expression *)Parsed_Dereference_Expression__create(Source_Location__merge(expression->location, last_token->location), expression);
             } else if (Parser__matches_one(self, Token__is_as)) {
                 Parser__consume_token(self, Token__is_as);
                 Parser__consume_space(self, 0);
@@ -323,7 +323,7 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
                 Parsed_Type *type = Parser__parse_type(self);
                 Parser__consume_space(self, 0);
                 Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-                expression = (Parsed_Expression *)Parsed_Cast_Expression__create(Source_Location__union(expression->location, last_token->location), expression, type);
+                expression = (Parsed_Expression *)Parsed_Cast_Expression__create(Source_Location__merge(expression->location, last_token->location), expression, type);
             } else {
                 Token *name = Parser__consume_token(self, Token__is_identifier);
                 expression = (Parsed_Expression *)Parsed_Member_Access_Expression__create(expression, name);
@@ -335,7 +335,7 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             Parsed_Call_Argument *call_arguments = Parser__parse_call_arguments(self);
             Parser__consume_space(self, 0);
             Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-            expression = (Parsed_Expression *)Parsed_Call_Expression__create(Source_Location__union(expression->location, last_token->location), expression, call_arguments);
+            expression = (Parsed_Expression *)Parsed_Call_Expression__create(Source_Location__merge(expression->location, last_token->location), expression, call_arguments);
         }
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
             Parser__consume_space(self, 0);
@@ -344,12 +344,12 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             Parsed_Expression *index_expression = Parser__parse_expression(self);
             Parser__consume_space(self, 0);
             Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
-            expression = (Parsed_Expression *)Parsed_Array_Access_Expression__create(Source_Location__union(expression->location, last_token->location), expression, index_expression);
+            expression = (Parsed_Expression *)Parsed_Array_Access_Expression__create(Source_Location__merge(expression->location, last_token->location), expression, index_expression);
         }
         if (Parser__matches_one(self, Token__is_less_than)) {
             Source_Location type_specialization_location = expression->location;
             Parsed_Type_Argument *first_type_argument = Parser__parse_type_arguments(self, &type_specialization_location);
-            expression = (Parsed_Expression *)Parsed_Type_Specialization_Expression__create(Source_Location__union(expression->location, type_specialization_location), expression, first_type_argument);
+            expression = (Parsed_Expression *)Parsed_Type_Specialization_Expression__create(Source_Location__merge(expression->location, type_specialization_location), expression, first_type_argument);
         }
         if (old_expression == expression) {
             break;
@@ -371,19 +371,19 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
         Token *first_token = Parser__consume_token(self, Token__is_minus);
         Parser__consume_space(self, 0);
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
-        return (Parsed_Expression *)Parsed_Minus_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
+        return (Parsed_Expression *)Parsed_Minus_Expression__create(Source_Location__merge(first_token->location, expression->location), expression);
     }
     if (Parser__matches_one(self, Token__is_not)) {
         Token *first_token = Parser__consume_token(self, Token__is_not);
         Parser__consume_space(self, 1);
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
-        return (Parsed_Expression *)Parsed_Not_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
+        return (Parsed_Expression *)Parsed_Not_Expression__create(Source_Location__merge(first_token->location, expression->location), expression);
     }
     if (Parser__matches_one(self, Token__is_caret)) {
         Token *first_token = Parser__consume_token(self, Token__is_caret);
         Parser__consume_space(self, 0);
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
-        return (Parsed_Expression *)Parsed_Address_Of_Expression__create(Source_Location__union(first_token->location, expression->location), expression);
+        return (Parsed_Expression *)Parsed_Address_Of_Expression__create(Source_Location__merge(first_token->location, expression->location), expression);
     }
     if (Parser__matches_one(self, Token__is_sizeof)) {
         Token *first_token = Parser__consume_token(self, Token__is_sizeof);
@@ -393,7 +393,7 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
         Parsed_Type *type = Parser__parse_type(self);
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Sizeof_Expression__create(Source_Location__union(first_token->location, last_token->location), type);
+        return (Parsed_Expression *)Parsed_Sizeof_Expression__create(Source_Location__merge(first_token->location, last_token->location), type);
     }
     return Parser__parse_access_expression(self);
 }
@@ -597,7 +597,7 @@ Parsed_Type_Specifier *Parser__parse_struct_type_specifier(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    return (Parsed_Type_Specifier *)Parsed_Struct_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_struct_member);
+    return (Parsed_Type_Specifier *)Parsed_Struct_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_struct_member);
 }
 
 Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Parsed_Type *receiver_type);
@@ -647,39 +647,39 @@ Parsed_Type_Specifier *Parser__parse_trait_type_specifier(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    return (Parsed_Type_Specifier *)Parsed_Trait_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_trait_method);
+    return (Parsed_Type_Specifier *)Parsed_Trait_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_trait_method);
 }
 
 /*
-union_type_specifier
-    | "union" "{" ( type )* "}"
+variant_type_specifier
+    | "variant" "{" ( type )* "}"
 */
-Parsed_Type_Specifier *Parser__parse_union_type_specifier(Parser *self) {
-    Token *first_token = Parser__consume_token(self, Token__is_union);
+Parsed_Type_Specifier *Parser__parse_variant_type_specifier(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_variant);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
     self->current_identation = self->current_identation + 1;
-    Parsed_Union_Variant *first_union_variant = NULL;
-    Parsed_Union_Variant *last_union_variant = NULL;
+    Parsed_Variant_Case *first_variant_case = NULL;
+    Parsed_Variant_Case *last_variant_case = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
             Parser__consume_space(self, self->current_identation * 4);
-            Parsed_Type *union_variant_type = Parser__parse_type(self);
+            Parsed_Type *variant_type = Parser__parse_type(self);
             Parser__consume_end_of_line(self);
-            Parsed_Union_Variant *union_variant = Parsed_Union_Variant__create(union_variant_type);
-            if (last_union_variant == NULL) {
-                first_union_variant = union_variant;
+            Parsed_Variant_Case *variant_case = Parsed_Variant_Case__create(variant_type);
+            if (last_variant_case == NULL) {
+                first_variant_case = variant_case;
             } else {
-                last_union_variant->next_variant = union_variant;
+                last_variant_case->next_variant = variant_case;
             }
-            last_union_variant = union_variant;
+            last_variant_case = variant_case;
         }
     }
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    return (Parsed_Type_Specifier *)Parsed_Union_Type_Specifier__create(Source_Location__union(first_token->location, last_token->location), first_union_variant);
+    return (Parsed_Type_Specifier *)Parsed_Variant_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_variant_case);
 }
 
 /*
@@ -737,7 +737,7 @@ type_specifier
     | external_type_specifier
     | struct_type_specifier
     | trait_type_specifier
-    | union_type_specifier
+    | variant_type_specifier
 */
 Parsed_Type_Specifier *Parser__parse_type_specifier(Parser *self) {
     if (Parser__matches_one(self, Token__is_builtin)) {
@@ -752,8 +752,8 @@ Parsed_Type_Specifier *Parser__parse_type_specifier(Parser *self) {
     if (Parser__matches_one(self, Token__is_trait)) {
         return Parser__parse_trait_type_specifier(self);
     }
-    if (Parser__matches_one(self, Token__is_union)) {
-        return Parser__parse_union_type_specifier(self);
+    if (Parser__matches_one(self, Token__is_variant)) {
+        return Parser__parse_variant_type_specifier(self);
     }
     Token *unsupported_type = Parser__consume_token(self, Token__is_identifier);
     pWriter__begin_location_message(stderr_writer, unsupported_type->location, WRITER_STYLE__ERROR);
@@ -780,7 +780,7 @@ Parsed_Statement *Parser__parse_type_statement(Parser *self) {
     Parser__consume_token(self, Token__is_equals);
     Parser__consume_space(self, 1);
     Parsed_Type_Specifier *type_specifier = Parser__parse_type_specifier(self);
-    return (Parsed_Statement *)Parsed_Type_Statement__create(Source_Location__union(type_location, type_specifier->location), name, type_specifier, first_type_parameter);
+    return (Parsed_Statement *)Parsed_Type_Statement__create(Source_Location__merge(type_location, type_specifier->location), name, type_specifier, first_type_parameter);
 }
 
 /*
@@ -862,7 +862,7 @@ Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location
     }
     Parser__consume_space(self, 0);
     Token *last_token = Parser__consume_token(self, Token__is_greater_than);
-    *type_location = Source_Location__union(*type_location, last_token->location);
+    *type_location = Source_Location__merge(*type_location, last_token->location);
     return first_type_argument;
 }
 
@@ -878,7 +878,7 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         Token *first_token = Parser__consume_token(self, Token__is_caret);
         Parser__consume_space(self, 0);
         Parsed_Type *type = Parser__parse_type(self);
-        return Parsed_Pointer_Type__create(Source_Location__union(first_token->location, type->location), type);
+        return Parsed_Pointer_Type__create(Source_Location__merge(first_token->location, type->location), type);
     }
     if (Parser__matches_one(self, Token__is_opening_bracket)) {
         Token *first_token = Parser__consume_token(self, Token__is_opening_bracket);
@@ -889,14 +889,14 @@ Parsed_Type *Parser__parse_type(Parser *self) {
             Parser__consume_token(self, Token__is_closing_bracket);
             Parser__consume_space(self, 0);
             Parsed_Type *item_type = Parser__parse_type(self);
-            return (Parsed_Type *)Parsed_Multi_Pointer_Type__create(Source_Location__union(first_token->location, item_type->location), item_type);
+            return (Parsed_Type *)Parsed_Multi_Pointer_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type);
         }
         Parsed_Expression *size_expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_bracket);
         Parser__consume_space(self, 0);
         Parsed_Type *item_type = Parser__parse_type(self);
-        return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__union(first_token->location, item_type->location), item_type, size_expression);
+        return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type, size_expression);
     }
     if (Parser__matches_one(self, Token__is_proc)) {
         Token *first_token = Parser__consume_token(self, Token__is_proc);
@@ -913,7 +913,7 @@ Parsed_Type *Parser__parse_type(Parser *self) {
             Parser__consume_space(self, 1);
             return_type = Parser__parse_type(self);
         }
-        return Parsed_Procedure_Type__create(Source_Location__union(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
+        return Parsed_Procedure_Type__create(Source_Location__merge(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
     }
     Token *module = NULL;
     Token *name = Parser__consume_token(self, Token__is_identifier);
@@ -942,14 +942,14 @@ Parsed_Statement *Parser__parse_variable(Parser *self) {
     Source_Location location = Parser__consume_token(self, Token__is_let)->location;
     Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
-    location = Source_Location__union(location, name->location);
+    location = Source_Location__merge(location, name->location);
     Parsed_Type *type = NULL;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_colon)) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_colon);
         Parser__consume_space(self, 1);
         type = Parser__parse_type(self);
-        location = Source_Location__union(location, type->location);
+        location = Source_Location__merge(location, type->location);
     }
     Parsed_Expression *expression = NULL;
     String_Token *external_name = NULL;
@@ -960,15 +960,15 @@ Parsed_Statement *Parser__parse_variable(Parser *self) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_external)) {
             is_external = true;
-            location = Source_Location__union(location, Parser__consume_token(self, Token__is_external)->location);
+            location = Source_Location__merge(location, Parser__consume_token(self, Token__is_external)->location);
             if (Parser__matches_two(self, Token__is_space, false, Token__is_string)) {
                 Parser__consume_space(self, 1);
                 external_name = (String_Token *)Parser__consume_token(self, Token__is_string);
-                location = Source_Location__union(location, external_name->super.location);
+                location = Source_Location__merge(location, external_name->super.location);
             }
         } else {
             expression = Parser__parse_expression(self);
-            location = Source_Location__union(location, expression->location);
+            location = Source_Location__merge(location, expression->location);
         }
     }
     return (Parsed_Statement *)Parsed_Variable_Statement__create(location, name, type, is_external, expression, external_name);
@@ -989,7 +989,7 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    return Parsed_Block_Statement__create(Source_Location__union(first_token->location, last_token->location), statements);
+    return Parsed_Block_Statement__create(Source_Location__merge(first_token->location, last_token->location), statements);
 }
 
 /*
@@ -1021,7 +1021,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
     Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, receiver_type);
     Parser__consume_space(self, 0);
     Token *closing_paren = Parser__consume_token(self, Token__is_closing_paren);
-    location = Source_Location__union(location, closing_paren->location);
+    location = Source_Location__merge(location, closing_paren->location);
     Parsed_Type *return_type = NULL;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
         Parser__consume_space(self, 1);
@@ -1029,7 +1029,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
         Parser__consume_token(self, Token__is_greater_than);
         Parser__consume_space(self, 1);
         return_type = Parser__parse_type(self);
-        location = Source_Location__union(location, return_type->location);
+        location = Source_Location__merge(location, return_type->location);
     }
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
@@ -1058,7 +1058,7 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *closing_brace = Parser__consume_token(self, Token__is_closing_brace);
-    location = Source_Location__union(location, closing_brace->location);
+    location = Source_Location__merge(location, closing_brace->location);
     return Parsed_Procedure_Statement__create(location, name, first_type_parameter, receiver_type != NULL, first_parameter, return_type, false, statements, NULL);
 }
 
@@ -1072,7 +1072,7 @@ Parsed_Statement *Parser__parse_return_statement(Parser *self) {
     if (!Parser__matches_end_of_line(self)) {
         Parser__consume_space(self, 1);
         expression = Parser__parse_expression(self);
-        location = Source_Location__union(location, expression->location);
+        location = Source_Location__merge(location, expression->location);
     }
     return Parsed_Return_Statement__create(location, expression);
 }
@@ -1123,7 +1123,7 @@ Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
                 switch_case = Parsed_Switch_Else__create(first_token->location);
             }
             switch_case->statement = (Parsed_Statement *)Parser__parse_block_statement(self);
-            switch_case->location = Source_Location__union(switch_case->location, switch_case->statement->location);
+            switch_case->location = Source_Location__merge(switch_case->location, switch_case->statement->location);
             if (first_case == NULL) {
                 first_case = switch_case;
             } else {
@@ -1135,7 +1135,7 @@ Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
-    return (Parsed_Statement *)Parsed_Switch_Statement__create(Source_Location__union(first_token->location, last_token->location), switch_expression, first_case);
+    return (Parsed_Statement *)Parsed_Switch_Statement__create(Source_Location__merge(first_token->location, last_token->location), switch_expression, first_case);
 }
 
 /*
@@ -1172,9 +1172,9 @@ Parsed_Statement *Parser__parse_if_statement(Parser *self) {
         } else {
             false_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
         }
-        location = Source_Location__union(location, false_statement->location);
+        location = Source_Location__merge(location, false_statement->location);
     } else {
-        location = Source_Location__union(location, true_statement->location);
+        location = Source_Location__merge(location, true_statement->location);
     }
     return Parsed_If_Statement__create(location, condition_expression, variant_alias, true_statement, false_statement);
 }
@@ -1187,7 +1187,7 @@ Parsed_Statement *Parser__parse_loop_statement(Parser *self) {
     Token *first_token = Parser__consume_token(self, Token__is_loop);
     Parser__consume_space(self, 1);
     Parsed_Statement *body_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
-    return Parsed_Loop_Statement__create(Source_Location__union(first_token->location, body_statement->location), body_statement);
+    return Parsed_Loop_Statement__create(Source_Location__merge(first_token->location, body_statement->location), body_statement);
 }
 
 /*
@@ -1200,7 +1200,7 @@ Parsed_Statement *Parser__parse_while_statement(Parser *self) {
     Parsed_Expression *condition_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 1);
     Parsed_Statement *body_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
-    return Parsed_While_Statement__create(Source_Location__union(first_token->location, body_statement->location), condition_expression, body_statement);
+    return Parsed_While_Statement__create(Source_Location__merge(first_token->location, body_statement->location), condition_expression, body_statement);
 }
 
 /*
@@ -1236,7 +1236,7 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
     String__append_cstring(module_path, ".code");
     Parsed_Source *parsed_source = parse(self->project_dir, module_path);
 
-    return Parsed_Import_Statement__create(Source_Location__union(first_location, last_location), module_name, parsed_source);
+    return Parsed_Import_Statement__create(Source_Location__merge(first_location, last_location), module_name, parsed_source);
 }
 
 /*

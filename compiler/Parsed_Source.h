@@ -485,7 +485,7 @@ typedef enum Parsed_Type_Specifier_Kind {
     PARSED_TYPE_SPECIFIER_KIND__EXTERNAL,
     PARSED_TYPE_SPECIFIER_KIND__STRUCT,
     PARSED_TYPE_SPECIFIER_KIND__TRAIT,
-    PARSED_TYPE_SPECIFIER_KIND__UNION,
+    PARSED_TYPE_SPECIFIER_KIND__VARIANT,
 } Parsed_Type_Specifier_Kind;
 
 typedef struct Parsed_Type_Specifier {
@@ -597,19 +597,19 @@ typedef struct Parsed_Trait_Type_Specifier {
 
 Parsed_Trait_Type_Specifier *Parsed_Trait_Type_Specifier__create(Source_Location location, Parsed_Trait_Method *first_method);
 
-typedef struct Parsed_Union_Variant {
+typedef struct Parsed_Variant_Case {
     Parsed_Type *type;
-    struct Parsed_Union_Variant *next_variant;
-} Parsed_Union_Variant;
+    struct Parsed_Variant_Case *next_variant;
+} Parsed_Variant_Case;
 
-Parsed_Union_Variant *Parsed_Union_Variant__create(Parsed_Type *type);
+Parsed_Variant_Case *Parsed_Variant_Case__create(Parsed_Type *type);
 
-typedef struct Parsed_Union_Type_Specifier {
+typedef struct Parsed_Variant_Type_Specifier {
     Parsed_Type_Specifier super;
-    Parsed_Union_Variant *first_variant;
-} Parsed_Union_Type_Specifier;
+    Parsed_Variant_Case *first_variant_case;
+} Parsed_Variant_Type_Specifier;
 
-Parsed_Union_Type_Specifier *Parsed_Union_Type_Specifier__create(Source_Location location, Parsed_Union_Variant *first_variant);
+Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Location location, Parsed_Variant_Case *first_variant);
 
 typedef struct Parsed_Source {
     Source *source;

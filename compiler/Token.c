@@ -218,6 +218,10 @@ bool Token__is_union(Token *self) {
     return Token__is_keyword(self, "union");
 }
 
+bool Token__is_variant(Token *self) {
+    return Token__is_keyword(self, "variant");
+}
+
 bool Token__is_while(Token *self) {
     return Token__is_keyword(self, "while");
 }

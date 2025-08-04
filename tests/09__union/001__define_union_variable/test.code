@@ -1,9 +1,0 @@
-type Integer = union {
-    i8
-    i32
-}
-
-proc main() -> i32 {
-    let integer: Integer
-    return 0
-}

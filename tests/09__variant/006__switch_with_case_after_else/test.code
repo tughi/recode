@@ -1,0 +1,25 @@
+type Integer = variant {
+    i8
+    i32
+}
+
+type Value = variant {
+    bool
+    Integer
+}
+
+proc main() -> i32 {
+    let value: Value = Integer(42)
+
+    switch value {
+        is Integer {
+            return 0
+        }
+        else {
+            return 1
+        }
+        is bool {
+            return 2
+        }
+    }
+}

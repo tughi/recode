@@ -1,0 +1,42 @@
+type Expression = variant {
+    i32
+    ^Addition
+    ^Subtraction
+}
+
+type Addition = struct {
+    left: Expression
+    right: Expression
+}
+
+type Subtraction = struct {
+    left: Expression
+    right: Expression
+}
+
+proc evaluate(expression: Expression) -> i32 {
+    switch expression {
+        is nil {
+            return 0
+        }
+        is i32 as value {
+            return value
+        }
+        is ^Addition as addition {
+            return evaluate(expression: addition.left) + evaluate(expression: addition.right)
+        }
+        is ^Subtraction as subtraction {
+            return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
+        }
+    }
+}
+
+proc main() -> i32 {
+    return evaluate(expression: alloc Subtraction(
+        left: 42
+        right: alloc Addition(
+            left: 21
+            right: 21
+        )
+    ))
+}
