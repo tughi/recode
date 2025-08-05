@@ -182,6 +182,10 @@ bool Token__is_proc(Token *self) {
     return Token__is_keyword(self, "proc");
 }
 
+bool Token__is_raise(Token *self) {
+    return Token__is_keyword(self, "raise");
+}
+
 bool Token__is_return(Token *self) {
     return Token__is_keyword(self, "return");
 }
@@ -206,6 +210,10 @@ bool Token__is_true(Token *self) {
     return Token__is_keyword(self, "true");
 }
 
+bool Token__is_try(Token *self) {
+    return Token__is_keyword(self, "try");
+}
+
 bool Token__is_type(Token *self) {
     return Token__is_keyword(self, "type");
 }
@@ -224,6 +232,10 @@ bool Token__is_variant(Token *self) {
 
 bool Token__is_while(Token *self) {
     return Token__is_keyword(self, "while");
+}
+
+bool Token__is_yield(Token *self) {
+    return Token__is_keyword(self, "yield");
 }
 
 bool Token__is_other(Token *self, char *lexeme) {

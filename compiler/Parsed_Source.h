@@ -8,6 +8,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__ADDRESS_OF,
     PARSED_EXPRESSION_KIND__ALLOC,
     PARSED_EXPRESSION_KIND__ARRAY_ACCESS,
+    PARSED_EXPRESSION_KIND__BLOCK,
     PARSED_EXPRESSION_KIND__BOOL,
     PARSED_EXPRESSION_KIND__CALL,
     PARSED_EXPRESSION_KIND__CAST,
@@ -15,26 +16,27 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__DEREFERENCE,
     PARSED_EXPRESSION_KIND__DIVIDE,
     PARSED_EXPRESSION_KIND__EQUALS,
-    PARSED_EXPRESSION_KIND__GREATER,
     PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS,
+    PARSED_EXPRESSION_KIND__GREATER,
     PARSED_EXPRESSION_KIND__GROUP,
     PARSED_EXPRESSION_KIND__INTEGER,
     PARSED_EXPRESSION_KIND__IS,
-    PARSED_EXPRESSION_KIND__LESS,
     PARSED_EXPRESSION_KIND__LESS_OR_EQUALS,
+    PARSED_EXPRESSION_KIND__LESS,
     PARSED_EXPRESSION_KIND__LOGIC_AND,
     PARSED_EXPRESSION_KIND__LOGIC_OR,
     PARSED_EXPRESSION_KIND__MEMBER_ACCESS,
     PARSED_EXPRESSION_KIND__MINUS,
     PARSED_EXPRESSION_KIND__MODULO,
     PARSED_EXPRESSION_KIND__MULTIPLY,
-    PARSED_EXPRESSION_KIND__NOT,
     PARSED_EXPRESSION_KIND__NOT_EQUALS,
+    PARSED_EXPRESSION_KIND__NOT,
     PARSED_EXPRESSION_KIND__NULL,
     PARSED_EXPRESSION_KIND__SIZEOF,
     PARSED_EXPRESSION_KIND__STRING,
     PARSED_EXPRESSION_KIND__SUBTRACT,
     PARSED_EXPRESSION_KIND__SYMBOL,
+    PARSED_EXPRESSION_KIND__TRY,
     PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION,
 } Parsed_Expression_Kind;
 
@@ -359,6 +361,14 @@ typedef struct Parsed_Symbol_Expression {
 
 Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name);
 
+typedef struct Parsed_Try_Expression {
+    Parsed_Expression super;
+    Parsed_Expression *expression;
+    Parsed_Expression *else_expression;
+} Parsed_Try_Expression;
+
+Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, Parsed_Expression *expression, Parsed_Expression *else_expression);
+
 typedef struct Parsed_Type_Specialization_Expression {
     Parsed_Expression super;
     Parsed_Expression *type_expression;
@@ -372,15 +382,17 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
     PARSED_STATEMENT_KIND__EXPRESSION,
-    PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__IF,
     PARSED_STATEMENT_KIND__IMPORT,
     PARSED_STATEMENT_KIND__LOOP,
+    PARSED_STATEMENT_KIND__PROCEDURE,
+    PARSED_STATEMENT_KIND__RAISE,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__SWITCH,
     PARSED_STATEMENT_KIND__TYPE,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE,
+    PARSED_STATEMENT_KIND__YIELD,
 } Parsed_Statement_Kind;
 
 typedef struct Parsed_Statement {
@@ -423,6 +435,13 @@ typedef struct Parsed_Block_Statement {
 
 Parsed_Block_Statement *Parsed_Block_Statement__create(Source_Location location, struct Parsed_Statements *statements);
 
+typedef struct Parsed_Block_Expression {
+    Parsed_Expression super;
+    struct Parsed_Block_Statement *block_statement;
+} Parsed_Block_Expression;
+
+Parsed_Block_Expression *Parsed_Block_Expression__create(struct Parsed_Block_Statement *block_statement);
+
 typedef struct Parsed_Break_Statement {
     Parsed_Statement super;
 } Parsed_Break_Statement;
@@ -449,12 +468,13 @@ typedef struct Parsed_Procedure_Statement {
     bool is_method;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
+    Parsed_Type *raise_type;
     bool is_external;
     struct Parsed_Statements *statements;
     String_Token *external_name;
 } Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
@@ -472,6 +492,13 @@ typedef struct Parsed_Loop_Statement {
 } Parsed_Loop_Statement;
 
 Parsed_Statement *Parsed_Loop_Statement__create(Source_Location location, Parsed_Statement *body_statement);
+
+typedef struct Parsed_Raise_Statement {
+    Parsed_Statement super;
+    Parsed_Expression *expression;
+} Parsed_Raise_Statement;
+
+Parsed_Raise_Statement *Parsed_Raise_Statement__create(Source_Location location, Parsed_Expression *expression);
 
 typedef struct Parsed_Return_Statement {
     Parsed_Statement super;
@@ -552,6 +579,13 @@ typedef struct Parsed_While_Statement {
 } Parsed_While_Statement;
 
 Parsed_Statement *Parsed_While_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Parsed_Statement *body_statement);
+
+typedef struct Parsed_Yield_Statement {
+    Parsed_Statement super;
+    Parsed_Expression *expression;
+} Parsed_Yield_Statement;
+
+Parsed_Yield_Statement *Parsed_Yield_Statement__create(Source_Location location, Parsed_Expression *expression);
 
 typedef struct Parsed_Builtin_Type_Specifier {
     Parsed_Type_Specifier super;

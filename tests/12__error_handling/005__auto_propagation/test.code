@@ -1,0 +1,25 @@
+proc main() -> i32 {
+    let result = try count_from(0) else {
+        return error.code - 42
+    }
+    return 1
+}
+
+type Error = struct {
+    code: i32
+}
+
+proc increment(anon value: i32) -> i32 !> Error {
+    if value > 10 {
+        raise Error(code: 42)
+    }
+    return value + 1
+}
+
+proc count_from(anon value: i32) -> i32 !> Error {
+    let new_value = value
+    while new_value < 100 {
+        new_value = increment(new_value)
+    }
+    return new_value
+}
