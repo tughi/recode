@@ -619,10 +619,11 @@ typedef struct Parsed_Trait_Method {
     Token *name;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
+    Parsed_Type *raise_type;
     struct Parsed_Trait_Method *next_method;
 } Parsed_Trait_Method;
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type);
 
 typedef struct Parsed_Trait_Type_Specifier {
     Parsed_Type_Specifier super;

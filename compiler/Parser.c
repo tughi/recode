@@ -653,8 +653,16 @@ Parsed_Type_Specifier *Parser__parse_trait_type_specifier(Parser *self) {
                 Parser__consume_space(self, 1);
                 return_type = Parser__parse_type(self);
             }
+            Parsed_Type *raise_type = NULL;
+            if (Parser__matches_two(self, Token__is_space, false, Token__is_exclamation_mark)) {
+                Parser__consume_space(self, 1);
+                Parser__consume_token(self, Token__is_exclamation_mark);
+                Parser__consume_token(self, Token__is_greater_than);
+                Parser__consume_space(self, 1);
+                raise_type = Parser__parse_type(self);
+            }
             Parser__consume_end_of_line(self);
-            Parsed_Trait_Method *trait_method = Parsed_Trait_Method__create(method_location, method_name, first_parameter, return_type);
+            Parsed_Trait_Method *trait_method = Parsed_Trait_Method__create(method_location, method_name, first_parameter, return_type, raise_type);
             if (last_trait_method == NULL) {
                 first_trait_method = trait_method;
             } else {

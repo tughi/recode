@@ -1923,7 +1923,7 @@ Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *t
     return (Checked_Named_Type *)struct_type;
 }
 
-Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
+Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type, Parsed_Type *parsed_raise_type) {
     Checked_Type *procedure_return_type;
     if (parsed_return_type != NULL) {
         procedure_return_type = Checker__resolve_type(self, parsed_return_type);
@@ -1943,6 +1943,24 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
         }
     } else {
         procedure_return_type = (Checked_Type *)self->builtin_types->nothing_type;
+    }
+    if (parsed_raise_type != NULL) {
+        Checked_Type *procedure_raise_type = Checker__resolve_type(self, parsed_raise_type);
+        switch (procedure_raise_type->kind) {
+        case CHECKED_TYPE_KIND__ANY:
+            pWriter__begin_location_message(stderr_writer, parsed_raise_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use Any as raise type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        case CHECKED_TYPE_KIND__EXTERNAL:
+            pWriter__begin_location_message(stderr_writer, parsed_raise_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use external type as raise type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        default:
+            break;
+        }
+        procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_return_type != NULL ? Source_Location__merge(parsed_return_type->location, parsed_raise_type->location) : parsed_raise_type->location, self->checked_module, procedure_return_type, procedure_raise_type);
     }
     Checked_Procedure_Parameter *procedure_first_parameter = NULL;
     Checked_Procedure_Parameter *procedure_last_parameter = NULL;
@@ -1998,7 +2016,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *ty
         Checked_Struct_Member *last_struct_member = trait_type->struct_type->first_member;
         Checked_Trait_Method *last_trait_method = NULL;
         for (; parsed_method != NULL; parsed_method = parsed_method->next_method) {
-            Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type);
+            Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type, parsed_method->raise_type);
             Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
             Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
@@ -2168,15 +2186,22 @@ Checked_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop_Stat
 }
 
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
+    Checked_Type *return_type = self->return_type;
+    if (return_type->kind == CHECKED_TYPE_KIND__RESULT) {
+        return_type = ((Checked_Result_Type *)return_type)->return_type;
+    }
     Decomposed_Expression decomposed_expression = {0};
     if (parsed_statement->expression != NULL) {
-        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, self->return_type);
+        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, return_type);
         decomposed_expression = Checker__decompose_expression(self, expression);
-    } else if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+    } else if (return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Missing return expression");
         pWriter__end_location_message(stderr_writer);
         panic();
+    }
+    if (self->return_type->kind == CHECKED_TYPE_KIND__RESULT) {
+        todo("Create make result expression for return statement");
     }
 
     Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
@@ -2464,7 +2489,7 @@ void Checker__check_generic_procedure_declaration(Checker *self, Parsed_Procedur
 }
 
 Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
-    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
+    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type, parsed_statement->raise_type);
 
     String *symbol_name = String__create();
     Checked_Type *receiver_type = NULL;

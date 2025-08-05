@@ -203,6 +203,15 @@ Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, S
     return type_argument;
 }
 
+Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Module *module, Checked_Type *return_type, Checked_Type *raise_type) {
+    String *name = String__create_from("Result__");
+    String__append_int16_t(name, location.start_line);
+    Checked_Result_Type *type = (Checked_Result_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__RESULT, sizeof(Checked_Result_Type), location, name, module);
+    type->return_type = return_type;
+    type->raise_type = raise_type;
+    return type;
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -381,8 +390,13 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         pWriter__write__checked_type(self, pointer_type->other_type);
         break;
     }
-    case CHECKED_TYPE_KIND__STR: {
-        pWriter__write__cstring(self, "str");
+    case CHECKED_TYPE_KIND__RESULT: {
+        Checked_Result_Type *result_type = (Checked_Result_Type *)type;
+        pWriter__write__cstring(self, "Result(");
+        pWriter__write__checked_type(self, result_type->return_type);
+        pWriter__write__cstring(self, ", ");
+        pWriter__write__checked_type(self, result_type->raise_type);
+        pWriter__write__char(self, ')');
         break;
     }
     case CHECKED_TYPE_KIND__TYPE: {

@@ -52,7 +52,8 @@ typedef enum Checked_Type_Kind {
     /* Dynamic */
     CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
-    CHECKED_TYPE_KIND__POINTER
+    CHECKED_TYPE_KIND__POINTER,
+    CHECKED_TYPE_KIND__RESULT,
 } Checked_Type_Kind;
 
 struct Checked_Type_Symbol;
@@ -211,6 +212,14 @@ typedef struct Checked_Pointer_Type {
 } Checked_Pointer_Type;
 
 Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location location, Checked_Type *other_type);
+
+typedef struct Checked_Result_Type {
+    Checked_Named_Type super;
+    Checked_Type *return_type;
+    Checked_Type *raise_type;
+} Checked_Result_Type;
+
+Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Module *module, Checked_Type *return_type, Checked_Type *raise_type);
 
 typedef struct Checked_Struct_Member {
     Source_Location location;

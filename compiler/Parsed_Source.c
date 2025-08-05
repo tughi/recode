@@ -477,12 +477,13 @@ Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Locati
     return type_specifier;
 }
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type) {
     Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
     method->location = location;
     method->name = name;
     method->first_parameter = first_parameter;
     method->return_type = return_type;
+    method->raise_type = raise_type;
     method->next_method = NULL;
     return method;
 }
