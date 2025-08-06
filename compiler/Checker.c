@@ -1961,6 +1961,7 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
             break;
         }
         procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_return_type != NULL ? Source_Location__merge(parsed_return_type->location, parsed_raise_type->location) : parsed_raise_type->location, self->checked_module, procedure_return_type, procedure_raise_type);
+        procedure_return_type->symbol = Checker__create_type_symbol(self, ((Checked_Result_Type *)procedure_return_type)->super.name, (Checked_Named_Type *)procedure_return_type);
     }
     Checked_Procedure_Parameter *procedure_first_parameter = NULL;
     Checked_Procedure_Parameter *procedure_last_parameter = NULL;
@@ -2201,7 +2202,7 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
         panic();
     }
     if (self->return_type->kind == CHECKED_TYPE_KIND__RESULT) {
-        todo("Create make result expression for return statement");
+        decomposed_expression.expression = (Checked_Expression *)Checked_Result_Expression__create(decomposed_expression.expression->location, self->return_type, decomposed_expression.expression, NULL);
     }
 
     Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);

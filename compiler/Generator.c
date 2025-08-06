@@ -324,6 +324,23 @@ void Generator__generate_null_expression(Generator *self, Checked_Null_Expressio
     pWriter__write__cstring(self->writer, "NULL");
 }
 
+void Generator__generate_result_expression(Generator *self, Checked_Result_Expression *expression) {
+    pWriter__write__char(self->writer, '(');
+    pWriter__write__cdecl(self->writer, NULL, expression->super.type);
+    pWriter__write__cstring(self->writer, "){.success = ");
+    if (expression->raise_expression == NULL) {
+        pWriter__write__cstring(self->writer, "true");
+        if (expression->return_expression->type->kind != CHECKED_TYPE_KIND__NOTHING) {
+            pWriter__write__cstring(self->writer, ", .value = ");
+            Generator__generate_expression(self, expression->return_expression);
+        }
+    } else {
+        pWriter__write__cstring(self->writer, "false, .error = ");
+        Generator__generate_expression(self, expression->raise_expression);
+    }
+    pWriter__write__cstring(self->writer, "}");
+}
+
 void Generator__generate_sizeof_expression(Generator *self, Checked_Sizeof_Expression *expression) {
     pWriter__write__cstring(self->writer, "sizeof(");
     pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
@@ -485,6 +502,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         break;
     case CHECKED_EXPRESSION_KIND__NULL:
         Generator__generate_null_expression(self, (Checked_Null_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__RESULT:
+        Generator__generate_result_expression(self, (Checked_Result_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__SIZEOF:
         Generator__generate_sizeof_expression(self, (Checked_Sizeof_Expression *)expression);
@@ -763,6 +783,29 @@ void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *pr
     pWriter__write__cstring(self->writer, "}\n\n");
 }
 
+void Generator__generate_result_type(Generator *self, Checked_Result_Type *result_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)result_type);
+    pWriter__write__cstring(self->writer, " {\n");
+    pWriter__write__cstring(self->writer, "    bool success;\n");
+    pWriter__write__cstring(self->writer, "    union {\n");
+    if (result_type->return_type != NULL) {
+        pWriter__write__cstring(self->writer, "        ");
+        String result_field_name = {.data = "value", .length = 5};
+        CDECL_Local_Name result_name = CDECL_Local_Name__create(&result_field_name);
+        pWriter__write__cdecl(self->writer, (CDECL_Name *)&result_name, result_type->return_type);
+        pWriter__write__cstring(self->writer, ";\n");
+    }
+    if (result_type->raise_type != NULL) {
+        pWriter__write__cstring(self->writer, "        ");
+        String error_field_name = {.data = "error", .length = 5};
+        CDECL_Local_Name error_name = CDECL_Local_Name__create(&error_field_name);
+        pWriter__write__cdecl(self->writer, (CDECL_Name *)&error_name, result_type->raise_type);
+        pWriter__write__cstring(self->writer, ";\n");
+    }
+    pWriter__write__cstring(self->writer, "    };\n");
+    pWriter__write__cstring(self->writer, "};\n\n");
+}
+
 void Generator__declare_struct(Generator *self, Checked_Struct_Type *struct_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, ";\n");
@@ -866,6 +909,9 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
         dependency = dependency->next_dependency;
     }
     switch (type->kind) {
+    case CHECKED_TYPE_KIND__RESULT:
+        Generator__generate_result_type(self, (Checked_Result_Type *)type);
+        break;
     case CHECKED_TYPE_KIND__STRUCT:
         Generator__generate_struct(self, (Checked_Struct_Type *)type);
         break;

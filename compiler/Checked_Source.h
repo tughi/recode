@@ -111,6 +111,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__NOT,
     CHECKED_EXPRESSION_KIND__NULL,
     CHECKED_EXPRESSION_KIND__RECEIVER_METHOD,
+    CHECKED_EXPRESSION_KIND__RESULT,
     CHECKED_EXPRESSION_KIND__SIZEOF,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__STRING,
@@ -667,6 +668,14 @@ typedef struct Checked_Not_Equals_Expression {
 } Checked_Not_Equals_Expression;
 
 Checked_Not_Equals_Expression *Checked_Not_Equals_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+
+typedef struct Checked_Result_Expression {
+    Checked_Expression super;
+    Checked_Expression *return_expression;
+    Checked_Expression *raise_expression;
+} Checked_Result_Expression;
+
+Checked_Result_Expression *Checked_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *return_expression, Checked_Expression *raise_expression);
 
 typedef struct Checked_Null_Expression {
     Checked_Expression super;

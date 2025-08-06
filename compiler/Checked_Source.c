@@ -820,6 +820,13 @@ Checked_Not_Equals_Expression *Checked_Not_Equals_Expression__create(Source_Loca
     return (Checked_Not_Equals_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOT_EQUALS, location, type, left_expression, right_expression);
 }
 
+Checked_Result_Expression *Checked_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *return_expression, Checked_Expression *raise_expression) {
+    Checked_Result_Expression *expression = (Checked_Result_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT, sizeof(Checked_Result_Expression), location, type);
+    expression->return_expression = return_expression;
+    expression->raise_expression = raise_expression;
+    return expression;
+}
+
 Checked_Null_Expression *Checked_Null_Expression__create(Source_Location location, Checked_Type *type) {
     return (Checked_Null_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NULL, sizeof(Checked_Null_Expression), location, type);
 }
