@@ -2226,6 +2226,18 @@ Checked_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop_Stat
     return (Checked_Statement *)loop_statement;
 }
 
+Checked_Statement *Checker__check_raise_statement(Checker *self, Parsed_Raise_Statement *parsed_statement) {
+    if (self->return_type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Procedure does not declare a raise type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Type *procedure_raise_type = ((Checked_Result_Type *)self->return_type)->raise_type;
+    Decomposed_Expression raise_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, procedure_raise_type));
+    return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, (Checked_Expression *)Checked_Result_Expression__create(raise_expression.expression->location, self->return_type, NULL, raise_expression.expression));
+}
+
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
     Checked_Type *return_type = self->return_type;
     if (return_type->kind == CHECKED_TYPE_KIND__RESULT) {
@@ -2593,6 +2605,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return Checker__check_if_statement(self, (Parsed_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__LOOP:
         return Checker__check_loop_statement(self, (Parsed_Loop_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__RAISE:
+        return Checker__check_raise_statement(self, (Parsed_Raise_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RETURN:
         return Checker__check_return_statement(self, (Parsed_Return_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__SWITCH:
