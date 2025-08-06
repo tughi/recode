@@ -341,6 +341,21 @@ void Generator__generate_result_expression(Generator *self, Checked_Result_Expre
     pWriter__write__cstring(self->writer, "}");
 }
 
+void Generator__generate_result_error_expression(Generator *self, Checked_Result_Error_Expression *expression) {
+    Generator__generate_expression(self, expression->result_expression);
+    pWriter__write__cstring(self->writer, ".error");
+}
+
+void Generator__generate_result_success_expression(Generator *self, Checked_Result_Success_Expression *expression) {
+    Generator__generate_expression(self, expression->result_expression);
+    pWriter__write__cstring(self->writer, ".success");
+}
+
+void Generator__generate_result_value_expression(Generator *self, Checked_Result_Value_Expression *expression) {
+    Generator__generate_expression(self, expression->result_expression);
+    pWriter__write__cstring(self->writer, ".value");
+}
+
 void Generator__generate_sizeof_expression(Generator *self, Checked_Sizeof_Expression *expression) {
     pWriter__write__cstring(self->writer, "sizeof(");
     pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
@@ -505,6 +520,15 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         break;
     case CHECKED_EXPRESSION_KIND__RESULT:
         Generator__generate_result_expression(self, (Checked_Result_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__RESULT_ERROR:
+        Generator__generate_result_error_expression(self, (Checked_Result_Error_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__RESULT_SUCCESS:
+        Generator__generate_result_success_expression(self, (Checked_Result_Success_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__RESULT_VALUE:
+        Generator__generate_result_value_expression(self, (Checked_Result_Value_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__SIZEOF:
         Generator__generate_sizeof_expression(self, (Checked_Sizeof_Expression *)expression);

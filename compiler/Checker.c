@@ -652,7 +652,21 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
             todo("Report too many arguments");
         }
     }
-    return (Checked_Expression *)Checked_Call_Expression__create(parsed_expression->super.location, procedure_type->return_type, procedure_expression, first_argument);
+
+    Checked_Call_Expression *call_expression = Checked_Call_Expression__create(parsed_expression->super.location, procedure_type->return_type, procedure_expression, first_argument);
+    if (call_expression->super.type->kind == CHECKED_TYPE_KIND__RESULT) {
+        Checked_Result_Type *result_type = (Checked_Result_Type *)call_expression->super.type;
+        if (self->return_type->kind != CHECKED_TYPE_KIND__RESULT || !Checked_Type__equals(result_type->raise_type, ((Checked_Result_Type *)self->return_type)->raise_type)) {
+            pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot unwrap result because ");
+            pWriter__write__checked_type(stderr_writer, result_type->raise_type);
+            pWriter__write__cstring(stderr_writer, " cannot be raised here");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        return (Checked_Expression *)Checked_Unwrap_Result_Expression__create(parsed_expression->super.location, result_type->return_type, call_expression);
+    }
+    return (Checked_Expression *)call_expression;
 }
 
 Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Expression *parsed_expression) {
@@ -1483,6 +1497,28 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_is_variant_case_exp
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_unwrap_result_expression(Checked_Expression_Decomposer *self, Checked_Unwrap_Result_Expression *expression) {
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, (Checked_Expression *)expression->call_expression));
+    if (result_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected result type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Result_Type *result_type = (Checked_Result_Type *)result_expression->type;
+
+    Checked_Result_Success_Expression *result_success_expression = Checked_Result_Success_Expression__create(expression->super.location, (Checked_Type *)self->checker->builtin_types->bool_type, result_expression);
+    Checked_Result_Value_Expression *result_value_expression = Checked_Result_Value_Expression__create(expression->super.location, result_type->return_type, result_expression);
+    Checked_Result_Error_Expression *result_error_expression = Checked_Result_Error_Expression__create(expression->super.location, result_type->raise_type, result_expression);
+
+    Checked_Return_Statement *return_statement = Checked_Return_Statement__create(expression->super.location, (Checked_Expression *)Checked_Result_Expression__create(expression->super.location, self->checker->return_type, NULL, (Checked_Expression *)result_error_expression));
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, NULL, (Checked_Statement *)return_statement));
+
+    free(expression); // replaced by result_expression
+
+    return (Checked_Expression *)result_value_expression;
+}
+
 bool Checked_Expression__needs_decomposition(Checked_Expression *self);
 
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
@@ -1558,6 +1594,8 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         return expression;
+    case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
+        return Checked_Expression_Decomposer__decompose_unwrap_result_expression(self, (Checked_Unwrap_Result_Expression *)expression);
     default:
         pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Cannot decompose expression kind: ");
@@ -1695,6 +1733,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         return false;
+    case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
+        return true;
     default:
         pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unsupported expression kind: ");

@@ -820,6 +820,10 @@ Checked_Not_Equals_Expression *Checked_Not_Equals_Expression__create(Source_Loca
     return (Checked_Not_Equals_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOT_EQUALS, location, type, left_expression, right_expression);
 }
 
+Checked_Null_Expression *Checked_Null_Expression__create(Source_Location location, Checked_Type *type) {
+    return (Checked_Null_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NULL, sizeof(Checked_Null_Expression), location, type);
+}
+
 Checked_Result_Expression *Checked_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *return_expression, Checked_Expression *raise_expression) {
     Checked_Result_Expression *expression = (Checked_Result_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT, sizeof(Checked_Result_Expression), location, type);
     expression->return_expression = return_expression;
@@ -827,8 +831,22 @@ Checked_Result_Expression *Checked_Result_Expression__create(Source_Location loc
     return expression;
 }
 
-Checked_Null_Expression *Checked_Null_Expression__create(Source_Location location, Checked_Type *type) {
-    return (Checked_Null_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NULL, sizeof(Checked_Null_Expression), location, type);
+Checked_Result_Error_Expression *Checked_Result_Error_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Error_Expression *expression = (Checked_Result_Error_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_ERROR, sizeof(Checked_Result_Error_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
+}
+
+Checked_Result_Success_Expression *Checked_Result_Success_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Success_Expression *expression = (Checked_Result_Success_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_SUCCESS, sizeof(Checked_Result_Success_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
+}
+
+Checked_Result_Value_Expression *Checked_Result_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Value_Expression *expression = (Checked_Result_Value_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_VALUE, sizeof(Checked_Result_Value_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
 }
 
 Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type) {
@@ -862,6 +880,12 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
 Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type) {
     Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
     expression->named_type = named_type;
+    return expression;
+}
+
+Checked_Unwrap_Result_Expression *Checked_Unwrap_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression) {
+    Checked_Unwrap_Result_Expression *expression = (Checked_Unwrap_Result_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__UNWRAP_RESULT, sizeof(Checked_Unwrap_Result_Expression), location, type);
+    expression->call_expression = call_expression;
     return expression;
 }
 
