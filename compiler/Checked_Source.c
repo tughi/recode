@@ -877,6 +877,13 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
     return expression;
 }
 
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression) {
+    Checked_Try_Expression *expression = (Checked_Try_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TRY, sizeof(Checked_Try_Expression), location, type);
+    expression->call_expression = call_expression;
+    expression->else_expression = else_expression;
+    return expression;
+}
+
 Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type) {
     Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
     expression->named_type = named_type;

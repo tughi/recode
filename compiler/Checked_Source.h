@@ -120,6 +120,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
+    CHECKED_EXPRESSION_KIND__TRY,
     CHECKED_EXPRESSION_KIND__TYPE,
     CHECKED_EXPRESSION_KIND__UNWRAP_RESULT,
 } Checked_Expression_Kind;
@@ -741,6 +742,14 @@ typedef struct Checked_Symbol_Expression {
 } Checked_Symbol_Expression;
 
 Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location location, Checked_Type *type, Checked_Symbol *symbol);
+
+typedef struct Checked_Try_Expression {
+    Checked_Expression super;
+    Checked_Call_Expression *call_expression;
+    Checked_Expression *else_expression;
+} Checked_Try_Expression;
+
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression);
 
 typedef struct Checked_Type_Expression {
     Checked_Expression super;
