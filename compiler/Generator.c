@@ -403,6 +403,11 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
         procedure_name.super.write((CDECL_Name *)&procedure_name, self->writer);
         break;
     }
+    case CHECKED_SYMBOL_KIND__RESULT_ERROR: {
+        Checked_Result_Error_Symbol *result_error_symbol = (Checked_Result_Error_Symbol *)expression->symbol;
+        Generator__generate_expression(self, result_error_symbol->expression);
+        break;
+    }
     case CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE: {
         Checked_Variant_Switch_Case_Symbol *variant_symbol = (Checked_Variant_Switch_Case_Symbol *)expression->symbol;
         if (variant_symbol->variant_expression->temp_variable_name == NULL) {

@@ -292,6 +292,7 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
+    CHECKED_SYMBOL_KIND__RESULT_ERROR,
     CHECKED_SYMBOL_KIND__TYPE_ARGUMENT,
     CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__VARIABLE,
@@ -396,6 +397,13 @@ typedef struct Checked_Procedure_Parameter_Symbol {
 } Checked_Procedure_Parameter_Symbol;
 
 Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
+
+typedef struct Checked_Result_Error_Symbol {
+    Checked_Symbol super;
+    Checked_Expression *expression;
+} Checked_Result_Error_Symbol;
+
+Checked_Result_Error_Symbol *Checked_Result_Error_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Type_Symbol {
     Checked_Symbol super;
@@ -747,9 +755,10 @@ typedef struct Checked_Try_Expression {
     Checked_Expression super;
     Checked_Call_Expression *call_expression;
     Checked_Expression *else_expression;
+    Checked_Result_Error_Symbol *result_error_symbol;
 } Checked_Try_Expression;
 
-Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression);
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol);
 
 typedef struct Checked_Type_Expression {
     Checked_Expression super;

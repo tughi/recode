@@ -532,6 +532,12 @@ Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(C
     return (Checked_Procedure_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER, sizeof(Checked_Procedure_Parameter_Symbol), module, location, name, type, false);
 }
 
+Checked_Result_Error_Symbol *Checked_Result_Error_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
+    Checked_Result_Error_Symbol *symbol = (Checked_Result_Error_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__RESULT_ERROR, sizeof(Checked_Result_Error_Symbol), module, location, name, type, true);
+    symbol->expression = NULL;
+    return symbol;
+}
+
 Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {
     Checked_Type_Symbol *symbol = (Checked_Type_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), module, location, name, type, true);
     symbol->named_type = named_type;
@@ -877,10 +883,11 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
     return expression;
 }
 
-Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression) {
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol) {
     Checked_Try_Expression *expression = (Checked_Try_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TRY, sizeof(Checked_Try_Expression), location, type);
     expression->call_expression = call_expression;
     expression->else_expression = else_expression;
+    expression->result_error_symbol = result_error_symbol;
     return expression;
 }
 

@@ -1202,6 +1202,7 @@ Checked_Expression *Checker__check_try_expression(Checker *self, Parsed_Try_Expr
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+
     Checked_Expression *call_expression = Checker__check_call_expression(self, (Parsed_Call_Expression *)parsed_expression->expression, false);
     if (call_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
         pWriter__begin_location_message(stderr_writer, call_expression->location, WRITER_STYLE__ERROR);
@@ -1210,9 +1211,14 @@ Checked_Expression *Checker__check_try_expression(Checker *self, Parsed_Try_Expr
         panic();
     }
     Checked_Result_Type *result_type = (Checked_Result_Type *)call_expression->type;
-    Checked_Type *try_expression_type = result_type->return_type;
-    Checked_Expression *else_expression = Checker__check_expression(self, parsed_expression->else_expression, try_expression_type);
-    return (Checked_Expression *)Checked_Try_Expression__create(parsed_expression->super.location, try_expression_type, (Checked_Call_Expression *)call_expression, else_expression);
+
+    self->symbols = Checked_Symbols__create(self->symbols);
+    Checked_Result_Error_Symbol *result_error_symbol = Checked_Result_Error_Symbol__create(self->checked_module, call_expression->location, String__create_from("error"), result_type->raise_type);
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)result_error_symbol);
+    Checked_Expression *else_expression = Checker__check_expression(self, parsed_expression->else_expression, result_type->return_type);
+    self->symbols = self->symbols->parent;
+
+    return (Checked_Expression *)Checked_Try_Expression__create(parsed_expression->super.location, result_type->return_type, (Checked_Call_Expression *)call_expression, else_expression, result_error_symbol);
 }
 
 Checked_Expression *Checker__check_type_specialization_expression(Checker *self, Parsed_Type_Specialization_Expression *parsed_expression) {
@@ -1551,6 +1557,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_try_expression(Chec
     Checked_Block_Statement *failed_block_statement = Checked_Block_Statement__create(expression->else_expression->location, Checked_Statements__create());
     Checked_Statements *self_statements = self->statements;
     self->statements = failed_block_statement->statements;
+    expression->result_error_symbol->expression = (Checked_Expression *)result_error_expression;
     Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(expression->else_expression->location, new_expression, Checked_Expression_Decomposer__decompose(self, expression->else_expression)));
     self->statements = self_statements;
 
