@@ -686,6 +686,12 @@ Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_
     return expression;
 }
 
+Checked_Block_Expression *Checked_Block_Expression__create(Source_Location location, Checked_Type *type, Checked_Statement *block_statement) {
+    Checked_Block_Expression *expression = (Checked_Block_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__BLOCK, sizeof(Checked_Block_Expression), location, type);
+    expression->block_statement = block_statement;
+    return expression;
+}
+
 Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location location, Checked_Type *type, bool value) {
     Checked_Bool_Expression *expression = (Checked_Bool_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__BOOL, sizeof(Checked_Bool_Expression), location, type);
     expression->value = value;

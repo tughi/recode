@@ -85,6 +85,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__ADDRESS_OF,
     CHECKED_EXPRESSION_KIND__ALLOC,
     CHECKED_EXPRESSION_KIND__ARRAY_ACCESS,
+    CHECKED_EXPRESSION_KIND__BLOCK,
     CHECKED_EXPRESSION_KIND__BOOL,
     CHECKED_EXPRESSION_KIND__CALL,
     CHECKED_EXPRESSION_KIND__CAST,
@@ -494,6 +495,13 @@ typedef struct Checked_Array_Access_Expression {
 } Checked_Array_Access_Expression;
 
 Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *array_expression, Checked_Expression *index_expression);
+
+typedef struct Checked_Block_Expression {
+    Checked_Expression super;
+    Checked_Statement *block_statement;
+} Checked_Block_Expression;
+
+Checked_Block_Expression *Checked_Block_Expression__create(Source_Location location, Checked_Type *type, Checked_Statement *block_statement);
 
 typedef struct Checked_Bool_Expression {
     Checked_Expression super;

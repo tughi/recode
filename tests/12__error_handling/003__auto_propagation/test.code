@@ -1,8 +1,5 @@
 proc main() -> i32 {
-    let result = try count_from(0) else {
-        return error.code - 42
-    }
-    return 1
+    return try count_from(0) else error.code - 42
 }
 
 type Error = struct {

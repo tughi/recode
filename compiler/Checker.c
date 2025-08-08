@@ -464,6 +464,14 @@ Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed
     return (Checked_Expression *)Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression);
 }
 
+Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement);
+
+Checked_Expression *Checker__check_block_expression(Checker *self, Parsed_Block_Expression *parsed_expression, Checked_Type *expected_type) {
+    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)Checker__check_block_statement(self, parsed_expression->block_statement);
+    Checked_Block_Expression *block_expression = Checked_Block_Expression__create(parsed_expression->super.location, expected_type, (Checked_Statement *)block_statement);
+    return (Checked_Expression *)block_expression;
+}
+
 Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Expression *parsed_expression) {
     Checked_Type *expression_type = (Checked_Type *)self->builtin_types->bool_type;
     bool value = parsed_expression->value;
@@ -1266,6 +1274,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     case PARSED_EXPRESSION_KIND__ARRAY_ACCESS:
         expression = Checker__check_array_access_expression(self, (Parsed_Array_Access_Expression *)parsed_expression);
         break;
+    case PARSED_EXPRESSION_KIND__BLOCK:
+        expression = Checker__check_block_expression(self, (Parsed_Block_Expression *)parsed_expression, expected_type);
+        break;
     case PARSED_EXPRESSION_KIND__BOOL:
         expression = Checker__check_bool_expression(self, (Parsed_Bool_Expression *)parsed_expression);
         break;
@@ -1481,6 +1492,12 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_unary_expression(Ch
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_block_expression(Checked_Expression_Decomposer *self, Checked_Block_Expression *expression) {
+    Checked_Expression *new_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.location, expression->super.type);
+    Checked_Statements__append(self->statements, expression->block_statement);
+    return new_expression;
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose_call_expression(Checked_Expression_Decomposer *self, Checked_Call_Expression *expression) {
     expression->callee_expression = Checked_Expression_Decomposer__decompose(self, expression->callee_expression);
     Checked_Call_Argument *call_argument = expression->first_argument;
@@ -1605,6 +1622,8 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_alloc_expression(self, (Checked_Alloc_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__BLOCK:
+        return Checked_Expression_Decomposer__decompose_block_expression(self, (Checked_Block_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__BOOL:
         return expression;
     case CHECKED_EXPRESSION_KIND__CALL:
@@ -1746,6 +1765,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return true;
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checked_Array_Access_Expression__needs_decomposition((Checked_Array_Access_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__BLOCK:
+        return true;
     case CHECKED_EXPRESSION_KIND__BOOL:
         return false;
     case CHECKED_EXPRESSION_KIND__CALL:
