@@ -92,6 +92,7 @@ typedef struct Checker {
 
     Checked_Type *receiver_type;
     Checked_Type *return_type;
+    int32_t temp_variable_counter;
 } Checker;
 
 Checker *Checker__create(Parsed_Source *parsed_source) {
@@ -1396,7 +1397,6 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
 typedef struct Checked_Expression_Decomposer {
     Checker *checker;
     Checked_Statements *statements;
-    int32_t temp_variable_counter;
 } Checked_Expression_Decomposer;
 
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression);
@@ -1407,14 +1407,14 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
     }
 
     String *temp_variable_name = String__create_from("__");
-    self->temp_variable_counter++;
-    if (self->temp_variable_counter < 100) {
+    self->checker->temp_variable_counter++;
+    if (self->checker->temp_variable_counter < 100) {
         String__append_char(temp_variable_name, '0');
-        if (self->temp_variable_counter < 10) {
+        if (self->checker->temp_variable_counter < 10) {
             String__append_char(temp_variable_name, '0');
         }
     }
-    String__append_int16_t(temp_variable_name, self->temp_variable_counter);
+    String__append_int16_t(temp_variable_name, self->checker->temp_variable_counter);
     String__append_cstring(temp_variable_name, "__");
 
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Variable_Symbol__create(self->checker->checked_module, location, temp_variable_name, type, false);
@@ -1503,8 +1503,12 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_block_expression(Ch
     }
     Checked_Block_Statement *block_statement = (Checked_Block_Statement *)expression->block_statement;
 
-    if (block_statement->statements->last_statement != NULL && block_statement->statements->last_statement->kind == CHECKED_STATEMENT_KIND__YIELD) {
-        Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)block_statement->statements->last_statement;
+    Checked_Statement *last_statement = block_statement->statements->last_statement;
+    if (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__DECOMPOSED) {
+        last_statement = ((Checked_Decomposed_Statement *)last_statement)->statements->last_statement;
+    }
+    if (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__YIELD) {
+        Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)last_statement;
         yield_statement->block_result_expression = new_expression;
     }
 
@@ -1861,11 +1865,10 @@ typedef struct Decomposed_Expression {
     int32_t temp_variable_counter;
 } Decomposed_Expression;
 
-Decomposed_Expression Checker__decompose_another_expression(Checker *self, Checked_Expression *expression, int32_t temp_variable_counter) {
+Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
     Checked_Expression_Decomposer decomposer = {
         .checker = self,
         .statements = NULL,
-        .temp_variable_counter = temp_variable_counter,
     };
     self->symbols = Checked_Symbols__create(self->symbols);
     Checked_Expression *decomposed_expression = Checked_Expression_Decomposer__decompose(&decomposer, expression);
@@ -1873,12 +1876,7 @@ Decomposed_Expression Checker__decompose_another_expression(Checker *self, Check
     return (Decomposed_Expression){
         .expression = decomposed_expression,
         .statements = decomposer.statements,
-        .temp_variable_counter = decomposer.temp_variable_counter,
     };
-}
-
-Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
-    return Checker__decompose_another_expression(self, expression, 0);
 }
 
 Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
@@ -2240,7 +2238,7 @@ Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Ass
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Decomposed_Expression value = Checker__decompose_another_expression(self, Checker__check_expression(self, parsed_statement->value_expression, object.expression->type), object.temp_variable_counter);
+    Decomposed_Expression value = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->value_expression, object.expression->type));
     Checked_Assignment_Statement *assignment_statement = Checked_Assignment_Statement__create(parsed_statement->super.location, object.expression, value.expression);
     if (object.statements != NULL || value.statements != NULL) {
         // Create block statement
@@ -2579,8 +2577,14 @@ Checked_Statement *Checker__check_while_statement(Checker *self, Parsed_While_St
 }
 
 Checked_Statement *Checker__check_yield_statement(Checker *self, Parsed_Yield_Statement *parsed_statement, Checked_Type *expected_type) {
-    Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, expected_type);
-    return (Checked_Statement *)Checked_Yield_Statement__create(parsed_statement->super.location, expression);
+    Decomposed_Expression decomposed_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, expected_type));
+    Checked_Yield_Statement *yield_statement = Checked_Yield_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
+    if (decomposed_expression.statements != NULL) {
+        Checked_Decomposed_Statement *decomposed_statement = Checked_Decomposed_Statement__create(decomposed_expression.expression->location, decomposed_expression.statements);
+        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)yield_statement);
+        return (Checked_Statement *)decomposed_statement;
+    }
+    return (Checked_Statement *)yield_statement;
 }
 
 Parsed_Named_Type *Parsed_Type__get_generic_dependency(Parsed_Type *self, Parsed_Type_Parameter *first_type_parameter) {
@@ -2763,6 +2767,8 @@ Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *
 void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol *procedure_symbol) {
     Checked_Procedure_Type *procedure_type = procedure_symbol->procedure_type;
     self->return_type = procedure_type->return_type;
+
+    self->temp_variable_counter = 0;
 
     /* Create and push procedure symbols */
     self->symbols = Checked_Symbols__create(self->symbols);

@@ -26,19 +26,19 @@ int32_t test__main() {
 #line 12 "tests/07__trait/006__structural_typing/test.code"
     {
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        struct test_Writer *__001__ = &out;
+        struct test_Writer *__007__ = &out;
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        int32_t __002__ = 42;
+        int32_t __008__ = 42;
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        void *__003__ = &__002__;
+        void *__009__ = &__008__;
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        void (*__004__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pi32__write_to);
+        void (*__010__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pi32__write_to);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        struct test_Writable __005__ = (struct test_Writable){.self = __003__, .write_to = __004__};
+        struct test_Writable __011__ = (struct test_Writable){.self = __009__, .write_to = __010__};
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        struct test_Writer *__006__ = ptest_Writer__write(__001__, __005__);
+        struct test_Writer *__012__ = ptest_Writer__write(__007__, __011__);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        ptest_Writer__end_line(__006__);
+        ptest_Writer__end_line(__012__);
     }
 #line 14 "tests/07__trait/006__structural_typing/test.code"
     return 0;
