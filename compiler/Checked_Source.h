@@ -353,7 +353,8 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__VARIABLE,
     CHECKED_STATEMENT_KIND__VARIANT_IF,
     CHECKED_STATEMENT_KIND__VARIANT_SWITCH,
-    CHECKED_STATEMENT_KIND__WHILE
+    CHECKED_STATEMENT_KIND__WHILE,
+    CHECKED_STATEMENT_KIND__YIELD,
 } Checked_Statement_Kind;
 
 typedef struct Checked_Statement {
@@ -892,6 +893,14 @@ typedef struct Checked_While_Statement {
 } Checked_While_Statement;
 
 Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
+
+typedef struct Checked_Yield_Statement {
+    Checked_Statement super;
+    Checked_Expression *expression;
+    Checked_Expression *block_result_expression;
+} Checked_Yield_Statement;
+
+Checked_Yield_Statement *Checked_Yield_Statement__create(Source_Location location, Checked_Expression *expression);
 
 typedef struct Checked_Source {
     Checked_Module *first_module;

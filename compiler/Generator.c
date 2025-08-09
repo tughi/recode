@@ -724,6 +724,19 @@ void Generator__generate_while_statement(Generator *self, Checked_While_Statemen
     Generator__generate_statement(self, statement->body_statement);
 }
 
+void Generator__generate_yield_statement(Generator *self, Checked_Yield_Statement *statement) {
+    if (statement->block_result_expression == NULL) {
+        pWriter__begin_location_message(self->writer, statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(self->writer, "Yield expression was not properly decomposed");
+        pWriter__end_location_message(self->writer);
+        panic();
+    }
+    Generator__generate_expression(self, statement->block_result_expression);
+    pWriter__write__cstring(self->writer, " = ");
+    Generator__generate_expression(self, statement->expression);
+    pWriter__write__cstring(self->writer, ";");
+}
+
 void Generator__generate_statement(Generator *self, Checked_Statement *statement) {
     switch (statement->kind) {
     case CHECKED_STATEMENT_KIND__ASSIGNMENT:
@@ -761,6 +774,9 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
         break;
     case CHECKED_STATEMENT_KIND__WHILE:
         Generator__generate_while_statement(self, (Checked_While_Statement *)statement);
+        break;
+    case CHECKED_STATEMENT_KIND__YIELD:
+        Generator__generate_yield_statement(self, (Checked_Yield_Statement *)statement);
         break;
     default:
         pWriter__begin_location_message(stderr_writer, statement->location, WRITER_STYLE__ERROR);

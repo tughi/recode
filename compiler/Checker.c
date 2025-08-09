@@ -464,10 +464,10 @@ Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed
     return (Checked_Expression *)Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression);
 }
 
-Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement);
+Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement, Checked_Type *expected_type);
 
 Checked_Expression *Checker__check_block_expression(Checker *self, Parsed_Block_Expression *parsed_expression, Checked_Type *expected_type) {
-    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)Checker__check_block_statement(self, parsed_expression->block_statement);
+    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)Checker__check_block_statement(self, parsed_expression->block_statement, expected_type);
     Checked_Block_Expression *block_expression = Checked_Block_Expression__create(parsed_expression->super.location, expected_type, (Checked_Statement *)block_statement);
     return (Checked_Expression *)block_expression;
 }
@@ -1494,7 +1494,22 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_unary_expression(Ch
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_block_expression(Checked_Expression_Decomposer *self, Checked_Block_Expression *expression) {
     Checked_Expression *new_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.location, expression->super.type);
-    Checked_Statements__append(self->statements, expression->block_statement);
+
+    if (expression->block_statement->kind != CHECKED_STATEMENT_KIND__BLOCK) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Not a block statement");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)expression->block_statement;
+
+    if (block_statement->statements->last_statement != NULL && block_statement->statements->last_statement->kind == CHECKED_STATEMENT_KIND__YIELD) {
+        Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)block_statement->statements->last_statement;
+        yield_statement->block_result_expression = new_expression;
+    }
+
+    Checked_Statements__append(self->statements, (Checked_Statement *)block_statement);
+
     return new_expression;
 }
 
@@ -2215,7 +2230,7 @@ Checked_Named_Type *Checker__check_variant_type_statement(Checker *self, Token *
     return (Checked_Named_Type *)variant_type;
 }
 
-Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
+Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement, Checked_Type *expected_type);
 
 Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
     Decomposed_Expression object = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->object_expression, NULL));
@@ -2244,10 +2259,10 @@ Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Ass
     return (Checked_Statement *)assignment_statement;
 }
 
-Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements);
+Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements, Checked_Type *expected_type);
 
-Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement) {
-    Checked_Statements *statements = Checker__check_statements(self, parsed_statement->statements);
+Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement, Checked_Type *expected_type) {
+    Checked_Statements *statements = Checker__check_statements(self, parsed_statement->statements, expected_type);
     Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, statements);
     return (Checked_Statement *)block_statement;
 }
@@ -2297,14 +2312,14 @@ Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statemen
         self->symbols = Checked_Symbols__create(self->symbols);
         Checked_Variant_Switch_Case_Symbol *variant_switch_case_symbol = Checked_Variant_Switch_Case_Symbol__create(self->checked_module, parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_variant_case_expression->variant_expression, is_variant_case_expression->variant_case);
         Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_switch_case_symbol);
-        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement, NULL);
         self->symbols = self->symbols->parent;
     } else {
-        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement, NULL);
     }
     Checked_Statement *false_statement = NULL;
     if (parsed_statement->false_statement != NULL) {
-        false_statement = Checker__check_statement(self, parsed_statement->false_statement);
+        false_statement = Checker__check_statement(self, parsed_statement->false_statement, NULL);
     }
     Checked_If_Statement *if_statement = Checked_If_Statement__create(parsed_statement->super.location, condition.expression, true_statement, false_statement);
     if (condition.statements != NULL) {
@@ -2317,7 +2332,7 @@ Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statemen
 }
 
 Checked_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop_Statement *parsed_statement) {
-    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement, NULL);
     Checked_Loop_Statement *loop_statement = Checked_Loop_Statement__create(parsed_statement->super.location, body_statement);
     return (Checked_Statement *)loop_statement;
 }
@@ -2399,7 +2414,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            switch_else = Checked_Switch_Else__create(parsed_switch_case->location, Checker__check_statement(self, parsed_switch_case->statement));
+            switch_else = Checked_Switch_Else__create(parsed_switch_case->location, Checker__check_statement(self, parsed_switch_case->statement, NULL));
             break;
         }
         case PARSED_SWITCH_CASE_KIND__VARIANT: {
@@ -2442,7 +2457,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
                 Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
             }
 
-            Checked_Statement *variant_switch_case_statement = Checker__check_statement(self, parsed_switch_case->statement);
+            Checked_Statement *variant_switch_case_statement = Checker__check_statement(self, parsed_switch_case->statement, NULL);
 
             // Pop switch case symbols
             self->symbols = self->symbols->parent;
@@ -2544,7 +2559,7 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Parsed_Varia
 
 Checked_Statement *Checker__check_while_statement(Checker *self, Parsed_While_Statement *parsed_statement) {
     Decomposed_Expression condition = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type));
-    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement, NULL);
     if (condition.statements != NULL) {
         // Create loop statement with break condition
         Checked_Block_Statement *block_statement;
@@ -2561,6 +2576,11 @@ Checked_Statement *Checker__check_while_statement(Checker *self, Parsed_While_St
     }
     Checked_While_Statement *while_statement = Checked_While_Statement__create(parsed_statement->super.location, condition.expression, body_statement);
     return (Checked_Statement *)while_statement;
+}
+
+Checked_Statement *Checker__check_yield_statement(Checker *self, Parsed_Yield_Statement *parsed_statement, Checked_Type *expected_type) {
+    Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, expected_type);
+    return (Checked_Statement *)Checked_Yield_Statement__create(parsed_statement->super.location, expression);
 }
 
 Parsed_Named_Type *Parsed_Type__get_generic_dependency(Parsed_Type *self, Parsed_Type_Parameter *first_type_parameter) {
@@ -2687,12 +2707,12 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
     return procedure_symbol;
 }
 
-Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
+Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement, Checked_Type *expected_type) {
     switch (parsed_statement->kind) {
     case PARSED_STATEMENT_KIND__ASSIGNMENT:
         return Checker__check_assignment_statement(self, (Parsed_Assignment_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__BLOCK:
-        return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement);
+        return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement, expected_type);
     case PARSED_STATEMENT_KIND__BREAK:
         return Checker__check_break_statement(self, (Parsed_Break_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__EXPRESSION:
@@ -2711,6 +2731,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__WHILE:
         return Checker__check_while_statement(self, (Parsed_While_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__YIELD:
+        return Checker__check_yield_statement(self, (Parsed_Yield_Statement *)parsed_statement, expected_type);
     default:
         break;
     }
@@ -2720,14 +2742,14 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
     panic();
 }
 
-Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements) {
+Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements, Checked_Type *expected_type) {
     /* Create and push block symbols */
     self->symbols = Checked_Symbols__create(self->symbols);
 
     Checked_Statements *checked_statements = Checked_Statements__create();
     Parsed_Statement *parsed_statement = parsed_statements->first_statement;
     while (parsed_statement != NULL) {
-        Checked_Statement *checked_statement = Checker__check_statement(self, parsed_statement);
+        Checked_Statement *checked_statement = Checker__check_statement(self, parsed_statement, expected_type);
         Checked_Statements__append(checked_statements, checked_statement);
         parsed_statement = parsed_statement->next_statement;
     }
@@ -2755,7 +2777,7 @@ void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol
     }
 
     /* Check statements */
-    procedure_symbol->checked_statements = Checker__check_statements(self, procedure_symbol->parsed_procedure_statement->statements);
+    procedure_symbol->checked_statements = Checker__check_statements(self, procedure_symbol->parsed_procedure_statement->statements, NULL);
 
     /* Pop procedure symbols */
     self->symbols = self->symbols->parent;

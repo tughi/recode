@@ -1024,6 +1024,13 @@ Checked_While_Statement *Checked_While_Statement__create(Source_Location locatio
     return statement;
 }
 
+Checked_Yield_Statement *Checked_Yield_Statement__create(Source_Location location, Checked_Expression *expression) {
+    Checked_Yield_Statement *statement = (Checked_Yield_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__YIELD, sizeof(Checked_Yield_Statement), location);
+    statement->expression = expression;
+    statement->block_result_expression = NULL;
+    return statement;
+}
+
 Checked_Statements *Checked_Statements__create() {
     Checked_Statements *statements = (Checked_Statements *)malloc(sizeof(Checked_Statements));
     statements->first_statement = NULL;
