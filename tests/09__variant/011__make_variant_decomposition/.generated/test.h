@@ -25,6 +25,8 @@ struct test_Subtraction {
 
 int32_t test__evaluate(struct test_Expression expression);
 
+void exit(int32_t status);
+
 int32_t test__main();
 
 #endif // __test_H__

@@ -16,9 +16,6 @@ type Subtraction = struct {
 
 proc evaluate(expression: Expression) -> i32 {
     switch expression {
-        is nil {
-            return 0
-        }
         is i32 as value {
             return value
         }
@@ -28,8 +25,14 @@ proc evaluate(expression: Expression) -> i32 {
         is ^Subtraction as subtraction {
             return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
+        else {
+            \ ignore
+        }
     }
+    exit(1)
 }
+
+proc exit(anon status: i32) = external
 
 proc main() -> i32 {
     return evaluate(expression: alloc Subtraction(

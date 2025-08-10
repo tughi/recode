@@ -330,7 +330,7 @@ void Generator__generate_result_expression(Generator *self, Checked_Result_Expre
     pWriter__write__cstring(self->writer, "){.success = ");
     if (expression->raise_expression == NULL) {
         pWriter__write__cstring(self->writer, "true");
-        if (expression->return_expression->type->kind != CHECKED_TYPE_KIND__NOTHING) {
+        if (expression->return_expression != NULL && expression->return_expression->type->kind != CHECKED_TYPE_KIND__NOTHING) {
             pWriter__write__cstring(self->writer, ", .value = ");
             Generator__generate_expression(self, expression->return_expression);
         }
@@ -520,6 +520,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
         Generator__generate_not_equals_expression(self, (Checked_Not_Equals_Expression *)expression);
         break;
+    case CHECKED_EXPRESSION_KIND__NOTHING:
+        break; // nothing to generate
     case CHECKED_EXPRESSION_KIND__NULL:
         Generator__generate_null_expression(self, (Checked_Null_Expression *)expression);
         break;
@@ -833,14 +835,14 @@ void Generator__generate_result_type(Generator *self, Checked_Result_Type *resul
     pWriter__write__cstring(self->writer, " {\n");
     pWriter__write__cstring(self->writer, "    bool success;\n");
     pWriter__write__cstring(self->writer, "    union {\n");
-    if (result_type->return_type != NULL) {
+    if (result_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__write__cstring(self->writer, "        ");
         String result_field_name = {.data = "value", .length = 5};
         CDECL_Local_Name result_name = CDECL_Local_Name__create(&result_field_name);
         pWriter__write__cdecl(self->writer, (CDECL_Name *)&result_name, result_type->return_type);
         pWriter__write__cstring(self->writer, ";\n");
     }
-    if (result_type->raise_type != NULL) {
+    if (result_type->raise_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__write__cstring(self->writer, "        ");
         String error_field_name = {.data = "error", .length = 5};
         CDECL_Local_Name error_name = CDECL_Local_Name__create(&error_field_name);

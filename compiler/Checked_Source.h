@@ -110,6 +110,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__MULTIPLY,
     CHECKED_EXPRESSION_KIND__NOT_EQUALS,
     CHECKED_EXPRESSION_KIND__NOT,
+    CHECKED_EXPRESSION_KIND__NOTHING,
     CHECKED_EXPRESSION_KIND__NULL,
     CHECKED_EXPRESSION_KIND__RECEIVER_METHOD,
     CHECKED_EXPRESSION_KIND__RESULT_ERROR,
@@ -651,6 +652,12 @@ typedef struct Checked_Member_Access_Expression {
 } Checked_Member_Access_Expression;
 
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
+
+typedef struct Checked_Nothing_Expression {
+    Checked_Expression super;
+} Checked_Nothing_Expression;
+
+Checked_Nothing_Expression *Checked_Nothing_Expression__create(Source_Location location, Checked_Type *type);
 
 typedef struct Checked_Receiver_Method_Expression {
     Checked_Expression super;

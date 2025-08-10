@@ -804,6 +804,10 @@ Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Sourc
     return expression;
 }
 
+Checked_Nothing_Expression *Checked_Nothing_Expression__create(Source_Location location, Checked_Type *type) {
+    return (Checked_Nothing_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOTHING, sizeof(Checked_Nothing_Expression), location, type);
+}
+
 Checked_Receiver_Method_Expression *Checked_Receiver_Method_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *receiver_expression, Checked_Expression *procedure_expression, Checked_Procedure_Type *procedure_type) {
     Checked_Receiver_Method_Expression *expression = (Checked_Receiver_Method_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RECEIVER_METHOD, sizeof(Checked_Receiver_Method_Expression), location, type);
     expression->receiver_expression = receiver_expression;
