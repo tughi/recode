@@ -3,9 +3,15 @@ import sdl
 import gui.app
 
 proc main() -> i32 {
-    app.init()
+    try app.init() else {
+        os.stderr.write_string("Failed to initialize app: ").write_string(error.message).end_line()
+        return 1
+    }
 
-    let window = app.create_window(title: "Editor", width: 800, height: 600)
+    let window = try app.create_window(title: "Editor", width: 800, height: 600) else {
+        os.stderr.write_string("Failed to create window: ").write_string(error.message).end_line()
+        return 1
+    }
 
     return app.run()
 }
