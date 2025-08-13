@@ -116,6 +116,13 @@ Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, Str
     return type;
 }
 
+bool Checked_Generic_Type__equals(Checked_Generic_Type *self, Checked_Generic_Type *other) {
+    if (!String__equals_string(self->super.name, other->super.name)) {
+        return false;
+    }
+    todo("Implement Checked_Generic_Type__equals");
+}
+
 Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Module *module) {
     Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, module);
     return type;
@@ -294,6 +301,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
+    case CHECKED_TYPE_KIND__GENERIC:
+        return Checked_Generic_Type__equals((Checked_Generic_Type *)self, (Checked_Generic_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
         return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
@@ -332,6 +341,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__GENERIC:
+    case CHECKED_TYPE_KIND__STR:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT: {

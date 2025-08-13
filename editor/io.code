@@ -4,9 +4,17 @@ type Writer = trait {
     proc write_char(self, anon c: u8)
 }
 
-proc (^Writer).write_char(self, anon c: u8) -> ^Writer {
-    self.write_char(c)
+type Writable = trait {
+    proc write_to(self, anon writer: ^Writer)
+}
+
+proc (^Writer).write(self, anon writable: Writable) -> ^Writer {
+    writable.write_to(self)
     return self
+}
+
+proc (^u8).write_to(self, anon writer: ^Writer) {
+    writer.write_char(self.^)
 }
 
 proc (^Writer).write_string(self, anon string: str) -> ^Writer {
@@ -20,36 +28,58 @@ proc (^Writer).write_string(self, anon string: str) -> ^Writer {
     return self
 }
 
+proc (^str).write_to(self, anon writer: ^Writer) {
+    writer.write_string(self.^)
+}
+
 proc (^Writer).write_signed(self, anon value: i64) -> ^Writer {
     if value < 0 {
         self.write_char('-')
-        return self.write_unsigned((-value).as(u64))
+        return self.write_unsigned((-value).as(u64), base: 10)
     }
-    return self.write_unsigned(value.as(u64))
+    return self.write_unsigned(value.as(u64), base: 10)
 }
 
-proc (^Writer).write_unsigned(self, anon value: u64) -> ^Writer {
+proc (^i32).write_to(self, anon writer: ^Writer) {
+    writer.write_signed(self.^.as(i64))
+}
+
+proc (^Writer).write_unsigned(self, anon value: u64, base: u64) -> ^Writer {
     \ Find the highest power of 10
     let divisor = 1u64
     let temp_value = value
-    while temp_value >= 10 {
-        divisor = divisor * 10
-        temp_value = temp_value / 10
+    while temp_value >= base {
+        divisor = divisor * base
+        temp_value = temp_value / base
     }
 
     \ Write digits from highest to lowest
+    let digits = "0123456789abcdef".data()
     temp_value = value
     while divisor > 0 {
-        let digit = (temp_value / divisor).as(u8) + '0'
+        let digit = digits[temp_value / divisor]
         self.write_char(digit)
         temp_value = temp_value // divisor
-        divisor = divisor / 10
+        divisor = divisor / base
     }
 
     return self
+}
+
+proc (^u32).write_to(self, anon writer: ^Writer) {
+    writer.write_unsigned(self.^.as(u64), base: 10)
 }
 
 proc (^Writer).end_line(self) -> ^Writer {
     self.write_char('\n')
     return self
+}
+
+type Hex<T> = struct {
+    value: T
+}
+
+proc (^Hex<T>).write_to<T>(self, anon writer: ^Writer) {
+    writer.write_string("0x")
+    writer.write_unsigned(self.value.as(u64), base: 16)
 }

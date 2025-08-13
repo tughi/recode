@@ -1744,6 +1744,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
 
 bool Checked_Address_Of_Expression__needs_decomposition(Checked_Address_Of_Expression *self) {
     switch (self->super.other_expression->kind) {
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
     case CHECKED_EXPRESSION_KIND__INTEGER:
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
     case CHECKED_EXPRESSION_KIND__MINUS:
@@ -2714,6 +2715,17 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
         String__append_cstring(symbol_name, "__");
     }
     String__append_string(symbol_name, parsed_statement->super.name->lexeme);
+
+    Checked_Symbol *existing_symbol = Checked_Symbols__find_symbol(self->global_symbols, self->checked_module, symbol_name);
+    if (existing_symbol != NULL) {
+        if (existing_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)existing_symbol;
+            if (procedure_symbol->parsed_procedure_statement == parsed_statement) {
+                String__delete(symbol_name);
+                return procedure_symbol;
+            }
+        }
+    }
 
     Checked_Procedure_Symbol *procedure_symbol = Checked_Procedure_Symbol__create(self->checked_module, parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, parsed_statement, procedure_type, receiver_type);
     Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)procedure_symbol);
