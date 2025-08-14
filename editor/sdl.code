@@ -12,6 +12,8 @@ proc create_window(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, ano
 
 type Surface = external
 
+proc get_window_id(anon window: ^Window) -> u32 = external "SDL_GetWindowID"
+
 proc get_window_surface(anon window: ^Window) -> ^Surface = external "SDL_GetWindowSurface"
 
 proc update_window_surface(anon window: ^Window) -> i32 = external "SDL_UpdateWindowSurface"

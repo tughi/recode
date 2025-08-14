@@ -75,11 +75,26 @@ proc (^Writer).end_line(self) -> ^Writer {
     return self
 }
 
-type Hex<T> = struct {
-    value: T
+type Hex_Writable = trait {
+    proc write_hex_to(self, anon writer: ^Writer)
 }
 
-proc (^Hex<T>).write_to<T>(self, anon writer: ^Writer) {
+proc (^Writer).write_hex(self, anon hex_writable: Hex_Writable) -> ^Writer {
+    hex_writable.write_hex_to(self)
+    return self
+}
+
+proc (^i32).write_hex_to(self, anon writer: ^Writer) {
     writer.write_string("0x")
-    writer.write_unsigned(self.value.as(u64), base: 16)
+    writer.write_unsigned(self.^.as(u64), base: 16)
+}
+
+proc (^u32).write_hex_to(self, anon writer: ^Writer) {
+    writer.write_string("0x")
+    writer.write_unsigned(self.^.as(u64), base: 16)
+}
+
+proc (^u8).write_hex_to(self, anon writer: ^Writer) {
+    writer.write_string("0x")
+    writer.write_unsigned(self.^.as(u64), base: 16)
 }
