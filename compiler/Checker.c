@@ -655,10 +655,16 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
             parsed_argument = parsed_argument->next_argument;
         }
         if (procedure_parameter != NULL) {
-            todo("Report too few arguments");
+            pWriter__begin_location_message(stderr_writer, procedure_expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Too few arguments");
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
         if (parsed_argument != NULL) {
-            todo("Report too many arguments");
+            pWriter__begin_location_message(stderr_writer, parsed_argument->expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Too many arguments");
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
     }
 

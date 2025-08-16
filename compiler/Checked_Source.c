@@ -129,6 +129,13 @@ Checked_External_Type *Checked_External_Type__create(Source_Location location, S
     return type;
 }
 
+bool Checked_External_Type__equals(Checked_External_Type *self, Checked_External_Type *other) {
+    if (!String__equals_string(self->super.name, other->super.name)) {
+        return false;
+    }
+    return true;
+}
+
 Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
     Checked_Procedure_Parameter *parameter = (Checked_Procedure_Parameter *)malloc(sizeof(Checked_Procedure_Parameter));
     parameter->location = location;
@@ -302,6 +309,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        return Checked_External_Type__equals((Checked_External_Type *)self, (Checked_External_Type *)other);
     case CHECKED_TYPE_KIND__GENERIC:
         return Checked_Generic_Type__equals((Checked_Generic_Type *)self, (Checked_Generic_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
