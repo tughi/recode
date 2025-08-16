@@ -2335,6 +2335,11 @@ Checked_Statement *Checker__check_break_statement(Checker *self, Parsed_Break_St
     return (Checked_Statement *)Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
+Checked_Statement *Checker__check_defer_statement(Checker *self, Parsed_Defer_Statement *parsed_statement) {
+    Checked_Statement *defered_statement = Checker__check_statement(self, parsed_statement->statement, NULL);
+    return (Checked_Statement *)Checked_Defer_Statement__create(parsed_statement->super.location, defered_statement);
+}
+
 Checked_Statement *Checker__check_expression_statement(Checker *self, Parsed_Expression_Statement *parsed_statement) {
     Decomposed_Expression expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, NULL));
     if (!Checked_Type__equals((Checked_Type *)self->builtin_types->nothing_type, expression.expression->type)) {
@@ -2806,6 +2811,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement, expected_type);
     case PARSED_STATEMENT_KIND__BREAK:
         return Checker__check_break_statement(self, (Parsed_Break_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__DEFER:
+        return Checker__check_defer_statement(self, (Parsed_Defer_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__EXPRESSION:
         return Checker__check_expression_statement(self, (Parsed_Expression_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__IF:

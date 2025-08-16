@@ -972,6 +972,12 @@ Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Locati
     return statement;
 }
 
+Checked_Defer_Statement *Checked_Defer_Statement__create(Source_Location location, Checked_Statement *statement) {
+    Checked_Defer_Statement *defer_statement = (Checked_Defer_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__DEFER, sizeof(Checked_Defer_Statement), location);
+    defer_statement->statement = statement;
+    return defer_statement;
+}
+
 Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location location, Checked_Expression *expression) {
     Checked_Expression_Statement *statement = (Checked_Expression_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__EXPRESSION, sizeof(Checked_Expression_Statement), location);
     statement->expression = expression;

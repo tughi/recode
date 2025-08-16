@@ -349,6 +349,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__BLOCK,
     CHECKED_STATEMENT_KIND__BREAK,
     CHECKED_STATEMENT_KIND__DECOMPOSED,
+    CHECKED_STATEMENT_KIND__DEFER,
     CHECKED_STATEMENT_KIND__EXPRESSION,
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
@@ -819,6 +820,13 @@ typedef struct Checked_Decomposed_Statement {
 } Checked_Decomposed_Statement;
 
 Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements);
+
+typedef struct Checked_Defer_Statement {
+    Checked_Statement super;
+    Checked_Statement *statement;
+} Checked_Defer_Statement;
+
+Checked_Defer_Statement *Checked_Defer_Statement__create(Source_Location location, Checked_Statement *statement);
 
 typedef struct Checked_Expression_Statement {
     Checked_Statement super;
