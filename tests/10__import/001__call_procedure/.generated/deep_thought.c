@@ -7,5 +7,6 @@ void *malloc(uintmax_t size);
 int32_t deep_thought__get_answer() {
 #line 2 "tests/10__import/001__call_procedure/deep_thought.code"
     return 42;
+#line 3 "tests/10__import/001__call_procedure/deep_thought.code"
 }
 

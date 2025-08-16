@@ -18,14 +18,17 @@ int32_t test__main() {
     if (second_value != 42) {
 #line 15 "tests/04__struct/008__init_struct_member_with_reference/test.code"
         return 1;
+#line 16 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     }
 #line 18 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     if (*second_value_ref != 42) {
 #line 19 "tests/04__struct/008__init_struct_member_with_reference/test.code"
         return 2;
+#line 20 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     }
 #line 22 "tests/04__struct/008__init_struct_member_with_reference/test.code"
     return 0;
+#line 23 "tests/04__struct/008__init_struct_member_with_reference/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

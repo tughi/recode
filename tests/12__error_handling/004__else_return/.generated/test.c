@@ -16,6 +16,7 @@ int32_t test__main() {
         if (__001__.success) {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
             __002__ = __001__.value;
+#line 2 "tests/12__error_handling/004__else_return/test.code"
         } else {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
             int32_t __003__;
@@ -23,15 +24,19 @@ int32_t test__main() {
             {
 #line 3 "tests/12__error_handling/004__else_return/test.code"
                 return __001__.error.code - 42;
+#line 4 "tests/12__error_handling/004__else_return/test.code"
             }
 #line 2 "tests/12__error_handling/004__else_return/test.code"
             __002__ = __003__;
+#line 4 "tests/12__error_handling/004__else_return/test.code"
         }
 #line 2 "tests/12__error_handling/004__else_return/test.code"
         result = __002__;
+#line 4 "tests/12__error_handling/004__else_return/test.code"
     }
 #line 5 "tests/12__error_handling/004__else_return/test.code"
     return result;
+#line 6 "tests/12__error_handling/004__else_return/test.code"
 }
 
 #line 12 "tests/12__error_handling/004__else_return/test.code"
@@ -40,9 +45,11 @@ struct test_Result__12 test__increment(int32_t value) {
     if (value > 10) {
 #line 14 "tests/12__error_handling/004__else_return/test.code"
         return (struct test_Result__12){.success = false, .error = (struct test_Error){.code = 42}};
+#line 15 "tests/12__error_handling/004__else_return/test.code"
     }
 #line 16 "tests/12__error_handling/004__else_return/test.code"
     return (struct test_Result__12){.success = true, .value = value + 1};
+#line 17 "tests/12__error_handling/004__else_return/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -8,6 +8,7 @@ int32_t test__main() {
     test__finish();
 #line 5 "tests/01__basics/012__procedure_without_return/test.code"
     return 1;
+#line 6 "tests/01__basics/012__procedure_without_return/test.code"
 }
 
 #line 8 "tests/01__basics/012__procedure_without_return/test.code"
@@ -16,10 +17,12 @@ void test__finish() {
     test__nothing();
 #line 10 "tests/01__basics/012__procedure_without_return/test.code"
     exit(0);
+#line 11 "tests/01__basics/012__procedure_without_return/test.code"
 }
 
 #line 13 "tests/01__basics/012__procedure_without_return/test.code"
 void test__nothing() {
+#line 14 "tests/01__basics/012__procedure_without_return/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

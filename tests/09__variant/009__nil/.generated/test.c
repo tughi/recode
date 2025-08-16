@@ -10,6 +10,7 @@ int32_t test__main() {
     if (value.variant != 0) {
 #line 10 "tests/09__variant/009__nil/test.code"
         return 1;
+#line 11 "tests/09__variant/009__nil/test.code"
     }
 #line 13 "tests/09__variant/009__nil/test.code"
     value = (struct test_Value){.variant = 2, .variant_2 = 42};
@@ -17,9 +18,11 @@ int32_t test__main() {
     if (value.variant == 0) {
 #line 16 "tests/09__variant/009__nil/test.code"
         return 2;
+#line 17 "tests/09__variant/009__nil/test.code"
     }
 #line 19 "tests/09__variant/009__nil/test.code"
     return 0;
+#line 20 "tests/09__variant/009__nil/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -14,9 +14,11 @@ int32_t test__main() {
         *__001__ = (struct test_Line){.p1 = (struct test_Point){.x = 16, .y = 32}, .p2 = (struct test_Point){.x = 48, .y = 64}};
 #line 12 "tests/04__struct/006__make_heap_struct_variable/test.code"
         line = __001__;
+#line 15 "tests/04__struct/006__make_heap_struct_variable/test.code"
     }
 #line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
     return line->p1.x + line->p1.y + line->p2.x + line->p2.y - 160;
+#line 17 "tests/04__struct/006__make_heap_struct_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

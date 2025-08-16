@@ -8,6 +8,7 @@ int32_t test__main() {
     struct test_Integer integer;
 #line 8 "tests/09__variant/001__define_variant_variable/test.code"
     return 0;
+#line 9 "tests/09__variant/001__define_variant_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

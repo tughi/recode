@@ -12,6 +12,7 @@ int32_t test__main() {
     pio_Writer__write(pio_Writer__write(pio_Writer__write(&stdout, 52), 50), 10);
 #line 9 "tests/10__import/006__reimport/test.code"
     return 0;
+#line 10 "tests/10__import/006__reimport/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

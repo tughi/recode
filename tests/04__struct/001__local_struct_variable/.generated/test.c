@@ -8,6 +8,7 @@ int32_t test__main() {
     struct test_Point point;
 #line 8 "tests/04__struct/001__local_struct_variable/test.code"
     return 0;
+#line 9 "tests/04__struct/001__local_struct_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

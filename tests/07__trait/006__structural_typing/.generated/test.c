@@ -22,6 +22,7 @@ int32_t test__main() {
         struct test_Writer *__006__ = ptest_Writer__write(__001__, __005__);
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         ptest_Writer__end_line(__006__);
+#line 7 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 12 "tests/07__trait/006__structural_typing/test.code"
     {
@@ -39,9 +40,11 @@ int32_t test__main() {
         struct test_Writer *__012__ = ptest_Writer__write(__007__, __011__);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
         ptest_Writer__end_line(__012__);
+#line 12 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 14 "tests/07__trait/006__structural_typing/test.code"
     return 0;
+#line 15 "tests/07__trait/006__structural_typing/test.code"
 }
 
 #line 17 "tests/07__trait/006__structural_typing/test.code"
@@ -54,6 +57,7 @@ void pi32__write_to(int32_t *self, struct test_Writer *writer) {
         writer->write_char(writer->self, '-');
 #line 21 "tests/07__trait/006__structural_typing/test.code"
         number = -number;
+#line 22 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 23 "tests/07__trait/006__structural_typing/test.code"
     if (number >= 10) {
@@ -61,9 +65,11 @@ void pi32__write_to(int32_t *self, struct test_Writer *writer) {
         int32_t factor = number / 10;
 #line 25 "tests/07__trait/006__structural_typing/test.code"
         pi32__write_to(&factor, writer);
+#line 26 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 27 "tests/07__trait/006__structural_typing/test.code"
     writer->write_char(writer->self, ((uint8_t) (number % 10)) + '0');
+#line 28 "tests/07__trait/006__structural_typing/test.code"
 }
 
 #line 30 "tests/07__trait/006__structural_typing/test.code"
@@ -78,7 +84,9 @@ void pstr__write_to(struct String *self, struct test_Writer *writer) {
         writer->write_char(writer->self, string->data[index]);
 #line 35 "tests/07__trait/006__structural_typing/test.code"
         index = index + 1u;
+#line 36 "tests/07__trait/006__structural_typing/test.code"
     }
+#line 37 "tests/07__trait/006__structural_typing/test.code"
 }
 
 #line 45 "tests/07__trait/006__structural_typing/test.code"
@@ -87,6 +95,7 @@ struct test_Writer *ptest_Writer__end_line(struct test_Writer *self) {
     self->write_char(self->self, '\n');
 #line 47 "tests/07__trait/006__structural_typing/test.code"
     return self;
+#line 48 "tests/07__trait/006__structural_typing/test.code"
 }
 
 #line 56 "tests/07__trait/006__structural_typing/test.code"
@@ -95,12 +104,14 @@ struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct test_Wr
     writable.write_to(writable.self, self);
 #line 58 "tests/07__trait/006__structural_typing/test.code"
     return self;
+#line 59 "tests/07__trait/006__structural_typing/test.code"
 }
 
 #line 69 "tests/07__trait/006__structural_typing/test.code"
 void ptest_FILE__write_char(struct test_FILE *self, uint8_t c) {
 #line 70 "tests/07__trait/006__structural_typing/test.code"
     fputc(((int32_t) c), self);
+#line 71 "tests/07__trait/006__structural_typing/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

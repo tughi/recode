@@ -6,6 +6,7 @@ void *malloc(uintmax_t size);
 int32_t test__main() {
 #line 8 "tests/11__generics/001__struct_type/test.code"
     return 0;
+#line 9 "tests/11__generics/001__struct_type/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

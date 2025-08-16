@@ -478,11 +478,11 @@ typedef struct Parsed_Procedure_Statement {
     Parsed_Type *return_type;
     Parsed_Type *raise_type;
     bool is_external;
-    struct Parsed_Statements *statements;
+    struct Parsed_Block_Statement *block_statement;
     String_Token *external_name;
 } Parsed_Procedure_Statement;
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, struct Parsed_Statements *statements, String_Token *external_name);
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, struct Parsed_Block_Statement *block_statement, String_Token *external_name);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;

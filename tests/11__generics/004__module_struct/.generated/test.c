@@ -9,6 +9,7 @@ int32_t test__main() {
     struct collections_List__i32__u32 list = (struct collections_List__i32__u32){};
 #line 5 "tests/11__generics/004__module_struct/test.code"
     return 0;
+#line 6 "tests/11__generics/004__module_struct/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

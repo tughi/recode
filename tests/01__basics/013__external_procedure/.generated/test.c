@@ -8,6 +8,7 @@ int32_t test__main() {
     exit(0);
 #line 5 "tests/01__basics/013__external_procedure/test.code"
     return 1;
+#line 6 "tests/01__basics/013__external_procedure/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

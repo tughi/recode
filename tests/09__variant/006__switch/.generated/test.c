@@ -14,6 +14,7 @@ int32_t test__main() {
         if (__switch_15_value__.variant == 1) {
 #line 17 "tests/09__variant/006__switch/test.code"
             return 1;
+#line 18 "tests/09__variant/006__switch/test.code"
         }
 #line 19 "tests/09__variant/006__switch/test.code"
         else if (__switch_15_value__.variant == 2) {
@@ -23,6 +24,7 @@ int32_t test__main() {
             if (__switch_20_value__.variant == 1) {
 #line 22 "tests/09__variant/006__switch/test.code"
                 return 2;
+#line 23 "tests/09__variant/006__switch/test.code"
             }
 #line 24 "tests/09__variant/006__switch/test.code"
             else if (__switch_20_value__.variant == 2) {
@@ -30,26 +32,33 @@ int32_t test__main() {
                 if (__switch_20_value__.variant_2 != 42) {
 #line 26 "tests/09__variant/006__switch/test.code"
                     return 3;
+#line 27 "tests/09__variant/006__switch/test.code"
                 }
 #line 28 "tests/09__variant/006__switch/test.code"
                 break;
+#line 29 "tests/09__variant/006__switch/test.code"
             }
 #line 30 "tests/09__variant/006__switch/test.code"
             else if (__switch_20_value__.variant == 0) {
 #line 31 "tests/09__variant/006__switch/test.code"
                 return 4;
+#line 32 "tests/09__variant/006__switch/test.code"
             }
+#line 34 "tests/09__variant/006__switch/test.code"
         }
 #line 35 "tests/09__variant/006__switch/test.code"
         else if (__switch_15_value__.variant == 0) {
 #line 36 "tests/09__variant/006__switch/test.code"
             return 5;
+#line 37 "tests/09__variant/006__switch/test.code"
         }
 #line 40 "tests/09__variant/006__switch/test.code"
         return 6;
+#line 41 "tests/09__variant/006__switch/test.code"
     }
 #line 43 "tests/09__variant/006__switch/test.code"
     return 0;
+#line 44 "tests/09__variant/006__switch/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

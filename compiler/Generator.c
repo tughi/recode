@@ -581,6 +581,10 @@ void Generator__generate_assignment_statement(Generator *self, Checked_Assignmen
 void Generator__generate_block_statement(Generator *self, Checked_Block_Statement *statement) {
     pWriter__write__cstring(self->writer, "{\n");
     Generator__generate_statements(self, statement->statements);
+    Source_Location location = statement->super.location;
+    location.start_line = location.end_line;
+    location.start_column = location.end_column = location.end_column - 1;
+    Generator__write_source_location(self, location);
     Generator__write_indentation(self);
     pWriter__write__cstring(self->writer, "}");
 }
@@ -819,15 +823,15 @@ void Generator__declare_procedure(Generator *self, Checked_Procedure_Symbol *pro
 }
 
 void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *procedure_symbol) {
-    if (procedure_symbol->checked_statements == NULL) {
+    if (procedure_symbol->checked_block_statement == NULL) {
         return;
     }
     Generator__write_source_location(self, procedure_symbol->super.location);
     CDECL_Procedure_Name procedure_name = CDECL_Procedure_Name__create(procedure_symbol);
     pWriter__write__cdecl(self->writer, (CDECL_Name *)&procedure_name, (Checked_Type *)procedure_symbol->procedure_type);
-    pWriter__write__cstring(self->writer, " {\n");
-    Generator__generate_statements(self, procedure_symbol->checked_statements);
-    pWriter__write__cstring(self->writer, "}\n\n");
+    pWriter__write__char(self->writer, ' ');
+    Generator__generate_statement(self, procedure_symbol->checked_block_statement);
+    pWriter__write__cstring(self->writer, "\n\n");
 }
 
 void Generator__generate_result_type(Generator *self, Checked_Result_Type *result_type) {

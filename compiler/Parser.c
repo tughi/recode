@@ -1086,16 +1086,9 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
         panic();
     }
     Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_opening_brace);
-    Parser__consume_end_of_line(self);
-    Parsed_Statements *statements = Parsed_Statements__create(false);
-    self->current_indentation = self->current_indentation + 1;
-    Parser__parse_statements(self, statements);
-    self->current_indentation = self->current_indentation - 1;
-    Parser__consume_space(self, self->current_indentation * 4);
-    Token *closing_brace = Parser__consume_token(self, Token__is_closing_brace);
-    location = Source_Location__merge(location, closing_brace->location);
-    return Parsed_Procedure_Statement__create(location, name, first_type_parameter, receiver_type != NULL, first_parameter, return_type, raise_type, false, statements, NULL);
+    Parsed_Block_Statement *block_statement = Parser__parse_block_statement(self);
+    location = Source_Location__merge(location, block_statement->super.location);
+    return Parsed_Procedure_Statement__create(location, name, first_type_parameter, receiver_type != NULL, first_parameter, return_type, raise_type, false, block_statement, NULL);
 }
 
 /*

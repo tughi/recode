@@ -8,6 +8,7 @@ struct String str__concat(struct String self, struct String other) {
     if (self.length == 0u) {
 #line 5 "tests/08__string/005__extensions/test.code"
         return other;
+#line 6 "tests/08__string/005__extensions/test.code"
     }
 #line 7 "tests/08__string/005__extensions/test.code"
     struct String result = (struct String){.data = ((uint8_t *) malloc(self.length + other.length)), .length = self.length + other.length};
@@ -25,7 +26,9 @@ struct String str__concat(struct String self, struct String other) {
             result.data[index] = self_data[index];
 #line 17 "tests/08__string/005__extensions/test.code"
             index = index + 1u;
+#line 18 "tests/08__string/005__extensions/test.code"
         }
+#line 19 "tests/08__string/005__extensions/test.code"
     }
 #line 20 "tests/08__string/005__extensions/test.code"
     if (other.length > 0u) {
@@ -41,10 +44,13 @@ struct String str__concat(struct String self, struct String other) {
             result.data[self.length + index] = other_data[index];
 #line 26 "tests/08__string/005__extensions/test.code"
             index = index + 1u;
+#line 27 "tests/08__string/005__extensions/test.code"
         }
+#line 28 "tests/08__string/005__extensions/test.code"
     }
 #line 29 "tests/08__string/005__extensions/test.code"
     return *((struct String *) (&result));
+#line 30 "tests/08__string/005__extensions/test.code"
 }
 
 #line 32 "tests/08__string/005__extensions/test.code"
@@ -53,6 +59,7 @@ bool str__equals(struct String self, struct String other) {
     if (self.length != other.length) {
 #line 34 "tests/08__string/005__extensions/test.code"
         return false;
+#line 35 "tests/08__string/005__extensions/test.code"
     }
 #line 36 "tests/08__string/005__extensions/test.code"
     struct String self_copy = self;
@@ -66,6 +73,7 @@ bool str__equals(struct String self, struct String other) {
     if (self_data == other_data) {
 #line 41 "tests/08__string/005__extensions/test.code"
         return true;
+#line 42 "tests/08__string/005__extensions/test.code"
     }
 #line 43 "tests/08__string/005__extensions/test.code"
     uintmax_t index = 0u;
@@ -75,12 +83,15 @@ bool str__equals(struct String self, struct String other) {
         if (self_data[index] != other_data[index]) {
 #line 46 "tests/08__string/005__extensions/test.code"
             return false;
+#line 47 "tests/08__string/005__extensions/test.code"
         }
 #line 48 "tests/08__string/005__extensions/test.code"
         index = index + 1u;
+#line 49 "tests/08__string/005__extensions/test.code"
     }
 #line 50 "tests/08__string/005__extensions/test.code"
     return true;
+#line 51 "tests/08__string/005__extensions/test.code"
 }
 
 #line 53 "tests/08__string/005__extensions/test.code"
@@ -91,19 +102,23 @@ int32_t test__main() {
     if (!str__equals(message, (struct String){.data = "Hello world!", .length = 12})) {
 #line 56 "tests/08__string/005__extensions/test.code"
         return 1;
+#line 57 "tests/08__string/005__extensions/test.code"
     }
 #line 58 "tests/08__string/005__extensions/test.code"
     if (!str__equals((struct String){.data = "Hello", .length = 5}, (struct String){.data = "Hello", .length = 5})) {
 #line 59 "tests/08__string/005__extensions/test.code"
         return 2;
+#line 60 "tests/08__string/005__extensions/test.code"
     }
 #line 61 "tests/08__string/005__extensions/test.code"
     if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
 #line 62 "tests/08__string/005__extensions/test.code"
         return 3;
+#line 63 "tests/08__string/005__extensions/test.code"
     }
 #line 64 "tests/08__string/005__extensions/test.code"
     return 0;
+#line 65 "tests/08__string/005__extensions/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -14,6 +14,7 @@ int32_t test__main() {
     other_value = value;
 #line 16 "tests/09__variant/003__assign_variant_value/test.code"
     return 0;
+#line 17 "tests/09__variant/003__assign_variant_value/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

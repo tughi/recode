@@ -10,12 +10,15 @@ int32_t test__main() {
     if (true) {
 #line 4 "tests/01__basics/008__if_true_else/test.code"
         result = 0;
+#line 5 "tests/01__basics/008__if_true_else/test.code"
     } else {
 #line 6 "tests/01__basics/008__if_true_else/test.code"
         result = 1;
+#line 7 "tests/01__basics/008__if_true_else/test.code"
     }
 #line 8 "tests/01__basics/008__if_true_else/test.code"
     return result;
+#line 9 "tests/01__basics/008__if_true_else/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

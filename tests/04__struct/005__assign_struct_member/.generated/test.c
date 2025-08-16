@@ -10,6 +10,7 @@ int32_t test__main() {
     line.p2.y = 64;
 #line 14 "tests/04__struct/005__assign_struct_member/test.code"
     return line.p2.y - 64;
+#line 15 "tests/04__struct/005__assign_struct_member/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

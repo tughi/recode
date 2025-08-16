@@ -24,9 +24,11 @@ struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String
         pio_Writer__write(self, string_data[index]);
 #line 13 "tests/99__calculator/io.code"
         index = index + 1u;
+#line 14 "tests/99__calculator/io.code"
     }
 #line 15 "tests/99__calculator/io.code"
     return self;
+#line 16 "tests/99__calculator/io.code"
 }
 
 #line 18 "tests/99__calculator/io.code"
@@ -35,6 +37,7 @@ struct io_Writer *pio_Writer__write(struct io_Writer *self, uint8_t c) {
     self->write_char(self->self, c);
 #line 20 "tests/99__calculator/io.code"
     return self;
+#line 21 "tests/99__calculator/io.code"
 }
 
 #line 23 "tests/99__calculator/io.code"
@@ -45,14 +48,17 @@ struct io_Writer *pio_Writer__write_signed(struct io_Writer *self, int32_t value
         pio_Writer__write(self, '-');
 #line 27 "tests/99__calculator/io.code"
         return pio_Writer__write_signed(self, -value);
+#line 28 "tests/99__calculator/io.code"
     }
 #line 29 "tests/99__calculator/io.code"
     if (value >= 10) {
 #line 30 "tests/99__calculator/io.code"
         pio_Writer__write_signed(self, value / 10);
+#line 31 "tests/99__calculator/io.code"
     }
 #line 32 "tests/99__calculator/io.code"
     return pio_Writer__write(self, ((uint8_t) (value % 10)) + '0');
+#line 33 "tests/99__calculator/io.code"
 }
 
 #line 35 "tests/99__calculator/io.code"
@@ -61,5 +67,6 @@ struct io_Writer *pio_Writer__end_line(struct io_Writer *self) {
     pio_Writer__write(self, '\n');
 #line 37 "tests/99__calculator/io.code"
     return self;
+#line 38 "tests/99__calculator/io.code"
 }
 

@@ -12,6 +12,7 @@ int32_t test__main() {
     struct test_Value another_value = other_value;
 #line 15 "tests/09__variant/002__init_variant_variable/test.code"
     return 0;
+#line 16 "tests/09__variant/002__init_variant_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

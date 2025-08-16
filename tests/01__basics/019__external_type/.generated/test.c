@@ -12,6 +12,7 @@ int32_t test__main() {
     fputc(10, __stdoutp);
 #line 11 "tests/01__basics/019__external_type/test.code"
     return 0;
+#line 12 "tests/01__basics/019__external_type/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

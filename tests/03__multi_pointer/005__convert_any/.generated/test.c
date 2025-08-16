@@ -12,9 +12,11 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
     if (name[0] != 'b') {
 #line 5 "tests/03__multi_pointer/005__convert_any/test.code"
         return 1;
+#line 6 "tests/03__multi_pointer/005__convert_any/test.code"
     }
 #line 7 "tests/03__multi_pointer/005__convert_any/test.code"
     return 0;
+#line 8 "tests/03__multi_pointer/005__convert_any/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

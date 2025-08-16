@@ -12,9 +12,11 @@ int32_t test__main() {
     {
 #line 16 "tests/09__variant/006__switch_else_only/test.code"
         return 0;
+#line 17 "tests/09__variant/006__switch_else_only/test.code"
     }
 #line 20 "tests/09__variant/006__switch_else_only/test.code"
     return 1;
+#line 21 "tests/09__variant/006__switch_else_only/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

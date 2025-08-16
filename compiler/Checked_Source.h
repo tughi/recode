@@ -390,7 +390,7 @@ typedef struct Checked_Procedure_Symbol {
     String *procedure_name;
     Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
-    Checked_Statements *checked_statements;
+    Checked_Statement *checked_block_statement;
     String *external_name;
 } Checked_Procedure_Symbol;
 

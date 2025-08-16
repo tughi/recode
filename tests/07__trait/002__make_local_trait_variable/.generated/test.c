@@ -6,6 +6,7 @@ void *malloc(uintmax_t size);
 int32_t ptest_Dog__legs(struct test_Dog *self) {
 #line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
     return 4;
+#line 7 "tests/07__trait/002__make_local_trait_variable/test.code"
 }
 
 #line 13 "tests/07__trait/002__make_local_trait_variable/test.code"
@@ -16,6 +17,7 @@ int32_t test__main() {
     struct test_Animal animal = (struct test_Animal){.self = &dog, .legs = ((int32_t (*)(void *self)) ptest_Dog__legs)};
 #line 16 "tests/07__trait/002__make_local_trait_variable/test.code"
     return 0;
+#line 17 "tests/07__trait/002__make_local_trait_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

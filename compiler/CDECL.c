@@ -234,7 +234,7 @@ void CDECL_Procedure_Name__write(CDECL_Procedure_Name *self, Writer *writer) {
         pWriter__write__string(writer, self->procedure_symbol->external_name);
         return;
     }
-    if (self->procedure_symbol->super.is_global && self->procedure_symbol->checked_statements != NULL && self->procedure_symbol->receiver_type == NULL) {
+    if (self->procedure_symbol->super.is_global && self->procedure_symbol->checked_block_statement != NULL && self->procedure_symbol->receiver_type == NULL) {
         pWriter__write__string(writer, self->procedure_symbol->super.module->name);
         pWriter__write__cstring(writer, "__");
     }

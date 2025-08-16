@@ -18,6 +18,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
     if (argc != 2) {
 #line 14 "tests/99__calculator/test.code"
         exit(1);
+#line 15 "tests/99__calculator/test.code"
     }
 #line 17 "tests/99__calculator/test.code"
     struct calculator__tokenizer_Tokenizer input_tokenizer = (struct calculator__tokenizer_Tokenizer){.data = argv[1], .index = 0};
@@ -27,6 +28,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
         struct calculator__tokenizer_Token token = pcalculator__tokenizer_Tokenizer__next_token(&input_tokenizer);
 #line 24 "tests/99__calculator/test.code"
         pio_Writer__end_line(pio_Writer__write_token(os__stdout, &token));
+#line 25 "tests/99__calculator/test.code"
     }
 #line 27 "tests/99__calculator/test.code"
     struct calculator__parser_Parser input_parser = (struct calculator__parser_Parser){.tokenizer = (struct calculator__tokenizer_Tokenizer){.data = argv[1], .index = 0}};
@@ -40,6 +42,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
     pio_Writer__end_line(pio_Writer__write_signed(pio_Writer__write_string(os__stdout, (struct String){.data = "Result: ", .length = 8}), result));
 #line 37 "tests/99__calculator/test.code"
     return 0;
+#line 38 "tests/99__calculator/test.code"
 }
 
 #line 40 "tests/99__calculator/test.code"
@@ -50,32 +53,39 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
     if (__switch_41_value__->variant == 1) {
 #line 43 "tests/99__calculator/test.code"
         return __switch_41_value__->variant_1.value;
+#line 44 "tests/99__calculator/test.code"
     }
 #line 45 "tests/99__calculator/test.code"
     else if (__switch_41_value__->variant == 2) {
 #line 46 "tests/99__calculator/test.code"
         return test__evaluate(__switch_41_value__->variant_2.left) + test__evaluate(__switch_41_value__->variant_2.right);
+#line 47 "tests/99__calculator/test.code"
     }
 #line 48 "tests/99__calculator/test.code"
     else if (__switch_41_value__->variant == 3) {
 #line 49 "tests/99__calculator/test.code"
         return test__evaluate(__switch_41_value__->variant_3.left) / test__evaluate(__switch_41_value__->variant_3.right);
+#line 50 "tests/99__calculator/test.code"
     }
 #line 51 "tests/99__calculator/test.code"
     else if (__switch_41_value__->variant == 4) {
 #line 52 "tests/99__calculator/test.code"
         return test__evaluate(__switch_41_value__->variant_4.left) * test__evaluate(__switch_41_value__->variant_4.right);
+#line 53 "tests/99__calculator/test.code"
     }
 #line 54 "tests/99__calculator/test.code"
     else if (__switch_41_value__->variant == 5) {
 #line 55 "tests/99__calculator/test.code"
         return test__evaluate(__switch_41_value__->variant_5.left) - test__evaluate(__switch_41_value__->variant_5.right);
+#line 56 "tests/99__calculator/test.code"
     }
 #line 57 "tests/99__calculator/test.code"
     else {
+#line 59 "tests/99__calculator/test.code"
     }
 #line 61 "tests/99__calculator/test.code"
     exit(1);
+#line 62 "tests/99__calculator/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

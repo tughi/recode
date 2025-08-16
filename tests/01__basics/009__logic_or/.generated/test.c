@@ -10,40 +10,50 @@ int32_t test__main() {
     bool f = test__echo(false);
 #line 4 "tests/01__basics/009__logic_or/test.code"
     if (t || f) {
+#line 6 "tests/01__basics/009__logic_or/test.code"
     } else {
 #line 7 "tests/01__basics/009__logic_or/test.code"
         return 1;
+#line 8 "tests/01__basics/009__logic_or/test.code"
     }
 #line 9 "tests/01__basics/009__logic_or/test.code"
     if (f || t) {
+#line 11 "tests/01__basics/009__logic_or/test.code"
     } else {
 #line 12 "tests/01__basics/009__logic_or/test.code"
         return 2;
+#line 13 "tests/01__basics/009__logic_or/test.code"
     }
 #line 14 "tests/01__basics/009__logic_or/test.code"
     if (t || t) {
+#line 16 "tests/01__basics/009__logic_or/test.code"
     } else {
 #line 17 "tests/01__basics/009__logic_or/test.code"
         return 3;
+#line 18 "tests/01__basics/009__logic_or/test.code"
     }
 #line 19 "tests/01__basics/009__logic_or/test.code"
     if (f || f) {
 #line 20 "tests/01__basics/009__logic_or/test.code"
         return 4;
+#line 21 "tests/01__basics/009__logic_or/test.code"
     }
 #line 22 "tests/01__basics/009__logic_or/test.code"
     if ((f || f) || (f || f)) {
 #line 23 "tests/01__basics/009__logic_or/test.code"
         return 5;
+#line 24 "tests/01__basics/009__logic_or/test.code"
     }
 #line 25 "tests/01__basics/009__logic_or/test.code"
     return 0;
+#line 26 "tests/01__basics/009__logic_or/test.code"
 }
 
 #line 28 "tests/01__basics/009__logic_or/test.code"
 bool test__echo(bool v) {
 #line 29 "tests/01__basics/009__logic_or/test.code"
     return v;
+#line 30 "tests/01__basics/009__logic_or/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

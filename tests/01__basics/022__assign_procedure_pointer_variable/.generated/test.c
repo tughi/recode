@@ -10,12 +10,14 @@ int32_t test__main() {
     procedure_pointer = test__echo;
 #line 6 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
     return 0;
+#line 7 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
 }
 
 #line 9 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
 int32_t test__echo(int32_t value) {
 #line 10 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
     return value;
+#line 11 "tests/01__basics/022__assign_procedure_pointer_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

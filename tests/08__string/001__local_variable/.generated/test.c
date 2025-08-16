@@ -8,6 +8,7 @@ int32_t test__main() {
     struct String string;
 #line 3 "tests/08__string/001__local_variable/test.code"
     return 0;
+#line 4 "tests/08__string/001__local_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -10,6 +10,7 @@ int32_t test__main() {
     struct test_Array__i64 array_of_i64;
 #line 10 "tests/11__generics/002__struct_variable/test.code"
     return 0;
+#line 11 "tests/11__generics/002__struct_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

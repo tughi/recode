@@ -9,6 +9,7 @@ int32_t test__main() {
     struct source_Span span = (struct source_Span){.start = 0, .end = 42};
 #line 5 "tests/10__import/003__init_struct_variable/test.code"
     return span.end - 42;
+#line 6 "tests/10__import/003__init_struct_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

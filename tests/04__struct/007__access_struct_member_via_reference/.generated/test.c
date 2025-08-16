@@ -10,6 +10,7 @@ int32_t test__main() {
     struct test_Line *line_reference = &line;
 #line 17 "tests/04__struct/007__access_struct_member_via_reference/test.code"
     return line_reference->p2.y - 64;
+#line 18 "tests/04__struct/007__access_struct_member_via_reference/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -10,6 +10,7 @@ int32_t test__main() {
     void *any = ((void *) (&value));
 #line 4 "tests/02__any/001__convert/test.code"
     return *((int32_t *) any) - 42;
+#line 5 "tests/02__any/001__convert/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -8,6 +8,7 @@ int32_t test__main() {
     void *mem = malloc(42u);
 #line 4 "tests/02__any/002__malloc/test.code"
     return 0;
+#line 5 "tests/02__any/002__malloc/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

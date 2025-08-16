@@ -500,7 +500,7 @@ Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *modul
     symbol->procedure_name = parsed_procedure_statement->super.name->lexeme;
     symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
-    symbol->checked_statements = NULL;
+    symbol->checked_block_statement = NULL;
     symbol->external_name = NULL;
     return symbol;
 }

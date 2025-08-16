@@ -12,14 +12,17 @@ int32_t test__main() {
     if (__switch_13_value__.variant == 3) {
 #line 15 "tests/09__variant/006__switch_expression/test.code"
         return __switch_13_value__.variant_3 - 42;
+#line 16 "tests/09__variant/006__switch_expression/test.code"
     }
 #line 17 "tests/09__variant/006__switch_expression/test.code"
     else {
 #line 18 "tests/09__variant/006__switch_expression/test.code"
         return 1;
+#line 19 "tests/09__variant/006__switch_expression/test.code"
     }
 #line 21 "tests/09__variant/006__switch_expression/test.code"
     return 2;
+#line 22 "tests/09__variant/006__switch_expression/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -9,6 +9,7 @@ int32_t test__main() {
     struct source_Span span;
 #line 5 "tests/10__import/002__local_struct_variable/test.code"
     return 0;
+#line 6 "tests/10__import/002__local_struct_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

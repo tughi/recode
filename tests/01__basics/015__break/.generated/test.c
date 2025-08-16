@@ -6,6 +6,7 @@ void *malloc(uintmax_t size);
 int32_t test__main() {
 #line 2 "tests/01__basics/015__break/test.code"
     return test__fibonacci(12) - 144;
+#line 3 "tests/01__basics/015__break/test.code"
 }
 
 #line 5 "tests/01__basics/015__break/test.code"
@@ -14,6 +15,7 @@ int32_t test__fibonacci(int32_t n) {
     if (n <= 1) {
 #line 7 "tests/01__basics/015__break/test.code"
         return n;
+#line 8 "tests/01__basics/015__break/test.code"
     }
 #line 10 "tests/01__basics/015__break/test.code"
     int32_t v1 = 0;
@@ -33,12 +35,15 @@ int32_t test__fibonacci(int32_t n) {
         if (i == n) {
 #line 18 "tests/01__basics/015__break/test.code"
             break;
+#line 19 "tests/01__basics/015__break/test.code"
         }
 #line 20 "tests/01__basics/015__break/test.code"
         i = i + 1;
+#line 21 "tests/01__basics/015__break/test.code"
     }
 #line 22 "tests/01__basics/015__break/test.code"
     return v2;
+#line 23 "tests/01__basics/015__break/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

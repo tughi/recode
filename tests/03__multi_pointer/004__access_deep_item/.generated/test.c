@@ -8,9 +8,11 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
     if (argv[0][0] != 'b') {
 #line 3 "tests/03__multi_pointer/004__access_deep_item/test.code"
         return 1;
+#line 4 "tests/03__multi_pointer/004__access_deep_item/test.code"
     }
 #line 5 "tests/03__multi_pointer/004__access_deep_item/test.code"
     return 0;
+#line 6 "tests/03__multi_pointer/004__access_deep_item/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

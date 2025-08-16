@@ -10,9 +10,11 @@ int32_t test__main() {
     if (value.variant == 2) {
 #line 10 "tests/09__variant/008__is/test.code"
         return 0;
+#line 11 "tests/09__variant/008__is/test.code"
     }
 #line 13 "tests/09__variant/008__is/test.code"
     return 1;
+#line 14 "tests/09__variant/008__is/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

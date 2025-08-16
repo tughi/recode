@@ -10,6 +10,7 @@ int32_t test__main() {
     if (message.length != 14u) {
 #line 4 "tests/08__string/004__assignment/test.code"
         return 1;
+#line 5 "tests/08__string/004__assignment/test.code"
     }
 #line 6 "tests/08__string/004__assignment/test.code"
     message = (struct String){.data = "I am a different string!", .length = 24};
@@ -17,6 +18,7 @@ int32_t test__main() {
     if (message.length != 24u) {
 #line 8 "tests/08__string/004__assignment/test.code"
         return 2;
+#line 9 "tests/08__string/004__assignment/test.code"
     }
 #line 10 "tests/08__string/004__assignment/test.code"
     struct String *message_ptr = &message;
@@ -26,9 +28,11 @@ int32_t test__main() {
     if (message.length != 35u) {
 #line 13 "tests/08__string/004__assignment/test.code"
         return 3;
+#line 14 "tests/08__string/004__assignment/test.code"
     }
 #line 15 "tests/08__string/004__assignment/test.code"
     return 0;
+#line 16 "tests/08__string/004__assignment/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -10,12 +10,15 @@ int32_t test__main() {
     if (value.variant == 2) {
 #line 10 "tests/09__variant/007__if_as_else/test.code"
         return value.variant_2 - 42;
+#line 11 "tests/09__variant/007__if_as_else/test.code"
     } else {
 #line 12 "tests/09__variant/007__if_as_else/test.code"
         return 1;
+#line 13 "tests/09__variant/007__if_as_else/test.code"
     }
 #line 15 "tests/09__variant/007__if_as_else/test.code"
     return 2;
+#line 16 "tests/09__variant/007__if_as_else/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

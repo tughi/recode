@@ -6,12 +6,14 @@ void *malloc(uintmax_t size);
 int32_t ptest_Square__area(struct test_Square *self) {
 #line 10 "tests/07__trait/003__call_trait_method/test.code"
     return self->side * self->side;
+#line 11 "tests/07__trait/003__call_trait_method/test.code"
 }
 
 #line 17 "tests/07__trait/003__call_trait_method/test.code"
 int32_t ptest_Circle__area(struct test_Circle *self) {
 #line 18 "tests/07__trait/003__call_trait_method/test.code"
     return 312 * self->radius * self->radius / 100;
+#line 19 "tests/07__trait/003__call_trait_method/test.code"
 }
 
 #line 21 "tests/07__trait/003__call_trait_method/test.code"
@@ -28,14 +30,17 @@ int32_t test__main() {
     if (square_shape.area(square_shape.self) != 100) {
 #line 28 "tests/07__trait/003__call_trait_method/test.code"
         return 1;
+#line 29 "tests/07__trait/003__call_trait_method/test.code"
     }
 #line 31 "tests/07__trait/003__call_trait_method/test.code"
     if (circle_shape.area(circle_shape.self) != 312) {
 #line 32 "tests/07__trait/003__call_trait_method/test.code"
         return 2;
+#line 33 "tests/07__trait/003__call_trait_method/test.code"
     }
 #line 35 "tests/07__trait/003__call_trait_method/test.code"
     return 0;
+#line 36 "tests/07__trait/003__call_trait_method/test.code"
 }
 
 int32_t main(int argc, const char **argv) {
