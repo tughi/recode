@@ -66,11 +66,13 @@ typedef struct Checked_Type {
     struct Checked_Type *next_type;
     struct Checked_Type_Dependency *first_dependency;
 
+    bool has_generated_declaration;
     bool has_generated_definition;
 } Checked_Type;
 
 struct Checked_Type_Dependency {
     Checked_Type *type;
+    bool weak;
     struct Checked_Type_Dependency *next_dependency;
 };
 

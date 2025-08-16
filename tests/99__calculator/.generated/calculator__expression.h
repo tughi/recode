@@ -12,6 +12,8 @@ struct calculator__expression_Number {
     int32_t value;
 };
 
+struct calculator__expression_Expression;
+
 struct calculator__expression_Addition {
     struct calculator__source_Span span;
     struct calculator__expression_Expression *left;

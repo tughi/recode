@@ -4,6 +4,8 @@
 #include "builtin_types.h"
 
 
+struct collections_List_Item__i32;
+
 struct collections_List__i32__u32 {
     struct collections_List_Item__i32 *first_item;
     struct collections_List_Item__i32 *last_item;

@@ -928,6 +928,9 @@ void Generator__generate_variant(Generator *self, Checked_Variant_Type *variant_
 }
 
 void Generator__declare_type(Generator *self, Checked_Type *type) {
+    if (type->has_generated_declaration || type->has_generated_definition) {
+        return; // Already declared
+    }
     switch (type->kind) {
     case CHECKED_TYPE_KIND__EXTERNAL:
         Generator__declare_external_type(self, (Checked_External_Type *)type);
@@ -945,13 +948,21 @@ void Generator__declare_type(Generator *self, Checked_Type *type) {
         panic();
     }
     pWriter__end_line(self->writer);
+    type->has_generated_declaration = true;
 }
 
 void Generator__define_type(Generator *self, Checked_Type *type) {
+    if (type->has_generated_definition) {
+        return; // Already defined
+    }
     struct Checked_Type_Dependency *dependency = type->first_dependency;
     while (dependency != NULL) {
-        if (!dependency->type->has_generated_definition && dependency->type->symbol->super.module == type->symbol->super.module) {
-            Generator__define_type(self, dependency->type);
+        if (dependency->type->symbol->super.module == type->symbol->super.module) {
+            if (dependency->weak) {
+                Generator__declare_type(self, dependency->type);
+            } else {
+                Generator__define_type(self, dependency->type);
+            }
         }
         dependency = dependency->next_dependency;
     }

@@ -1989,15 +1989,21 @@ Checked_Named_Type *Checker__check_external_type_statement(Checker *self, Token 
     return (Checked_Named_Type *)external_type;
 }
 
-struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type) {
+struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type, bool weak) {
     struct Checked_Type_Dependency *dependency = malloc(sizeof(struct Checked_Type_Dependency));
     dependency->type = type;
+    dependency->weak = weak;
     dependency->next_dependency = NULL;
     return dependency;
 }
 
-void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker) {
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker);
+
+void Checked_Type__append_weak_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker, bool weak) {
     if (self == other) {
+        if (weak) {
+            return; // Weak dependencies to self are allowed
+        }
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type ");
         pWriter__write__checked_type(stderr_writer, self);
@@ -2007,17 +2013,24 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     switch (other->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
-        Checked_Type__append_dependencies(self, ((Checked_Array_Type *)other)->item_type, location, checker);
+        Checked_Type__append_weak_dependencies(self, ((Checked_Array_Type *)other)->item_type, location, checker, weak);
         return;
     case CHECKED_TYPE_KIND__EXTERNAL:
-        pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Type ");
-        pWriter__write__checked_type(stderr_writer, self);
-        pWriter__write__cstring(stderr_writer, " cannot depend on external type ");
-        pWriter__write__checked_type(stderr_writer, other);
-        pWriter__end_location_message(stderr_writer);
-        panic();
+        if (!weak) {
+            pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Type ");
+            pWriter__write__checked_type(stderr_writer, self);
+            pWriter__write__cstring(stderr_writer, " cannot depend on external type ");
+            pWriter__write__checked_type(stderr_writer, other);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        return;
+    case CHECKED_TYPE_KIND__POINTER:
+        Checked_Type__append_weak_dependencies(self, ((Checked_Pointer_Type *)other)->other_type, location, checker, true);
+        return;
     case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT:
         break;
     default:
@@ -2025,7 +2038,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     struct Checked_Type_Dependency *self_dependency = self->first_dependency;
     if (self_dependency == NULL) {
-        self->first_dependency = Checked_Type_Dependency__create(other);
+        self->first_dependency = Checked_Type_Dependency__create(other, weak);
     } else {
         while (self_dependency->next_dependency != NULL) {
             if (self_dependency->type == other) {
@@ -2033,13 +2046,19 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
             }
             self_dependency = self_dependency->next_dependency;
         }
-        self_dependency->next_dependency = Checked_Type_Dependency__create(other);
+        self_dependency->next_dependency = Checked_Type_Dependency__create(other, weak);
     }
-    struct Checked_Type_Dependency *other_dependency = other->first_dependency;
-    while (other_dependency != NULL) {
-        Checked_Type__append_dependencies(self, other_dependency->type, location, checker);
-        other_dependency = other_dependency->next_dependency;
+    if (!weak) {
+        struct Checked_Type_Dependency *other_dependency = other->first_dependency;
+        while (other_dependency != NULL) {
+            Checked_Type__append_weak_dependencies(self, other_dependency->type, location, checker, other_dependency->weak);
+            other_dependency = other_dependency->next_dependency;
+        }
     }
+}
+
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker) {
+    Checked_Type__append_weak_dependencies(self, other, location, checker, false);
 }
 
 Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
@@ -2173,9 +2192,18 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
 Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
     Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__TRAIT && Source_Location__equals(other_type->super.location, type_name->location)) {
+            /* Type checked already */
+            return other_type;
+        }
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
         pWriter__end_location_message(stderr_writer);
+        if (other_type->super.location.source != NULL) {
+            pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Previous declaration here");
+            pWriter__end_location_message(stderr_writer);
+        }
         panic();
     }
 
@@ -2197,6 +2225,11 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *ty
             Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
             Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
+            Checked_Procedure_Parameter *trait_method_parameter = trait_method->procedure_type->first_parameter;
+            while (trait_method_parameter != NULL) {
+                Checked_Type__append_dependencies((Checked_Type *)trait_type, trait_method_parameter->type, trait_method_parameter->location, self);
+                trait_method_parameter = trait_method_parameter->next_parameter;
+            }
             if (last_trait_method == NULL) {
                 trait_type->first_method = trait_method;
             } else {
