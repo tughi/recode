@@ -9,7 +9,13 @@ int32_t test__main() {
 #line 13 "tests/09__variant/005__make_variant_value/test.code"
     value = (struct test_Value){.variant = 2, .variant_2 = (struct test_Integer){.variant = 2, .variant_2 = 42}};
 #line 14 "tests/09__variant/005__make_variant_value/test.code"
-    return 0;
+    {
+#line 14 "tests/09__variant/005__make_variant_value/test.code"
+        int32_t __001__ = 0;
+#line 14 "tests/09__variant/005__make_variant_value/test.code"
+        return __001__;
+#line 14 "tests/09__variant/005__make_variant_value/test.code"
+    }
 #line 15 "tests/09__variant/005__make_variant_value/test.code"
 }
 

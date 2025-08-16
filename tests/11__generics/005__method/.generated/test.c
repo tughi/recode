@@ -12,7 +12,13 @@ int32_t test__main() {
 #line 17 "tests/11__generics/005__method/test.code"
     pcollections_List__i32__prepend(&list, 24);
 #line 18 "tests/11__generics/005__method/test.code"
-    return list.last_item->data - list.first_item->data - 18;
+    {
+#line 18 "tests/11__generics/005__method/test.code"
+        int32_t __001__ = list.last_item->data - list.first_item->data - 18;
+#line 18 "tests/11__generics/005__method/test.code"
+        return __001__;
+#line 18 "tests/11__generics/005__method/test.code"
+    }
 #line 19 "tests/11__generics/005__method/test.code"
 }
 

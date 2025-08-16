@@ -47,14 +47,26 @@ int32_t test__main() {
 #line 24 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 25 "tests/01__basics/011__i32_comparison/test.code"
-    return errors;
+    {
+#line 25 "tests/01__basics/011__i32_comparison/test.code"
+        int32_t __001__ = errors;
+#line 25 "tests/01__basics/011__i32_comparison/test.code"
+        return __001__;
+#line 25 "tests/01__basics/011__i32_comparison/test.code"
+    }
 #line 26 "tests/01__basics/011__i32_comparison/test.code"
 }
 
 #line 28 "tests/01__basics/011__i32_comparison/test.code"
 int32_t test__echo(int32_t v) {
 #line 29 "tests/01__basics/011__i32_comparison/test.code"
-    return v;
+    {
+#line 29 "tests/01__basics/011__i32_comparison/test.code"
+        int32_t __001__ = v;
+#line 29 "tests/01__basics/011__i32_comparison/test.code"
+        return __001__;
+#line 29 "tests/01__basics/011__i32_comparison/test.code"
+    }
 #line 30 "tests/01__basics/011__i32_comparison/test.code"
 }
 

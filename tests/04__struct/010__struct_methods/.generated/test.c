@@ -5,7 +5,13 @@ void *malloc(uintmax_t size);
 #line 5 "tests/04__struct/010__struct_methods/test.code"
 int32_t ptest_Number__get_value(struct test_Number *self) {
 #line 6 "tests/04__struct/010__struct_methods/test.code"
-    return self->value;
+    {
+#line 6 "tests/04__struct/010__struct_methods/test.code"
+        int32_t __001__ = self->value;
+#line 6 "tests/04__struct/010__struct_methods/test.code"
+        return __001__;
+#line 6 "tests/04__struct/010__struct_methods/test.code"
+    }
 #line 7 "tests/04__struct/010__struct_methods/test.code"
 }
 
@@ -23,7 +29,13 @@ int32_t test__main() {
 #line 16 "tests/04__struct/010__struct_methods/test.code"
     ptest_Number__set_value(&number, 42);
 #line 18 "tests/04__struct/010__struct_methods/test.code"
-    return ptest_Number__get_value(&number) - 42;
+    {
+#line 18 "tests/04__struct/010__struct_methods/test.code"
+        int32_t __001__ = ptest_Number__get_value(&number) - 42;
+#line 18 "tests/04__struct/010__struct_methods/test.code"
+        return __001__;
+#line 18 "tests/04__struct/010__struct_methods/test.code"
+    }
 #line 19 "tests/04__struct/010__struct_methods/test.code"
 }
 

@@ -7,7 +7,13 @@ int32_t test__main() {
 #line 4 "tests/01__basics/012__procedure_without_return/test.code"
     test__finish();
 #line 5 "tests/01__basics/012__procedure_without_return/test.code"
-    return 1;
+    {
+#line 5 "tests/01__basics/012__procedure_without_return/test.code"
+        int32_t __001__ = 1;
+#line 5 "tests/01__basics/012__procedure_without_return/test.code"
+        return __001__;
+#line 5 "tests/01__basics/012__procedure_without_return/test.code"
+    }
 #line 6 "tests/01__basics/012__procedure_without_return/test.code"
 }
 

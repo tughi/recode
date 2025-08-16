@@ -9,11 +9,23 @@ int32_t test__main() {
 #line 9 "tests/09__variant/008__is/test.code"
     if (value.variant == 2) {
 #line 10 "tests/09__variant/008__is/test.code"
-        return 0;
+        {
+#line 10 "tests/09__variant/008__is/test.code"
+            int32_t __001__ = 0;
+#line 10 "tests/09__variant/008__is/test.code"
+            return __001__;
+#line 10 "tests/09__variant/008__is/test.code"
+        }
 #line 11 "tests/09__variant/008__is/test.code"
     }
 #line 13 "tests/09__variant/008__is/test.code"
-    return 1;
+    {
+#line 13 "tests/09__variant/008__is/test.code"
+        int32_t __002__ = 1;
+#line 13 "tests/09__variant/008__is/test.code"
+        return __002__;
+#line 13 "tests/09__variant/008__is/test.code"
+    }
 #line 14 "tests/09__variant/008__is/test.code"
 }
 

@@ -27,7 +27,13 @@ struct io_Writer *pio_Writer__write_string(struct io_Writer *self, struct String
 #line 14 "tests/99__calculator/io.code"
     }
 #line 15 "tests/99__calculator/io.code"
-    return self;
+    {
+#line 15 "tests/99__calculator/io.code"
+        struct io_Writer *__001__ = self;
+#line 15 "tests/99__calculator/io.code"
+        return __001__;
+#line 15 "tests/99__calculator/io.code"
+    }
 #line 16 "tests/99__calculator/io.code"
 }
 
@@ -36,7 +42,13 @@ struct io_Writer *pio_Writer__write(struct io_Writer *self, uint8_t c) {
 #line 19 "tests/99__calculator/io.code"
     self->write_char(self->self, c);
 #line 20 "tests/99__calculator/io.code"
-    return self;
+    {
+#line 20 "tests/99__calculator/io.code"
+        struct io_Writer *__001__ = self;
+#line 20 "tests/99__calculator/io.code"
+        return __001__;
+#line 20 "tests/99__calculator/io.code"
+    }
 #line 21 "tests/99__calculator/io.code"
 }
 
@@ -47,7 +59,13 @@ struct io_Writer *pio_Writer__write_signed(struct io_Writer *self, int32_t value
 #line 26 "tests/99__calculator/io.code"
         pio_Writer__write(self, '-');
 #line 27 "tests/99__calculator/io.code"
-        return pio_Writer__write_signed(self, -value);
+        {
+#line 27 "tests/99__calculator/io.code"
+            struct io_Writer *__001__ = pio_Writer__write_signed(self, -value);
+#line 27 "tests/99__calculator/io.code"
+            return __001__;
+#line 27 "tests/99__calculator/io.code"
+        }
 #line 28 "tests/99__calculator/io.code"
     }
 #line 29 "tests/99__calculator/io.code"
@@ -57,7 +75,13 @@ struct io_Writer *pio_Writer__write_signed(struct io_Writer *self, int32_t value
 #line 31 "tests/99__calculator/io.code"
     }
 #line 32 "tests/99__calculator/io.code"
-    return pio_Writer__write(self, ((uint8_t) (value % 10)) + '0');
+    {
+#line 32 "tests/99__calculator/io.code"
+        struct io_Writer *__002__ = pio_Writer__write(self, ((uint8_t) (value % 10)) + '0');
+#line 32 "tests/99__calculator/io.code"
+        return __002__;
+#line 32 "tests/99__calculator/io.code"
+    }
 #line 33 "tests/99__calculator/io.code"
 }
 
@@ -66,7 +90,13 @@ struct io_Writer *pio_Writer__end_line(struct io_Writer *self) {
 #line 36 "tests/99__calculator/io.code"
     pio_Writer__write(self, '\n');
 #line 37 "tests/99__calculator/io.code"
-    return self;
+    {
+#line 37 "tests/99__calculator/io.code"
+        struct io_Writer *__001__ = self;
+#line 37 "tests/99__calculator/io.code"
+        return __001__;
+#line 37 "tests/99__calculator/io.code"
+    }
 #line 38 "tests/99__calculator/io.code"
 }
 

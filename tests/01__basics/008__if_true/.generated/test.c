@@ -13,7 +13,13 @@ int32_t test__main() {
 #line 5 "tests/01__basics/008__if_true/test.code"
     }
 #line 6 "tests/01__basics/008__if_true/test.code"
-    return result;
+    {
+#line 6 "tests/01__basics/008__if_true/test.code"
+        int32_t __001__ = result;
+#line 6 "tests/01__basics/008__if_true/test.code"
+        return __001__;
+#line 6 "tests/01__basics/008__if_true/test.code"
+    }
 #line 7 "tests/01__basics/008__if_true/test.code"
 }
 

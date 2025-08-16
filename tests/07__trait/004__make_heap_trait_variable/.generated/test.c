@@ -5,14 +5,26 @@ void *malloc(uintmax_t size);
 #line 9 "tests/07__trait/004__make_heap_trait_variable/test.code"
 int32_t ptest_Square__area(struct test_Square *self) {
 #line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    return self->side * self->side;
+    {
+#line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        int32_t __001__ = self->side * self->side;
+#line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        return __001__;
+#line 10 "tests/07__trait/004__make_heap_trait_variable/test.code"
+    }
 #line 11 "tests/07__trait/004__make_heap_trait_variable/test.code"
 }
 
 #line 17 "tests/07__trait/004__make_heap_trait_variable/test.code"
 int32_t ptest_Circle__area(struct test_Circle *self) {
 #line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    return 312 * self->radius * self->radius / 100;
+    {
+#line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        int32_t __001__ = 312 * self->radius * self->radius / 100;
+#line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        return __001__;
+#line 18 "tests/07__trait/004__make_heap_trait_variable/test.code"
+    }
 #line 19 "tests/07__trait/004__make_heap_trait_variable/test.code"
 }
 
@@ -69,17 +81,35 @@ int32_t test__main() {
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (square_shape->area(square_shape->self) != 100) {
 #line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        return 1;
+        {
+#line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
+            int32_t __005__ = 1;
+#line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
+            return __005__;
+#line 28 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        }
 #line 29 "tests/07__trait/004__make_heap_trait_variable/test.code"
     }
 #line 31 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (circle_shape->area(circle_shape->self) != 312) {
 #line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        return 2;
+        {
+#line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
+            int32_t __006__ = 2;
+#line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
+            return __006__;
+#line 32 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        }
 #line 33 "tests/07__trait/004__make_heap_trait_variable/test.code"
     }
 #line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
-    return 0;
+    {
+#line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        int32_t __007__ = 0;
+#line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
+        return __007__;
+#line 35 "tests/07__trait/004__make_heap_trait_variable/test.code"
+    }
 #line 36 "tests/07__trait/004__make_heap_trait_variable/test.code"
 }
 

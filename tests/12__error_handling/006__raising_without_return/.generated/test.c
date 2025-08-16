@@ -7,13 +7,19 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
     {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
-        struct test_Result__8 __001__ = test__auto_raise_error(false);
+        struct test_Result__8 __002__ = test__auto_raise_error(false);
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
-        if (__001__.success) {} else {
+        if (__002__.success) {} else {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
             {
 #line 3 "tests/12__error_handling/006__raising_without_return/test.code"
-                return __001__.error.code;
+                {
+#line 3 "tests/12__error_handling/006__raising_without_return/test.code"
+                    int32_t __001__ = __002__.error.code;
+#line 3 "tests/12__error_handling/006__raising_without_return/test.code"
+                    return __001__;
+#line 3 "tests/12__error_handling/006__raising_without_return/test.code"
+                }
 #line 4 "tests/12__error_handling/006__raising_without_return/test.code"
             }
 #line 4 "tests/12__error_handling/006__raising_without_return/test.code"
@@ -23,7 +29,13 @@ int32_t test__main() {
 #line 4 "tests/12__error_handling/006__raising_without_return/test.code"
     }
 #line 5 "tests/12__error_handling/006__raising_without_return/test.code"
-    return 0;
+    {
+#line 5 "tests/12__error_handling/006__raising_without_return/test.code"
+        int32_t __003__ = 0;
+#line 5 "tests/12__error_handling/006__raising_without_return/test.code"
+        return __003__;
+#line 5 "tests/12__error_handling/006__raising_without_return/test.code"
+    }
 #line 6 "tests/12__error_handling/006__raising_without_return/test.code"
 }
 
@@ -40,7 +52,13 @@ struct test_Result__8 test__auto_raise_error(bool condition) {
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
     }
 #line 10 "tests/12__error_handling/006__raising_without_return/test.code"
-    return (struct test_Result__8){.success = true};
+    {
+#line 10 "tests/12__error_handling/006__raising_without_return/test.code"
+        struct test_Result__8 __002__ = (struct test_Result__8){.success = true};
+#line 10 "tests/12__error_handling/006__raising_without_return/test.code"
+        return __002__;
+#line 10 "tests/12__error_handling/006__raising_without_return/test.code"
+    }
 #line 11 "tests/12__error_handling/006__raising_without_return/test.code"
 }
 
@@ -53,7 +71,13 @@ struct test_Result__13 test__raise_error(bool condition) {
 #line 16 "tests/12__error_handling/006__raising_without_return/test.code"
     }
 #line 17 "tests/12__error_handling/006__raising_without_return/test.code"
-    return (struct test_Result__13){.success = true};
+    {
+#line 17 "tests/12__error_handling/006__raising_without_return/test.code"
+        struct test_Result__13 __001__ = (struct test_Result__13){.success = true};
+#line 17 "tests/12__error_handling/006__raising_without_return/test.code"
+        return __001__;
+#line 17 "tests/12__error_handling/006__raising_without_return/test.code"
+    }
 #line 18 "tests/12__error_handling/006__raising_without_return/test.code"
 }
 

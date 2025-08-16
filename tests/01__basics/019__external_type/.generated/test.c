@@ -11,7 +11,13 @@ int32_t test__main() {
 #line 10 "tests/01__basics/019__external_type/test.code"
     fputc(10, __stdoutp);
 #line 11 "tests/01__basics/019__external_type/test.code"
-    return 0;
+    {
+#line 11 "tests/01__basics/019__external_type/test.code"
+        int32_t __001__ = 0;
+#line 11 "tests/01__basics/019__external_type/test.code"
+        return __001__;
+#line 11 "tests/01__basics/019__external_type/test.code"
+    }
 #line 12 "tests/01__basics/019__external_type/test.code"
 }
 

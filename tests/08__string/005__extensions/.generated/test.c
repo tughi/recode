@@ -7,7 +7,13 @@ struct String str__concat(struct String self, struct String other) {
 #line 4 "tests/08__string/005__extensions/test.code"
     if (self.length == 0u) {
 #line 5 "tests/08__string/005__extensions/test.code"
-        return other;
+        {
+#line 5 "tests/08__string/005__extensions/test.code"
+            struct String __001__ = other;
+#line 5 "tests/08__string/005__extensions/test.code"
+            return __001__;
+#line 5 "tests/08__string/005__extensions/test.code"
+        }
 #line 6 "tests/08__string/005__extensions/test.code"
     }
 #line 7 "tests/08__string/005__extensions/test.code"
@@ -49,7 +55,13 @@ struct String str__concat(struct String self, struct String other) {
 #line 28 "tests/08__string/005__extensions/test.code"
     }
 #line 29 "tests/08__string/005__extensions/test.code"
-    return *((struct String *) (&result));
+    {
+#line 29 "tests/08__string/005__extensions/test.code"
+        struct String __002__ = *((struct String *) (&result));
+#line 29 "tests/08__string/005__extensions/test.code"
+        return __002__;
+#line 29 "tests/08__string/005__extensions/test.code"
+    }
 #line 30 "tests/08__string/005__extensions/test.code"
 }
 
@@ -58,7 +70,13 @@ bool str__equals(struct String self, struct String other) {
 #line 33 "tests/08__string/005__extensions/test.code"
     if (self.length != other.length) {
 #line 34 "tests/08__string/005__extensions/test.code"
-        return false;
+        {
+#line 34 "tests/08__string/005__extensions/test.code"
+            bool __001__ = false;
+#line 34 "tests/08__string/005__extensions/test.code"
+            return __001__;
+#line 34 "tests/08__string/005__extensions/test.code"
+        }
 #line 35 "tests/08__string/005__extensions/test.code"
     }
 #line 36 "tests/08__string/005__extensions/test.code"
@@ -72,7 +90,13 @@ bool str__equals(struct String self, struct String other) {
 #line 40 "tests/08__string/005__extensions/test.code"
     if (self_data == other_data) {
 #line 41 "tests/08__string/005__extensions/test.code"
-        return true;
+        {
+#line 41 "tests/08__string/005__extensions/test.code"
+            bool __002__ = true;
+#line 41 "tests/08__string/005__extensions/test.code"
+            return __002__;
+#line 41 "tests/08__string/005__extensions/test.code"
+        }
 #line 42 "tests/08__string/005__extensions/test.code"
     }
 #line 43 "tests/08__string/005__extensions/test.code"
@@ -82,7 +106,13 @@ bool str__equals(struct String self, struct String other) {
 #line 45 "tests/08__string/005__extensions/test.code"
         if (self_data[index] != other_data[index]) {
 #line 46 "tests/08__string/005__extensions/test.code"
-            return false;
+            {
+#line 46 "tests/08__string/005__extensions/test.code"
+                bool __003__ = false;
+#line 46 "tests/08__string/005__extensions/test.code"
+                return __003__;
+#line 46 "tests/08__string/005__extensions/test.code"
+            }
 #line 47 "tests/08__string/005__extensions/test.code"
         }
 #line 48 "tests/08__string/005__extensions/test.code"
@@ -90,7 +120,13 @@ bool str__equals(struct String self, struct String other) {
 #line 49 "tests/08__string/005__extensions/test.code"
     }
 #line 50 "tests/08__string/005__extensions/test.code"
-    return true;
+    {
+#line 50 "tests/08__string/005__extensions/test.code"
+        bool __004__ = true;
+#line 50 "tests/08__string/005__extensions/test.code"
+        return __004__;
+#line 50 "tests/08__string/005__extensions/test.code"
+    }
 #line 51 "tests/08__string/005__extensions/test.code"
 }
 
@@ -101,23 +137,47 @@ int32_t test__main() {
 #line 55 "tests/08__string/005__extensions/test.code"
     if (!str__equals(message, (struct String){.data = "Hello world!", .length = 12})) {
 #line 56 "tests/08__string/005__extensions/test.code"
-        return 1;
+        {
+#line 56 "tests/08__string/005__extensions/test.code"
+            int32_t __001__ = 1;
+#line 56 "tests/08__string/005__extensions/test.code"
+            return __001__;
+#line 56 "tests/08__string/005__extensions/test.code"
+        }
 #line 57 "tests/08__string/005__extensions/test.code"
     }
 #line 58 "tests/08__string/005__extensions/test.code"
     if (!str__equals((struct String){.data = "Hello", .length = 5}, (struct String){.data = "Hello", .length = 5})) {
 #line 59 "tests/08__string/005__extensions/test.code"
-        return 2;
+        {
+#line 59 "tests/08__string/005__extensions/test.code"
+            int32_t __002__ = 2;
+#line 59 "tests/08__string/005__extensions/test.code"
+            return __002__;
+#line 59 "tests/08__string/005__extensions/test.code"
+        }
 #line 60 "tests/08__string/005__extensions/test.code"
     }
 #line 61 "tests/08__string/005__extensions/test.code"
     if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
 #line 62 "tests/08__string/005__extensions/test.code"
-        return 3;
+        {
+#line 62 "tests/08__string/005__extensions/test.code"
+            int32_t __003__ = 3;
+#line 62 "tests/08__string/005__extensions/test.code"
+            return __003__;
+#line 62 "tests/08__string/005__extensions/test.code"
+        }
 #line 63 "tests/08__string/005__extensions/test.code"
     }
 #line 64 "tests/08__string/005__extensions/test.code"
-    return 0;
+    {
+#line 64 "tests/08__string/005__extensions/test.code"
+        int32_t __004__ = 0;
+#line 64 "tests/08__string/005__extensions/test.code"
+        return __004__;
+#line 64 "tests/08__string/005__extensions/test.code"
+    }
 #line 65 "tests/08__string/005__extensions/test.code"
 }
 

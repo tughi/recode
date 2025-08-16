@@ -12,7 +12,13 @@ int32_t test__main() {
 #line 6 "tests/10__import/005__external_variable/test.code"
     fputc(((int32_t) '\n'), __stdoutp);
 #line 8 "tests/10__import/005__external_variable/test.code"
-    return 0;
+    {
+#line 8 "tests/10__import/005__external_variable/test.code"
+        int32_t __001__ = 0;
+#line 8 "tests/10__import/005__external_variable/test.code"
+        return __001__;
+#line 8 "tests/10__import/005__external_variable/test.code"
+    }
 #line 9 "tests/10__import/005__external_variable/test.code"
 }
 

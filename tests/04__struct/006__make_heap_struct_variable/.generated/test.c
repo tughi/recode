@@ -17,7 +17,13 @@ int32_t test__main() {
 #line 15 "tests/04__struct/006__make_heap_struct_variable/test.code"
     }
 #line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
-    return line->p1.x + line->p1.y + line->p2.x + line->p2.y - 160;
+    {
+#line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
+        int32_t __002__ = line->p1.x + line->p1.y + line->p2.x + line->p2.y - 160;
+#line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
+        return __002__;
+#line 16 "tests/04__struct/006__make_heap_struct_variable/test.code"
+    }
 #line 17 "tests/04__struct/006__make_heap_struct_variable/test.code"
 }
 

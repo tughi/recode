@@ -44,7 +44,13 @@ struct test_Result__11 test__increment(int32_t value) {
 #line 14 "tests/12__error_handling/005__else_block/test.code"
     }
 #line 15 "tests/12__error_handling/005__else_block/test.code"
-    return (struct test_Result__11){.success = true, .value = value + 1};
+    {
+#line 15 "tests/12__error_handling/005__else_block/test.code"
+        struct test_Result__11 __001__ = (struct test_Result__11){.success = true, .value = value + 1};
+#line 15 "tests/12__error_handling/005__else_block/test.code"
+        return __001__;
+#line 15 "tests/12__error_handling/005__else_block/test.code"
+    }
 #line 16 "tests/12__error_handling/005__else_block/test.code"
 }
 

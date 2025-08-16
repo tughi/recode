@@ -7,7 +7,13 @@ int32_t test__main() {
 #line 7 "tests/04__struct/001__local_struct_variable/test.code"
     struct test_Point point;
 #line 8 "tests/04__struct/001__local_struct_variable/test.code"
-    return 0;
+    {
+#line 8 "tests/04__struct/001__local_struct_variable/test.code"
+        int32_t __001__ = 0;
+#line 8 "tests/04__struct/001__local_struct_variable/test.code"
+        return __001__;
+#line 8 "tests/04__struct/001__local_struct_variable/test.code"
+    }
 #line 9 "tests/04__struct/001__local_struct_variable/test.code"
 }
 

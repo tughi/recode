@@ -9,15 +9,33 @@ int32_t test__main() {
 #line 9 "tests/09__variant/007__if_as_else/test.code"
     if (value.variant == 2) {
 #line 10 "tests/09__variant/007__if_as_else/test.code"
-        return value.variant_2 - 42;
+        {
+#line 10 "tests/09__variant/007__if_as_else/test.code"
+            int32_t __001__ = value.variant_2 - 42;
+#line 10 "tests/09__variant/007__if_as_else/test.code"
+            return __001__;
+#line 10 "tests/09__variant/007__if_as_else/test.code"
+        }
 #line 11 "tests/09__variant/007__if_as_else/test.code"
     } else {
 #line 12 "tests/09__variant/007__if_as_else/test.code"
-        return 1;
+        {
+#line 12 "tests/09__variant/007__if_as_else/test.code"
+            int32_t __002__ = 1;
+#line 12 "tests/09__variant/007__if_as_else/test.code"
+            return __002__;
+#line 12 "tests/09__variant/007__if_as_else/test.code"
+        }
 #line 13 "tests/09__variant/007__if_as_else/test.code"
     }
 #line 15 "tests/09__variant/007__if_as_else/test.code"
-    return 2;
+    {
+#line 15 "tests/09__variant/007__if_as_else/test.code"
+        int32_t __003__ = 2;
+#line 15 "tests/09__variant/007__if_as_else/test.code"
+        return __003__;
+#line 15 "tests/09__variant/007__if_as_else/test.code"
+    }
 #line 16 "tests/09__variant/007__if_as_else/test.code"
 }
 

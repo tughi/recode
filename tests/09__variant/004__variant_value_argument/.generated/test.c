@@ -15,14 +15,26 @@ int32_t test__main() {
 #line 11 "tests/09__variant/004__variant_value_argument/test.code"
     struct test_Value another_value = test__demo((struct test_Value){.variant = 1, .variant_1 = true});
 #line 12 "tests/09__variant/004__variant_value_argument/test.code"
-    return 0;
+    {
+#line 12 "tests/09__variant/004__variant_value_argument/test.code"
+        int32_t __001__ = 0;
+#line 12 "tests/09__variant/004__variant_value_argument/test.code"
+        return __001__;
+#line 12 "tests/09__variant/004__variant_value_argument/test.code"
+    }
 #line 13 "tests/09__variant/004__variant_value_argument/test.code"
 }
 
 #line 15 "tests/09__variant/004__variant_value_argument/test.code"
 struct test_Value test__demo(struct test_Value value) {
 #line 16 "tests/09__variant/004__variant_value_argument/test.code"
-    return value;
+    {
+#line 16 "tests/09__variant/004__variant_value_argument/test.code"
+        struct test_Value __001__ = value;
+#line 16 "tests/09__variant/004__variant_value_argument/test.code"
+        return __001__;
+#line 16 "tests/09__variant/004__variant_value_argument/test.code"
+    }
 #line 17 "tests/09__variant/004__variant_value_argument/test.code"
 }
 

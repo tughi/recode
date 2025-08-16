@@ -1424,21 +1424,24 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
     String__append_cstring(temp_variable_name, "__");
 
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Variable_Symbol__create(self->checker->checked_module, location, temp_variable_name, type, false);
+    temp_variable_symbol->is_temp = true;
     Checked_Symbols__append_symbol(self->checker->symbols, (Checked_Symbol *)temp_variable_symbol);
     return temp_variable_symbol;
 }
 
 Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_with_type(Checked_Expression_Decomposer *self, Checked_Expression *expression, Checked_Type *type) {
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, expression->location, type);
-
+    temp_variable_symbol->is_temp = true;
+    
     Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(expression->location, temp_variable_symbol, false, expression);
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
-
+    
     return (Checked_Expression *)Checked_Symbol_Expression__create(expression->location, expression->type, (Checked_Symbol *)temp_variable_symbol);
 }
 
 Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_without_value(Checked_Expression_Decomposer *self, Source_Location location, Checked_Type *type) {
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, location, type);
+    temp_variable_symbol->is_temp = true;
 
     Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(location, temp_variable_symbol, false, NULL);
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
@@ -1803,6 +1806,17 @@ bool Checked_Member_Access_Expression__needs_decomposition(Checked_Member_Access
     return Checked_Expression__needs_decomposition(self->object_expression);
 }
 
+bool Checked_Result_Expression__needs_decomposition(Checked_Result_Expression *self) {
+    bool needs_decomposition = false;
+    if (self->return_expression != NULL) {
+        needs_decomposition = Checked_Expression__needs_decomposition(self->return_expression);
+    }
+    if (!needs_decomposition && self->raise_expression != NULL) {
+        needs_decomposition = Checked_Expression__needs_decomposition(self->raise_expression);
+    }
+    return needs_decomposition;
+}
+
 bool Checked_Unary_Expression__needs_decomposition(Checked_Unary_Expression *self) {
     return Checked_Expression__needs_decomposition(self->other_expression);
 }
@@ -1869,6 +1883,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self);
     case CHECKED_EXPRESSION_KIND__NULL:
         return false;
+    case CHECKED_EXPRESSION_KIND__RESULT:
+        return Checked_Result_Expression__needs_decomposition((Checked_Result_Expression *)self);
     case CHECKED_EXPRESSION_KIND__SIZEOF:
         return false;
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
@@ -1898,18 +1914,34 @@ typedef struct Decomposed_Expression {
     int32_t temp_variable_counter;
 } Decomposed_Expression;
 
-Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
+Decomposed_Expression Checker__decompose_expression_with_temp_variable(Checker *self, Checked_Expression *expression, bool require_temp_variable) {
     Checked_Expression_Decomposer decomposer = {
         .checker = self,
         .statements = NULL,
     };
     self->symbols = Checked_Symbols__create(self->symbols);
     Checked_Expression *decomposed_expression = Checked_Expression_Decomposer__decompose(&decomposer, expression);
+    if (require_temp_variable) {
+        if (decomposed_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+            Checked_Symbol *symbol = ((Checked_Symbol_Expression *)decomposed_expression)->symbol;
+            if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
+                Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)symbol;
+                require_temp_variable = !variable_symbol->is_temp;
+            }
+        }
+    }
+    if (require_temp_variable) {
+        decomposed_expression = Checked_Expression_Decomposer__create_temp_variable(&decomposer, decomposed_expression);
+    }
     self->symbols = self->symbols->parent;
     return (Decomposed_Expression){
         .expression = decomposed_expression,
         .statements = decomposer.statements,
     };
+}
+
+Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
+    return Checker__decompose_expression_with_temp_variable(self, expression, false);
 }
 
 Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
@@ -2434,7 +2466,7 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
     if (return_type->kind == CHECKED_TYPE_KIND__RESULT) {
         return_type = ((Checked_Result_Type *)return_type)->return_type;
     }
-    Decomposed_Expression decomposed_expression = {0};
+    Checked_Expression *result_expression = NULL;
     if (parsed_statement->expression != NULL) {
         if (return_type->kind == CHECKED_TYPE_KIND__NOTHING) {
             pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
@@ -2442,8 +2474,7 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
             pWriter__end_location_message(stderr_writer);
             panic();
         }
-        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, return_type);
-        decomposed_expression = Checker__decompose_expression(self, expression);
+        result_expression = Checker__check_expression(self, parsed_statement->expression, return_type);
     } else if (return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Missing return expression");
@@ -2451,21 +2482,21 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
         panic();
     }
     if (self->return_type->kind == CHECKED_TYPE_KIND__RESULT) {
-        if (decomposed_expression.expression != NULL) {
-            decomposed_expression.expression = (Checked_Expression *)Checked_Result_Expression__create(decomposed_expression.expression->location, self->return_type, decomposed_expression.expression, NULL);
+        if (result_expression != NULL) {
+            result_expression = (Checked_Expression *)Checked_Result_Expression__create(result_expression->location, self->return_type, result_expression, NULL);
         } else {
-            decomposed_expression.expression = (Checked_Expression *)Checked_Result_Expression__create(parsed_statement->super.location, self->return_type, NULL, NULL);
+            result_expression = (Checked_Expression *)Checked_Result_Expression__create(parsed_statement->super.location, self->return_type, NULL, NULL);
         }
     }
 
-    Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
-    if (decomposed_expression.statements != NULL) {
-        // Create block statement
+    if (result_expression != NULL) {
+        Decomposed_Expression decomposed_expression = Checker__decompose_expression_with_temp_variable(self, result_expression, true);
         Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, decomposed_expression.statements);
-        Checked_Statements__append(block_statement->statements, (Checked_Statement *)return_statement);
+        Checked_Statements__append(block_statement->statements, (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression));
         return (Checked_Statement *)block_statement;
     }
-    return (Checked_Statement *)return_statement;
+
+    return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, NULL);
 }
 
 Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checker *self, Parsed_Switch_Statement *parsed_statement, Checked_Expression *variant_expression, Checked_Variant_Type *variant_type);

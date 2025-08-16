@@ -9,7 +9,13 @@ int32_t test__main() {
 #line 16 "tests/04__struct/007__access_struct_member_via_reference/test.code"
     struct test_Line *line_reference = &line;
 #line 17 "tests/04__struct/007__access_struct_member_via_reference/test.code"
-    return line_reference->p2.y - 64;
+    {
+#line 17 "tests/04__struct/007__access_struct_member_via_reference/test.code"
+        int32_t __001__ = line_reference->p2.y - 64;
+#line 17 "tests/04__struct/007__access_struct_member_via_reference/test.code"
+        return __001__;
+#line 17 "tests/04__struct/007__access_struct_member_via_reference/test.code"
+    }
 #line 18 "tests/04__struct/007__access_struct_member_via_reference/test.code"
 }
 

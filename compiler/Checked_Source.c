@@ -573,6 +573,7 @@ Checked_Type_Argument_Symbol *Checked_Type_Argument_Symbol__create(Source_Locati
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type, is_global);
     variable->external_name = NULL;
+    variable->is_temp = false;
     variable->statement = NULL;
     return variable;
 }

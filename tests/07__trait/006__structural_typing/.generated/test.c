@@ -43,7 +43,13 @@ int32_t test__main() {
 #line 12 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 14 "tests/07__trait/006__structural_typing/test.code"
-    return 0;
+    {
+#line 14 "tests/07__trait/006__structural_typing/test.code"
+        int32_t __013__ = 0;
+#line 14 "tests/07__trait/006__structural_typing/test.code"
+        return __013__;
+#line 14 "tests/07__trait/006__structural_typing/test.code"
+    }
 #line 15 "tests/07__trait/006__structural_typing/test.code"
 }
 
@@ -94,7 +100,13 @@ struct test_Writer *ptest_Writer__end_line(struct test_Writer *self) {
 #line 46 "tests/07__trait/006__structural_typing/test.code"
     self->write_char(self->self, '\n');
 #line 47 "tests/07__trait/006__structural_typing/test.code"
-    return self;
+    {
+#line 47 "tests/07__trait/006__structural_typing/test.code"
+        struct test_Writer *__001__ = self;
+#line 47 "tests/07__trait/006__structural_typing/test.code"
+        return __001__;
+#line 47 "tests/07__trait/006__structural_typing/test.code"
+    }
 #line 48 "tests/07__trait/006__structural_typing/test.code"
 }
 
@@ -103,7 +115,13 @@ struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct test_Wr
 #line 57 "tests/07__trait/006__structural_typing/test.code"
     writable.write_to(writable.self, self);
 #line 58 "tests/07__trait/006__structural_typing/test.code"
-    return self;
+    {
+#line 58 "tests/07__trait/006__structural_typing/test.code"
+        struct test_Writer *__001__ = self;
+#line 58 "tests/07__trait/006__structural_typing/test.code"
+        return __001__;
+#line 58 "tests/07__trait/006__structural_typing/test.code"
+    }
 #line 59 "tests/07__trait/006__structural_typing/test.code"
 }
 

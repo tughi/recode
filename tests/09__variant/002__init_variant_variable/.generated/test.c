@@ -11,7 +11,13 @@ int32_t test__main() {
 #line 14 "tests/09__variant/002__init_variant_variable/test.code"
     struct test_Value another_value = other_value;
 #line 15 "tests/09__variant/002__init_variant_variable/test.code"
-    return 0;
+    {
+#line 15 "tests/09__variant/002__init_variant_variable/test.code"
+        int32_t __001__ = 0;
+#line 15 "tests/09__variant/002__init_variant_variable/test.code"
+        return __001__;
+#line 15 "tests/09__variant/002__init_variant_variable/test.code"
+    }
 #line 16 "tests/09__variant/002__init_variant_variable/test.code"
 }
 

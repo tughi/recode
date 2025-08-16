@@ -11,11 +11,23 @@ int32_t test__main() {
 #line 15 "tests/09__variant/006__switch_else_only/test.code"
     {
 #line 16 "tests/09__variant/006__switch_else_only/test.code"
-        return 0;
+        {
+#line 16 "tests/09__variant/006__switch_else_only/test.code"
+            int32_t __001__ = 0;
+#line 16 "tests/09__variant/006__switch_else_only/test.code"
+            return __001__;
+#line 16 "tests/09__variant/006__switch_else_only/test.code"
+        }
 #line 17 "tests/09__variant/006__switch_else_only/test.code"
     }
 #line 20 "tests/09__variant/006__switch_else_only/test.code"
-    return 1;
+    {
+#line 20 "tests/09__variant/006__switch_else_only/test.code"
+        int32_t __002__ = 1;
+#line 20 "tests/09__variant/006__switch_else_only/test.code"
+        return __002__;
+#line 20 "tests/09__variant/006__switch_else_only/test.code"
+    }
 #line 21 "tests/09__variant/006__switch_else_only/test.code"
 }
 

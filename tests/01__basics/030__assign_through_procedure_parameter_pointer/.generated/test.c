@@ -9,7 +9,13 @@ int32_t test__main() {
 #line 3 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
     test__set(&x, 42);
 #line 4 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
-    return x - 42;
+    {
+#line 4 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
+        int32_t __001__ = x - 42;
+#line 4 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
+        return __001__;
+#line 4 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
+    }
 #line 5 "tests/01__basics/030__assign_through_procedure_parameter_pointer/test.code"
 }
 

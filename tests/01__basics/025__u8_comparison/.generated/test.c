@@ -65,14 +65,26 @@ int32_t test__main() {
 #line 35 "tests/01__basics/025__u8_comparison/test.code"
     }
 #line 36 "tests/01__basics/025__u8_comparison/test.code"
-    return errors;
+    {
+#line 36 "tests/01__basics/025__u8_comparison/test.code"
+        int32_t __001__ = errors;
+#line 36 "tests/01__basics/025__u8_comparison/test.code"
+        return __001__;
+#line 36 "tests/01__basics/025__u8_comparison/test.code"
+    }
 #line 37 "tests/01__basics/025__u8_comparison/test.code"
 }
 
 #line 39 "tests/01__basics/025__u8_comparison/test.code"
 uint8_t test__forty_two() {
 #line 40 "tests/01__basics/025__u8_comparison/test.code"
-    return 42;
+    {
+#line 40 "tests/01__basics/025__u8_comparison/test.code"
+        uint8_t __001__ = 42;
+#line 40 "tests/01__basics/025__u8_comparison/test.code"
+        return __001__;
+#line 40 "tests/01__basics/025__u8_comparison/test.code"
+    }
 #line 41 "tests/01__basics/025__u8_comparison/test.code"
 }
 

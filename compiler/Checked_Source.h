@@ -430,6 +430,7 @@ struct Checked_Variable_Statement;
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
     String *external_name;
+    bool is_temp;
     struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
