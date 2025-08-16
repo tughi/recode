@@ -1,0 +1,55 @@
+type Button = struct {
+    bounds: Rect
+    label: str
+    label_bounds: Rect
+    pressed: bool
+}
+
+type Widget = trait {
+    proc draw(self, renderer: ^Renderer)
+    proc handle_event(self, anon event: ^Event)
+}
+
+type Event = variant {
+    MouseButtonDownEvent
+    MouseButtonUpEvent
+    MouseMotionEvent
+}
+
+type MouseButtonDownEvent = struct {
+    button: u8
+    x: i32
+    y: i32
+}
+
+type MouseButtonUpEvent = struct {
+    button: u8
+    x: i32
+    y: i32
+}
+
+type MouseMotionEvent = struct {
+    x: i32
+    y: i32
+}
+
+type Renderer = trait {
+    proc clear(self)
+    proc draw_rect(self, anon rect: Rect)
+    proc present(self)
+    proc set_draw_color(self, anon color: Color)
+}
+
+type Rect = struct {
+    left: i32
+    top: i32
+    right: i32
+    bottom: i32
+}
+
+type Color = struct {
+    red: u8
+    green: u8
+    blue: u8
+    alpha: u8
+}

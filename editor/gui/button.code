@@ -1,9 +1,11 @@
-import gui.rect
-import gui.widget
+import gui
+import os
 
-type Button = struct {
-    super: widget.Widget
-    label: str
-    label_bounds: rect.Rect
-    pressed: bool
+proc (^gui.Button).draw(self, renderer: ^gui.Renderer) {
+    renderer.set_draw_color(gui.Color(red: 255, green: 255, blue: 255, alpha: 255))
+    renderer.draw_rect(self.bounds)
+}
+
+proc (^gui.Button).handle_event(self, anon event: ^gui.Event) {
+    os.stdout.write("Button event").end_line()
 }
