@@ -52,7 +52,8 @@ typedef enum Checked_Type_Kind {
     /* Dynamic */
     CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
-    CHECKED_TYPE_KIND__POINTER
+    CHECKED_TYPE_KIND__POINTER,
+    CHECKED_TYPE_KIND__RESULT,
 } Checked_Type_Kind;
 
 struct Checked_Type_Symbol;
@@ -65,11 +66,13 @@ typedef struct Checked_Type {
     struct Checked_Type *next_type;
     struct Checked_Type_Dependency *first_dependency;
 
+    bool has_generated_declaration;
     bool has_generated_definition;
 } Checked_Type;
 
 struct Checked_Type_Dependency {
     Checked_Type *type;
+    bool weak;
     struct Checked_Type_Dependency *next_dependency;
 };
 
@@ -84,6 +87,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__ADDRESS_OF,
     CHECKED_EXPRESSION_KIND__ALLOC,
     CHECKED_EXPRESSION_KIND__ARRAY_ACCESS,
+    CHECKED_EXPRESSION_KIND__BLOCK,
     CHECKED_EXPRESSION_KIND__BOOL,
     CHECKED_EXPRESSION_KIND__CALL,
     CHECKED_EXPRESSION_KIND__CAST,
@@ -108,14 +112,21 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__MULTIPLY,
     CHECKED_EXPRESSION_KIND__NOT_EQUALS,
     CHECKED_EXPRESSION_KIND__NOT,
+    CHECKED_EXPRESSION_KIND__NOTHING,
     CHECKED_EXPRESSION_KIND__NULL,
     CHECKED_EXPRESSION_KIND__RECEIVER_METHOD,
+    CHECKED_EXPRESSION_KIND__RESULT_ERROR,
+    CHECKED_EXPRESSION_KIND__RESULT_SUCCESS,
+    CHECKED_EXPRESSION_KIND__RESULT_VALUE,
+    CHECKED_EXPRESSION_KIND__RESULT,
     CHECKED_EXPRESSION_KIND__SIZEOF,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
+    CHECKED_EXPRESSION_KIND__TRY,
     CHECKED_EXPRESSION_KIND__TYPE,
+    CHECKED_EXPRESSION_KIND__UNWRAP_RESULT,
 } Checked_Expression_Kind;
 
 typedef struct Checked_Expression {
@@ -212,6 +223,14 @@ typedef struct Checked_Pointer_Type {
 
 Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location location, Checked_Type *other_type);
 
+typedef struct Checked_Result_Type {
+    Checked_Named_Type super;
+    Checked_Type *return_type;
+    Checked_Type *raise_type;
+} Checked_Result_Type;
+
+Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Module *module, Checked_Type *return_type, Checked_Type *raise_type);
+
 typedef struct Checked_Struct_Member {
     Source_Location location;
     String *name;
@@ -277,6 +296,7 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__IMPORT,
     CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER,
     CHECKED_SYMBOL_KIND__PROCEDURE,
+    CHECKED_SYMBOL_KIND__RESULT_ERROR,
     CHECKED_SYMBOL_KIND__TYPE_ARGUMENT,
     CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__VARIABLE,
@@ -336,7 +356,8 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__VARIABLE,
     CHECKED_STATEMENT_KIND__VARIANT_IF,
     CHECKED_STATEMENT_KIND__VARIANT_SWITCH,
-    CHECKED_STATEMENT_KIND__WHILE
+    CHECKED_STATEMENT_KIND__WHILE,
+    CHECKED_STATEMENT_KIND__YIELD,
 } Checked_Statement_Kind;
 
 typedef struct Checked_Statement {
@@ -381,6 +402,13 @@ typedef struct Checked_Procedure_Parameter_Symbol {
 } Checked_Procedure_Parameter_Symbol;
 
 Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
+
+typedef struct Checked_Result_Error_Symbol {
+    Checked_Symbol super;
+    Checked_Expression *expression;
+} Checked_Result_Error_Symbol;
+
+Checked_Result_Error_Symbol *Checked_Result_Error_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Type_Symbol {
     Checked_Symbol super;
@@ -471,6 +499,13 @@ typedef struct Checked_Array_Access_Expression {
 } Checked_Array_Access_Expression;
 
 Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *array_expression, Checked_Expression *index_expression);
+
+typedef struct Checked_Block_Expression {
+    Checked_Expression super;
+    Checked_Statement *block_statement;
+} Checked_Block_Expression;
+
+Checked_Block_Expression *Checked_Block_Expression__create(Source_Location location, Checked_Type *type, Checked_Statement *block_statement);
 
 typedef struct Checked_Bool_Expression {
     Checked_Expression super;
@@ -620,6 +655,12 @@ typedef struct Checked_Member_Access_Expression {
 
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
 
+typedef struct Checked_Nothing_Expression {
+    Checked_Expression super;
+} Checked_Nothing_Expression;
+
+Checked_Nothing_Expression *Checked_Nothing_Expression__create(Source_Location location, Checked_Type *type);
+
 typedef struct Checked_Receiver_Method_Expression {
     Checked_Expression super;
     Checked_Expression *receiver_expression;
@@ -665,6 +706,35 @@ typedef struct Checked_Null_Expression {
 
 Checked_Null_Expression *Checked_Null_Expression__create(Source_Location location, Checked_Type *type);
 
+typedef struct Checked_Result_Expression {
+    Checked_Expression super;
+    Checked_Expression *return_expression;
+    Checked_Expression *raise_expression;
+} Checked_Result_Expression;
+
+Checked_Result_Expression *Checked_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *return_expression, Checked_Expression *raise_expression);
+
+typedef struct Checked_Result_Error_Expression {
+    Checked_Expression super;
+    Checked_Expression *result_expression;
+} Checked_Result_Error_Expression;
+
+Checked_Result_Error_Expression *Checked_Result_Error_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression);
+
+typedef struct Checked_Result_Success_Expression {
+    Checked_Expression super;
+    Checked_Expression *result_expression;
+} Checked_Result_Success_Expression;
+
+Checked_Result_Success_Expression *Checked_Result_Success_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression);
+
+typedef struct Checked_Result_Value_Expression {
+    Checked_Expression super;
+    Checked_Expression *result_expression;
+} Checked_Result_Value_Expression;
+
+Checked_Result_Value_Expression *Checked_Result_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression);
+
 typedef struct Checked_Sizeof_Expression {
     Checked_Expression super;
     Checked_Type *sized_type;
@@ -699,12 +769,28 @@ typedef struct Checked_Symbol_Expression {
 
 Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location location, Checked_Type *type, Checked_Symbol *symbol);
 
+typedef struct Checked_Try_Expression {
+    Checked_Expression super;
+    Checked_Call_Expression *call_expression;
+    Checked_Expression *else_expression;
+    Checked_Result_Error_Symbol *result_error_symbol;
+} Checked_Try_Expression;
+
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol);
+
 typedef struct Checked_Type_Expression {
     Checked_Expression super;
     Checked_Named_Type *named_type;
 } Checked_Type_Expression;
 
 Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type);
+
+typedef struct Checked_Unwrap_Result_Expression {
+    Checked_Expression super;
+    Checked_Call_Expression *call_expression;
+} Checked_Unwrap_Result_Expression;
+
+Checked_Unwrap_Result_Expression *Checked_Unwrap_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression);
 
 typedef struct Checked_Assignment_Statement {
     Checked_Statement super;
@@ -816,6 +902,14 @@ typedef struct Checked_While_Statement {
 } Checked_While_Statement;
 
 Checked_While_Statement *Checked_While_Statement__create(Source_Location location, Checked_Expression *condition_expression, Checked_Statement *body_statement);
+
+typedef struct Checked_Yield_Statement {
+    Checked_Statement super;
+    Checked_Expression *expression;
+    Checked_Expression *block_result_expression;
+} Checked_Yield_Statement;
+
+Checked_Yield_Statement *Checked_Yield_Statement__create(Source_Location location, Checked_Expression *expression);
 
 typedef struct Checked_Source {
     Checked_Module *first_module;

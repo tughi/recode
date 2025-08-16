@@ -253,6 +253,13 @@ Parsed_Symbol_Expression *Parsed_Symbol_Expression__create(Token *name) {
     return expression;
 }
 
+Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, Parsed_Expression *expression, Parsed_Expression *else_expression) {
+    Parsed_Try_Expression *try_expression = (Parsed_Try_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TRY, sizeof(Parsed_Try_Expression), location);
+    try_expression->expression = expression;
+    try_expression->else_expression = else_expression;
+    return try_expression;
+}
+
 Parsed_Type_Specialization_Expression *Parsed_Type_Specialization_Expression__create(Source_Location location, Parsed_Expression *type_expression, Parsed_Type_Argument *first_type_argument) {
     Parsed_Type_Specialization_Expression *expression = (Parsed_Type_Specialization_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION, sizeof(Parsed_Type_Specialization_Expression), location);
     expression->type_expression = type_expression;
@@ -287,6 +294,12 @@ Parsed_Block_Statement *Parsed_Block_Statement__create(Source_Location location,
     return statement;
 }
 
+Parsed_Block_Expression *Parsed_Block_Expression__create(struct Parsed_Block_Statement *block_statement) {
+    Parsed_Block_Expression *expression = (Parsed_Block_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__BLOCK, sizeof(Parsed_Block_Expression), block_statement->super.location);
+    expression->block_statement = block_statement;
+    return expression;
+}
+
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
@@ -297,12 +310,13 @@ Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expressi
     return statement;
 }
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
     Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
     statement->first_type_parameter = first_type_parameter;
     statement->is_method = is_method;
     statement->first_parameter = first_parameter;
     statement->return_type = return_type;
+    statement->raise_type = raise_type;
     statement->is_external = is_external;
     statement->statements = statements;
     statement->external_name = external_name;
@@ -329,6 +343,12 @@ Parsed_Statement *Parsed_Loop_Statement__create(Source_Location location, Parsed
     Parsed_Loop_Statement *statement = (Parsed_Loop_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__LOOP, sizeof(Parsed_Loop_Statement), location);
     statement->body_statement = body_statement;
     return (Parsed_Statement *)statement;
+}
+
+Parsed_Raise_Statement *Parsed_Raise_Statement__create(Source_Location location, Parsed_Expression *expression) {
+    Parsed_Raise_Statement *statement = (Parsed_Raise_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__RAISE, sizeof(Parsed_Raise_Statement), location);
+    statement->expression = expression;
+    return statement;
 }
 
 Parsed_Statement *Parsed_Return_Statement__create(Source_Location location, Parsed_Expression *expression) {
@@ -404,6 +424,12 @@ Parsed_Statement *Parsed_While_Statement__create(Source_Location location, Parse
     return (Parsed_Statement *)statement;
 }
 
+Parsed_Yield_Statement *Parsed_Yield_Statement__create(Source_Location location, Parsed_Expression *expression) {
+    Parsed_Yield_Statement *statement = (Parsed_Yield_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__YIELD, sizeof(Parsed_Yield_Statement), location);
+    statement->expression = expression;
+    return statement;
+}
+
 Parsed_Statements *Parsed_Statements__create(bool has_globals) {
     Parsed_Statements *statements = (Parsed_Statements *)malloc(sizeof(Parsed_Statements));
     statements->first_statement = NULL;
@@ -451,12 +477,13 @@ Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Locati
     return type_specifier;
 }
 
-Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location location, Token *name, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type) {
     Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
     method->location = location;
     method->name = name;
     method->first_parameter = first_parameter;
     method->return_type = return_type;
+    method->raise_type = raise_type;
     method->next_method = NULL;
     return method;
 }

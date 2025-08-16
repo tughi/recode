@@ -6,6 +6,7 @@
 #include "calculator__expression.h"
 #include "calculator__source.h"
 #include "io.h"
+#include "libc.h"
 
 struct calculator__tokenizer_Plus {
     struct calculator__source_Span span;

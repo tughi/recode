@@ -10,13 +10,30 @@ type Window = external
 
 proc create_window(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^Window = external "SDL_CreateWindow"
 
-type Surface = external
-
-proc get_window_surface(anon window: ^Window) -> ^Surface = external "SDL_GetWindowSurface"
-
-proc update_window_surface(anon window: ^Window) -> i32 = external "SDL_UpdateWindowSurface"
+proc get_window_id(anon window: ^Window) -> u32 = external "SDL_GetWindowID"
 
 proc destroy_window(anon window: ^Window) = external "SDL_DestroyWindow"
+
+type Renderer = external
+
+proc create_renderer(anon window: ^Window, anon index: i32, anon flags: u32) -> ^Renderer = external "SDL_CreateRenderer"
+
+proc destroy_renderer(anon renderer: ^Renderer) = external "SDL_DestroyRenderer"
+
+proc render_clear(anon renderer: ^Renderer) = external "SDL_RenderClear"
+
+type Rect = struct {
+    x: i32
+    y: i32
+    w: i32
+    h: i32
+}
+
+proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderDrawRect"
+
+proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
+
+proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"
 
 type Event = struct { \ SDL_Event
     type: u32

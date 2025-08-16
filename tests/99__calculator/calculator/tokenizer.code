@@ -1,6 +1,7 @@
 import calculator.expression
 import calculator.source
 import io
+import libc
 
 type Tokenizer = struct {
     data: [^]u8
@@ -122,10 +123,11 @@ proc (^Token).span(self) -> source.Span {
         is source.Error as variant {
             return variant.span
         }
-        is nil {
-            return source.Span(start: 0, end: 0)
+        else {
+            \ ignore
         }
     }
+    libc.exit(1)
 }
 
 proc (^io.Writer).write_token(self, anon token: ^Token) -> ^io.Writer {

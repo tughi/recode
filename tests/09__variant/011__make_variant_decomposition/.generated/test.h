@@ -4,6 +4,10 @@
 #include "builtin_types.h"
 
 
+struct test_Addition;
+
+struct test_Subtraction;
+
 struct test_Expression {
     int32_t variant;
     union {
@@ -24,6 +28,8 @@ struct test_Subtraction {
 };
 
 int32_t test__evaluate(struct test_Expression expression);
+
+void exit(int32_t status);
 
 int32_t test__main();
 

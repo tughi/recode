@@ -32,33 +32,33 @@ int32_t test__main() {
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
     {
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        struct test_Shape *__001__ = (struct test_Shape *)malloc(sizeof(struct test_Shape));
+        struct test_Shape *__002__ = (struct test_Shape *)malloc(sizeof(struct test_Shape));
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        *__001__ = (struct test_Shape){.self = square, .area = ((int32_t (*)(void *self)) ptest_Square__area)};
+        *__002__ = (struct test_Shape){.self = square, .area = ((int32_t (*)(void *self)) ptest_Square__area)};
 #line 23 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        square_shape = __001__;
+        square_shape = __002__;
     }
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
     struct test_Circle *circle;
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
     {
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        struct test_Circle *__001__ = (struct test_Circle *)malloc(sizeof(struct test_Circle));
+        struct test_Circle *__003__ = (struct test_Circle *)malloc(sizeof(struct test_Circle));
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        *__001__ = (struct test_Circle){.radius = 10};
+        *__003__ = (struct test_Circle){.radius = 10};
 #line 24 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        circle = __001__;
+        circle = __003__;
     }
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
     struct test_Shape *circle_shape;
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
     {
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        struct test_Shape *__001__ = (struct test_Shape *)malloc(sizeof(struct test_Shape));
+        struct test_Shape *__004__ = (struct test_Shape *)malloc(sizeof(struct test_Shape));
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        *__001__ = (struct test_Shape){.self = circle, .area = ((int32_t (*)(void *self)) ptest_Circle__area)};
+        *__004__ = (struct test_Shape){.self = circle, .area = ((int32_t (*)(void *self)) ptest_Circle__area)};
 #line 25 "tests/07__trait/004__make_heap_trait_variable/test.code"
-        circle_shape = __001__;
+        circle_shape = __004__;
     }
 #line 27 "tests/07__trait/004__make_heap_trait_variable/test.code"
     if (square_shape->area(square_shape->self) != 100) {

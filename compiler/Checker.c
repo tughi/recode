@@ -92,6 +92,7 @@ typedef struct Checker {
 
     Checked_Type *receiver_type;
     Checked_Type *return_type;
+    int32_t temp_variable_counter;
 } Checker;
 
 Checker *Checker__create(Parsed_Source *parsed_source) {
@@ -464,6 +465,14 @@ Checked_Expression *Checker__check_array_access_expression(Checker *self, Parsed
     return (Checked_Expression *)Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression);
 }
 
+Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement, Checked_Type *expected_type);
+
+Checked_Expression *Checker__check_block_expression(Checker *self, Parsed_Block_Expression *parsed_expression, Checked_Type *expected_type) {
+    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)Checker__check_block_statement(self, parsed_expression->block_statement, expected_type);
+    Checked_Block_Expression *block_expression = Checked_Block_Expression__create(parsed_expression->super.location, expected_type, (Checked_Statement *)block_statement);
+    return (Checked_Expression *)block_expression;
+}
+
 Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Expression *parsed_expression) {
     Checked_Type *expression_type = (Checked_Type *)self->builtin_types->bool_type;
     bool value = parsed_expression->value;
@@ -518,7 +527,7 @@ Checked_Make_Variant_Expression *Checker__make_variant_expression(Checker *self,
 
 Checked_Expression *Checker__check_init_expression(Checker *self, Checked_Named_Type *type, Parsed_Call_Argument *first_parsed_argument, Source_Location location);
 
-Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
+Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression, bool unwarp_result) {
     Checked_Expression *callee_expression = Checker__check_expression(self, parsed_expression->callee_expression, NULL);
 
     Checked_Expression *procedure_expression = NULL;
@@ -646,13 +655,33 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
             parsed_argument = parsed_argument->next_argument;
         }
         if (procedure_parameter != NULL) {
-            todo("Report too few arguments");
+            pWriter__begin_location_message(stderr_writer, procedure_expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Too few arguments");
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
         if (parsed_argument != NULL) {
-            todo("Report too many arguments");
+            pWriter__begin_location_message(stderr_writer, parsed_argument->expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Too many arguments");
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
     }
-    return (Checked_Expression *)Checked_Call_Expression__create(parsed_expression->super.location, procedure_type->return_type, procedure_expression, first_argument);
+
+    Checked_Call_Expression *call_expression = Checked_Call_Expression__create(parsed_expression->super.location, procedure_type->return_type, procedure_expression, first_argument);
+    if (unwarp_result && call_expression->super.type->kind == CHECKED_TYPE_KIND__RESULT) {
+        Checked_Result_Type *result_type = (Checked_Result_Type *)call_expression->super.type;
+        if (self->return_type->kind != CHECKED_TYPE_KIND__RESULT || !Checked_Type__equals(result_type->raise_type, ((Checked_Result_Type *)self->return_type)->raise_type)) {
+            pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot unwrap result because ");
+            pWriter__write__checked_type(stderr_writer, result_type->raise_type);
+            pWriter__write__cstring(stderr_writer, " cannot be raised here");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        return (Checked_Expression *)Checked_Unwrap_Result_Expression__create(parsed_expression->super.location, result_type->return_type, call_expression);
+    }
+    return (Checked_Expression *)call_expression;
 }
 
 Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Expression *parsed_expression) {
@@ -1181,6 +1210,32 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
     return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol);
 }
 
+Checked_Expression *Checker__check_try_expression(Checker *self, Parsed_Try_Expression *parsed_expression) {
+    if (parsed_expression->expression->kind != PARSED_EXPRESSION_KIND__CALL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported try expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
+    Checked_Expression *call_expression = Checker__check_call_expression(self, (Parsed_Call_Expression *)parsed_expression->expression, false);
+    if (call_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, call_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Call doesn't raise");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Result_Type *result_type = (Checked_Result_Type *)call_expression->type;
+
+    self->symbols = Checked_Symbols__create(self->symbols);
+    Checked_Result_Error_Symbol *result_error_symbol = Checked_Result_Error_Symbol__create(self->checked_module, call_expression->location, String__create_from("error"), result_type->raise_type);
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)result_error_symbol);
+    Checked_Expression *else_expression = Checker__check_expression(self, parsed_expression->else_expression, result_type->return_type);
+    self->symbols = self->symbols->parent;
+
+    return (Checked_Expression *)Checked_Try_Expression__create(parsed_expression->super.location, result_type->return_type, (Checked_Call_Expression *)call_expression, else_expression, result_error_symbol);
+}
+
 Checked_Expression *Checker__check_type_specialization_expression(Checker *self, Parsed_Type_Specialization_Expression *parsed_expression) {
     Checked_Expression *type_expression = Checker__check_expression(self, parsed_expression->type_expression, NULL);
     if (type_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
@@ -1226,11 +1281,14 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     case PARSED_EXPRESSION_KIND__ARRAY_ACCESS:
         expression = Checker__check_array_access_expression(self, (Parsed_Array_Access_Expression *)parsed_expression);
         break;
+    case PARSED_EXPRESSION_KIND__BLOCK:
+        expression = Checker__check_block_expression(self, (Parsed_Block_Expression *)parsed_expression, expected_type);
+        break;
     case PARSED_EXPRESSION_KIND__BOOL:
         expression = Checker__check_bool_expression(self, (Parsed_Bool_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__CALL:
-        expression = Checker__check_call_expression(self, (Parsed_Call_Expression *)parsed_expression);
+        expression = Checker__check_call_expression(self, (Parsed_Call_Expression *)parsed_expression, true);
         break;
     case PARSED_EXPRESSION_KIND__CAST:
         expression = Checker__check_cast_expression(self, (Parsed_Cast_Expression *)parsed_expression);
@@ -1307,6 +1365,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     case PARSED_EXPRESSION_KIND__SYMBOL:
         expression = Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression);
         break;
+    case PARSED_EXPRESSION_KIND__TRY:
+        expression = Checker__check_try_expression(self, (Parsed_Try_Expression *)parsed_expression);
+        break;
     case PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION:
         expression = Checker__check_type_specialization_expression(self, (Parsed_Type_Specialization_Expression *)parsed_expression);
         break;
@@ -1342,7 +1403,6 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
 typedef struct Checked_Expression_Decomposer {
     Checker *checker;
     Checked_Statements *statements;
-    int32_t temp_variable_counter;
 } Checked_Expression_Decomposer;
 
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression);
@@ -1353,14 +1413,14 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
     }
 
     String *temp_variable_name = String__create_from("__");
-    self->temp_variable_counter++;
-    if (self->temp_variable_counter < 100) {
+    self->checker->temp_variable_counter++;
+    if (self->checker->temp_variable_counter < 100) {
         String__append_char(temp_variable_name, '0');
-        if (self->temp_variable_counter < 10) {
+        if (self->checker->temp_variable_counter < 10) {
             String__append_char(temp_variable_name, '0');
         }
     }
-    String__append_int16_t(temp_variable_name, self->temp_variable_counter);
+    String__append_int16_t(temp_variable_name, self->checker->temp_variable_counter);
     String__append_cstring(temp_variable_name, "__");
 
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Variable_Symbol__create(self->checker->checked_module, location, temp_variable_name, type, false);
@@ -1375,6 +1435,15 @@ Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_with_typ
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
 
     return (Checked_Expression *)Checked_Symbol_Expression__create(expression->location, expression->type, (Checked_Symbol *)temp_variable_symbol);
+}
+
+Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_without_value(Checked_Expression_Decomposer *self, Source_Location location, Checked_Type *type) {
+    Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, location, type);
+
+    Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(location, temp_variable_symbol, false, NULL);
+    Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
+
+    return (Checked_Expression *)Checked_Symbol_Expression__create(location, type, (Checked_Symbol *)temp_variable_symbol);
 }
 
 Checked_Expression *Checked_Expression_Decomposer__create_temp_variable(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
@@ -1427,6 +1496,36 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_logic_or_expression
 Checked_Expression *Checked_Expression_Decomposer__decompose_unary_expression(Checked_Expression_Decomposer *self, Checked_Unary_Expression *expression) {
     expression->other_expression = Checked_Expression_Decomposer__decompose(self, expression->other_expression);
     return (Checked_Expression *)expression;
+}
+
+Checked_Expression *Checked_Expression_Decomposer__decompose_block_expression(Checked_Expression_Decomposer *self, Checked_Block_Expression *expression) {
+    Checked_Expression *new_expression;
+    if (expression->super.type->kind == CHECKED_TYPE_KIND__NOTHING) {
+        new_expression = (Checked_Expression *)Checked_Nothing_Expression__create(expression->super.location, expression->super.type);
+    } else {
+        new_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.location, expression->super.type);
+    }
+
+    if (expression->block_statement->kind != CHECKED_STATEMENT_KIND__BLOCK) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Not a block statement");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Block_Statement *block_statement = (Checked_Block_Statement *)expression->block_statement;
+
+    Checked_Statement *last_statement = block_statement->statements->last_statement;
+    if (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__DECOMPOSED) {
+        last_statement = ((Checked_Decomposed_Statement *)last_statement)->statements->last_statement;
+    }
+    if (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__YIELD) {
+        Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)last_statement;
+        yield_statement->block_result_expression = new_expression;
+    }
+
+    Checked_Statements__append(self->statements, (Checked_Statement *)block_statement);
+
+    return new_expression;
 }
 
 Checked_Expression *Checked_Expression_Decomposer__decompose_call_expression(Checked_Expression_Decomposer *self, Checked_Call_Expression *expression) {
@@ -1483,6 +1582,82 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_is_variant_case_exp
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_try_expression(Checked_Expression_Decomposer *self, Checked_Try_Expression *expression) {
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, (Checked_Expression *)expression->call_expression));
+    if (result_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected result type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Result_Type *result_type = (Checked_Result_Type *)result_expression->type;
+
+    if (result_type->return_type->kind == CHECKED_TYPE_KIND__NOTHING) {
+        Checked_Result_Success_Expression *result_success_expression = Checked_Result_Success_Expression__create(expression->super.location, (Checked_Type *)self->checker->builtin_types->bool_type, result_expression);
+        Checked_Result_Error_Expression *result_error_expression = Checked_Result_Error_Expression__create(expression->super.location, result_type->raise_type, result_expression);
+
+        Checked_Block_Statement *failed_block_statement = Checked_Block_Statement__create(expression->else_expression->location, Checked_Statements__create());
+        Checked_Statements *self_statements = self->statements;
+        self->statements = failed_block_statement->statements;
+        expression->result_error_symbol->expression = (Checked_Expression *)result_error_expression;
+        Checked_Expression *else_expression = Checked_Expression_Decomposer__decompose(self, expression->else_expression);
+        self->statements = self_statements;
+
+        Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, NULL, (Checked_Statement *)failed_block_statement));
+
+        return else_expression;
+    }
+
+    Checked_Expression *new_expression = Checked_Expression_Decomposer__create_temp_variable_without_value(self, expression->super.location, result_type->return_type);
+
+    Checked_Result_Success_Expression *result_success_expression = Checked_Result_Success_Expression__create(expression->super.location, (Checked_Type *)self->checker->builtin_types->bool_type, result_expression);
+    Checked_Result_Value_Expression *result_value_expression = Checked_Result_Value_Expression__create(expression->super.location, result_type->return_type, result_expression);
+    Checked_Result_Error_Expression *result_error_expression = Checked_Result_Error_Expression__create(expression->super.location, result_type->raise_type, result_expression);
+
+    Checked_Block_Statement *success_block_statement = Checked_Block_Statement__create(expression->super.location, Checked_Statements__create());
+    Checked_Statements__append(success_block_statement->statements, (Checked_Statement *)Checked_Assignment_Statement__create(expression->super.location, new_expression, (Checked_Expression *)result_value_expression));
+
+    Checked_Block_Statement *failed_block_statement = Checked_Block_Statement__create(expression->else_expression->location, Checked_Statements__create());
+    Checked_Statements *self_statements = self->statements;
+    self->statements = failed_block_statement->statements;
+    expression->result_error_symbol->expression = (Checked_Expression *)result_error_expression;
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_Assignment_Statement__create(expression->else_expression->location, new_expression, Checked_Expression_Decomposer__decompose(self, expression->else_expression)));
+    self->statements = self_statements;
+
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, (Checked_Statement *)success_block_statement, (Checked_Statement *)failed_block_statement));
+
+    free(expression); // replaced by new_expression
+
+    return (Checked_Expression *)new_expression;
+}
+
+Checked_Expression *Checked_Expression_Decomposer__decompose_unwrap_result_expression(Checked_Expression_Decomposer *self, Checked_Unwrap_Result_Expression *expression) {
+    Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, (Checked_Expression *)expression->call_expression));
+    if (result_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected result type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Result_Type *result_type = (Checked_Result_Type *)result_expression->type;
+
+    Checked_Result_Success_Expression *result_success_expression = Checked_Result_Success_Expression__create(expression->super.location, (Checked_Type *)self->checker->builtin_types->bool_type, result_expression);
+    Checked_Expression *result_value_expression;
+    if (result_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+        result_value_expression = (Checked_Expression *)Checked_Result_Value_Expression__create(expression->super.location, result_type->return_type, result_expression);
+    } else {
+        result_value_expression = (Checked_Expression *)Checked_Nothing_Expression__create(expression->super.location, result_type->return_type);
+    }
+    Checked_Result_Error_Expression *result_error_expression = Checked_Result_Error_Expression__create(expression->super.location, result_type->raise_type, result_expression);
+
+    Checked_Return_Statement *return_statement = Checked_Return_Statement__create(expression->super.location, (Checked_Expression *)Checked_Result_Expression__create(expression->super.location, self->checker->return_type, NULL, (Checked_Expression *)result_error_expression));
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, NULL, (Checked_Statement *)return_statement));
+
+    free(expression); // replaced by result_value_expression
+
+    return (Checked_Expression *)result_value_expression;
+}
+
 bool Checked_Expression__needs_decomposition(Checked_Expression *self);
 
 Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_Decomposer *self, Checked_Expression *expression) {
@@ -1498,6 +1673,8 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_alloc_expression(self, (Checked_Alloc_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checked_Expression_Decomposer__decompose_array_access_expression(self, (Checked_Array_Access_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__BLOCK:
+        return Checked_Expression_Decomposer__decompose_block_expression(self, (Checked_Block_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__BOOL:
         return expression;
     case CHECKED_EXPRESSION_KIND__CALL:
@@ -1558,6 +1735,10 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_binary_expression(self, (Checked_Binary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         return expression;
+    case CHECKED_EXPRESSION_KIND__TRY:
+        return Checked_Expression_Decomposer__decompose_try_expression(self, (Checked_Try_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
+        return Checked_Expression_Decomposer__decompose_unwrap_result_expression(self, (Checked_Unwrap_Result_Expression *)expression);
     default:
         pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Cannot decompose expression kind: ");
@@ -1569,6 +1750,7 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
 
 bool Checked_Address_Of_Expression__needs_decomposition(Checked_Address_Of_Expression *self) {
     switch (self->super.other_expression->kind) {
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
     case CHECKED_EXPRESSION_KIND__INTEGER:
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT:
     case CHECKED_EXPRESSION_KIND__MINUS:
@@ -1635,6 +1817,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return true;
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checked_Array_Access_Expression__needs_decomposition((Checked_Array_Access_Expression *)self);
+    case CHECKED_EXPRESSION_KIND__BLOCK:
+        return true;
     case CHECKED_EXPRESSION_KIND__BOOL:
         return false;
     case CHECKED_EXPRESSION_KIND__CALL:
@@ -1695,6 +1879,10 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return Checked_Binary_Expression__needs_decomposition((Checked_Binary_Expression *)self);
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         return false;
+    case CHECKED_EXPRESSION_KIND__TRY:
+        return true;
+    case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
+        return true;
     default:
         pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unsupported expression kind: ");
@@ -1710,11 +1898,10 @@ typedef struct Decomposed_Expression {
     int32_t temp_variable_counter;
 } Decomposed_Expression;
 
-Decomposed_Expression Checker__decompose_another_expression(Checker *self, Checked_Expression *expression, int32_t temp_variable_counter) {
+Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
     Checked_Expression_Decomposer decomposer = {
         .checker = self,
         .statements = NULL,
-        .temp_variable_counter = temp_variable_counter,
     };
     self->symbols = Checked_Symbols__create(self->symbols);
     Checked_Expression *decomposed_expression = Checked_Expression_Decomposer__decompose(&decomposer, expression);
@@ -1722,12 +1909,7 @@ Decomposed_Expression Checker__decompose_another_expression(Checker *self, Check
     return (Decomposed_Expression){
         .expression = decomposed_expression,
         .statements = decomposer.statements,
-        .temp_variable_counter = decomposer.temp_variable_counter,
     };
-}
-
-Decomposed_Expression Checker__decompose_expression(Checker *self, Checked_Expression *expression) {
-    return Checker__decompose_another_expression(self, expression, 0);
 }
 
 Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Token *type_name) {
@@ -1813,15 +1995,21 @@ Checked_Named_Type *Checker__check_external_type_statement(Checker *self, Token 
     return (Checked_Named_Type *)external_type;
 }
 
-struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type) {
+struct Checked_Type_Dependency *Checked_Type_Dependency__create(Checked_Type *type, bool weak) {
     struct Checked_Type_Dependency *dependency = malloc(sizeof(struct Checked_Type_Dependency));
     dependency->type = type;
+    dependency->weak = weak;
     dependency->next_dependency = NULL;
     return dependency;
 }
 
-void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker) {
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker);
+
+void Checked_Type__append_weak_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker, bool weak) {
     if (self == other) {
+        if (weak) {
+            return; // Weak dependencies to self are allowed
+        }
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type ");
         pWriter__write__checked_type(stderr_writer, self);
@@ -1831,17 +2019,24 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     switch (other->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
-        Checked_Type__append_dependencies(self, ((Checked_Array_Type *)other)->item_type, location, checker);
+        Checked_Type__append_weak_dependencies(self, ((Checked_Array_Type *)other)->item_type, location, checker, weak);
         return;
     case CHECKED_TYPE_KIND__EXTERNAL:
-        pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Type ");
-        pWriter__write__checked_type(stderr_writer, self);
-        pWriter__write__cstring(stderr_writer, " cannot depend on external type ");
-        pWriter__write__checked_type(stderr_writer, other);
-        pWriter__end_location_message(stderr_writer);
-        panic();
+        if (!weak) {
+            pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Type ");
+            pWriter__write__checked_type(stderr_writer, self);
+            pWriter__write__cstring(stderr_writer, " cannot depend on external type ");
+            pWriter__write__checked_type(stderr_writer, other);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        return;
+    case CHECKED_TYPE_KIND__POINTER:
+        Checked_Type__append_weak_dependencies(self, ((Checked_Pointer_Type *)other)->other_type, location, checker, true);
+        return;
     case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT:
         break;
     default:
@@ -1849,7 +2044,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     }
     struct Checked_Type_Dependency *self_dependency = self->first_dependency;
     if (self_dependency == NULL) {
-        self->first_dependency = Checked_Type_Dependency__create(other);
+        self->first_dependency = Checked_Type_Dependency__create(other, weak);
     } else {
         while (self_dependency->next_dependency != NULL) {
             if (self_dependency->type == other) {
@@ -1857,13 +2052,19 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
             }
             self_dependency = self_dependency->next_dependency;
         }
-        self_dependency->next_dependency = Checked_Type_Dependency__create(other);
+        self_dependency->next_dependency = Checked_Type_Dependency__create(other, weak);
     }
-    struct Checked_Type_Dependency *other_dependency = other->first_dependency;
-    while (other_dependency != NULL) {
-        Checked_Type__append_dependencies(self, other_dependency->type, location, checker);
-        other_dependency = other_dependency->next_dependency;
+    if (!weak) {
+        struct Checked_Type_Dependency *other_dependency = other->first_dependency;
+        while (other_dependency != NULL) {
+            Checked_Type__append_weak_dependencies(self, other_dependency->type, location, checker, other_dependency->weak);
+            other_dependency = other_dependency->next_dependency;
+        }
     }
+}
+
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker) {
+    Checked_Type__append_weak_dependencies(self, other, location, checker, false);
 }
 
 Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
@@ -1923,7 +2124,7 @@ Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *t
     return (Checked_Named_Type *)struct_type;
 }
 
-Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type) {
+Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type, Parsed_Type *parsed_raise_type) {
     Checked_Type *procedure_return_type;
     if (parsed_return_type != NULL) {
         procedure_return_type = Checker__resolve_type(self, parsed_return_type);
@@ -1943,6 +2144,25 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
         }
     } else {
         procedure_return_type = (Checked_Type *)self->builtin_types->nothing_type;
+    }
+    if (parsed_raise_type != NULL) {
+        Checked_Type *procedure_raise_type = Checker__resolve_type(self, parsed_raise_type);
+        switch (procedure_raise_type->kind) {
+        case CHECKED_TYPE_KIND__ANY:
+            pWriter__begin_location_message(stderr_writer, parsed_raise_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use Any as raise type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        case CHECKED_TYPE_KIND__EXTERNAL:
+            pWriter__begin_location_message(stderr_writer, parsed_raise_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use external type as raise type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        default:
+            break;
+        }
+        procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_return_type != NULL ? Source_Location__merge(parsed_return_type->location, parsed_raise_type->location) : parsed_raise_type->location, self->checked_module, procedure_return_type, procedure_raise_type);
+        procedure_return_type->symbol = Checker__create_type_symbol(self, ((Checked_Result_Type *)procedure_return_type)->super.name, (Checked_Named_Type *)procedure_return_type);
     }
     Checked_Procedure_Parameter *procedure_first_parameter = NULL;
     Checked_Procedure_Parameter *procedure_last_parameter = NULL;
@@ -1978,9 +2198,18 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
 Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
     Checked_Named_Type *other_type = Checker__find_type(self, type_name->lexeme);
     if (other_type != NULL) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__TRAIT && Source_Location__equals(other_type->super.location, type_name->location)) {
+            /* Type checked already */
+            return other_type;
+        }
         pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Type redeclaration");
         pWriter__end_location_message(stderr_writer);
+        if (other_type->super.location.source != NULL) {
+            pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Previous declaration here");
+            pWriter__end_location_message(stderr_writer);
+        }
         panic();
     }
 
@@ -1998,10 +2227,15 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *ty
         Checked_Struct_Member *last_struct_member = trait_type->struct_type->first_member;
         Checked_Trait_Method *last_trait_method = NULL;
         for (; parsed_method != NULL; parsed_method = parsed_method->next_method) {
-            Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type);
+            Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type, parsed_method->raise_type);
             Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
             Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
+            Checked_Procedure_Parameter *trait_method_parameter = trait_method->procedure_type->first_parameter;
+            while (trait_method_parameter != NULL) {
+                Checked_Type__append_dependencies((Checked_Type *)trait_type, trait_method_parameter->type, trait_method_parameter->location, self);
+                trait_method_parameter = trait_method_parameter->next_parameter;
+            }
             if (last_trait_method == NULL) {
                 trait_type->first_method = trait_method;
             } else {
@@ -2060,7 +2294,7 @@ Checked_Named_Type *Checker__check_variant_type_statement(Checker *self, Token *
     return (Checked_Named_Type *)variant_type;
 }
 
-Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement);
+Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement, Checked_Type *expected_type);
 
 Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Assignment_Statement *parsed_statement) {
     Decomposed_Expression object = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->object_expression, NULL));
@@ -2070,7 +2304,7 @@ Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Ass
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Decomposed_Expression value = Checker__decompose_another_expression(self, Checker__check_expression(self, parsed_statement->value_expression, object.expression->type), object.temp_variable_counter);
+    Decomposed_Expression value = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->value_expression, object.expression->type));
     Checked_Assignment_Statement *assignment_statement = Checked_Assignment_Statement__create(parsed_statement->super.location, object.expression, value.expression);
     if (object.statements != NULL || value.statements != NULL) {
         // Create block statement
@@ -2089,10 +2323,10 @@ Checked_Statement *Checker__check_assignment_statement(Checker *self, Parsed_Ass
     return (Checked_Statement *)assignment_statement;
 }
 
-Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements);
+Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements, Checked_Type *expected_type);
 
-Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement) {
-    Checked_Statements *statements = Checker__check_statements(self, parsed_statement->statements);
+Checked_Statement *Checker__check_block_statement(Checker *self, Parsed_Block_Statement *parsed_statement, Checked_Type *expected_type) {
+    Checked_Statements *statements = Checker__check_statements(self, parsed_statement->statements, expected_type);
     Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, statements);
     return (Checked_Statement *)block_statement;
 }
@@ -2142,14 +2376,14 @@ Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statemen
         self->symbols = Checked_Symbols__create(self->symbols);
         Checked_Variant_Switch_Case_Symbol *variant_switch_case_symbol = Checked_Variant_Switch_Case_Symbol__create(self->checked_module, parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_variant_case_expression->variant_expression, is_variant_case_expression->variant_case);
         Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_switch_case_symbol);
-        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement, NULL);
         self->symbols = self->symbols->parent;
     } else {
-        true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+        true_statement = Checker__check_statement(self, parsed_statement->true_statement, NULL);
     }
     Checked_Statement *false_statement = NULL;
     if (parsed_statement->false_statement != NULL) {
-        false_statement = Checker__check_statement(self, parsed_statement->false_statement);
+        false_statement = Checker__check_statement(self, parsed_statement->false_statement, NULL);
     }
     Checked_If_Statement *if_statement = Checked_If_Statement__create(parsed_statement->super.location, condition.expression, true_statement, false_statement);
     if (condition.statements != NULL) {
@@ -2162,21 +2396,50 @@ Checked_Statement *Checker__check_if_statement(Checker *self, Parsed_If_Statemen
 }
 
 Checked_Statement *Checker__check_loop_statement(Checker *self, Parsed_Loop_Statement *parsed_statement) {
-    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement, NULL);
     Checked_Loop_Statement *loop_statement = Checked_Loop_Statement__create(parsed_statement->super.location, body_statement);
     return (Checked_Statement *)loop_statement;
 }
 
+Checked_Statement *Checker__check_raise_statement(Checker *self, Parsed_Raise_Statement *parsed_statement) {
+    if (self->return_type->kind != CHECKED_TYPE_KIND__RESULT) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Procedure does not declare a raise type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Type *procedure_raise_type = ((Checked_Result_Type *)self->return_type)->raise_type;
+    Decomposed_Expression raise_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, procedure_raise_type));
+    return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, (Checked_Expression *)Checked_Result_Expression__create(raise_expression.expression->location, self->return_type, NULL, raise_expression.expression));
+}
+
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
+    Checked_Type *return_type = self->return_type;
+    if (return_type->kind == CHECKED_TYPE_KIND__RESULT) {
+        return_type = ((Checked_Result_Type *)return_type)->return_type;
+    }
     Decomposed_Expression decomposed_expression = {0};
     if (parsed_statement->expression != NULL) {
-        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, self->return_type);
+        if (return_type->kind == CHECKED_TYPE_KIND__NOTHING) {
+            pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Unexpected return expression");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Expression *expression = Checker__check_expression(self, parsed_statement->expression, return_type);
         decomposed_expression = Checker__decompose_expression(self, expression);
-    } else if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+    } else if (return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Missing return expression");
         pWriter__end_location_message(stderr_writer);
         panic();
+    }
+    if (self->return_type->kind == CHECKED_TYPE_KIND__RESULT) {
+        if (decomposed_expression.expression != NULL) {
+            decomposed_expression.expression = (Checked_Expression *)Checked_Result_Expression__create(decomposed_expression.expression->location, self->return_type, decomposed_expression.expression, NULL);
+        } else {
+            decomposed_expression.expression = (Checked_Expression *)Checked_Result_Expression__create(parsed_statement->super.location, self->return_type, NULL, NULL);
+        }
     }
 
     Checked_Return_Statement *return_statement = Checked_Return_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
@@ -2225,7 +2488,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            switch_else = Checked_Switch_Else__create(parsed_switch_case->location, Checker__check_statement(self, parsed_switch_case->statement));
+            switch_else = Checked_Switch_Else__create(parsed_switch_case->location, Checker__check_statement(self, parsed_switch_case->statement, NULL));
             break;
         }
         case PARSED_SWITCH_CASE_KIND__VARIANT: {
@@ -2268,7 +2531,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
                 Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
             }
 
-            Checked_Statement *variant_switch_case_statement = Checker__check_statement(self, parsed_switch_case->statement);
+            Checked_Statement *variant_switch_case_statement = Checker__check_statement(self, parsed_switch_case->statement, NULL);
 
             // Pop switch case symbols
             self->symbols = self->symbols->parent;
@@ -2370,7 +2633,7 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Parsed_Varia
 
 Checked_Statement *Checker__check_while_statement(Checker *self, Parsed_While_Statement *parsed_statement) {
     Decomposed_Expression condition = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type));
-    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+    Checked_Statement *body_statement = Checker__check_statement(self, parsed_statement->body_statement, NULL);
     if (condition.statements != NULL) {
         // Create loop statement with break condition
         Checked_Block_Statement *block_statement;
@@ -2387,6 +2650,17 @@ Checked_Statement *Checker__check_while_statement(Checker *self, Parsed_While_St
     }
     Checked_While_Statement *while_statement = Checked_While_Statement__create(parsed_statement->super.location, condition.expression, body_statement);
     return (Checked_Statement *)while_statement;
+}
+
+Checked_Statement *Checker__check_yield_statement(Checker *self, Parsed_Yield_Statement *parsed_statement, Checked_Type *expected_type) {
+    Decomposed_Expression decomposed_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, expected_type));
+    Checked_Yield_Statement *yield_statement = Checked_Yield_Statement__create(parsed_statement->super.location, decomposed_expression.expression);
+    if (decomposed_expression.statements != NULL) {
+        Checked_Decomposed_Statement *decomposed_statement = Checked_Decomposed_Statement__create(decomposed_expression.expression->location, decomposed_expression.statements);
+        Checked_Statements__append(decomposed_statement->statements, (Checked_Statement *)yield_statement);
+        return (Checked_Statement *)decomposed_statement;
+    }
+    return (Checked_Statement *)yield_statement;
 }
 
 Parsed_Named_Type *Parsed_Type__get_generic_dependency(Parsed_Type *self, Parsed_Type_Parameter *first_type_parameter) {
@@ -2464,7 +2738,7 @@ void Checker__check_generic_procedure_declaration(Checker *self, Parsed_Procedur
 }
 
 Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Parsed_Procedure_Statement *parsed_statement) {
-    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type);
+    Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_statement->super.super.location, parsed_statement->first_parameter, parsed_statement->return_type, parsed_statement->raise_type);
 
     String *symbol_name = String__create();
     Checked_Type *receiver_type = NULL;
@@ -2480,6 +2754,17 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
         String__append_cstring(symbol_name, "__");
     }
     String__append_string(symbol_name, parsed_statement->super.name->lexeme);
+
+    Checked_Symbol *existing_symbol = Checked_Symbols__find_symbol(self->global_symbols, self->checked_module, symbol_name);
+    if (existing_symbol != NULL) {
+        if (existing_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)existing_symbol;
+            if (procedure_symbol->parsed_procedure_statement == parsed_statement) {
+                String__delete(symbol_name);
+                return procedure_symbol;
+            }
+        }
+    }
 
     Checked_Procedure_Symbol *procedure_symbol = Checked_Procedure_Symbol__create(self->checked_module, parsed_statement->super.name->location, symbol_name, parsed_statement->super.super.location, parsed_statement, procedure_type, receiver_type);
     Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)procedure_symbol);
@@ -2513,12 +2798,12 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
     return procedure_symbol;
 }
 
-Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
+Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement, Checked_Type *expected_type) {
     switch (parsed_statement->kind) {
     case PARSED_STATEMENT_KIND__ASSIGNMENT:
         return Checker__check_assignment_statement(self, (Parsed_Assignment_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__BLOCK:
-        return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement);
+        return Checker__check_block_statement(self, (Parsed_Block_Statement *)parsed_statement, expected_type);
     case PARSED_STATEMENT_KIND__BREAK:
         return Checker__check_break_statement(self, (Parsed_Break_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__EXPRESSION:
@@ -2527,6 +2812,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return Checker__check_if_statement(self, (Parsed_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__LOOP:
         return Checker__check_loop_statement(self, (Parsed_Loop_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__RAISE:
+        return Checker__check_raise_statement(self, (Parsed_Raise_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RETURN:
         return Checker__check_return_statement(self, (Parsed_Return_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__SWITCH:
@@ -2535,6 +2822,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
         return Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__WHILE:
         return Checker__check_while_statement(self, (Parsed_While_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__YIELD:
+        return Checker__check_yield_statement(self, (Parsed_Yield_Statement *)parsed_statement, expected_type);
     default:
         break;
     }
@@ -2544,14 +2833,14 @@ Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *par
     panic();
 }
 
-Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements) {
+Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *parsed_statements, Checked_Type *expected_type) {
     /* Create and push block symbols */
     self->symbols = Checked_Symbols__create(self->symbols);
 
     Checked_Statements *checked_statements = Checked_Statements__create();
     Parsed_Statement *parsed_statement = parsed_statements->first_statement;
     while (parsed_statement != NULL) {
-        Checked_Statement *checked_statement = Checker__check_statement(self, parsed_statement);
+        Checked_Statement *checked_statement = Checker__check_statement(self, parsed_statement, expected_type);
         Checked_Statements__append(checked_statements, checked_statement);
         parsed_statement = parsed_statement->next_statement;
     }
@@ -2566,6 +2855,8 @@ void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol
     Checked_Procedure_Type *procedure_type = procedure_symbol->procedure_type;
     self->return_type = procedure_type->return_type;
 
+    self->temp_variable_counter = 0;
+
     /* Create and push procedure symbols */
     self->symbols = Checked_Symbols__create(self->symbols);
 
@@ -2579,7 +2870,52 @@ void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol
     }
 
     /* Check statements */
-    procedure_symbol->checked_statements = Checker__check_statements(self, procedure_symbol->parsed_procedure_statement->statements);
+    procedure_symbol->checked_statements = Checker__check_statements(self, procedure_symbol->parsed_procedure_statement->statements, NULL);
+
+    if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+        Checked_Statement *last_statement = procedure_symbol->checked_statements->last_statement;
+        bool has_return_statement = false;
+        while (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__BLOCK) {
+            last_statement = ((Checked_Block_Statement *)last_statement)->statements->last_statement;
+        }
+        if (last_statement != NULL) {
+            switch (last_statement->kind) {
+            case CHECKED_STATEMENT_KIND__EXPRESSION: {
+                Checked_Expression_Statement *expression_statement = (Checked_Expression_Statement *)last_statement;
+                if (expression_statement->expression->kind == CHECKED_EXPRESSION_KIND__CALL) {
+                    Checked_Call_Expression *call_expression = (Checked_Call_Expression *)expression_statement->expression;
+                    if (call_expression->callee_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+                        Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)call_expression->callee_expression;
+                        if (symbol_expression->symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                            Checked_Procedure_Symbol *called_procedure_symbol = (Checked_Procedure_Symbol *)symbol_expression->symbol;
+                            if (called_procedure_symbol->parsed_procedure_statement->is_external) {
+                                if (called_procedure_symbol->external_name != NULL) {
+                                    if (String__equals_cstring(called_procedure_symbol->external_name, "exit")) {
+                                        has_return_statement = true;
+                                    }
+                                } else if (String__equals_cstring(called_procedure_symbol->procedure_name, "exit")) {
+                                    has_return_statement = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case CHECKED_STATEMENT_KIND__RETURN:
+                has_return_statement = true;
+                break;
+            default:
+                break;
+            }
+        }
+        if (!has_return_statement) {
+            pWriter__begin_location_message(stderr_writer, last_statement ? last_statement->location : procedure_symbol->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Missing return statement");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+    }
 
     /* Pop procedure symbols */
     self->symbols = self->symbols->parent;

@@ -1,0 +1,17 @@
+proc main() -> i32 {
+    let result = try increment(13) else {
+        return error.code - 42
+    }
+    return result
+}
+
+type Error = struct {
+    code: i32
+}
+
+proc increment(anon value: i32) -> i32 !> Error {
+    if value > 10 {
+        raise Error(code: 42)
+    }
+    return value + 1
+}

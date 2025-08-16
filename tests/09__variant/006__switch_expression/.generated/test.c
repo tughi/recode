@@ -18,6 +18,8 @@ int32_t test__main() {
 #line 18 "tests/09__variant/006__switch_expression/test.code"
         return 1;
     }
+#line 21 "tests/09__variant/006__switch_expression/test.code"
+    return 2;
 }
 
 int32_t main(int argc, const char **argv) {

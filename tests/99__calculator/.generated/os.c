@@ -26,11 +26,11 @@ void os__init() {
 #line 9 "tests/99__calculator/os.code"
     {
 #line 9 "tests/99__calculator/os.code"
-        struct io_Writer *__001__ = (struct io_Writer *)malloc(sizeof(struct io_Writer));
+        struct io_Writer *__002__ = (struct io_Writer *)malloc(sizeof(struct io_Writer));
 #line 9 "tests/99__calculator/os.code"
-        *__001__ = (struct io_Writer){.self = __stderrp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)};
+        *__002__ = (struct io_Writer){.self = __stderrp, .write_char = ((void (*)(void *self, uint8_t c)) plibc_FILE__write_char)};
 #line 9 "tests/99__calculator/os.code"
-        os__stderr = __001__;
+        os__stderr = __002__;
     }
 }
 

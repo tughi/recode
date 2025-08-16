@@ -146,6 +146,7 @@ bool Token__is_percent(Token *self);
 bool Token__is_plus(Token *self);
 bool Token__is_proc(Token *self);
 bool Token__is_question_mark(Token *self);
+bool Token__is_raise(Token *self);
 bool Token__is_return(Token *self);
 bool Token__is_semicolon(Token *self);
 bool Token__is_sizeof(Token *self);
@@ -156,12 +157,14 @@ bool Token__is_struct(Token *self);
 bool Token__is_switch(Token *self);
 bool Token__is_trait(Token *self);
 bool Token__is_true(Token *self);
+bool Token__is_try(Token *self);
 bool Token__is_type(Token *self);
 bool Token__is_typedef(Token *self);
 bool Token__is_union(Token *self);
 bool Token__is_variant(Token *self);
 bool Token__is_vertical_bar(Token *self);
 bool Token__is_while(Token *self);
+bool Token__is_yield(Token *self);
 
 void pWriter__write__token(Writer *writer, Token *token);
 

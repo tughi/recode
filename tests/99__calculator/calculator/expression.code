@@ -1,5 +1,6 @@
 import calculator.source
 import io
+import libc
 
 type Expression = variant {
     Number
@@ -59,10 +60,11 @@ proc (^Expression).span(self) -> source.Span {
         is source.Error as variant {
             return variant.span
         }
-        is nil {
-            return source.Span(start: 0, end: 0)
+        else {
+            \ ignore
         }
     }
+    libc.exit(1)
 }
 
 proc (^io.Writer).write_expression(self, anon expression: ^Expression) -> ^io.Writer {

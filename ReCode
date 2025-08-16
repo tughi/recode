@@ -306,7 +306,7 @@ def test(paths, save=False, stage=1):
 
         tester.load_test_data(test_dir)
 
-        run('rm -fr build/{test_dir}/generated/*')
+        run(f'rm -fr build/{test_dir}/generated/*')
 
         compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
         if compiler_result.returncode != 0:

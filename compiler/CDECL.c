@@ -185,6 +185,7 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
         break;
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__RESULT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)symbol_type;

@@ -73,9 +73,9 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
     }
 #line 57 "tests/99__calculator/test.code"
     else {
-#line 58 "tests/99__calculator/test.code"
-        exit(1);
     }
+#line 61 "tests/99__calculator/test.code"
+    exit(1);
 }
 
 int32_t main(int argc, const char **argv) {

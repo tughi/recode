@@ -5,11 +5,14 @@
 
 #include "calculator__source.h"
 #include "io.h"
+#include "libc.h"
 
 struct calculator__expression_Number {
     struct calculator__source_Span span;
     int32_t value;
 };
+
+struct calculator__expression_Expression;
 
 struct calculator__expression_Addition {
     struct calculator__source_Span span;

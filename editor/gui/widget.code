@@ -1,5 +1,0 @@
-import gui.rect
-
-type Widget = struct {
-    bounds: rect.Rect
-}

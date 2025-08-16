@@ -8,6 +8,7 @@ Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
     type->symbol = NULL;
     type->next_type = NULL;
     type->first_dependency = NULL;
+    type->has_generated_declaration = false;
     type->has_generated_definition = false;
     return type;
 }
@@ -116,9 +117,23 @@ Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, Str
     return type;
 }
 
+bool Checked_Generic_Type__equals(Checked_Generic_Type *self, Checked_Generic_Type *other) {
+    if (!String__equals_string(self->super.name, other->super.name)) {
+        return false;
+    }
+    todo("Implement Checked_Generic_Type__equals");
+}
+
 Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Module *module) {
     Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, module);
     return type;
+}
+
+bool Checked_External_Type__equals(Checked_External_Type *self, Checked_External_Type *other) {
+    if (!String__equals_string(self->super.name, other->super.name)) {
+        return false;
+    }
+    return true;
 }
 
 Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
@@ -203,6 +218,15 @@ Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, S
     return type_argument;
 }
 
+Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Module *module, Checked_Type *return_type, Checked_Type *raise_type) {
+    String *name = String__create_from("Result__");
+    String__append_int16_t(name, location.start_line);
+    Checked_Result_Type *type = (Checked_Result_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__RESULT, sizeof(Checked_Result_Type), location, name, module);
+    type->return_type = return_type;
+    type->raise_type = raise_type;
+    return type;
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -285,6 +309,10 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        return Checked_External_Type__equals((Checked_External_Type *)self, (Checked_External_Type *)other);
+    case CHECKED_TYPE_KIND__GENERIC:
+        return Checked_Generic_Type__equals((Checked_Generic_Type *)self, (Checked_Generic_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
         return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
@@ -323,6 +351,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__GENERIC:
+    case CHECKED_TYPE_KIND__STR:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT: {
@@ -381,8 +410,13 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         pWriter__write__checked_type(self, pointer_type->other_type);
         break;
     }
-    case CHECKED_TYPE_KIND__STR: {
-        pWriter__write__cstring(self, "str");
+    case CHECKED_TYPE_KIND__RESULT: {
+        Checked_Result_Type *result_type = (Checked_Result_Type *)type;
+        pWriter__write__cstring(self, "Result(");
+        pWriter__write__checked_type(self, result_type->return_type);
+        pWriter__write__cstring(self, ", ");
+        pWriter__write__checked_type(self, result_type->raise_type);
+        pWriter__write__char(self, ')');
         break;
     }
     case CHECKED_TYPE_KIND__TYPE: {
@@ -516,6 +550,12 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
 
 Checked_Procedure_Parameter_Symbol *Checked_Procedure_Parameter_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
     return (Checked_Procedure_Parameter_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER, sizeof(Checked_Procedure_Parameter_Symbol), module, location, name, type, false);
+}
+
+Checked_Result_Error_Symbol *Checked_Result_Error_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
+    Checked_Result_Error_Symbol *symbol = (Checked_Result_Error_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__RESULT_ERROR, sizeof(Checked_Result_Error_Symbol), module, location, name, type, true);
+    symbol->expression = NULL;
+    return symbol;
 }
 
 Checked_Type_Symbol *Checked_Type_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, Checked_Named_Type *named_type) {
@@ -666,6 +706,12 @@ Checked_Array_Access_Expression *Checked_Array_Access_Expression__create(Source_
     return expression;
 }
 
+Checked_Block_Expression *Checked_Block_Expression__create(Source_Location location, Checked_Type *type, Checked_Statement *block_statement) {
+    Checked_Block_Expression *expression = (Checked_Block_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__BLOCK, sizeof(Checked_Block_Expression), location, type);
+    expression->block_statement = block_statement;
+    return expression;
+}
+
 Checked_Bool_Expression *Checked_Bool_Expression__create(Source_Location location, Checked_Type *type, bool value) {
     Checked_Bool_Expression *expression = (Checked_Bool_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__BOOL, sizeof(Checked_Bool_Expression), location, type);
     expression->value = value;
@@ -778,6 +824,10 @@ Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Sourc
     return expression;
 }
 
+Checked_Nothing_Expression *Checked_Nothing_Expression__create(Source_Location location, Checked_Type *type) {
+    return (Checked_Nothing_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOTHING, sizeof(Checked_Nothing_Expression), location, type);
+}
+
 Checked_Receiver_Method_Expression *Checked_Receiver_Method_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *receiver_expression, Checked_Expression *procedure_expression, Checked_Procedure_Type *procedure_type) {
     Checked_Receiver_Method_Expression *expression = (Checked_Receiver_Method_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RECEIVER_METHOD, sizeof(Checked_Receiver_Method_Expression), location, type);
     expression->receiver_expression = receiver_expression;
@@ -810,6 +860,31 @@ Checked_Null_Expression *Checked_Null_Expression__create(Source_Location locatio
     return (Checked_Null_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NULL, sizeof(Checked_Null_Expression), location, type);
 }
 
+Checked_Result_Expression *Checked_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *return_expression, Checked_Expression *raise_expression) {
+    Checked_Result_Expression *expression = (Checked_Result_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT, sizeof(Checked_Result_Expression), location, type);
+    expression->return_expression = return_expression;
+    expression->raise_expression = raise_expression;
+    return expression;
+}
+
+Checked_Result_Error_Expression *Checked_Result_Error_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Error_Expression *expression = (Checked_Result_Error_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_ERROR, sizeof(Checked_Result_Error_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
+}
+
+Checked_Result_Success_Expression *Checked_Result_Success_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Success_Expression *expression = (Checked_Result_Success_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_SUCCESS, sizeof(Checked_Result_Success_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
+}
+
+Checked_Result_Value_Expression *Checked_Result_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression) {
+    Checked_Result_Value_Expression *expression = (Checked_Result_Value_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__RESULT_VALUE, sizeof(Checked_Result_Value_Expression), location, type);
+    expression->result_expression = result_expression;
+    return expression;
+}
+
 Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type) {
     Checked_Sizeof_Expression *expression = (Checked_Sizeof_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SIZEOF, sizeof(Checked_Sizeof_Expression), location, type);
     expression->sized_type = sized_type;
@@ -838,9 +913,23 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
     return expression;
 }
 
+Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol) {
+    Checked_Try_Expression *expression = (Checked_Try_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TRY, sizeof(Checked_Try_Expression), location, type);
+    expression->call_expression = call_expression;
+    expression->else_expression = else_expression;
+    expression->result_error_symbol = result_error_symbol;
+    return expression;
+}
+
 Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Named_Type *named_type) {
     Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
     expression->named_type = named_type;
+    return expression;
+}
+
+Checked_Unwrap_Result_Expression *Checked_Unwrap_Result_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression) {
+    Checked_Unwrap_Result_Expression *expression = (Checked_Unwrap_Result_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__UNWRAP_RESULT, sizeof(Checked_Unwrap_Result_Expression), location, type);
+    expression->call_expression = call_expression;
     return expression;
 }
 
@@ -956,6 +1045,13 @@ Checked_While_Statement *Checked_While_Statement__create(Source_Location locatio
     Checked_While_Statement *statement = (Checked_While_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__WHILE, sizeof(Checked_While_Statement), location);
     statement->condition_expression = condition_expression;
     statement->body_statement = body_statement;
+    return statement;
+}
+
+Checked_Yield_Statement *Checked_Yield_Statement__create(Source_Location location, Checked_Expression *expression) {
+    Checked_Yield_Statement *statement = (Checked_Yield_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__YIELD, sizeof(Checked_Yield_Statement), location);
+    statement->expression = expression;
+    statement->block_result_expression = NULL;
     return statement;
 }
 

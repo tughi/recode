@@ -55,7 +55,8 @@ proc evaluate(expression: ^expression.Expression) -> i32 {
             return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
         else {
-            libc.exit(1)
+            \ ignore
         }
     }
+    libc.exit(1)
 }

@@ -1,0 +1,22 @@
+proc main() -> i32 {
+    try auto_raise_error(false) else {
+        return error.code
+    }
+    return 0
+}
+
+proc auto_raise_error(anon condition: bool) !> Error {
+    raise_error(condition)
+    return
+}
+
+proc raise_error(anon condition: bool) !> Error {
+    if condition {
+        raise Error(code: 42)
+    }
+    return
+}
+
+type Error = struct {
+    code: i32
+}

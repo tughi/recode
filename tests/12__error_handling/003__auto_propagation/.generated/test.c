@@ -1,0 +1,60 @@
+#include "test.h"
+
+void *malloc(uintmax_t size);
+
+#line 1 "tests/12__error_handling/003__auto_propagation/test.code"
+int32_t test__main() {
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+    {
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+        struct test_Result__16 __001__ = test__count_from(0);
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+        int32_t __002__;
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+        if (__001__.success) {
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+            __002__ = __001__.value;
+        } else {
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+            __002__ = __001__.error.code - 42;
+        }
+#line 2 "tests/12__error_handling/003__auto_propagation/test.code"
+        return __002__;
+    }
+}
+
+#line 9 "tests/12__error_handling/003__auto_propagation/test.code"
+struct test_Result__9 test__increment(int32_t value) {
+#line 10 "tests/12__error_handling/003__auto_propagation/test.code"
+    if (value > 10) {
+#line 11 "tests/12__error_handling/003__auto_propagation/test.code"
+        return (struct test_Result__9){.success = false, .error = (struct test_Error){.code = 42}};
+    }
+#line 13 "tests/12__error_handling/003__auto_propagation/test.code"
+    return (struct test_Result__9){.success = true, .value = value + 1};
+}
+
+#line 16 "tests/12__error_handling/003__auto_propagation/test.code"
+struct test_Result__16 test__count_from(int32_t value) {
+#line 17 "tests/12__error_handling/003__auto_propagation/test.code"
+    int32_t new_value = value;
+#line 18 "tests/12__error_handling/003__auto_propagation/test.code"
+    while (new_value < 100) {
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+        {
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+            struct test_Result__9 __001__ = test__increment(new_value);
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+            if (__001__.success) {} else return (struct test_Result__16){.success = false, .error = __001__.error};
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+            new_value = __001__.value;
+        }
+    }
+#line 21 "tests/12__error_handling/003__auto_propagation/test.code"
+    return (struct test_Result__16){.success = true, .value = new_value};
+}
+
+int32_t main(int argc, const char **argv) {
+    return test__main();
+}
+
