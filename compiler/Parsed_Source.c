@@ -304,6 +304,12 @@ Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
 
+Parsed_Defer_Statement *Parsed_Defer_Statement__create(Source_Location location, Parsed_Statement *statement) {
+    Parsed_Defer_Statement *defer_statement = (Parsed_Defer_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__DEFER, sizeof(Parsed_Defer_Statement), location);
+    defer_statement->statement = statement;
+    return defer_statement;
+}
+
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {
     Parsed_Expression_Statement *statement = (Parsed_Expression_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location);
     statement->expression = expression;

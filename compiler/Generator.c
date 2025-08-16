@@ -4,7 +4,7 @@
 
 typedef struct Generator {
     Writer *writer;
-    uint16_t identation;
+    uint16_t indentation;
 } Generator;
 
 void Generator__write_source_location(Generator *self, Source_Location location) {
@@ -561,10 +561,10 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
 }
 
 void Generator__write_indentation(Generator *self) {
-    uint16_t identation = self->identation;
-    while (identation > 0) {
+    uint16_t indentation = self->indentation;
+    while (indentation > 0) {
         pWriter__write__cstring(self->writer, "    ");
-        identation = identation - 1;
+        indentation = indentation - 1;
     }
 }
 
@@ -789,7 +789,7 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
 }
 
 void Generator__generate_statements(Generator *self, Checked_Statements *statements) {
-    self->identation = self->identation + 1;
+    self->indentation = self->indentation + 1;
 
     Checked_Statement *statement = statements->first_statement;
     while (statement != NULL) {
@@ -804,7 +804,7 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
         statement = statement->next_statement;
     }
 
-    self->identation = self->identation - 1;
+    self->indentation = self->indentation - 1;
 }
 
 void Generator__declare_external_type(Generator *self, Checked_External_Type *external_type) {
@@ -997,7 +997,7 @@ void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *out
 
     Generator generator;
     generator.writer = File__create_writer(output_file_path);
-    generator.identation = 0;
+    generator.indentation = 0;
 
     /* Header guard */
     pWriter__write__cstring(generator.writer, "#ifndef __BUILTIN_TYPES_H__\n");
@@ -1034,7 +1034,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
 
     Generator generator;
     generator.writer = File__create_writer(output_file_path);
-    generator.identation = 0;
+    generator.indentation = 0;
 
     /* Header guard */
     pWriter__write__cstring(generator.writer, "#ifndef __");
@@ -1119,7 +1119,7 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
 
     Generator generator;
     generator.writer = File__create_writer(output_file_path);
-    generator.identation = 0;
+    generator.indentation = 0;
 
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *main_procedure = NULL;

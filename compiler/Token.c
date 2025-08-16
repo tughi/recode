@@ -118,6 +118,10 @@ bool Token__is_case(Token *self) {
     return Token__is_keyword(self, "case");
 }
 
+bool Token__is_defer(Token *self) {
+    return Token__is_keyword(self, "defer");
+}
+
 bool Token__is_else(Token *self) {
     return Token__is_keyword(self, "else");
 }
