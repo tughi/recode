@@ -93,6 +93,7 @@ typedef struct Checker {
     Checked_Type *receiver_type;
     Checked_Type *return_type;
     int32_t temp_variable_counter;
+    bool is_deferred_statement;
 } Checker;
 
 Checker *Checker__create(Parsed_Source *parsed_source) {
@@ -118,6 +119,8 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
 
     checker->receiver_type = NULL;
     checker->return_type = NULL;
+
+    checker->is_deferred_statement = false;
 
     return checker;
 }
@@ -2375,11 +2378,20 @@ Checked_Block_Statement *Checker__check_block_statement(Checker *self, Parsed_Bl
 }
 
 Checked_Statement *Checker__check_break_statement(Checker *self, Parsed_Break_Statement *parsed_statement) {
+    if (self->is_deferred_statement) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot defer break statements");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     return (Checked_Statement *)Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
 Checked_Statement *Checker__check_defer_statement(Checker *self, Parsed_Defer_Statement *parsed_statement) {
+    bool is_deferred_statement = self->is_deferred_statement;
+    self->is_deferred_statement = true;
     Checked_Statement *defered_statement = Checker__check_statement(self, parsed_statement->statement, NULL);
+    self->is_deferred_statement = is_deferred_statement;
     return (Checked_Statement *)Checked_Defer_Statement__create(parsed_statement->super.location, defered_statement);
 }
 
@@ -2462,6 +2474,12 @@ Checked_Statement *Checker__check_raise_statement(Checker *self, Parsed_Raise_St
 }
 
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
+    if (self->is_deferred_statement) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot defer return statements");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     Checked_Type *return_type = self->return_type;
     if (return_type->kind == CHECKED_TYPE_KIND__RESULT) {
         return_type = ((Checked_Result_Type *)return_type)->return_type;

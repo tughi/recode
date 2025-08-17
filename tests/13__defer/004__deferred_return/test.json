@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/13__defer/004__deferred_return/test.code:2:11-19: Cannot defer return statements"
+        ]
+    }
+}

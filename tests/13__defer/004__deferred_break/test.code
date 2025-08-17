@@ -1,0 +1,9 @@
+proc main() -> i32 {
+    loop {
+        defer {
+            {
+                break
+            }
+        }
+    }
+}
