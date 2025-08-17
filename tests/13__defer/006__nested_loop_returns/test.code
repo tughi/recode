@@ -1,0 +1,11 @@
+proc main() -> i32 {
+    let result = 42
+    defer result = 32
+    loop {
+        defer result = 22
+        loop {
+            defer result = 12
+            return result - 42
+        }
+    }
+}

@@ -6,7 +6,17 @@ typedef struct Generator {
     Writer *writer;
     uint16_t indentation;
     Checked_Defer_Statement *top_defer_statement;
+    Checked_Defer_Statement *loop_top_defer_statement;
 } Generator;
+
+Generator Generator__make(Writer *writer) {
+    return (Generator){
+        .writer = writer,
+        .indentation = 0,
+        .top_defer_statement = NULL,
+        .loop_top_defer_statement = NULL,
+    };
+}
 
 void Generator__write_source_location(Generator *self, Source_Location location) {
     pWriter__write__cstring(self->writer, "#line ");
@@ -597,7 +607,7 @@ void Generator__generate_block_statement(Generator *self, Checked_Block_Statemen
 
     // Generate the deferred statements
     Checked_Statement *last_statement = block_statement->statements->last_statement;
-    if (last_statement != NULL && !Checked_Statement__is_terminal(last_statement)) {
+    if (last_statement != NULL && !Checked_Statement__is_terminal(last_statement) && last_statement->kind != CHECKED_STATEMENT_KIND__BREAK) {
         Checked_Defer_Statement *defer_statement = self->top_defer_statement;
         while (defer_statement != first_defer_statement) {
             Generator__generate_statement(self, defer_statement->statement);
@@ -652,8 +662,15 @@ void Generator__generate_if_statement(Generator *self, Checked_If_Statement *sta
 }
 
 void Generator__generate_loop_statement(Generator *self, Checked_Loop_Statement *statement) {
+    // Save the current defer statement stack
+    Checked_Defer_Statement *loop_top_defer_statement = self->loop_top_defer_statement;
+    self->loop_top_defer_statement = self->top_defer_statement;
+
     pWriter__write__cstring(self->writer, "for (;;) ");
     Generator__generate_statement_inlined(self, statement->body_statement, true);
+
+    // Restore the previous defer statement stack
+    self->loop_top_defer_statement = loop_top_defer_statement;
 }
 
 void Generator__generate_return_statement(Generator *self, Checked_Return_Statement *statement) {
@@ -744,10 +761,17 @@ void Generator__generate_variable_statement(Generator *self, Checked_Variable_St
 }
 
 void Generator__generate_while_statement(Generator *self, Checked_While_Statement *statement) {
+    // Save the current defer statement stack
+    Checked_Defer_Statement *loop_top_defer_statement = self->loop_top_defer_statement;
+    self->loop_top_defer_statement = self->top_defer_statement;
+
     pWriter__write__cstring(self->writer, "while (");
     Generator__generate_expression(self, statement->condition_expression);
     pWriter__write__cstring(self->writer, ") ");
     Generator__generate_statement_inlined(self, statement->body_statement, true);
+
+    // Restore the previous defer statement stack
+    self->loop_top_defer_statement = loop_top_defer_statement;
 }
 
 void Generator__generate_yield_statement(Generator *self, Checked_Yield_Statement *statement) {
@@ -765,6 +789,14 @@ void Generator__generate_yield_statement(Generator *self, Checked_Yield_Statemen
 
 void Generator__generate_statement_inlined(Generator *self, Checked_Statement *statement, bool inlined) {
     switch (statement->kind) {
+    case CHECKED_STATEMENT_KIND__BREAK: {
+        Checked_Defer_Statement *defer_statement = self->top_defer_statement;
+        while (defer_statement != self->loop_top_defer_statement) {
+            Generator__generate_statement_inlined(self, defer_statement->statement, inlined);
+            defer_statement = defer_statement->prev_defer_statement;
+        }
+        break;
+    }
     case CHECKED_STATEMENT_KIND__DECOMPOSED: {
         Generator__generate_decomposed_statement(self, (Checked_Decomposed_Statement *)statement, inlined);
         return;
@@ -1031,10 +1063,7 @@ void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *out
     }
     String__append_cstring(output_file_path, "builtin_types.h");
 
-    Generator generator;
-    generator.writer = File__create_writer(output_file_path);
-    generator.top_defer_statement = NULL;
-    generator.indentation = 0;
+    Generator generator = Generator__make(File__create_writer(output_file_path));
 
     /* Header guard */
     pWriter__write__cstring(generator.writer, "#ifndef __BUILTIN_TYPES_H__\n");
@@ -1069,10 +1098,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     String__append_string(output_file_path, checked_module->name);
     String__append_cstring(output_file_path, ".h");
 
-    Generator generator;
-    generator.writer = File__create_writer(output_file_path);
-    generator.top_defer_statement = NULL;
-    generator.indentation = 0;
+    Generator generator = Generator__make(File__create_writer(output_file_path));
 
     /* Header guard */
     pWriter__write__cstring(generator.writer, "#ifndef __");
@@ -1155,10 +1181,7 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     String__append_string(output_file_path, checked_module->name);
     String__append_cstring(output_file_path, ".c");
 
-    Generator generator;
-    generator.writer = File__create_writer(output_file_path);
-    generator.top_defer_statement = NULL;
-    generator.indentation = 0;
+    Generator generator = Generator__make(File__create_writer(output_file_path));
 
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *main_procedure = NULL;

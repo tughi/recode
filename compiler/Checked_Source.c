@@ -955,7 +955,6 @@ bool Checked_Statement__is_terminal(Checked_Statement *self) {
     case CHECKED_STATEMENT_KIND__ASSIGNMENT:
     case CHECKED_STATEMENT_KIND__BREAK:
     case CHECKED_STATEMENT_KIND__DEFER:
-    case CHECKED_STATEMENT_KIND__LOOP:
     case CHECKED_STATEMENT_KIND__VARIABLE:
     case CHECKED_STATEMENT_KIND__VARIANT_IF:
     case CHECKED_STATEMENT_KIND__VARIANT_SWITCH:
@@ -1004,6 +1003,10 @@ bool Checked_Statement__is_terminal(Checked_Statement *self) {
             return Checked_Statement__is_terminal(if_statement->true_statement) && Checked_Statement__is_terminal(if_statement->false_statement);
         }
         return false;
+    }
+    case CHECKED_STATEMENT_KIND__LOOP: {
+        Checked_Loop_Statement *loop_statement = (Checked_Loop_Statement *)self;
+        return Checked_Statement__is_terminal(loop_statement->body_statement);
     }
     case CHECKED_STATEMENT_KIND__RETURN:
         return true;

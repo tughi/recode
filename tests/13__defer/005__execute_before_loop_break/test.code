@@ -1,0 +1,11 @@
+proc main() -> i32 {
+    let repeat = true
+    while repeat {
+        loop {
+            defer repeat = false
+            repeat = true
+            break
+        }
+    }
+    return 0
+}
