@@ -369,6 +369,8 @@ typedef struct Checked_Statement {
 
 Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location location);
 
+bool Checked_Statement__is_terminal(Checked_Statement *self);
+
 typedef struct Checked_Statements {
     Checked_Statement *first_statement;
     Checked_Statement *last_statement;
@@ -825,6 +827,7 @@ Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Locati
 typedef struct Checked_Defer_Statement {
     Checked_Statement super;
     Checked_Statement *statement;
+    struct Checked_Defer_Statement *prev_defer_statement;
 } Checked_Defer_Statement;
 
 Checked_Defer_Statement *Checked_Defer_Statement__create(Source_Location location, Checked_Statement *statement);

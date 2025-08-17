@@ -1,0 +1,13 @@
+proc main() -> i32 {
+    if return_forty_two() != 42 {
+        return 2
+    }
+    return 0
+}
+
+proc return_forty_two() -> i32 {
+    let value = 42
+    defer value = 13
+    defer value = 0
+    return value
+}

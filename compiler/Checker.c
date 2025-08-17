@@ -1432,10 +1432,10 @@ Checked_Variable_Symbol *Checked_Expression_Decomposer__create_temp_variable_sym
 Checked_Expression *Checked_Expression_Decomposer__create_temp_variable_with_type(Checked_Expression_Decomposer *self, Checked_Expression *expression, Checked_Type *type) {
     Checked_Variable_Symbol *temp_variable_symbol = Checked_Expression_Decomposer__create_temp_variable_symbol(self, expression->location, type);
     temp_variable_symbol->is_temp = true;
-    
+
     Checked_Variable_Statement *temp_variable_statement = Checked_Variable_Statement__create(expression->location, temp_variable_symbol, false, expression);
     Checked_Statements__append(self->statements, (Checked_Statement *)temp_variable_statement);
-    
+
     return (Checked_Expression *)Checked_Symbol_Expression__create(expression->location, expression->type, (Checked_Symbol *)temp_variable_symbol);
 }
 
@@ -2905,44 +2905,11 @@ void Checker__check_procedure_definition(Checker *self, Checked_Procedure_Symbol
     procedure_symbol->checked_block_statement = (Checked_Statement *)checked_block_statement;
 
     if (self->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
-        Checked_Statement *last_statement = checked_block_statement->statements->last_statement;
-        bool has_return_statement = false;
-        while (last_statement != NULL && last_statement->kind == CHECKED_STATEMENT_KIND__BLOCK) {
-            last_statement = ((Checked_Block_Statement *)last_statement)->statements->last_statement;
-        }
-        if (last_statement != NULL) {
-            switch (last_statement->kind) {
-            case CHECKED_STATEMENT_KIND__EXPRESSION: {
-                Checked_Expression_Statement *expression_statement = (Checked_Expression_Statement *)last_statement;
-                if (expression_statement->expression->kind == CHECKED_EXPRESSION_KIND__CALL) {
-                    Checked_Call_Expression *call_expression = (Checked_Call_Expression *)expression_statement->expression;
-                    if (call_expression->callee_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
-                        Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)call_expression->callee_expression;
-                        if (symbol_expression->symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-                            Checked_Procedure_Symbol *called_procedure_symbol = (Checked_Procedure_Symbol *)symbol_expression->symbol;
-                            if (called_procedure_symbol->parsed_procedure_statement->is_external) {
-                                if (called_procedure_symbol->external_name != NULL) {
-                                    if (String__equals_cstring(called_procedure_symbol->external_name, "exit")) {
-                                        has_return_statement = true;
-                                    }
-                                } else if (String__equals_cstring(called_procedure_symbol->procedure_name, "exit")) {
-                                    has_return_statement = true;
-                                }
-                            }
-                        }
-                    }
-                }
-                break;
-            }
-            case CHECKED_STATEMENT_KIND__RETURN:
-                has_return_statement = true;
-                break;
-            default:
-                break;
-            }
-        }
-        if (!has_return_statement) {
-            pWriter__begin_location_message(stderr_writer, last_statement ? last_statement->location : procedure_symbol->super.location, WRITER_STYLE__ERROR);
+        if (!Checked_Statement__is_terminal((Checked_Statement *)checked_block_statement)) {
+            Source_Location location = checked_block_statement->super.location;
+            location.start_line = location.end_line;
+            location.start_column = location.end_column;
+            pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Missing return statement");
             pWriter__end_location_message(stderr_writer);
             panic();
