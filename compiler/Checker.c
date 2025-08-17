@@ -2473,9 +2473,11 @@ Checked_Statement *Checker__check_raise_statement(Checker *self, Parsed_Raise_St
         panic();
     }
     Checked_Type *procedure_raise_type = ((Checked_Result_Type *)self->return_type)->raise_type;
-    Decomposed_Expression raise_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, procedure_raise_type));
+    Decomposed_Expression raise_expression = Checker__decompose_expression_with_temp_variable(self, Checker__check_expression(self, parsed_statement->expression, procedure_raise_type), true);
+    Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_statement->super.location, raise_expression.statements);
+    Checked_Statements__append(block_statement->statements, (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, (Checked_Expression *)Checked_Result_Expression__create(raise_expression.expression->location, self->return_type, NULL, raise_expression.expression)));
     self->is_unreachable_statement = true;
-    return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, (Checked_Expression *)Checked_Result_Expression__create(raise_expression.expression->location, self->return_type, NULL, raise_expression.expression));
+    return (Checked_Statement *)block_statement;
 }
 
 Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_Statement *parsed_statement) {
