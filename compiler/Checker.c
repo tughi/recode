@@ -94,6 +94,7 @@ typedef struct Checker {
     Checked_Type *return_type;
     int32_t temp_variable_counter;
     bool is_deferred_statement;
+    bool is_unreachable_statement;
 } Checker;
 
 Checker *Checker__create(Parsed_Source *parsed_source) {
@@ -121,6 +122,7 @@ Checker *Checker__create(Parsed_Source *parsed_source) {
     checker->return_type = NULL;
 
     checker->is_deferred_statement = false;
+    checker->is_unreachable_statement = false;
 
     return checker;
 }
@@ -2374,6 +2376,7 @@ Checked_Block_Statement *Checker__check_block_statement(Checker *self, Parsed_Bl
     self->symbols = self->symbols->parent;
 
     Checked_Block_Statement *block_statement = Checked_Block_Statement__create(parsed_block_statement->super.location, checked_statements);
+    self->is_unreachable_statement = false;
     return block_statement;
 }
 
@@ -2384,6 +2387,7 @@ Checked_Statement *Checker__check_break_statement(Checker *self, Parsed_Break_St
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+    self->is_unreachable_statement = true;
     return (Checked_Statement *)Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
@@ -2470,6 +2474,7 @@ Checked_Statement *Checker__check_raise_statement(Checker *self, Parsed_Raise_St
     }
     Checked_Type *procedure_raise_type = ((Checked_Result_Type *)self->return_type)->raise_type;
     Decomposed_Expression raise_expression = Checker__decompose_expression(self, Checker__check_expression(self, parsed_statement->expression, procedure_raise_type));
+    self->is_unreachable_statement = true;
     return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, (Checked_Expression *)Checked_Result_Expression__create(raise_expression.expression->location, self->return_type, NULL, raise_expression.expression));
 }
 
@@ -2506,6 +2511,8 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Parsed_Return_
             result_expression = (Checked_Expression *)Checked_Result_Expression__create(parsed_statement->super.location, self->return_type, NULL, NULL);
         }
     }
+
+    self->is_unreachable_statement = true;
 
     if (result_expression != NULL) {
         Decomposed_Expression decomposed_expression = Checker__decompose_expression_with_temp_variable(self, result_expression, true);
@@ -2864,6 +2871,12 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Pa
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement, Checked_Type *expected_type) {
+    if (self->is_unreachable_statement) {
+        pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unreachable statement");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     switch (parsed_statement->kind) {
     case PARSED_STATEMENT_KIND__ASSIGNMENT:
         return Checker__check_assignment_statement(self, (Parsed_Assignment_Statement *)parsed_statement);
