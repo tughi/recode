@@ -6,12 +6,12 @@ proc main() -> i32 {
 
     test(
 
-        1, 2, 3 \ comment
+        1, 2, 3 // comment
 
-        \ comment
+        // comment
 
          4
-        \ comment
+        // comment
         5
 
     )

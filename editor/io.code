@@ -45,7 +45,7 @@ proc (^i32).write_to(self, anon writer: ^Writer) {
 }
 
 proc (^Writer).write_unsigned(self, anon value: u64, base: u64) -> ^Writer {
-    \ Find the highest power of 10
+    // Find the highest power of 10
     let divisor = 1u64
     let temp_value = value
     while temp_value >= base {
@@ -53,13 +53,13 @@ proc (^Writer).write_unsigned(self, anon value: u64, base: u64) -> ^Writer {
         temp_value = temp_value / base
     }
 
-    \ Write digits from highest to lowest
+    // Write digits from highest to lowest
     let digits = "0123456789abcdef".data()
     temp_value = value
     while divisor > 0 {
         let digit = digits[temp_value / divisor]
         self.write_char(digit)
-        temp_value = temp_value // divisor
+        temp_value = temp_value % divisor
         divisor = divisor / base
     }
 

@@ -21,7 +21,7 @@ proc (^Writer).write(self, char c: u8) -> ^Writer {
 }
 
 proc (^Writer).write_signed(self, signed value: i32) -> ^Writer {
-    \ TODO: Use a buffer to avoid recursion
+    // TODO: Use a buffer to avoid recursion
     if value < 0 {
         self.write(char: '-')
         return self.write_signed(signed: -value)
@@ -29,7 +29,7 @@ proc (^Writer).write_signed(self, signed value: i32) -> ^Writer {
     if value >= 10 {
         self.write_signed(signed: value / 10)
     }
-    return self.write(char: (value // 10).as(u8) + '0')
+    return self.write(char: (value % 10).as(u8) + '0')
 }
 
 proc (^Writer).end_line(self) -> ^Writer {

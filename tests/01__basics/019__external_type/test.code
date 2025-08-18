@@ -5,8 +5,8 @@ let stdout: ^FILE = external "__stdoutp"
 proc fputc(anon ch: i32, anon file: ^FILE) -> i32 = external
 
 proc main() -> i32 {
-    fputc(52, stdout) \\ '4'
-    fputc(50, stdout) \\ '2'
-    fputc(10, stdout) \\ '\n'
+    fputc(52, stdout) // '4'
+    fputc(50, stdout) // '2'
+    fputc(10, stdout) // '\n'
     return 0
 }

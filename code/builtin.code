@@ -1,4 +1,4 @@
-\ This file is automatically imported by the compiler.
+// This file is automatically imported by the compiler.
 
 type bool = builtin
 

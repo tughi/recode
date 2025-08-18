@@ -8,7 +8,7 @@ proc main() -> i32 {
         return 2
     }
     if t and t {
-        \ correct
+        // correct
     } else {
         return 3
     }

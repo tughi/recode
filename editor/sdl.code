@@ -35,7 +35,7 @@ proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
 
 proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"
 
-type Event = struct { \ SDL_Event
+type Event = struct { // SDL_Event
     type: u32
     timestamp: u32
     window_id: u32
@@ -50,7 +50,7 @@ type Event = struct { \ SDL_Event
 
 proc poll_event(anon event: ^Event) -> i32 = external "SDL_PollEvent"
 
-type Window_Event = struct { \ SDL_WindowEvent
+type Window_Event = struct { // SDL_WindowEvent
     type: u32
     timestamp: u32
     window_id: u32
@@ -62,7 +62,7 @@ type Window_Event = struct { \ SDL_WindowEvent
     data2: i32
 }
 
-type Keyboard_Event = struct { \ SDL_KeyboardEvent
+type Keyboard_Event = struct { // SDL_KeyboardEvent
     type: u32
     timestamp: u32
     window_id: u32
@@ -73,14 +73,14 @@ type Keyboard_Event = struct { \ SDL_KeyboardEvent
     key: Keyboard_Key
 }
 
-type Keyboard_Key = struct { \ SDL_Keysym
+type Keyboard_Key = struct { // SDL_Keysym
     scan_code: u32
     key_code: u32
     modifiers: u32
     unused: u32
 }
 
-type Mouse_Motion_Event = struct { \ SDL_MouseMotionEvent
+type Mouse_Motion_Event = struct { // SDL_MouseMotionEvent
     type: u32
     timestamp: u32
     window_id: u32
@@ -92,7 +92,7 @@ type Mouse_Motion_Event = struct { \ SDL_MouseMotionEvent
     y_rel: i32
 }
 
-type Mouse_Button_Event = struct { \ SDL_MouseButtonEvent
+type Mouse_Button_Event = struct { // SDL_MouseButtonEvent
     type: u32
     timestamp: u32
     window_id: u32
@@ -105,7 +105,7 @@ type Mouse_Button_Event = struct { \ SDL_MouseButtonEvent
     y: i32
 }
 
-type Mouse_Wheel_Event = struct { \ SDL_MouseWheelEvent
+type Mouse_Wheel_Event = struct { // SDL_MouseWheelEvent
     type: u32
     timestamp: u32
     window_id: u32

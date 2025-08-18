@@ -4,7 +4,7 @@ import libc
 proc main() -> i32 {
     let stdout = io.Writer(libc.stdout)
 
-    stdout.write(char: 52).write(char: 50).write(char: 10) \ "42\n"
+    stdout.write(char: 52).write(char: 50).write(char: 10) // "42\n"
 
     return 0
 }

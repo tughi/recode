@@ -63,11 +63,15 @@ Token *Scanner__scan_character_token(Scanner *self, String *token_lexeme) {
     return (Token *)Character_Token__create(self->current_location, token_lexeme, value);
 }
 
-Token *Scanner__scan_comment_token(Scanner *self, String *token_lexeme) {
-    do {
-        String__append_char(token_lexeme, Scanner__next_char(self));
-    } while (Scanner__peek_char(self) != '\n');
-    return (Token *)Comment_Token__create(self->current_location, token_lexeme);
+Token *Scanner__scan_comment_or_other_token(Scanner *self, String *token_lexeme) {
+    String__append_char(token_lexeme, Scanner__next_char(self));
+    if (Scanner__peek_char(self) == '/') {
+        do {
+            String__append_char(token_lexeme, Scanner__next_char(self));
+        } while (Scanner__peek_char(self) != '\n');
+        return (Token *)Comment_Token__create(self->current_location, token_lexeme);
+    }
+    return (Token *)Other_Token__create(self->current_location, token_lexeme);
 }
 
 Token *Scanner__scan_identifier_token(Scanner *self, String *token_lexeme) {
@@ -191,8 +195,8 @@ Token *Scanner__scan_token(Scanner *self) {
         return Scanner__scan_string_token(self, token_lexeme);
     }
 
-    if (next_char == '\\') {
-        return Scanner__scan_comment_token(self, token_lexeme);
+    if (next_char == '/') {
+        return Scanner__scan_comment_or_other_token(self, token_lexeme);
     }
 
     if (next_char == '\n') {

@@ -417,33 +417,31 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
     return Parser__parse_access_expression(self);
 }
 
-bool Token__is_asterisk_or_slash(Token *self) {
-    return Token__is_asterisk(self) || Token__is_slash(self);
+bool Token__is_asterisk_or_percent_or_slash(Token *self) {
+    return Token__is_asterisk(self) || Token__is_percent(self) || Token__is_slash(self);
 }
 
 // multiplicative_expression
-//  | unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
+//  | unary_expression ( ( "*" | "/" | "%" ) unary_expression )*
 Parsed_Expression *Parser__parse_multiplicative_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_unary_expression(self);
-    while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk_or_slash)) {
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk_or_percent_or_slash)) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_asterisk)) {
             Parser__consume_token(self, Token__is_asterisk);
             Parser__consume_space(self, 1);
             Parsed_Expression *right_expression = Parser__parse_unary_expression(self);
             expression = (Parsed_Expression *)Parsed_Multiply_Expression__create(expression, right_expression);
-        } else {
+        } else if (Parser__matches_one(self, Token__is_percent)) {
+            Parser__consume_token(self, Token__is_percent);
+            Parser__consume_space(self, 1);
+            Parsed_Expression *right_expression = Parser__parse_unary_expression(self);
+            expression = (Parsed_Expression *)Parsed_Modulo_Expression__create(expression, right_expression);
+        } else if (Parser__matches_one(self, Token__is_slash)) {
             Parser__consume_token(self, Token__is_slash);
-            if (Parser__matches_one(self, Token__is_slash)) {
-                Parser__consume_token(self, Token__is_slash);
-                Parser__consume_space(self, 1);
-                Parsed_Expression *right_expression = Parser__parse_unary_expression(self);
-                expression = (Parsed_Expression *)Parsed_Modulo_Expression__create(expression, right_expression);
-            } else {
-                Parser__consume_space(self, 1);
-                Parsed_Expression *right_expression = Parser__parse_unary_expression(self);
-                expression = (Parsed_Expression *)Parsed_Divide_Expression__create(expression, right_expression);
-            }
+            Parser__consume_space(self, 1);
+            Parsed_Expression *right_expression = Parser__parse_unary_expression(self);
+            expression = (Parsed_Expression *)Parsed_Divide_Expression__create(expression, right_expression);
         }
     }
     return expression;
