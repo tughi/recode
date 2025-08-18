@@ -124,7 +124,7 @@ proc (^Token).span(self) -> source.Span {
             return variant.span
         }
         else {
-            \ ignore
+            // ignore
         }
     }
     libc.exit(1)

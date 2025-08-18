@@ -1,15 +1,15 @@
 proc main() -> i32 {
     let out: Writer = stdout
 
-    \ let message = "Hello, World!"
-    \ let writable_message = Writable(^message)
-    \ out.write(writable_message).end_line()
-    out.write("Hello, World!").end_line() \ This should do the same as the commented code
+    // let message = "Hello, World!"
+    // let writable_message = Writable(^message)
+    // out.write(writable_message).end_line()
+    out.write("Hello, World!").end_line() // This should do the same as the commented code
 
-    \ let number = 42
-    \ let writable_number = Writable(^number)
-    \ out.write(writable_number).end_line()
-    out.write(42).end_line() \ This should write the number 42 directly
+    // let number = 42
+    // let writable_number = Writable(^number)
+    // out.write(writable_number).end_line()
+    out.write(42).end_line() // This should write the number 42 directly
 
     return 0
 }
@@ -24,7 +24,7 @@ proc (^i32).write_to(self, anon writer: ^Writer) {
         let factor = number / 10
         factor.write_to(writer)
     }
-    writer.write_char((number // 10).as(u8) + '0')
+    writer.write_char((number % 10).as(u8) + '0')
 }
 
 proc (^str).write_to(self, anon writer: ^Writer) {
@@ -36,7 +36,7 @@ proc (^str).write_to(self, anon writer: ^Writer) {
     }
 }
 
-\ Writer
+// Writer
 
 type Writer = trait {
     proc write_char(self, anon c: u8)
@@ -47,7 +47,7 @@ proc (^Writer).end_line(self) -> ^Writer {
     return self
 }
 
-\ Writable
+// Writable
 
 type Writable = trait {
     proc write_to(self, anon writer: ^Writer)
@@ -58,7 +58,7 @@ proc (^Writer).write(self, anon writable: Writable) -> ^Writer {
     return self
 }
 
-\ LibC
+// LibC
 
 type FILE = external
 

@@ -26,7 +26,7 @@ proc evaluate(expression: Expression) -> i32 {
             return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
         else {
-            \ ignore
+            // ignore
         }
     }
     exit(1)

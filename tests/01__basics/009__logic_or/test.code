@@ -2,17 +2,17 @@ proc main() -> i32 {
     let t = echo(true)
     let f = echo(false)
     if t or f {
-        \ correct
+        // correct
     } else {
         return 1
     }
     if f or t {
-        \ correct
+        // correct
     } else {
         return 2
     }
     if t or t {
-        \ correct
+        // correct
     } else {
         return 3
     }

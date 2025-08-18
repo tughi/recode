@@ -3,7 +3,7 @@ proc main() -> i32 {
         return 1
     }
     if test_not(false) {
-        \ correct
+        // correct
     } else {
         return 2
     }

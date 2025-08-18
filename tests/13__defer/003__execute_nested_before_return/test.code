@@ -4,7 +4,7 @@ proc main() -> i32 {
     {
         defer result = 10
         {
-            return result - 42 \ result is still 42 when the return value is evaluated
+            return result - 42 // result is still 42 when the return value is evaluated
         }
     }
     return 1
