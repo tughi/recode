@@ -111,6 +111,7 @@ bool Token__is_closing_paren(Token *self);
 bool Token__is_colon(Token *self);
 bool Token__is_comma(Token *self);
 bool Token__is_comment(Token *self);
+bool Token__is_const(Token *self);
 bool Token__is_defer(Token *self);
 bool Token__is_dot(Token *self);
 bool Token__is_else(Token *self);

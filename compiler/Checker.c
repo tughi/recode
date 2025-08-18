@@ -2391,6 +2391,49 @@ Checked_Statement *Checker__check_break_statement(Checker *self, Parsed_Break_St
     return (Checked_Statement *)Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
+void Checked_Expression__require_constant(Checked_Expression *self) {
+    switch (self->kind) {
+    case CHECKED_EXPRESSION_KIND__INTEGER:
+    case CHECKED_EXPRESSION_KIND__BOOL:
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
+    case CHECKED_EXPRESSION_KIND__STRING:
+        return;
+    case CHECKED_EXPRESSION_KIND__ADD:
+    case CHECKED_EXPRESSION_KIND__DIVIDE:
+    case CHECKED_EXPRESSION_KIND__MODULO:
+    case CHECKED_EXPRESSION_KIND__MULTIPLY:
+    case CHECKED_EXPRESSION_KIND__SUBTRACT: {
+        Checked_Binary_Expression *binary_expression = (Checked_Binary_Expression *)self;
+        Checked_Expression__require_constant(binary_expression->left_expression);
+        Checked_Expression__require_constant(binary_expression->right_expression);
+        return;
+    }
+    case CHECKED_EXPRESSION_KIND__SYMBOL: {
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)self)->symbol;
+        if (symbol->kind != CHECKED_SYMBOL_KIND__CONSTANT) {
+            pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Expected constant symbol");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        return;
+    }
+    default:
+        pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected constant expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+}
+
+Checked_Statement *Checker__check_constant_statement(Checker *self, Parsed_Constant_Statement *parsed_statement) {
+    Checked_Expression *value_expression = Checker__check_expression(self, parsed_statement->value_expression, NULL);
+    Checked_Expression__require_constant(value_expression);
+    Checked_Constant_Symbol *constant_symbol = Checked_Constant_Symbol__create(self->checked_module, parsed_statement->super.name->location, parsed_statement->super.name->lexeme, value_expression);
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)constant_symbol);
+    return (Checked_Statement *)Checked_Constant_Statement__create(parsed_statement->super.super.location, constant_symbol);
+}
+
 Checked_Statement *Checker__check_defer_statement(Checker *self, Parsed_Defer_Statement *parsed_statement) {
     bool is_deferred_statement = self->is_deferred_statement;
     self->is_deferred_statement = true;
@@ -3192,6 +3235,9 @@ void Checker__check_module(Checker *self) {
             break;
         case PARSED_STATEMENT_KIND__VARIABLE:
             checked_statement = (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
+            break;
+        case PARSED_STATEMENT_KIND__CONSTANT:
+            checked_statement = (Checked_Statement *)Checker__check_constant_statement(self, (Parsed_Constant_Statement *)parsed_statement);
             break;
         default:
             pWriter__begin_location_message(stderr_writer, parsed_statement->location, WRITER_STYLE__ERROR);

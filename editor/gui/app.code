@@ -19,7 +19,7 @@ proc init() !> errors.Error {
     first_window = null
     last_window = null
 
-    if sdl.init(0x20) != 0 {
+    if sdl.init(sdl.INIT_VIDEO) != 0 {
         raise errors.Error(message: "Failed to initialize SDL")
     }
 
@@ -49,21 +49,21 @@ proc run() -> i32 {
                 window = window.next
             }
 
-            if event.type == 0x100 { // SDL_QUIT
+            if event.type == sdl.EVENT_TYPE_QUIT {
                 running = false
-            } else if event.type == 0x200 { // SDL_WINDOWEVENT
+            } else if event.type == sdl.EVENT_TYPE_WINDOW {
                 window.on_window_event((^event).as(^sdl.Window_Event))
-            } else if event.type == 0x300 { // SDL_KEYDOWN
+            } else if event.type == sdl.EVENT_TYPE_KEY_DOWN {
                 window.on_key_down_event((^event).as(^sdl.Keyboard_Event))
-            } else if event.type == 0x301 { // SDL_KEYUP
+            } else if event.type == sdl.EVENT_TYPE_KEY_UP {
                 window.on_key_up_event((^event).as(^sdl.Keyboard_Event))
-            } else if event.type == 0x400 { // SDL_MOUSEMOTION
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
                 window.on_mouse_motion_event((^event).as(^sdl.Mouse_Motion_Event))
-            } else if event.type == 0x401 { // SDL_MOUSEBUTTONDOWN
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_DOWN {
                 window.on_mouse_button_down_event((^event).as(^sdl.Mouse_Button_Event))
-            } else if event.type == 0x402 { // SDL_MOUSEBUTTONUP
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_UP {
                 window.on_mouse_button_up_event((^event).as(^sdl.Mouse_Button_Event))
-            } else if event.type == 0x403 { // SDL_MOUSEWHEEL
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_WHEEL {
                 window.on_mouse_wheel_event((^event).as(^sdl.Mouse_Wheel_Event))
             } else {
                 os.stdout.write("Unsupported event (").write_hex(event.type).write(')').end_line()

@@ -381,6 +381,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
+    PARSED_STATEMENT_KIND__CONSTANT,
     PARSED_STATEMENT_KIND__DEFER,
     PARSED_STATEMENT_KIND__EXPRESSION,
     PARSED_STATEMENT_KIND__IF,
@@ -448,6 +449,13 @@ typedef struct Parsed_Break_Statement {
 } Parsed_Break_Statement;
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location location);
+
+typedef struct Parsed_Constant_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Expression *value_expression;
+} Parsed_Constant_Statement;
+
+Parsed_Constant_Statement *Parsed_Constant_Statement__create(Source_Location location, Token *name, Parsed_Expression *value_expression);
 
 typedef struct Parsed_Defer_Statement {
     Parsed_Statement super;

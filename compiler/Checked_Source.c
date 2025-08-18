@@ -469,6 +469,12 @@ Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kin
     return symbol;
 }
 
+Checked_Constant_Symbol *Checked_Constant_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *value_expression) {
+    Checked_Constant_Symbol *symbol = (Checked_Constant_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__CONSTANT, sizeof(Checked_Constant_Symbol), module, location, name, value_expression->type, true);
+    symbol->value_expression = value_expression;
+    return symbol;
+}
+
 Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type) {
     return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), module, location, name, type, true);
 }
@@ -1034,6 +1040,12 @@ Checked_Block_Statement *Checked_Block_Statement__create(Source_Location locatio
 
 Checked_Break_Statement *Checked_Break_Statement__create(Source_Location location) {
     return (Checked_Break_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__BREAK, sizeof(Checked_Break_Statement), location);
+}
+
+Checked_Constant_Statement *Checked_Constant_Statement__create(Source_Location location, Checked_Constant_Symbol *constant) {
+    Checked_Constant_Statement *statement = (Checked_Constant_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__CONSTANT, sizeof(Checked_Constant_Statement), location);
+    statement->constant = constant;
+    return statement;
 }
 
 Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements) {

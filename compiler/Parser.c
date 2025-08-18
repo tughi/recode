@@ -1189,6 +1189,21 @@ Parsed_Statement *Parser__parse_break_statement(Parser *self) {
 Parsed_Statement *Parser__parse_statement(Parser *self);
 
 /*
+const
+    | "const" IDENTIFIER "=" expression
+*/
+Parsed_Statement *Parser__parse_constant_statement(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_const);
+    Parser__consume_space(self, 1);
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_equals);
+    Parser__consume_space(self, 1);
+    Parsed_Expression *value_expression = Parser__parse_expression(self);
+    return (Parsed_Statement *)Parsed_Constant_Statement__create(Source_Location__merge(first_token->location, value_expression->location), name, value_expression);
+}
+
+/*
 defer
     | "defer" statement
 */
@@ -1308,6 +1323,7 @@ statement
     | assignment
     | block
     | break
+    | constant
     | defer
     | expression
     | if
@@ -1376,6 +1392,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_one(self, Token__is_yield)) {
         return Parser__parse_yield_statement(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_const)) {
+        return Parser__parse_constant_statement(self);
     }
 
     Parsed_Expression *expression = Parser__parse_expression(self);

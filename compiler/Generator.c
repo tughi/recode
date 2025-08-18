@@ -409,6 +409,13 @@ void Generator__generate_subtract_expression(Generator *self, Checked_Subtract_E
 
 void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expression *expression) {
     switch (expression->symbol->kind) {
+    case CHECKED_SYMBOL_KIND__CONSTANT: {
+        Checked_Constant_Symbol *constant_symbol = (Checked_Constant_Symbol *)expression->symbol;
+        pWriter__write__char(self->writer, '(');
+        Generator__generate_expression(self, constant_symbol->value_expression);
+        pWriter__write__char(self->writer, ')');
+        break;
+    }
     case CHECKED_SYMBOL_KIND__PROCEDURE: {
         CDECL_Procedure_Name procedure_name = CDECL_Procedure_Name__create((Checked_Procedure_Symbol *)expression->symbol);
         procedure_name.super.write((CDECL_Name *)&procedure_name, self->writer);
