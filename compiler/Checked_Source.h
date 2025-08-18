@@ -290,6 +290,7 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
+    CHECKED_SYMBOL_KIND__CONSTANT,
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
     CHECKED_SYMBOL_KIND__EXTERNAL,
     CHECKED_SYMBOL_KIND__GENERIC_PROCEDURE,
@@ -315,6 +316,13 @@ typedef struct Checked_Symbol {
 } Checked_Symbol;
 
 Checked_Symbol *Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global);
+
+typedef struct Checked_Constant_Symbol {
+    Checked_Symbol super;
+    Checked_Expression *value_expression;
+} Checked_Constant_Symbol;
+
+Checked_Constant_Symbol *Checked_Constant_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Expression *value_expression);
 
 typedef struct Checked_Enum_Member_Symbol {
     Checked_Symbol super;
@@ -348,6 +356,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
     CHECKED_STATEMENT_KIND__BLOCK,
     CHECKED_STATEMENT_KIND__BREAK,
+    CHECKED_STATEMENT_KIND__CONSTANT,
     CHECKED_STATEMENT_KIND__DECOMPOSED,
     CHECKED_STATEMENT_KIND__DEFER,
     CHECKED_STATEMENT_KIND__EXPRESSION,
@@ -816,6 +825,13 @@ typedef struct Checked_Break_Statement {
 } Checked_Break_Statement;
 
 Checked_Break_Statement *Checked_Break_Statement__create(Source_Location location);
+
+typedef struct Checked_Constant_Statement {
+    Checked_Statement super;
+    Checked_Constant_Symbol *constant;
+} Checked_Constant_Statement;
+
+Checked_Constant_Statement *Checked_Constant_Statement__create(Source_Location location, Checked_Constant_Symbol *constant);
 
 typedef struct Checked_Decomposed_Statement {
     Checked_Statement super;

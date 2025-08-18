@@ -1,3 +1,5 @@
+const INIT_VIDEO = 0x0020u32
+
 proc init(anon flags: u32) -> i32 = external "SDL_Init"
 
 proc quit() = external "SDL_Quit"
@@ -34,6 +36,15 @@ proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SD
 proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
 
 proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"
+
+const EVENT_TYPE_QUIT = 0x0100u32 // SDL_QUIT
+const EVENT_TYPE_WINDOW = 0x0200u32 // SDL_WINDOWEVENT
+const EVENT_TYPE_KEY_DOWN = 0x0300u32 // SDL_KEYDOWN
+const EVENT_TYPE_KEY_UP = 0x0301u32 // SDL_KEYUP
+const EVENT_TYPE_MOUSE_MOTION = 0x0400u32 // SDL_MOUSEMOTION
+const EVENT_TYPE_MOUSE_BUTTON_DOWN = 0x0401u32 // SDL_MOUSEBUTTONDOWN
+const EVENT_TYPE_MOUSE_BUTTON_UP = 0x0402u32 // SDL_MOUSEBUTTONUP
+const EVENT_TYPE_MOUSE_WHEEL = 0x0403u32 // SDL_MOUSEWHEEL
 
 type Event = struct { // SDL_Event
     type: u32

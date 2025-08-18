@@ -1,0 +1,5 @@
+import constants
+
+proc main() -> i32 {
+    return constants.FORTY_TWO - 42
+}
