@@ -1,0 +1,4 @@
+proc foo() !> i32 {
+    raise 42
+    executed = true
+}

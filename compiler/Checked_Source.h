@@ -349,6 +349,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__BLOCK,
     CHECKED_STATEMENT_KIND__BREAK,
     CHECKED_STATEMENT_KIND__DECOMPOSED,
+    CHECKED_STATEMENT_KIND__DEFER,
     CHECKED_STATEMENT_KIND__EXPRESSION,
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
@@ -367,6 +368,8 @@ typedef struct Checked_Statement {
 } Checked_Statement;
 
 Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location location);
+
+bool Checked_Statement__is_terminal(Checked_Statement *self);
 
 typedef struct Checked_Statements {
     Checked_Statement *first_statement;
@@ -389,7 +392,7 @@ typedef struct Checked_Procedure_Symbol {
     String *procedure_name;
     Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
-    Checked_Statements *checked_statements;
+    Checked_Statement *checked_block_statement;
     String *external_name;
 } Checked_Procedure_Symbol;
 
@@ -429,6 +432,7 @@ struct Checked_Variable_Statement;
 typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
     String *external_name;
+    bool is_temp;
     struct Checked_Variable_Statement *statement;
 } Checked_Variable_Symbol;
 
@@ -819,6 +823,14 @@ typedef struct Checked_Decomposed_Statement {
 } Checked_Decomposed_Statement;
 
 Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Location location, Checked_Statements *statements);
+
+typedef struct Checked_Defer_Statement {
+    Checked_Statement super;
+    Checked_Statement *statement;
+    struct Checked_Defer_Statement *prev_defer_statement;
+} Checked_Defer_Statement;
+
+Checked_Defer_Statement *Checked_Defer_Statement__create(Source_Location location, Checked_Statement *statement);
 
 typedef struct Checked_Expression_Statement {
     Checked_Statement super;

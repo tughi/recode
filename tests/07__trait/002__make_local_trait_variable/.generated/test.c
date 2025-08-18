@@ -5,7 +5,14 @@ void *malloc(uintmax_t size);
 #line 5 "tests/07__trait/002__make_local_trait_variable/test.code"
 int32_t ptest_Dog__legs(struct test_Dog *self) {
 #line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
-    return 4;
+    {
+#line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
+        int32_t __001__ = 4;
+#line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
+        return __001__;
+#line 6 "tests/07__trait/002__make_local_trait_variable/test.code"
+    }
+#line 7 "tests/07__trait/002__make_local_trait_variable/test.code"
 }
 
 #line 13 "tests/07__trait/002__make_local_trait_variable/test.code"
@@ -15,7 +22,14 @@ int32_t test__main() {
 #line 15 "tests/07__trait/002__make_local_trait_variable/test.code"
     struct test_Animal animal = (struct test_Animal){.self = &dog, .legs = ((int32_t (*)(void *self)) ptest_Dog__legs)};
 #line 16 "tests/07__trait/002__make_local_trait_variable/test.code"
-    return 0;
+    {
+#line 16 "tests/07__trait/002__make_local_trait_variable/test.code"
+        int32_t __001__ = 0;
+#line 16 "tests/07__trait/002__make_local_trait_variable/test.code"
+        return __001__;
+#line 16 "tests/07__trait/002__make_local_trait_variable/test.code"
+    }
+#line 17 "tests/07__trait/002__make_local_trait_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

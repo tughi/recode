@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/13__defer/004__deferred_break/test.code:5:17-22: Cannot defer break statements"
+        ]
+    }
+}

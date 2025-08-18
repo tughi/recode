@@ -6,7 +6,7 @@ typedef struct Parser {
     String *project_dir;
     Scanner *scanner;
     Parsed_Source *parsed_source;
-    uint16_t current_identation;
+    uint16_t current_indentation;
 } Parser;
 
 Token *Parser__peek_token(Parser *self, uint8_t offset) {
@@ -103,7 +103,7 @@ bool Parser__consume_empty_line(Parser *self) {
     }
     if (Parser__matches_three(self, Token__is_space, false, Token__is_comment, false, Token__is_end_of_line)) {
         if (Parser__matches_two(self, Token__is_space, false, Token__is_comment)) {
-            Parser__consume_space(self, self->current_identation * 4);
+            Parser__consume_space(self, self->current_indentation * 4);
             Parser__consume_comment(self);
         } else {
             Parser__consume_space(self, 0);
@@ -248,8 +248,8 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
     if (Parser__matches_end_of_line(self)) {
         Parser__consume_space(self, 0);
         multiline = true;
-        self->current_identation = self->current_identation + 1;
-        space_before_argument_list = self->current_identation * 4;
+        self->current_indentation = self->current_indentation + 1;
+        space_before_argument_list = self->current_indentation * 4;
         while (Parser__consume_empty_line(self)) {
             /* ignored */
         }
@@ -282,15 +282,15 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
                 pWriter__write__cstring(stderr_writer, "Multi-line argument list must start on a new line");
                 pWriter__end_location_message(stderr_writer);
                 multiline = true;
-                self->current_identation = self->current_identation + 1;
-                space_before_argument_list = self->current_identation * 4;
+                self->current_indentation = self->current_indentation + 1;
+                space_before_argument_list = self->current_indentation * 4;
             }
         } else if (multiline && Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
             pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__WARNING);
             pWriter__write__cstring(stderr_writer, "Multi-line argument list must end on a new line");
             pWriter__end_location_message(stderr_writer);
             multiline = false;
-            self->current_identation = self->current_identation - 1;
+            self->current_indentation = self->current_indentation - 1;
         }
 
         if (multiline) {
@@ -301,8 +301,8 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
     }
 
     if (multiline) {
-        self->current_identation = self->current_identation - 1;
-        Parser__consume_space(self, self->current_identation * 4);
+        self->current_indentation = self->current_indentation - 1;
+        Parser__consume_space(self, self->current_indentation * 4);
     }
 
     return first_argument;
@@ -592,12 +592,12 @@ Parsed_Type_Specifier *Parser__parse_struct_type_specifier(Parser *self) {
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
-    self->current_identation = self->current_identation + 1;
+    self->current_indentation = self->current_indentation + 1;
     Parsed_Struct_Member *first_struct_member = NULL;
     Parsed_Struct_Member *last_struct_member = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
-            Parser__consume_space(self, self->current_identation * 4);
+            Parser__consume_space(self, self->current_indentation * 4);
             Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_colon);
@@ -613,8 +613,8 @@ Parsed_Type_Specifier *Parser__parse_struct_type_specifier(Parser *self) {
             last_struct_member = struct_member;
         }
     }
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Type_Specifier *)Parsed_Struct_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_struct_member);
 }
@@ -630,12 +630,12 @@ Parsed_Type_Specifier *Parser__parse_trait_type_specifier(Parser *self) {
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
-    self->current_identation = self->current_identation + 1;
+    self->current_indentation = self->current_indentation + 1;
     Parsed_Trait_Method *first_trait_method = NULL;
     Parsed_Trait_Method *last_trait_method = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
-            Parser__consume_space(self, self->current_identation * 4);
+            Parser__consume_space(self, self->current_indentation * 4);
             Source_Location method_location = Parser__consume_token(self, Token__is_proc)->location;
             Parser__consume_space(self, 1);
             Token *method_name = Parser__consume_token(self, Token__is_identifier);
@@ -671,8 +671,8 @@ Parsed_Type_Specifier *Parser__parse_trait_type_specifier(Parser *self) {
             last_trait_method = trait_method;
         }
     }
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Type_Specifier *)Parsed_Trait_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_trait_method);
 }
@@ -686,12 +686,12 @@ Parsed_Type_Specifier *Parser__parse_variant_type_specifier(Parser *self) {
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
-    self->current_identation = self->current_identation + 1;
+    self->current_indentation = self->current_indentation + 1;
     Parsed_Variant_Case *first_variant_case = NULL;
     Parsed_Variant_Case *last_variant_case = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
-            Parser__consume_space(self, self->current_identation * 4);
+            Parser__consume_space(self, self->current_indentation * 4);
             Parsed_Type *variant_type = Parser__parse_type(self);
             Parser__consume_end_of_line(self);
             Parsed_Variant_Case *variant_case = Parsed_Variant_Case__create(variant_type);
@@ -703,8 +703,8 @@ Parsed_Type_Specifier *Parser__parse_variant_type_specifier(Parser *self) {
             last_variant_case = variant_case;
         }
     }
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Type_Specifier *)Parsed_Variant_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_variant_case);
 }
@@ -1011,10 +1011,10 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
     Token *first_token = Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
     Parsed_Statements *statements = Parsed_Statements__create(false);
-    self->current_identation = self->current_identation + 1;
+    self->current_indentation = self->current_indentation + 1;
     Parser__parse_statements(self, statements);
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
     return Parsed_Block_Statement__create(Source_Location__merge(first_token->location, last_token->location), statements);
 }
@@ -1086,16 +1086,9 @@ Parsed_Statement *Parser__parse_procedure(Parser *self, Parsed_Type *receiver_ty
         panic();
     }
     Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_opening_brace);
-    Parser__consume_end_of_line(self);
-    Parsed_Statements *statements = Parsed_Statements__create(false);
-    self->current_identation = self->current_identation + 1;
-    Parser__parse_statements(self, statements);
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
-    Token *closing_brace = Parser__consume_token(self, Token__is_closing_brace);
-    location = Source_Location__merge(location, closing_brace->location);
-    return Parsed_Procedure_Statement__create(location, name, first_type_parameter, receiver_type != NULL, first_parameter, return_type, raise_type, false, statements, NULL);
+    Parsed_Block_Statement *block_statement = Parser__parse_block_statement(self);
+    location = Source_Location__merge(location, block_statement->super.location);
+    return Parsed_Procedure_Statement__create(location, name, first_type_parameter, receiver_type != NULL, first_parameter, return_type, raise_type, false, block_statement, NULL);
 }
 
 /*
@@ -1138,12 +1131,12 @@ Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
     Parsed_Expression *switch_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
-    self->current_identation = self->current_identation + 1;
+    self->current_indentation = self->current_indentation + 1;
     Parsed_Switch_Case *first_case = NULL;
     Parsed_Switch_Case *last_case = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
-            Parser__consume_space(self, self->current_identation * 4);
+            Parser__consume_space(self, self->current_indentation * 4);
             Token *first_token;
             Parsed_Switch_Case *switch_case = NULL;
             if (Parser__matches_one(self, Token__is_case)) {
@@ -1180,8 +1173,8 @@ Parsed_Statement *Parser__parse_switch_statement(Parser *self) {
             last_case = switch_case;
         }
     }
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
     Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Statement *)Parsed_Switch_Statement__create(Source_Location__merge(first_token->location, last_token->location), switch_expression, first_case);
 }
@@ -1193,6 +1186,19 @@ break
 Parsed_Statement *Parser__parse_break_statement(Parser *self) {
     Source_Location location = Parser__consume_token(self, Token__is_break)->location;
     return Parsed_Break_Statement__create(location);
+}
+
+Parsed_Statement *Parser__parse_statement(Parser *self);
+
+/*
+defer
+    | "defer" statement
+*/
+Parsed_Statement *Parser__parse_defer_statement(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_defer);
+    Parser__consume_space(self, 1);
+    Parsed_Statement *statement = Parser__parse_statement(self);
+    return (Parsed_Statement *)Parsed_Defer_Statement__create(Source_Location__merge(first_token->location, statement->location), statement);
 }
 
 // if
@@ -1302,7 +1308,9 @@ Parsed_Statement *Parser__parse_yield_statement(Parser *self) {
 /*
 statement
     | assignment
+    | block
     | break
+    | defer
     | expression
     | if
     | import
@@ -1316,8 +1324,6 @@ statement
     | yield
 */
 Parsed_Statement *Parser__parse_statement(Parser *self) {
-    Parser__consume_space(self, self->current_identation * 4);
-
     if (Parser__matches_one(self, Token__is_proc)) {
         return Parser__parse_procedure(self, NULL);
     }
@@ -1362,6 +1368,14 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
         return Parser__parse_raise_statement(self);
     }
 
+    if (Parser__matches_one(self, Token__is_opening_brace)) {
+        return (Parsed_Statement *)Parser__parse_block_statement(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_defer)) {
+        return Parser__parse_defer_statement(self);
+    }
+
     if (Parser__matches_one(self, Token__is_yield)) {
         return Parser__parse_yield_statement(self);
     }
@@ -1377,6 +1391,11 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
     }
 
     return (Parsed_Statement *)Parsed_Expression_Statement__create(expression);
+}
+
+Parsed_Statement *Parser__parse_indented_statement(Parser *self) {
+    Parser__consume_space(self, self->current_indentation * 4);
+    return Parser__parse_statement(self);
 }
 
 /*
@@ -1399,7 +1418,7 @@ void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
             }
         }
 
-        Parsed_Statement *statement = Parser__parse_statement(self);
+        Parsed_Statement *statement = Parser__parse_indented_statement(self);
 
         Parsed_Statements__append(statements, statement);
 
@@ -1456,7 +1475,7 @@ Parsed_Source *parse(String *project_dir, String *file_path) {
     parser.parsed_source = Parsed_Source__create();
     parser.parsed_source->package_name = make_package_name(file_path);
     parser.parsed_source->source = source;
-    parser.current_identation = 0;
+    parser.current_indentation = 0;
 
     Parser__parse_source(&parser, source);
 

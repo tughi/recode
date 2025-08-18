@@ -11,16 +11,37 @@ int32_t test__main() {
 #line 4 "tests/01__basics/010__logic/test.code"
     if ((t && f || f && t) || !((t || f) && (f || t))) {
 #line 5 "tests/01__basics/010__logic/test.code"
-        return 1;
+        {
+#line 5 "tests/01__basics/010__logic/test.code"
+            int32_t __001__ = 1;
+#line 5 "tests/01__basics/010__logic/test.code"
+            return __001__;
+#line 5 "tests/01__basics/010__logic/test.code"
+        }
+#line 6 "tests/01__basics/010__logic/test.code"
     }
 #line 7 "tests/01__basics/010__logic/test.code"
-    return 0;
+    {
+#line 7 "tests/01__basics/010__logic/test.code"
+        int32_t __002__ = 0;
+#line 7 "tests/01__basics/010__logic/test.code"
+        return __002__;
+#line 7 "tests/01__basics/010__logic/test.code"
+    }
+#line 8 "tests/01__basics/010__logic/test.code"
 }
 
 #line 10 "tests/01__basics/010__logic/test.code"
 bool test__echo(bool v) {
 #line 11 "tests/01__basics/010__logic/test.code"
-    return v;
+    {
+#line 11 "tests/01__basics/010__logic/test.code"
+        bool __001__ = v;
+#line 11 "tests/01__basics/010__logic/test.code"
+        return __001__;
+#line 11 "tests/01__basics/010__logic/test.code"
+    }
+#line 12 "tests/01__basics/010__logic/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

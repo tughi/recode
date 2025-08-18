@@ -304,13 +304,19 @@ Parsed_Statement *Parsed_Break_Statement__create(Source_Location location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
 
+Parsed_Defer_Statement *Parsed_Defer_Statement__create(Source_Location location, Parsed_Statement *statement) {
+    Parsed_Defer_Statement *defer_statement = (Parsed_Defer_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__DEFER, sizeof(Parsed_Defer_Statement), location);
+    defer_statement->statement = statement;
+    return defer_statement;
+}
+
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {
     Parsed_Expression_Statement *statement = (Parsed_Expression_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location);
     statement->expression = expression;
     return statement;
 }
 
-Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, Parsed_Statements *statements, String_Token *external_name) {
+Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, Token *name, Parsed_Type_Parameter *first_type_parameter, bool is_method, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type, bool is_external, Parsed_Block_Statement *block_statement, String_Token *external_name) {
     Parsed_Procedure_Statement *statement = (Parsed_Procedure_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__PROCEDURE, sizeof(Parsed_Procedure_Statement), location, name);
     statement->first_type_parameter = first_type_parameter;
     statement->is_method = is_method;
@@ -318,7 +324,7 @@ Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, T
     statement->return_type = return_type;
     statement->raise_type = raise_type;
     statement->is_external = is_external;
-    statement->statements = statements;
+    statement->block_statement = block_statement;
     statement->external_name = external_name;
     return (Parsed_Statement *)statement;
 }

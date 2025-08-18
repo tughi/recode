@@ -5,7 +5,14 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/014__while/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/014__while/test.code"
-    return test__fibonacci(12) - 144;
+    {
+#line 2 "tests/01__basics/014__while/test.code"
+        int32_t __001__ = test__fibonacci(12) - 144;
+#line 2 "tests/01__basics/014__while/test.code"
+        return __001__;
+#line 2 "tests/01__basics/014__while/test.code"
+    }
+#line 3 "tests/01__basics/014__while/test.code"
 }
 
 #line 5 "tests/01__basics/014__while/test.code"
@@ -13,7 +20,14 @@ int32_t test__fibonacci(int32_t n) {
 #line 6 "tests/01__basics/014__while/test.code"
     if (n <= 1) {
 #line 7 "tests/01__basics/014__while/test.code"
-        return n;
+        {
+#line 7 "tests/01__basics/014__while/test.code"
+            int32_t __001__ = n;
+#line 7 "tests/01__basics/014__while/test.code"
+            return __001__;
+#line 7 "tests/01__basics/014__while/test.code"
+        }
+#line 8 "tests/01__basics/014__while/test.code"
     }
 #line 10 "tests/01__basics/014__while/test.code"
     int32_t v1 = 0;
@@ -31,9 +45,17 @@ int32_t test__fibonacci(int32_t n) {
         v2 = v3;
 #line 17 "tests/01__basics/014__while/test.code"
         i = i + 1;
+#line 18 "tests/01__basics/014__while/test.code"
     }
 #line 19 "tests/01__basics/014__while/test.code"
-    return v2;
+    {
+#line 19 "tests/01__basics/014__while/test.code"
+        int32_t __002__ = v2;
+#line 19 "tests/01__basics/014__while/test.code"
+        return __002__;
+#line 19 "tests/01__basics/014__while/test.code"
+    }
+#line 20 "tests/01__basics/014__while/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

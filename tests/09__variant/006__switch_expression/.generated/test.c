@@ -11,15 +11,36 @@ int32_t test__main() {
 #line 14 "tests/09__variant/006__switch_expression/test.code"
     if (__switch_13_value__.variant == 3) {
 #line 15 "tests/09__variant/006__switch_expression/test.code"
-        return __switch_13_value__.variant_3 - 42;
+        {
+#line 15 "tests/09__variant/006__switch_expression/test.code"
+            int32_t __001__ = __switch_13_value__.variant_3 - 42;
+#line 15 "tests/09__variant/006__switch_expression/test.code"
+            return __001__;
+#line 15 "tests/09__variant/006__switch_expression/test.code"
+        }
+#line 16 "tests/09__variant/006__switch_expression/test.code"
     }
 #line 17 "tests/09__variant/006__switch_expression/test.code"
     else {
 #line 18 "tests/09__variant/006__switch_expression/test.code"
-        return 1;
+        {
+#line 18 "tests/09__variant/006__switch_expression/test.code"
+            int32_t __002__ = 1;
+#line 18 "tests/09__variant/006__switch_expression/test.code"
+            return __002__;
+#line 18 "tests/09__variant/006__switch_expression/test.code"
+        }
+#line 19 "tests/09__variant/006__switch_expression/test.code"
     }
 #line 21 "tests/09__variant/006__switch_expression/test.code"
-    return 2;
+    {
+#line 21 "tests/09__variant/006__switch_expression/test.code"
+        int32_t __003__ = 2;
+#line 21 "tests/09__variant/006__switch_expression/test.code"
+        return __003__;
+#line 21 "tests/09__variant/006__switch_expression/test.code"
+    }
+#line 22 "tests/09__variant/006__switch_expression/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

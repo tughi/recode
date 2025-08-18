@@ -500,7 +500,7 @@ Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Module *modul
     symbol->procedure_name = parsed_procedure_statement->super.name->lexeme;
     symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
-    symbol->checked_statements = NULL;
+    symbol->checked_block_statement = NULL;
     symbol->external_name = NULL;
     return symbol;
 }
@@ -573,6 +573,7 @@ Checked_Type_Argument_Symbol *Checked_Type_Argument_Symbol__create(Source_Locati
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Module *module, Source_Location location, String *name, Checked_Type *type, bool is_global) {
     Checked_Variable_Symbol *variable = (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), module, location, name, type, is_global);
     variable->external_name = NULL;
+    variable->is_temp = false;
     variable->statement = NULL;
     return variable;
 }
@@ -949,6 +950,75 @@ Checked_Statement *Checked_Statement__create_kind(Checked_Statement_Kind kind, s
     return statement;
 }
 
+bool Checked_Statement__is_terminal(Checked_Statement *self) {
+    switch (self->kind) {
+    case CHECKED_STATEMENT_KIND__ASSIGNMENT:
+    case CHECKED_STATEMENT_KIND__BREAK:
+    case CHECKED_STATEMENT_KIND__DEFER:
+    case CHECKED_STATEMENT_KIND__VARIABLE:
+    case CHECKED_STATEMENT_KIND__VARIANT_IF:
+    case CHECKED_STATEMENT_KIND__VARIANT_SWITCH:
+    case CHECKED_STATEMENT_KIND__WHILE:
+    case CHECKED_STATEMENT_KIND__YIELD:
+        return false;
+    case CHECKED_STATEMENT_KIND__BLOCK: {
+        Checked_Block_Statement *block_statement = (Checked_Block_Statement *)self;
+        if (block_statement->statements->last_statement != NULL) {
+            return Checked_Statement__is_terminal(block_statement->statements->last_statement);
+        }
+        return false;
+    }
+    case CHECKED_STATEMENT_KIND__DECOMPOSED: {
+        Checked_Decomposed_Statement *decomposed_statement = (Checked_Decomposed_Statement *)self;
+        if (decomposed_statement->statements->last_statement != NULL) {
+            return Checked_Statement__is_terminal(decomposed_statement->statements->last_statement);
+        }
+        return false;
+    }
+    case CHECKED_STATEMENT_KIND__EXPRESSION: {
+        Checked_Expression_Statement *expression_statement = (Checked_Expression_Statement *)self;
+        if (expression_statement->expression->kind == CHECKED_EXPRESSION_KIND__CALL) {
+            Checked_Call_Expression *call_expression = (Checked_Call_Expression *)expression_statement->expression;
+            if (call_expression->callee_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+                Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)call_expression->callee_expression;
+                if (symbol_expression->symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                    Checked_Procedure_Symbol *called_procedure_symbol = (Checked_Procedure_Symbol *)symbol_expression->symbol;
+                    if (called_procedure_symbol->parsed_procedure_statement->is_external) {
+                        if (called_procedure_symbol->external_name != NULL) {
+                            if (String__equals_cstring(called_procedure_symbol->external_name, "exit")) {
+                                return true;
+                            }
+                        } else if (String__equals_cstring(called_procedure_symbol->procedure_name, "exit")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    case CHECKED_STATEMENT_KIND__IF: {
+        Checked_If_Statement *if_statement = (Checked_If_Statement *)self;
+        if (if_statement->true_statement != NULL && if_statement->false_statement != NULL) {
+            return Checked_Statement__is_terminal(if_statement->true_statement) && Checked_Statement__is_terminal(if_statement->false_statement);
+        }
+        return false;
+    }
+    case CHECKED_STATEMENT_KIND__LOOP: {
+        Checked_Loop_Statement *loop_statement = (Checked_Loop_Statement *)self;
+        return Checked_Statement__is_terminal(loop_statement->body_statement);
+    }
+    case CHECKED_STATEMENT_KIND__RETURN:
+        return true;
+    default:
+        pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported statement kind: ");
+        pWriter__write__int64(stderr_writer, self->kind);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+}
+
 Checked_Assignment_Statement *Checked_Assignment_Statement__create(Source_Location location, Checked_Expression *object_expression, Checked_Expression *value_expression) {
     Checked_Assignment_Statement *statement = (Checked_Assignment_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__ASSIGNMENT, sizeof(Checked_Assignment_Statement), location);
     statement->object_expression = object_expression;
@@ -970,6 +1040,13 @@ Checked_Decomposed_Statement *Checked_Decomposed_Statement__create(Source_Locati
     Checked_Decomposed_Statement *statement = (Checked_Decomposed_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__DECOMPOSED, sizeof(Checked_Decomposed_Statement), location);
     statement->statements = statements;
     return statement;
+}
+
+Checked_Defer_Statement *Checked_Defer_Statement__create(Source_Location location, Checked_Statement *statement) {
+    Checked_Defer_Statement *defer_statement = (Checked_Defer_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__DEFER, sizeof(Checked_Defer_Statement), location);
+    defer_statement->statement = statement;
+    defer_statement->prev_defer_statement = NULL;
+    return defer_statement;
 }
 
 Checked_Expression_Statement *Checked_Expression_Statement__create(Source_Location location, Checked_Expression *expression) {

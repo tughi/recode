@@ -13,7 +13,14 @@ int32_t test__main() {
 #line 15 "tests/09__variant/003__assign_variant_value/test.code"
     other_value = value;
 #line 16 "tests/09__variant/003__assign_variant_value/test.code"
-    return 0;
+    {
+#line 16 "tests/09__variant/003__assign_variant_value/test.code"
+        int32_t __001__ = 0;
+#line 16 "tests/09__variant/003__assign_variant_value/test.code"
+        return __001__;
+#line 16 "tests/09__variant/003__assign_variant_value/test.code"
+    }
+#line 17 "tests/09__variant/003__assign_variant_value/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

@@ -9,7 +9,14 @@ int32_t test__main() {
 #line 3 "tests/08__string/002__init_variable/test.code"
     struct String quote = (struct String){.data = "Answer to the Ultimate Question of Life, the Universe, and Everything", .length = 69};
 #line 4 "tests/08__string/002__init_variable/test.code"
-    return 0;
+    {
+#line 4 "tests/08__string/002__init_variable/test.code"
+        int32_t __001__ = 0;
+#line 4 "tests/08__string/002__init_variable/test.code"
+        return __001__;
+#line 4 "tests/08__string/002__init_variable/test.code"
+    }
+#line 5 "tests/08__string/002__init_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

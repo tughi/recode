@@ -1,0 +1,9 @@
+proc main() -> i32 {
+    return try raise_forty_two() else error - 42
+}
+
+proc raise_forty_two() -> i32 !> i32 {
+    let value = 42
+    defer value = 0
+    raise value
+}

@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/12__error_handling/007__unreachable_after_raise/test.code:3:5-20: Unreachable statement"
+        ]
+    }
+}

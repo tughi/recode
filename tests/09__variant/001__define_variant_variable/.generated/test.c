@@ -7,7 +7,14 @@ int32_t test__main() {
 #line 7 "tests/09__variant/001__define_variant_variable/test.code"
     struct test_Integer integer;
 #line 8 "tests/09__variant/001__define_variant_variable/test.code"
-    return 0;
+    {
+#line 8 "tests/09__variant/001__define_variant_variable/test.code"
+        int32_t __001__ = 0;
+#line 8 "tests/09__variant/001__define_variant_variable/test.code"
+        return __001__;
+#line 8 "tests/09__variant/001__define_variant_variable/test.code"
+    }
+#line 9 "tests/09__variant/001__define_variant_variable/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

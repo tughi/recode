@@ -9,10 +9,24 @@ int32_t test__main() {
 #line 9 "tests/09__variant/007__if_as/test.code"
     if (value.variant == 2) {
 #line 10 "tests/09__variant/007__if_as/test.code"
-        return value.variant_2 - 42;
+        {
+#line 10 "tests/09__variant/007__if_as/test.code"
+            int32_t __001__ = value.variant_2 - 42;
+#line 10 "tests/09__variant/007__if_as/test.code"
+            return __001__;
+#line 10 "tests/09__variant/007__if_as/test.code"
+        }
+#line 11 "tests/09__variant/007__if_as/test.code"
     }
 #line 13 "tests/09__variant/007__if_as/test.code"
-    return 1;
+    {
+#line 13 "tests/09__variant/007__if_as/test.code"
+        int32_t __002__ = 1;
+#line 13 "tests/09__variant/007__if_as/test.code"
+        return __002__;
+#line 13 "tests/09__variant/007__if_as/test.code"
+    }
+#line 14 "tests/09__variant/007__if_as/test.code"
 }
 
 int32_t main(int argc, const char **argv) {
