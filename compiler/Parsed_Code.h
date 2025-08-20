@@ -662,28 +662,28 @@ typedef struct Parsed_Variant_Type_Specifier {
 
 Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Location location, Parsed_Variant_Case *first_variant);
 
-typedef struct Parsed_Source {
+typedef struct Parsed_Module {
     Source *source;
     String *package_name;
     Parsed_Statements *statements;
-    struct Parsed_Source *next;
-} Parsed_Source;
+    struct Parsed_Module *next_module;
+} Parsed_Module;
 
-Parsed_Source *Parsed_Source__create();
+Parsed_Module *Parsed_Module__create();
+
+typedef struct Parsed_Package {
+    String *name;
+    Parsed_Module *first_module;
+} Parsed_Package;
+
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_module);
 
 typedef struct Parsed_Import_Statement {
     Parsed_Statement super;
     String *import_name;
-    Parsed_Source *parsed_source;
+    Parsed_Package *parsed_package;
 } Parsed_Import_Statement;
 
-Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source);
-
-typedef struct Parsed_Package {
-    String *name;
-    Parsed_Source *first_source;
-} Parsed_Package;
-
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Source *first_source);
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Package *parsed_package);
 
 #endif

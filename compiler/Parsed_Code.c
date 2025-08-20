@@ -1,4 +1,4 @@
-#include "Parsed_Source.h"
+#include "Parsed_Code.h"
 
 Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, Source_Location location) {
     Parsed_Type *type = (Parsed_Type *)malloc(kind_size);
@@ -335,10 +335,10 @@ Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, T
     return (Parsed_Statement *)statement;
 }
 
-Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source) {
+Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Package *parsed_package) {
     Parsed_Import_Statement *statement = (Parsed_Import_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IMPORT, sizeof(Parsed_Import_Statement), location);
     statement->import_name = import_name;
-    statement->parsed_source = parsed_source;
+    statement->parsed_package = parsed_package;
     return (Parsed_Statement *)statement;
 }
 
@@ -519,18 +519,18 @@ Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Loca
     return type_specifier;
 }
 
-Parsed_Source *Parsed_Source__create() {
-    Parsed_Source *parsed_source = (Parsed_Source *)malloc(sizeof(Parsed_Source));
+Parsed_Module *Parsed_Module__create() {
+    Parsed_Module *parsed_source = (Parsed_Module *)malloc(sizeof(Parsed_Module));
     parsed_source->source = NULL;
     parsed_source->package_name = NULL;
     parsed_source->statements = Parsed_Statements__create(true);
-    parsed_source->next = NULL;
+    parsed_source->next_module = NULL;
     return parsed_source;
 }
 
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Source *first_source) {
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_source) {
     Parsed_Package *package = (Parsed_Package *)malloc(sizeof(Parsed_Package));
     package->name = name;
-    package->first_source = first_source;
+    package->first_module = first_source;
     return package;
 }

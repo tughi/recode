@@ -1032,7 +1032,7 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     }
     struct Checked_Type_Dependency *dependency = type->first_dependency;
     while (dependency != NULL) {
-        if (dependency->type->symbol->super.module == type->symbol->super.module) {
+        if (dependency->type->symbol->super.package == type->symbol->super.package) {
             if (dependency->weak) {
                 Generator__declare_type(self, dependency->type);
             } else {
@@ -1097,22 +1097,23 @@ void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *out
     pWriter__write__cstring(generator.writer, "#endif // __BUILTIN_TYPES_H__\n");
 }
 
-void generate_module_header(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir) {
+void generate_package_header(Checked_Source *checked_source, Checked_Package *checked_package, String *output_dir) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
     }
-    String__append_string(output_file_path, checked_module->name);
+    Writer output_file_path_writer = String__create_writer(output_file_path);
+    pWriter__write__package_name(&output_file_path_writer, checked_package);
     String__append_cstring(output_file_path, ".h");
 
     Generator generator = Generator__make(File__create_writer(output_file_path));
 
     /* Header guard */
     pWriter__write__cstring(generator.writer, "#ifndef __");
-    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__package_name(generator.writer, checked_package);
     pWriter__write__cstring(generator.writer, "_H__\n");
     pWriter__write__cstring(generator.writer, "#define __");
-    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__package_name(generator.writer, checked_package);
     pWriter__write__cstring(generator.writer, "_H__\n\n");
 
     /* Include builtin types header */
@@ -1121,13 +1122,13 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *malloc_procedure = NULL;
 
-    /* Import all modules */
+    /* Import all packages */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__IMPORT && checked_symbol->module == checked_module) {
-            Checked_Module *other_module = ((Checked_Import_Symbol *)checked_symbol)->other_module;
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__IMPORT && checked_symbol->package == checked_package) {
+            Checked_Package *other_package = ((Checked_Import_Symbol *)checked_symbol)->other_package;
             pWriter__write__cstring(generator.writer, "#include \"");
-            pWriter__write__string(generator.writer, other_module->name);
+            pWriter__write__package_name(generator.writer, other_package);
             pWriter__write__cstring(generator.writer, ".h\"\n");
         }
         checked_symbol = checked_symbol->next_symbol;
@@ -1137,7 +1138,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     /* Generate all defined types */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->module == checked_module) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->package == checked_package) {
             Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
             if (!type->has_generated_definition) {
                 Generator__define_type(&generator, type);
@@ -1151,7 +1152,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     /* Declare all global variables */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->package == checked_package) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
             Generator__declare_variable(&generator, variable_symbol->statement);
             pWriter__end_line(generator.writer);
@@ -1163,7 +1164,7 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
     /* Declare all defined procedures */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->module == checked_module) {
+        if (checked_symbol->package == checked_package) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                 Generator__declare_procedure(&generator, (Checked_Procedure_Symbol *)checked_symbol);
                 pWriter__end_line(generator.writer);
@@ -1176,16 +1177,17 @@ void generate_module_header(Checked_Source *checked_source, Checked_Module *chec
 
     /* Close header guard */
     pWriter__write__cstring(generator.writer, "#endif // __");
-    pWriter__write__string(generator.writer, checked_module->name);
+    pWriter__write__package_name(generator.writer, checked_package);
     pWriter__write__cstring(generator.writer, "_H__\n");
 }
 
-void generate_module(Checked_Source *checked_source, Checked_Module *checked_module, String *output_dir, bool generate_main, Checked_Module *first_module) {
+void generate_package(Checked_Source *checked_source, Checked_Package *checked_package, String *output_dir, bool generate_main, Checked_Package *first_package) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
     }
-    String__append_string(output_file_path, checked_module->name);
+    Writer output_file_path_writer = String__create_writer(output_file_path);
+    pWriter__write__package_name(&output_file_path_writer, checked_package);
     String__append_cstring(output_file_path, ".c");
 
     Generator generator = Generator__make(File__create_writer(output_file_path));
@@ -1194,19 +1196,19 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     Checked_Procedure_Symbol *main_procedure = NULL;
 
     /* Include all headers to have all methods available */
-    Checked_Module *module = first_module;
-    while (module != NULL) {
+    Checked_Package *package = first_package;
+    while (package != NULL) {
         pWriter__write__cstring(generator.writer, "#include \"");
-        pWriter__write__string(generator.writer, module->name);
+        pWriter__write__package_name(generator.writer, package);
         pWriter__write__cstring(generator.writer, ".h\"\n");
-        module = module->next_module;
+        package = package->next_package;
     }
     pWriter__end_line(generator.writer);
 
     /* Define all global variables */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->module == checked_module) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE && checked_symbol->package == checked_package) {
             Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)checked_symbol;
             if (!variable_symbol->statement->is_external) {
                 Generator__generate_variable_statement(&generator, variable_symbol->statement);
@@ -1222,7 +1224,7 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
     /* Generate all defined procedures */
     checked_symbol = checked_source->symbols->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->module == checked_module) {
+        if (checked_symbol->package == checked_package) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
                 Checked_Procedure_Symbol *checked_procedure = (Checked_Procedure_Symbol *)checked_symbol;
                 if (generate_main && String__equals_cstring(checked_procedure->procedure_name, "main")) {
@@ -1252,10 +1254,10 @@ void generate_module(Checked_Source *checked_source, Checked_Module *checked_mod
 void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
     generate_builtin_types_header(checked_source->symbols->parent, output_dir);
 
-    Checked_Module *checked_module = checked_source->first_module;
-    while (checked_module != NULL) {
-        generate_module_header(checked_source, checked_module, output_dir);
-        generate_module(checked_source, checked_module, output_dir, generate_main, checked_source->first_module);
-        checked_module = checked_module->next_module;
+    Checked_Package *checked_package = checked_source->first_package;
+    while (checked_package != NULL) {
+        generate_package_header(checked_source, checked_package, output_dir);
+        generate_package(checked_source, checked_package, output_dir, generate_main, checked_source->first_package);
+        checked_package = checked_package->next_package;
     }
 }

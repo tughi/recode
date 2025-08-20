@@ -12,11 +12,11 @@ String *String__create() {
     return String__create_empty(16);
 }
 
-Writer *String__create_writer(String *self) {
-    Writer *writer = (Writer *)malloc(sizeof(Writer));
-    writer->object = self;
-    writer->write_char = (void (*)(void *, char))String__append_char;
-    return writer;
+Writer String__create_writer(String *self) {
+    return (Writer){
+        .object = self,
+        .write_char = (void (*)(void *, char))String__append_char,
+    };
 }
 
 void String__clear(String *self) {

@@ -5,7 +5,7 @@
 typedef struct Parser {
     String *project_dir;
     Scanner *scanner;
-    Parsed_Source *parsed_source;
+    Parsed_Module *parsed_source;
     uint16_t current_indentation;
 } Parser;
 
@@ -1280,6 +1280,7 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
     Token *token = Parser__consume_token(self, Token__is_identifier);
     Source_Location last_location = token->location;
     String *import_name = token->lexeme;
+    Source_Location package_location = token->location;
     String *package_dir = String__create_copy(token->lexeme);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
         Parser__consume_space(self, 0);
@@ -1290,6 +1291,7 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
         import_name = token->lexeme;
         String__append_char(package_dir, '/');
         String__append_string(package_dir, token->lexeme);
+        package_location = Source_Location__merge(package_location, last_location);
     }
     if (Parser__matches_two(self, Token__is_space, false, Token__is_as)) {
         Parser__consume_space(self, 1);
@@ -1301,8 +1303,14 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
     }
 
     Parsed_Package *parsed_package = parse_package(self->project_dir, package_dir, NULL);
+    if (parsed_package == NULL) {
+        pWriter__begin_location_message(stderr_writer, package_location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Package does not exist");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
 
-    return Parsed_Import_Statement__create(Source_Location__merge(first_location, last_location), import_name, parsed_package->first_source);
+    return Parsed_Import_Statement__create(Source_Location__merge(first_location, last_location), import_name, parsed_package);
 }
 
 /*
@@ -1469,9 +1477,9 @@ String *make_package_name(String *package_dir) {
     String *package_name = String__create_copy(package_dir);
 
     size_t index = 0;
-    while (index < package_name->length - 5) {
+    while (index < package_name->length) {
         if (package_name->data[index] == '/') {
-            String__append_char(package_name, '.');
+            package_name->data[index] = '.';
         }
         index++;
     }
@@ -1479,7 +1487,7 @@ String *make_package_name(String *package_dir) {
     return package_name;
 }
 
-Parsed_Source *parse_source(String *project_dir, String *package_dir, String *package_file, String *main_package_name) {
+Parsed_Module *parse_source(String *project_dir, String *package_dir, String *package_file, String *main_package_name) {
     String *source_path = String__create_copy(project_dir);
     if (!String__ends_with_cstring(source_path, "/")) {
         String__append_char(source_path, '/');
@@ -1496,7 +1504,7 @@ Parsed_Source *parse_source(String *project_dir, String *package_dir, String *pa
     Parser parser;
     parser.project_dir = project_dir;
     parser.scanner = NULL;
-    parser.parsed_source = Parsed_Source__create();
+    parser.parsed_source = Parsed_Module__create();
     parser.parsed_source->package_name = package_dir ? make_package_name(package_dir) : main_package_name;
     parser.parsed_source->source = source;
     parser.current_indentation = 0;
@@ -1524,8 +1532,8 @@ Parsed_Package *parse_package(String *project_dir, String *package_dir, String *
         return NULL;
     }
 
-    Parsed_Source *first_parsed_source = NULL;
-    Parsed_Source *last_parsed_source = NULL;
+    Parsed_Module *first_parsed_source = NULL;
+    Parsed_Module *last_parsed_source = NULL;
 
     String **package_file_pointer = package_files;
     for (; *package_file_pointer != NULL; package_file_pointer++) {
@@ -1537,8 +1545,12 @@ Parsed_Package *parse_package(String *project_dir, String *package_dir, String *
         if (first_parsed_source == NULL) {
             first_parsed_source = last_parsed_source = parse_source(project_dir, package_dir, package_file, main_package_name);
         } else {
-            last_parsed_source = last_parsed_source->next = parse_source(project_dir, package_dir, package_file, main_package_name);
+            last_parsed_source = last_parsed_source->next_module = parse_source(project_dir, package_dir, package_file, main_package_name);
         }
+    }
+
+    if (first_parsed_source == NULL) {
+        return NULL;
     }
 
     return Parsed_Package__create(first_parsed_source->package_name, first_parsed_source);
