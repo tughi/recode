@@ -149,6 +149,23 @@ bool String__equals_string(String *self, String *other) {
     return true;
 }
 
+bool String__starts_with_cstring(String *self, char *s) {
+    size_t length = cstring_length(s);
+    if (self->length < length) {
+        return false;
+    }
+
+    size_t index = 0;
+    while (index < length) {
+        if (self->data[index] != s[index]) {
+            return false;
+        }
+        index = index + 1;
+    }
+
+    return true;
+}
+
 Writer *pWriter__write__string(Writer *self, String *string) {
     size_t index = 0;
     while (index < string->length) {

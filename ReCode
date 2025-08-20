@@ -302,11 +302,11 @@ def test(paths, save=False, stage=1):
 
         logger.info(f"Testing: {test_dir}")
 
-        compiler_command = [f'build/stage{stage}/ReCode', '--output-dir', f'build/{test_dir}/generated', '--project-dir', test_dir, 'app', 'test.code']
+        compiler_command = [f'build/stage{stage}/ReCode', '-o', f'build/{test_dir}/generated', '-p', 'test', f'{test_dir}/test.code']
 
         tester.load_test_data(test_dir)
 
-        run(f'rm -fr build/{test_dir}/generated/*')
+        run([f'rm -fr build/{test_dir}/generated/*'], shell=True)
 
         compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
         if compiler_result.returncode != 0:
@@ -426,7 +426,7 @@ def editor(launch):
     if not os.path.exists(f'build/editor'):
         run(f'mkdir build/editor')
 
-    compiler_command = ['build/stage1/ReCode', '--output-dir', 'build/editor', '--project-dir', 'editor', 'app', 'editor.code']
+    compiler_command = ['build/stage1/ReCode', '--output-dir', 'build/editor', 'editor/editor.code']
     if run(compiler_command, capture_output=False, check=False).returncode != 0:
         trace(*compiler_command)
         exit(1)

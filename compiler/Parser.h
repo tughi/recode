@@ -3,6 +3,6 @@
 
 #include "Parsed_Source.h"
 
-Parsed_Source *parse(String *project_dir, String *file_path);
+Parsed_Package *parse_package(String *project_dir, String *package_dir, String *main_package_name);
 
 #endif

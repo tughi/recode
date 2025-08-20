@@ -3270,9 +3270,9 @@ void Checker__check_builtin_module(Checker *self, Parsed_Source *parsed_source) 
     Checker__check_module(&module_checker);
 }
 
-Checked_Source *check(Parsed_Source *parsed_builtin_source, Parsed_Source *parsed_source) {
-    Checker *checker = Checker__create(parsed_source);
-    Checker__check_builtin_module(checker, parsed_builtin_source);
+Checked_Source *check(Parsed_Package *parsed_builtin_package, Parsed_Package *parsed_package) {
+    Checker *checker = Checker__create(parsed_package->first_source);
+    Checker__check_builtin_module(checker, parsed_builtin_package->first_source);
     Checker__check_module(checker);
 
     /* Check procedure definitions from all modules */

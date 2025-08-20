@@ -524,5 +524,13 @@ Parsed_Source *Parsed_Source__create() {
     parsed_source->source = NULL;
     parsed_source->package_name = NULL;
     parsed_source->statements = Parsed_Statements__create(true);
+    parsed_source->next = NULL;
     return parsed_source;
+}
+
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Source *first_source) {
+    Parsed_Package *package = (Parsed_Package *)malloc(sizeof(Parsed_Package));
+    package->name = name;
+    package->first_source = first_source;
+    return package;
 }

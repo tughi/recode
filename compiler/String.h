@@ -40,6 +40,8 @@ bool String__equals_cstring(String *self, char *s);
 
 bool String__equals_string(String *self, String *other);
 
+bool String__starts_with_cstring(String *self, char *s);
+
 Writer *pWriter__write__string(Writer *self, String *string);
 
 #endif

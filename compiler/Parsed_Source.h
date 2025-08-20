@@ -666,6 +666,7 @@ typedef struct Parsed_Source {
     Source *source;
     String *package_name;
     Parsed_Statements *statements;
+    struct Parsed_Source *next;
 } Parsed_Source;
 
 Parsed_Source *Parsed_Source__create();
@@ -677,5 +678,12 @@ typedef struct Parsed_Import_Statement {
 } Parsed_Import_Statement;
 
 Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, String *import_name, Parsed_Source *parsed_source);
+
+typedef struct Parsed_Package {
+    String *name;
+    Parsed_Source *first_source;
+} Parsed_Package;
+
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Source *first_source);
 
 #endif
