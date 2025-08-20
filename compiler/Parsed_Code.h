@@ -102,12 +102,12 @@ Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type);
 
 typedef struct Parsed_Named_Type {
     Parsed_Type super;
-    Token *module;
+    Token *package;
     String *name;
     Parsed_Type_Argument *first_type_argument;
 } Parsed_Named_Type;
 
-Parsed_Named_Type *Parsed_Named_Type__create(Token *module, Token *name);
+Parsed_Named_Type *Parsed_Named_Type__create(Token *package, Token *name);
 
 typedef struct Parsed_Pointer_Type {
     Parsed_Type super;

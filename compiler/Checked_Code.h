@@ -5,11 +5,10 @@
 
 typedef struct Checked_Package {
     String *name;
-    Source *source;
     struct Checked_Package *next_package;
 } Checked_Package;
 
-Checked_Package *Checked_Package__create(String *name, Source *source);
+Checked_Package *Checked_Package__create(String *name);
 
 Writer *pWriter__write__package_name(Writer *self, Checked_Package *package);
 

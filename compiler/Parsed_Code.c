@@ -43,9 +43,9 @@ Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type) {
     return type_argument;
 }
 
-Parsed_Named_Type *Parsed_Named_Type__create(Token *module, Token *name) {
+Parsed_Named_Type *Parsed_Named_Type__create(Token *package, Token *name) {
     Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
-    type->module = module;
+    type->package = package;
     type->name = name->lexeme;
     type->first_type_argument = NULL;
     return type;

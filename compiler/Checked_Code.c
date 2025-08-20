@@ -429,10 +429,9 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
 }
 
-Checked_Package *Checked_Package__create(String *name, Source *source) {
+Checked_Package *Checked_Package__create(String *name) {
     Checked_Package *package = (Checked_Package *)malloc(sizeof(Checked_Package));
     package->name = name;
-    package->source = source;
     package->next_package = NULL;
     return package;
 }
