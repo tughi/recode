@@ -1,5 +1,5 @@
 import errors
-import os
+import libc
 
 type List<T> = struct {
     items: [^]T
@@ -26,7 +26,7 @@ proc (^List<T>).append<T>(self, anon item: T) !> errors.Error {
             new_capacity = 10
         }
         let item_size = (sizeof(T)).as(usize) // TODO: Use sizeof(T) directly
-        let new_items = os.realloc(self.items.as(^Any), new_capacity * item_size)
+        let new_items = libc.realloc(self.items.as(^Any), new_capacity * item_size)
         if new_items == null {
             raise errors.Error(message: "Failed to allocate memory for list items")
         }

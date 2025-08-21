@@ -2,22 +2,25 @@ import gui
 import sdl
 
 type Window = struct {
+    super: gui.Base_Window
     sdl_window: ^sdl.Window
     sdl_window_id: u32
-    renderer: ^gui.Renderer
-    widget: ^gui.Widget
     must_draw: bool
     next_window: ^Window
 }
 
-proc (^Window).draw(self) {
-    self.widget.draw(renderer: self.renderer)
-    self.renderer.present()
+proc (^Window).render(self) {
+    // TODO: self.super.render()
+    if self.super.widget != null {
+        self.super.widget.render(self.super.renderer)
+        self.super.renderer.present()
+    }
 }
 
 proc (^Window).set_widget(self, anon widget: ^gui.Widget) {
-    self.widget = widget
-    self.must_draw = true
+    self.super.widget = widget
+    let bounds = gui.Rect(left: 0, top: 0, right: self.super.width - 1, bottom: self.super.height - 1)
+    widget.layout(bounds)
 }
 
 proc (^Window).on_window_event(self, anon event: ^sdl.Window_Event) {
@@ -33,9 +36,9 @@ proc (^Window).on_key_up_event(self, anon event: ^sdl.Keyboard_Event) {
 }
 
 proc (^Window).on_mouse_motion_event(self, anon sdl_event: ^sdl.Mouse_Motion_Event) {
-    if self.widget != null {
+    if self.super.widget != null {
         let gui_event: gui.Event = gui.MouseMotionEvent(x: sdl_event.x, y: sdl_event.y)
-        self.widget.handle_event(^gui_event)
+        self.super.widget.handle_event(^gui_event)
     }
 }
 

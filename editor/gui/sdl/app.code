@@ -31,7 +31,7 @@ proc (^App).run(self) -> i32 {
         let window = self.first_window
         while window != null {
             // if window.must_draw {
-            window.draw()
+            window.render()
             // }
             window = window.next_window
         }
@@ -97,11 +97,14 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Wind
     }
 
     let window = alloc Window(
+        super: gui.Base_Window(
+            width: width
+            height: height
+            renderer: alloc gui.Renderer(sdl_renderer)
+            widget: null
+        )
         sdl_window: sdl_window
         sdl_window_id: sdl_window_id
-        renderer: alloc gui.Renderer(sdl_renderer)
-        widget: null
-        must_draw: true
         next_window: null
     )
 

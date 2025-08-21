@@ -157,6 +157,23 @@ Checked_Named_Type *Checker__find_type(Checker *self, String *name) {
     return Checked_Symbols__find_type(self->global_symbols->parent, NULL, name);
 }
 
+Checked_Result_Type *Checker__find_result_type(Checker *self, Checked_Type *return_type, Checked_Type *raise_type) {
+    Checked_Symbol *symbol = self->global_symbols->last_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE && symbol->package == self->checked_package) {
+            Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
+            if (type_symbol->named_type->super.kind == CHECKED_TYPE_KIND__RESULT) {
+                Checked_Result_Type *result_type = (Checked_Result_Type *)type_symbol->named_type;
+                if (Checked_Type__equals(result_type->return_type, return_type) && Checked_Type__equals(result_type->raise_type, raise_type)) {
+                    return result_type;
+                }
+            }
+        }
+        symbol = symbol->prev_symbol;
+    }
+    return NULL;
+}
+
 Checked_Type_Argument_Symbol *Checker__find_type_argument_symbol(Checker *self, String *alias) {
     Checked_Symbols *symbols = self->symbols;
     while (symbols != NULL) {
@@ -368,6 +385,9 @@ Checked_Type_Argument *Checked_Type__is_specialization(Checked_Type *self, Check
                 return struct_type->super.first_type_argument;
             }
         }
+        return NULL;
+    }
+    case CHECKED_TYPE_KIND__TRAIT: {
         return NULL;
     }
     default:
@@ -2204,8 +2224,13 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Source_Loca
         default:
             break;
         }
-        procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_return_type != NULL ? Source_Location__merge(parsed_return_type->location, parsed_raise_type->location) : parsed_raise_type->location, self->checked_package, procedure_return_type, procedure_raise_type);
-        procedure_return_type->symbol = Checker__create_type_symbol(self, ((Checked_Result_Type *)procedure_return_type)->super.name, (Checked_Named_Type *)procedure_return_type);
+        Checked_Result_Type *result_type = Checker__find_result_type(self, procedure_return_type, procedure_raise_type);
+        if (result_type != NULL) {
+            procedure_return_type = (Checked_Type *)result_type;
+        } else {
+            procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_return_type != NULL ? Source_Location__merge(parsed_return_type->location, parsed_raise_type->location) : parsed_raise_type->location, self->checked_package, procedure_return_type, procedure_raise_type);
+            procedure_return_type->symbol = Checker__create_type_symbol(self, ((Checked_Result_Type *)procedure_return_type)->super.name, (Checked_Named_Type *)procedure_return_type);
+        }
     }
     Checked_Procedure_Parameter *procedure_first_parameter = NULL;
     Checked_Procedure_Parameter *procedure_last_parameter = NULL;

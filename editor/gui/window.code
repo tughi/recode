@@ -1,4 +1,18 @@
 type Window = trait {
-    proc draw(self)
+    proc render(self)
     proc set_widget(self, anon widget: ^Widget)
+}
+
+type Base_Window = struct {
+    width: i32
+    height: i32
+    renderer: ^Renderer
+    widget: ^Widget
+}
+
+proc (^Base_Window).render(self) {
+    if self.widget != null {
+        self.widget.render(self.renderer)
+        self.renderer.present()
+    }
 }

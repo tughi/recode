@@ -1,17 +1,21 @@
 import os
 
 type Button = struct {
-    bounds: Rect
+    super: Base_Control
     label: str
     label_bounds: Rect
     pressed: bool
 }
 
-proc (^Button).draw(self, renderer: ^Renderer) {
-    renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
-    renderer.draw_rect(self.bounds)
-}
-
 proc (^Button).handle_event(self, anon event: ^Event) {
     os.stdout.write("Button event").end_line()
+}
+
+proc (^Button).layout(self, anon bounds: Rect) {
+    self.super.layout(bounds)
+}
+
+proc (^Button).render(self, anon renderer: ^Renderer) {
+    renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
+    renderer.draw_rect(self.super.bounds)
 }

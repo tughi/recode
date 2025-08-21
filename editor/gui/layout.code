@@ -1,0 +1,18 @@
+import collections
+
+type Layout = trait {
+}
+
+type Base_Layout = struct {
+    parent: ^Widget
+    children: collections.List<^Widget>
+}
+
+proc (^Base_Layout).render(self, anon renderer: ^Renderer) {
+    let index = 0usize
+    while index < self.children.length {
+        let child = self.children.items[index]
+        child.render(renderer)
+        index = index + 1
+    }
+}
