@@ -1,0 +1,13 @@
+type Renderer = external
+
+proc create_renderer(anon window: ^Window, anon index: i32, anon flags: u32) -> ^Renderer = external "SDL_CreateRenderer"
+
+proc destroy_renderer(anon renderer: ^Renderer) = external "SDL_DestroyRenderer"
+
+proc render_clear(anon renderer: ^Renderer) = external "SDL_RenderClear"
+
+proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderDrawRect"
+
+proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
+
+proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"

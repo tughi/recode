@@ -1,0 +1,6 @@
+type Renderer = trait {
+    proc clear(self)
+    proc draw_rect(self, anon rect: Rect)
+    proc present(self)
+    proc set_draw_color(self, anon color: Color)
+}

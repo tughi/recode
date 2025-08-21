@@ -1,8 +1,8 @@
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
-#include "Parsed_Source.h"
+#include "Parsed_Code.h"
 
-Parsed_Source *parse(String *project_dir, String *file_path);
+Parsed_Package *parse_package(String *project_dir, String *package_dir, String *package_name);
 
 #endif

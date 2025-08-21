@@ -18,7 +18,7 @@ String *String__create_empty(size_t data_size);
 
 String *String__create_from(char *data);
 
-Writer *String__create_writer(String *self);
+Writer String__create_writer(String *self);
 
 void String__clear(String *self);
 
@@ -39,6 +39,8 @@ bool String__ends_with_cstring(String *self, char *s);
 bool String__equals_cstring(String *self, char *s);
 
 bool String__equals_string(String *self, String *other);
+
+bool String__starts_with_cstring(String *self, char *s);
 
 Writer *pWriter__write__string(Writer *self, String *string);
 

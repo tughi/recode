@@ -1,0 +1,4 @@
+type Error = struct {
+    span: Span
+    message: str
+}

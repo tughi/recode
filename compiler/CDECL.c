@@ -18,9 +18,8 @@ CDECL *CDECL__create() {
 void declare(CDECL *cdecl, Checked_Type *symbol_type);
 
 void String__append_cdecl(String *self, CDECL_Name *name, Checked_Type *type) {
-    Writer *writer = String__create_writer(self);
-    pWriter__write__cdecl(writer, name, type);
-    pWriter__destroy(writer);
+    Writer writer = String__create_writer(self);
+    pWriter__write__cdecl(&writer, name, type);
 }
 
 void pWriter__write__cdecl(Writer *writer, CDECL_Name *name, Checked_Type *type) {
@@ -190,8 +189,9 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)symbol_type;
         cdecl->type = String__create_from("struct ");
-        if (named_type->module != NULL) {
-            String__append_string(cdecl->type, named_type->module->name);
+        if (named_type->package != NULL) {
+            Writer cdecl_type_writer = String__create_writer(cdecl->type);
+            pWriter__write__package_name(&cdecl_type_writer, named_type->package);
             String__append_char(cdecl->type, '_');
         }
         if (named_type->generic_type != NULL) {
@@ -235,7 +235,7 @@ void CDECL_Procedure_Name__write(CDECL_Procedure_Name *self, Writer *writer) {
         return;
     }
     if (self->procedure_symbol->super.is_global && self->procedure_symbol->checked_block_statement != NULL && self->procedure_symbol->receiver_type == NULL) {
-        pWriter__write__string(writer, self->procedure_symbol->super.module->name);
+        pWriter__write__package_name(writer, self->procedure_symbol->super.package);
         pWriter__write__cstring(writer, "__");
     }
     pWriter__write__string(writer, self->procedure_symbol->super.name);
@@ -255,7 +255,7 @@ void CDECL_Variable_Name__write(CDECL_Variable_Name *self, Writer *writer) {
             return;
         }
     } else if (self->variable_symbol->super.is_global) {
-        pWriter__write__string(writer, self->variable_symbol->super.module->name);
+        pWriter__write__string(writer, self->variable_symbol->super.package->name);
         pWriter__write__cstring(writer, "__");
     }
     pWriter__write__string(writer, self->variable_symbol->super.name);

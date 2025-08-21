@@ -1,10 +1,13 @@
-import os
-import sdl
+import errors
 import gui
-import gui.app
-import gui.button
+import gui.sdl
+import os
 
 proc main() -> i32 {
+    os.init()
+
+    let app: gui.App = sdl.App()
+
     try app.init() else {
         os.stderr.write_string("Failed to initialize app: ").write_string(error.message).end_line()
         return 1
@@ -15,11 +18,68 @@ proc main() -> i32 {
         return 1
     }
 
-    let button: gui.Widget = gui.Button(
-        bounds: gui.Rect(left: 50, top: 50, right: 200, bottom: 100)
-        label: "Click Me"
-    )
-    window.widget = ^button
+    let editor_layout = Editor_Layout()
+    try editor_layout.init() else {
+        os.stderr.write_string("Failed to initialize editor layout: ").write_string(error.message).end_line()
+        return 1
+    }
+
+    let editor_layout_widget: gui.Widget = editor_layout
+    window.set_widget(^editor_layout_widget)
 
     return app.run()
+}
+
+type Editor_Layout = struct {
+    super: gui.Base_Layout
+    glyph_editor: ^gui.Widget
+    save_button: ^gui.Widget
+    preview: ^gui.Widget
+}
+
+proc (^Editor_Layout).init(self) !> errors.Error {
+    self.glyph_editor = alloc gui.Widget(alloc gui.Button(label: "Glyph"))
+    self.super.children.append(self.glyph_editor)
+    self.save_button = alloc gui.Widget(alloc gui.Button(label: "Save"))
+    self.super.children.append(self.save_button)
+    self.preview = alloc gui.Widget(alloc gui.Button(label: "Preview"))
+    self.super.children.append(self.preview)
+    return
+}
+
+proc (^Editor_Layout).handle_event(self, anon event: ^gui.Event) {
+    // TODO: Implement event handling
+}
+
+const MARGIN = 16
+const GLYPH_EDITOR_DOT = MARGIN / 2 * 3
+
+proc (^Editor_Layout).layout(self, anon bounds: gui.Rect) {
+    let child_bounds = gui.Rect(
+        left: bounds.left + MARGIN
+        top: bounds.top + MARGIN
+        right: bounds.left + MARGIN + (GLYPH_EDITOR_DOT + 1) * 9
+        bottom: bounds.top + MARGIN + (GLYPH_EDITOR_DOT + 1) * 18
+    )
+    self.glyph_editor.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.left
+        top: child_bounds.bottom + MARGIN
+        right: child_bounds.right
+        bottom: child_bounds.bottom + MARGIN + 30
+    )
+    self.save_button.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.right + MARGIN
+        top: bounds.top + MARGIN
+        right: bounds.right - MARGIN
+        bottom: bounds.bottom - MARGIN
+    )
+    self.preview.layout(child_bounds)
+}
+
+proc (^Editor_Layout).render(self, anon renderer: ^gui.Renderer) {
+    self.super.render(renderer)
 }

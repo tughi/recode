@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/10__import/008__nonexisting_package/test.code:1:8-11: Package does not exist"
+        ]
+    }
+}

@@ -1,0 +1,55 @@
+import gui
+import sdl
+
+type Window = struct {
+    super: gui.Base_Window
+    sdl_window: ^sdl.Window
+    sdl_window_id: u32
+    must_draw: bool
+    next_window: ^Window
+}
+
+proc (^Window).render(self) {
+    // TODO: self.super.render()
+    if self.super.widget != null {
+        self.super.widget.render(self.super.renderer)
+        self.super.renderer.present()
+    }
+}
+
+proc (^Window).set_widget(self, anon widget: ^gui.Widget) {
+    self.super.widget = widget
+    let bounds = gui.Rect(left: 0, top: 0, right: self.super.width - 1, bottom: self.super.height - 1)
+    widget.layout(bounds)
+}
+
+proc (^Window).on_window_event(self, anon event: ^sdl.Window_Event) {
+    os.stdout.write("Window Event (").write_hex(event.type).write("): ").write_hex(event.event).end_line()
+}
+
+proc (^Window).on_key_down_event(self, anon event: ^sdl.Keyboard_Event) {
+    os.stdout.write("Key Down (").write_hex(event.type).write("): key=").write_hex(event.key.scan_code).end_line()
+}
+
+proc (^Window).on_key_up_event(self, anon event: ^sdl.Keyboard_Event) {
+    os.stdout.write("Key Up (").write_hex(event.type).write("): key=").write_hex(event.key.scan_code).end_line()
+}
+
+proc (^Window).on_mouse_motion_event(self, anon sdl_event: ^sdl.Mouse_Motion_Event) {
+    if self.super.widget != null {
+        let gui_event: gui.Event = gui.MouseMotionEvent(x: sdl_event.x, y: sdl_event.y)
+        self.super.widget.handle_event(^gui_event)
+    }
+}
+
+proc (^Window).on_mouse_button_down_event(self, anon event: ^sdl.Mouse_Button_Event) {
+    os.stdout.write("Mouse Button Down (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", button=").write_hex(event.button).end_line()
+}
+
+proc (^Window).on_mouse_button_up_event(self, anon event: ^sdl.Mouse_Button_Event) {
+    os.stdout.write("Mouse Button Up (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", button=").write_hex(event.button).end_line()
+}
+
+proc (^Window).on_mouse_wheel_event(self, anon event: ^sdl.Mouse_Wheel_Event) {
+    os.stdout.write("Mouse Wheel (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", direction=").write_hex(event.direction).end_line()
+}

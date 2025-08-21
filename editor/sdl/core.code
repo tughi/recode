@@ -1,0 +1,7 @@
+const INIT_VIDEO = 0x0020u32
+
+proc init(anon flags: u32) -> i32 = external "SDL_Init"
+
+proc quit() = external "SDL_Quit"
+
+proc get_error() -> ^u8 = external "SDL_GetError"

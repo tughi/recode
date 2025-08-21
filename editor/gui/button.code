@@ -1,11 +1,21 @@
-import gui
 import os
 
-proc (^gui.Button).draw(self, renderer: ^gui.Renderer) {
-    renderer.set_draw_color(gui.Color(red: 255, green: 255, blue: 255, alpha: 255))
-    renderer.draw_rect(self.bounds)
+type Button = struct {
+    super: Base_Control
+    label: str
+    label_bounds: Rect
+    pressed: bool
 }
 
-proc (^gui.Button).handle_event(self, anon event: ^gui.Event) {
+proc (^Button).handle_event(self, anon event: ^Event) {
     os.stdout.write("Button event").end_line()
+}
+
+proc (^Button).layout(self, anon bounds: Rect) {
+    self.super.layout(bounds)
+}
+
+proc (^Button).render(self, anon renderer: ^Renderer) {
+    renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
+    renderer.draw_rect(self.super.bounds)
 }

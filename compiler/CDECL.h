@@ -1,7 +1,7 @@
 #ifndef __CDECL_H__
 #define __CDECL_H__
 
-#include "Checked_Source.h"
+#include "Checked_Code.h"
 
 typedef struct CDECL_Name {
     void (*write)(struct CDECL_Name *name, Writer *writer);

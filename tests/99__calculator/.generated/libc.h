@@ -10,12 +10,12 @@ extern struct libc_FILE *__stdoutp;
 
 extern struct libc_FILE *__stderrp;
 
-int32_t fputc(int32_t c, struct libc_FILE *file);
-
 void *malloc(uintmax_t size);
 
 void *realloc(void *block, uintmax_t size);
 
 void exit(int32_t code);
+
+int32_t fputc(int32_t c, struct libc_FILE *file);
 
 #endif // __libc_H__

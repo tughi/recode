@@ -1,0 +1,69 @@
+import calculator.expression
+import calculator.source
+
+type Tokenizer = struct {
+    data: [^]u8
+    index: i32
+
+    current_token: Token
+}
+
+proc (^Tokenizer).peek_token(self) -> Token {
+    if self.current_token is nil {
+        self.current_token = self.scan_token()
+    }
+    return self.current_token
+}
+
+proc (^Tokenizer).next_token(self) -> Token {
+    let token = self.peek_token()
+    self.current_token = nil
+    return token
+}
+
+proc (^Tokenizer).scan_token(self) -> Token {
+    while self.data[self.index] == ' ' {
+        self.index = self.index + 1
+    }
+    let ch = self.data[self.index]
+    if ch == 0 {
+        return Stop(span: source.Span(start: self.index, end: self.index))
+    }
+    if ch >= '0' and ch <= '9' {
+        return self.scan_number_token()
+    }
+    self.index = self.index + 1
+    if ch == '+' {
+        return Plus(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '-' {
+        return Minus(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '*' {
+        return Multiply(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    if ch == '/' {
+        return Divide(span: source.Span(start: self.index - 1, end: self.index))
+    }
+    return source.Error(
+        span: source.Span(start: self.index - 1, end: self.index)
+        message: "Unexpected character"
+    )
+}
+
+proc (^Tokenizer).scan_number_token(self) -> Token {
+    let start = self.index
+    let value = 0
+    loop {
+        let c = self.data[self.index]
+        if c < '0' or c > '9' {
+            break
+        }
+        value = value * 10 + (c - '0').as(i32)
+        self.index = self.index + 1
+    }
+    return Token(expression.Number(
+        span: source.Span(start: start, end: self.index)
+        value: value
+    ))
+}

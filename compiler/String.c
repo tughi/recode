@@ -12,11 +12,11 @@ String *String__create() {
     return String__create_empty(16);
 }
 
-Writer *String__create_writer(String *self) {
-    Writer *writer = (Writer *)malloc(sizeof(Writer));
-    writer->object = self;
-    writer->write_char = (void (*)(void *, char))String__append_char;
-    return writer;
+Writer String__create_writer(String *self) {
+    return (Writer){
+        .object = self,
+        .write_char = (void (*)(void *, char))String__append_char,
+    };
 }
 
 void String__clear(String *self) {
@@ -141,6 +141,23 @@ bool String__equals_string(String *self, String *other) {
     size_t index = 0;
     while (index < self->length) {
         if (self->data[index] != other->data[index]) {
+            return false;
+        }
+        index = index + 1;
+    }
+
+    return true;
+}
+
+bool String__starts_with_cstring(String *self, char *s) {
+    size_t length = cstring_length(s);
+    if (self->length < length) {
+        return false;
+    }
+
+    size_t index = 0;
+    while (index < length) {
+        if (self->data[index] != s[index]) {
             return false;
         }
         index = index + 1;
