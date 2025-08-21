@@ -664,19 +664,20 @@ Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Loca
 
 typedef struct Parsed_Module {
     Source *source;
-    String *package_name;
     Parsed_Statements *statements;
     struct Parsed_Module *next_module;
 } Parsed_Module;
 
-Parsed_Module *Parsed_Module__create();
+Parsed_Module *Parsed_Module__create(Source *source, Parsed_Statements *statements);
 
 typedef struct Parsed_Package {
     String *name;
     Parsed_Module *first_module;
+    bool is_root;
+    struct Parsed_Package *next_package;
 } Parsed_Package;
 
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_module);
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_module, bool is_root);
 
 typedef struct Parsed_Import_Statement {
     Parsed_Statement super;

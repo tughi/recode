@@ -519,18 +519,19 @@ Parsed_Variant_Type_Specifier *Parsed_Variant_Type_Specifier__create(Source_Loca
     return type_specifier;
 }
 
-Parsed_Module *Parsed_Module__create() {
+Parsed_Module *Parsed_Module__create(Source *source, Parsed_Statements *statements) {
     Parsed_Module *parsed_source = (Parsed_Module *)malloc(sizeof(Parsed_Module));
-    parsed_source->source = NULL;
-    parsed_source->package_name = NULL;
-    parsed_source->statements = Parsed_Statements__create(true);
+    parsed_source->source = source;
+    parsed_source->statements = statements;
     parsed_source->next_module = NULL;
     return parsed_source;
 }
 
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_source) {
+Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_source, bool is_root) {
     Parsed_Package *package = (Parsed_Package *)malloc(sizeof(Parsed_Package));
     package->name = name;
     package->first_module = first_source;
+    package->is_root = is_root;
+    package->next_package = NULL;
     return package;
 }

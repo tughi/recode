@@ -98,7 +98,7 @@ int32_t main(int32_t argc, char **argv) {
 
     Parsed_Package *main_package = parse_package(project_dir, NULL, project_name);
 
-    Parsed_Package *builtin_package = parse_package(String__create_from("code"), String__create_from("builtin"), NULL);
+    Parsed_Package *builtin_package = parse_package(String__create_from("code"), String__create_from("builtin"), String__create_from("builtin"));
 
     Checked_Source *checked_source = check(builtin_package, main_package);
 

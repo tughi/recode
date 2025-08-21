@@ -3,9 +3,9 @@
 #include "Scanner.h"
 
 typedef struct Parser {
-    String *project_dir;
+    Parsed_Package *first_package;
+    Parsed_Package *last_package;
     Scanner *scanner;
-    Parsed_Module *parsed_source;
     uint16_t current_indentation;
 } Parser;
 
@@ -1281,7 +1281,7 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
     Source_Location last_location = token->location;
     String *import_name = token->lexeme;
     Source_Location package_location = token->location;
-    String *package_dir = String__create_copy(token->lexeme);
+    String *package_name = String__create_copy(token->lexeme);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_dot);
@@ -1289,8 +1289,8 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
         token = Parser__consume_token(self, Token__is_identifier);
         last_location = token->location;
         import_name = token->lexeme;
-        String__append_char(package_dir, '/');
-        String__append_string(package_dir, token->lexeme);
+        String__append_char(package_name, '.');
+        String__append_string(package_name, token->lexeme);
         package_location = Source_Location__merge(package_location, last_location);
     }
     if (Parser__matches_two(self, Token__is_space, false, Token__is_as)) {
@@ -1302,15 +1302,21 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
         import_name = token->lexeme;
     }
 
-    Parsed_Package *parsed_package = parse_package(self->project_dir, package_dir, NULL);
-    if (parsed_package == NULL) {
-        pWriter__begin_location_message(stderr_writer, package_location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Package does not exist");
-        pWriter__end_location_message(stderr_writer);
-        panic();
+    Parsed_Package *other_package = self->first_package;
+    while (other_package != NULL) {
+        if (String__equals_string(other_package->name, package_name)) {
+            String__delete(package_name);
+            break;
+        }
+        other_package = other_package->next_package;
+    }
+    if (other_package == NULL) {
+        other_package = Parsed_Package__create(package_name, NULL, false);
+        self->last_package->next_package = other_package;
+        self->last_package = other_package;
     }
 
-    return Parsed_Import_Statement__create(Source_Location__merge(first_location, last_location), import_name, parsed_package);
+    return Parsed_Import_Statement__create(Source_Location__merge(first_location, last_location), import_name, other_package);
 }
 
 /*
@@ -1451,12 +1457,26 @@ void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
     }
 }
 
-void Parser__parse_source(Parser *self, Source *source) {
-    Scanner *other_scanner = self->scanner;
+Parsed_Module *Parser__parse_module(Parser *self, String *project_dir, String *package_dir, String *package_file) {
+    String *source_path = String__create_copy(project_dir);
+    if (!String__ends_with_cstring(source_path, "/")) {
+        String__append_char(source_path, '/');
+    }
+    if (package_dir != NULL) {
+        String__append_string(source_path, package_dir);
+        if (!String__ends_with_cstring(source_path, "/")) {
+            String__append_char(source_path, '/');
+        }
+    }
+    String__append_string(source_path, package_file);
+    Source *source = Source__create(source_path);
 
     self->scanner = Scanner__create(source);
+    self->current_indentation = 0;
 
-    Parser__parse_statements(self, self->parsed_source->statements);
+    Parsed_Module *module = Parsed_Module__create(source, Parsed_Statements__create(true));
+
+    Parser__parse_statements(self, module->statements);
 
     Token *last_token = Parser__peek_token(self, 0);
     if (!Token__is_end_of_file(last_token)) {
@@ -1470,7 +1490,57 @@ void Parser__parse_source(Parser *self, Source *source) {
         pWriter__end_location_message(stderr_writer);
     }
 
-    self->scanner = other_scanner;
+    return module;
+}
+
+void Parser__parse_package(Parser *self, String *project_dir, Parsed_Package *package) {
+    String *package_dir;
+    String **package_files;
+    if (package->is_root) {
+        package_dir = NULL;
+        package_files = Path__get_children(project_dir);
+    } else {
+        package_dir = String__create_copy(package->name);
+        size_t package_dir_index = 0;
+        while (package_dir_index < package_dir->length) {
+            if (package_dir->data[package_dir_index] == '.') {
+                package_dir->data[package_dir_index] = '/';
+            }
+            package_dir_index++;
+        }
+
+        String *path = String__create_copy(project_dir);
+        if (!String__ends_with_cstring(path, "/")) {
+            String__append_char(path, '/');
+        }
+        String__append_string(path, package_dir);
+        package_files = Path__get_children(path);
+        String__delete(path);
+    }
+
+    if (package_files == NULL) {
+        return;
+    }
+
+    Parsed_Module *last_module = NULL;
+
+    String **package_file_pointer = package_files;
+    for (; *package_file_pointer != NULL; package_file_pointer++) {
+        String *package_file = *package_file_pointer;
+        if (String__starts_with_cstring(package_file, ".") || !String__ends_with_cstring(package_file, ".code")) {
+            continue;
+        }
+
+        Parsed_Module *module = Parser__parse_module(self, project_dir, package_dir, package_file);
+
+        if (last_module == NULL) {
+            package->first_module = module;
+            last_module = module;
+        } else {
+            last_module->next_module = module;
+            last_module = module;
+        }
+    }
 }
 
 String *make_package_name(String *package_dir) {
@@ -1487,71 +1557,18 @@ String *make_package_name(String *package_dir) {
     return package_name;
 }
 
-Parsed_Module *parse_source(String *project_dir, String *package_dir, String *package_file, String *main_package_name) {
-    String *source_path = String__create_copy(project_dir);
-    if (!String__ends_with_cstring(source_path, "/")) {
-        String__append_char(source_path, '/');
-    }
-    if (package_dir != NULL) {
-        String__append_string(source_path, package_dir);
-        if (!String__ends_with_cstring(source_path, "/")) {
-            String__append_char(source_path, '/');
-        }
-    }
-    String__append_string(source_path, package_file);
-    Source *source = Source__create(source_path);
+Parsed_Package *parse_package(String *project_dir, String *package_dir, String *package_name) {
+    Parsed_Package *package = Parsed_Package__create(package_name, NULL, package_dir == NULL);
 
-    Parser parser;
-    parser.project_dir = project_dir;
-    parser.scanner = NULL;
-    parser.parsed_source = Parsed_Module__create();
-    parser.parsed_source->package_name = package_dir ? make_package_name(package_dir) : main_package_name;
-    parser.parsed_source->source = source;
-    parser.current_indentation = 0;
+    Parser parser = {
+        .first_package = package,
+        .last_package = package,
+    };
 
-    Parser__parse_source(&parser, source);
-
-    return parser.parsed_source;
-}
-
-Parsed_Package *parse_package(String *project_dir, String *package_dir, String *main_package_name) {
-    String **package_files;
-    if (package_dir == NULL) {
-        package_files = Path__get_children(project_dir);
-    } else {
-        String *path = String__create_copy(project_dir);
-        if (!String__ends_with_cstring(path, "/")) {
-            String__append_char(path, '/');
-        }
-        String__append_string(path, package_dir);
-        package_files = Path__get_children(path);
-        String__delete(path);
+    while (package != NULL) {
+        Parser__parse_package(&parser, project_dir, package);
+        package = package->next_package;
     }
 
-    if (package_files == NULL) {
-        return NULL;
-    }
-
-    Parsed_Module *first_parsed_source = NULL;
-    Parsed_Module *last_parsed_source = NULL;
-
-    String **package_file_pointer = package_files;
-    for (; *package_file_pointer != NULL; package_file_pointer++) {
-        String *package_file = *package_file_pointer;
-        if (String__starts_with_cstring(package_file, ".") || !String__ends_with_cstring(package_file, ".code")) {
-            continue;
-        }
-
-        if (first_parsed_source == NULL) {
-            first_parsed_source = last_parsed_source = parse_source(project_dir, package_dir, package_file, main_package_name);
-        } else {
-            last_parsed_source = last_parsed_source->next_module = parse_source(project_dir, package_dir, package_file, main_package_name);
-        }
-    }
-
-    if (first_parsed_source == NULL) {
-        return NULL;
-    }
-
-    return Parsed_Package__create(first_parsed_source->package_name, first_parsed_source);
+    return parser.first_package;
 }
