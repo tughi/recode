@@ -673,11 +673,12 @@ Parsed_Module *Parsed_Module__create(Source *source, Parsed_Statements *statemen
 typedef struct Parsed_Package {
     String *name;
     Parsed_Module *first_module;
+    Source_Location *import_location;
     bool is_root;
     struct Parsed_Package *next_package;
 } Parsed_Package;
 
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_module, bool is_root);
+Parsed_Package *Parsed_Package__create(String *name, bool is_root);
 
 typedef struct Parsed_Import_Statement {
     Parsed_Statement super;

@@ -1311,7 +1311,9 @@ Parsed_Statement *Parser__parse_import_statement(Parser *self) {
         other_package = other_package->next_package;
     }
     if (other_package == NULL) {
-        other_package = Parsed_Package__create(package_name, NULL, false);
+        other_package = Parsed_Package__create(package_name, false);
+        other_package->import_location = malloc(sizeof(Source_Location));
+        *other_package->import_location = package_location;
         self->last_package->next_package = other_package;
         self->last_package = other_package;
     }
@@ -1519,7 +1521,12 @@ void Parser__parse_package(Parser *self, String *project_dir, Parsed_Package *pa
     }
 
     if (package_files == NULL) {
-        return;
+        if (package->import_location != NULL) {
+            pWriter__begin_location_message(stderr_writer, *package->import_location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Package does not exist");
+            pWriter__end_location_message(stderr_writer);
+        }
+        panic();
     }
 
     Parsed_Module *last_module = NULL;
@@ -1558,7 +1565,7 @@ String *make_package_name(String *package_dir) {
 }
 
 Parsed_Package *parse_package(String *project_dir, String *package_dir, String *package_name) {
-    Parsed_Package *package = Parsed_Package__create(package_name, NULL, package_dir == NULL);
+    Parsed_Package *package = Parsed_Package__create(package_name, package_dir == NULL);
 
     Parser parser = {
         .first_package = package,

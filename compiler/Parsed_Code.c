@@ -527,10 +527,11 @@ Parsed_Module *Parsed_Module__create(Source *source, Parsed_Statements *statemen
     return parsed_source;
 }
 
-Parsed_Package *Parsed_Package__create(String *name, Parsed_Module *first_source, bool is_root) {
+Parsed_Package *Parsed_Package__create(String *name, bool is_root) {
     Parsed_Package *package = (Parsed_Package *)malloc(sizeof(Parsed_Package));
     package->name = name;
-    package->first_module = first_source;
+    package->first_module = NULL;
+    package->import_location = NULL;
     package->is_root = is_root;
     package->next_package = NULL;
     return package;
