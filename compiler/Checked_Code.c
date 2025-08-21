@@ -228,6 +228,11 @@ Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Check
     return type;
 }
 
+bool Checked_Result_Type__equals(Checked_Result_Type *self, Checked_Result_Type *other) {
+    return Checked_Type__equals(self->return_type, other->return_type) &&
+           Checked_Type__equals(self->raise_type, other->raise_type);
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -322,6 +327,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__RESULT:
+        return Checked_Result_Type__equals((Checked_Result_Type *)self, (Checked_Result_Type *)other);
     case CHECKED_TYPE_KIND__STRUCT:
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     case CHECKED_TYPE_KIND__TRAIT:

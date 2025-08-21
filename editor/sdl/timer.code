@@ -1,0 +1,1 @@
+proc delay(anon ms: u32) = external "SDL_Delay"

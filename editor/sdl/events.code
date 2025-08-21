@@ -1,42 +1,3 @@
-const INIT_VIDEO = 0x0020u32
-
-proc init(anon flags: u32) -> i32 = external "SDL_Init"
-
-proc quit() = external "SDL_Quit"
-
-proc get_error() -> ^u8 = external "SDL_GetError"
-
-proc delay(anon ms: u32) = external "SDL_Delay"
-
-type Window = external
-
-proc create_window(anon title: [^]u8, anon x: i32, anon y: i32, anon w: i32, anon h: i32, anon flags: u32) -> ^Window = external "SDL_CreateWindow"
-
-proc get_window_id(anon window: ^Window) -> u32 = external "SDL_GetWindowID"
-
-proc destroy_window(anon window: ^Window) = external "SDL_DestroyWindow"
-
-type Renderer = external
-
-proc create_renderer(anon window: ^Window, anon index: i32, anon flags: u32) -> ^Renderer = external "SDL_CreateRenderer"
-
-proc destroy_renderer(anon renderer: ^Renderer) = external "SDL_DestroyRenderer"
-
-proc render_clear(anon renderer: ^Renderer) = external "SDL_RenderClear"
-
-type Rect = struct {
-    x: i32
-    y: i32
-    w: i32
-    h: i32
-}
-
-proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderDrawRect"
-
-proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
-
-proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"
-
 const EVENT_TYPE_QUIT = 0x0100u32 // SDL_QUIT
 const EVENT_TYPE_WINDOW = 0x0200u32 // SDL_WINDOWEVENT
 const EVENT_TYPE_KEY_DOWN = 0x0300u32 // SDL_KEYDOWN
@@ -45,6 +6,8 @@ const EVENT_TYPE_MOUSE_MOTION = 0x0400u32 // SDL_MOUSEMOTION
 const EVENT_TYPE_MOUSE_BUTTON_DOWN = 0x0401u32 // SDL_MOUSEBUTTONDOWN
 const EVENT_TYPE_MOUSE_BUTTON_UP = 0x0402u32 // SDL_MOUSEBUTTONUP
 const EVENT_TYPE_MOUSE_WHEEL = 0x0403u32 // SDL_MOUSEWHEEL
+
+proc poll_event(anon event: ^Event) -> i32 = external "SDL_PollEvent"
 
 type Event = struct { // SDL_Event
     type: u32
@@ -58,8 +21,6 @@ type Event = struct { // SDL_Event
     _data_6: u64
     _data_7: u64
 }
-
-proc poll_event(anon event: ^Event) -> i32 = external "SDL_PollEvent"
 
 type Window_Event = struct { // SDL_WindowEvent
     type: u32

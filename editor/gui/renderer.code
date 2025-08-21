@@ -1,25 +1,6 @@
-import sdl
-
 type Renderer = trait {
     proc clear(self)
     proc draw_rect(self, anon rect: Rect)
     proc present(self)
     proc set_draw_color(self, anon color: Color)
-}
-
-proc (^sdl.Renderer).clear(self) {
-    sdl.render_clear(self)
-}
-
-proc (^sdl.Renderer).draw_rect(self, anon rect: Rect) {
-    let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
-    sdl.render_draw_rect(self, ^sdl_rect)
-}
-
-proc (^sdl.Renderer).present(self) {
-    sdl.render_present(self)
-}
-
-proc (^sdl.Renderer).set_draw_color(self, anon color: Color) {
-    sdl.set_render_draw_color(self, color.red, color.green, color.blue, color.alpha)
 }

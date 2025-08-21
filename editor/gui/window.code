@@ -1,0 +1,4 @@
+type Window = trait {
+    proc draw(self)
+    proc set_widget(self, anon widget: ^Widget)
+}
