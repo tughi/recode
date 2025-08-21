@@ -1,7 +1,4 @@
 import errors
-import gui
-import gui.sdl_renderer
-import io
 import os
 import sdl
 
@@ -78,8 +75,8 @@ proc run() -> i32 {
 type Window = struct {
     sdl_window: ^sdl.Window
     sdl_window_id: u32
-    renderer: ^gui.Renderer
-    widget: ^gui.Widget
+    renderer: ^Renderer
+    widget: ^Widget
     must_draw: bool
     next: ^Window
 }
@@ -111,7 +108,7 @@ proc create_window(title: str, width: i32, height: i32) -> ^Window !> errors.Err
     let window = alloc Window(
         sdl_window: sdl_window
         sdl_window_id: sdl_window_id
-        renderer: alloc gui.Renderer(sdl_renderer)
+        renderer: alloc Renderer(sdl_renderer)
         widget: null
         must_draw: true
         next: null
@@ -146,7 +143,7 @@ proc (^Window).on_key_up_event(self, anon event: ^sdl.Keyboard_Event) {
 
 proc (^Window).on_mouse_motion_event(self, anon sdl_event: ^sdl.Mouse_Motion_Event) {
     os.stdout.write("Mouse Motion (").write_hex(sdl_event.type).write("): x=").write(sdl_event.x).write(", y=").write(sdl_event.y).end_line()
-    let gui_event: gui.Event = gui.MouseMotionEvent(x: sdl_event.x, y: sdl_event.y)
+    let gui_event: Event = MouseMotionEvent(x: sdl_event.x, y: sdl_event.y)
     self.widget.handle_event(^gui_event)
 }
 

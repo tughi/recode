@@ -425,7 +425,7 @@ def editor(launch):
     if not os.path.exists(f'build/editor'):
         run(f'mkdir build/editor')
 
-    compiler_command = ['build/stage1/ReCode', '--output-dir', 'build/editor', 'editor/editor.code']
+    compiler_command = ['build/stage1/ReCode', '-o', 'build/editor', '-p', 'editor', 'editor/editor.code']
     if run(compiler_command, capture_output=False, check=False).returncode != 0:
         trace(*compiler_command)
         exit(1)

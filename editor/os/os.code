@@ -12,9 +12,3 @@ proc init() {
 proc (^libc.FILE).write_char(self, anon c: u8) {
     libc.fputc(c.as(i32), self)
 }
-
-proc exit(anon status: i32) = external
-
-proc malloc(anon size: usize) -> ^Any = external
-proc realloc(anon ptr: ^Any, anon size: usize) -> ^Any = external
-proc free(anon ptr: ^Any) = external

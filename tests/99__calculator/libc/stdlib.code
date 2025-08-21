@@ -1,0 +1,4 @@
+proc malloc(anon size: usize) -> ^Any = external
+proc realloc(anon block: ^Any, anon size: usize) -> ^Any = external
+
+proc exit(anon code: i32) = external

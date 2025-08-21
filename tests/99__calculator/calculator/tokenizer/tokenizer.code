@@ -1,7 +1,5 @@
 import calculator.expression
 import calculator.source
-import io
-import libc
 
 type Tokenizer = struct {
     data: [^]u8
@@ -68,94 +66,4 @@ proc (^Tokenizer).scan_number_token(self) -> Token {
         span: source.Span(start: start, end: self.index)
         value: value
     ))
-}
-
-type Plus = struct {
-    span: source.Span
-}
-
-type Minus = struct {
-    span: source.Span
-}
-
-type Multiply = struct {
-    span: source.Span
-}
-
-type Divide = struct {
-    span: source.Span
-}
-
-type Stop = struct {
-    span: source.Span
-}
-
-type Token = variant {
-    expression.Number
-    Plus
-    Minus
-    Multiply
-    Divide
-    Stop
-    source.Error
-}
-
-proc (^Token).span(self) -> source.Span {
-    switch self {
-        is expression.Number as variant {
-            return variant.span
-        }
-        is Plus as variant {
-            return variant.span
-        }
-        is Minus as variant {
-            return variant.span
-        }
-        is Multiply as variant {
-            return variant.span
-        }
-        is Divide as variant {
-            return variant.span
-        }
-        is Stop as variant {
-            return variant.span
-        }
-        is source.Error as variant {
-            return variant.span
-        }
-        else {
-            // ignore
-        }
-    }
-    libc.exit(1)
-}
-
-proc (^io.Writer).write_token(self, anon token: ^Token) -> ^io.Writer {
-    switch token {
-        is expression.Number as number {
-            return self.write_string("Number: ").write_signed(signed: number.value)
-        }
-        is Plus {
-            return self.write_string("Plus")
-        }
-        is Minus {
-            return self.write_string("Minus")
-        }
-        is Multiply {
-            return self.write_string("Multiply")
-        }
-        is Divide {
-            return self.write_string("Divide")
-        }
-        is Stop {
-            return self.write_string("Stop")
-        }
-        is source.Error as error {
-            return self.write_string("Error: ").write_string(error.message)
-        }
-        is nil {
-            return self.write_string("Nil!")
-        }
-    }
-    return self
 }

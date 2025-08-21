@@ -1,0 +1,4 @@
+type Widget = trait {
+    proc draw(self, renderer: ^Renderer)
+    proc handle_event(self, anon event: ^Event)
+}

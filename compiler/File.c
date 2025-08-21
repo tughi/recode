@@ -61,7 +61,7 @@ String **Path__get_children(String *path) {
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        if (children_length >= children_size) {
+        if (children_length >= children_size - 1) {
             children_size *= 2;
             children = realloc(children, sizeof(String *) * children_size);
             if (children == NULL) {

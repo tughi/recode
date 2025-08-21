@@ -3185,6 +3185,12 @@ Checked_Package *Checker__check_imported_package(Checker *self, Parsed_Package *
 void Checker__check_import_statement(Checker *self, Parsed_Import_Statement *parsed_statement) {
     Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, self->checked_package, parsed_statement->import_name);
     if (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__IMPORT) {
+            Checked_Import_Symbol *import_symbol = (Checked_Import_Symbol *)symbol;
+            if (String__equals_string(import_symbol->other_package->name, parsed_statement->parsed_package->name)) {
+                return; // Import already exists
+            }
+        }
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Import symbol conflicts with existing symbol");
         pWriter__end_location_message(stderr_writer);

@@ -3,7 +3,6 @@
 
 #include "builtin_types.h"
 
-#include "libc.h"
 
 struct calculator__source_Span {
     int32_t start;
