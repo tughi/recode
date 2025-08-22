@@ -25,7 +25,7 @@ proc main() -> i32 {
     }
 
     let editor_layout_widget: gui.Widget = editor_layout
-    window.set_widget(^editor_layout_widget)
+    window.set_content(^editor_layout_widget)
 
     return app.run()
 }
@@ -38,17 +38,17 @@ type Editor_Layout = struct {
 }
 
 proc (^Editor_Layout).init(self) !> errors.Error {
-    self.glyph_editor = alloc gui.Widget(alloc gui.Button(label: "Glyph"))
-    self.super.children.append(self.glyph_editor)
+    self.glyph_editor = alloc gui.Widget(alloc gui.Button(label: "Glyph Editor"))
+    self.super.add_child(self.glyph_editor)
     self.save_button = alloc gui.Widget(alloc gui.Button(label: "Save"))
-    self.super.children.append(self.save_button)
+    self.super.add_child(self.save_button)
     self.preview = alloc gui.Widget(alloc gui.Button(label: "Preview"))
-    self.super.children.append(self.preview)
+    self.super.add_child(self.preview)
     return
 }
 
-proc (^Editor_Layout).handle_event(self, anon event: ^gui.Event) {
-    // TODO: Implement event handling
+proc (^Editor_Layout).handle_event(self, anon event: gui.Event) {
+    self.super.handle_event(event)
 }
 
 const MARGIN = 16
@@ -82,4 +82,12 @@ proc (^Editor_Layout).layout(self, anon bounds: gui.Rect) {
 
 proc (^Editor_Layout).render(self, anon renderer: ^gui.Renderer) {
     self.super.render(renderer)
+}
+
+proc (^Editor_Layout).set_window(self, anon window: ^gui.Base_Window) {
+    self.super.set_window(window)
+}
+
+proc (^Editor_Layout).set_widget(self, anon widget: ^gui.Widget) {
+    self.super.set_widget(widget)
 }

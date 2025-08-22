@@ -1,5 +1,7 @@
 type Widget = trait {
-    proc handle_event(self, anon event: ^Event)
+    proc handle_event(self, anon event: Event)
     proc layout(self, anon bounds: Rect)
     proc render(self, anon renderer: ^Renderer)
+    proc set_window(self, anon window: ^Base_Window)
+    proc set_widget(self, anon widget: ^Widget)
 }

@@ -1,9 +1,25 @@
 type Base_Control = struct {
+    window: ^Base_Window
+    widget: ^Widget
     bounds: Rect
-    is_dirty: bool
+}
+
+proc (^Base_Control).handle_event(self, anon event: Event) {
+    if event is Mouse_Motion_Event as mouse_motion_event {
+        if self.bounds.contains(x: mouse_motion_event.x, y: mouse_motion_event.y) {
+            self.window.hovered_widget = self.widget
+        }
+    }
 }
 
 proc (^Base_Control).layout(self, anon bounds: Rect) {
     self.bounds = bounds
-    self.is_dirty = true
+}
+
+proc (^Base_Control).set_window(self, anon window: ^Base_Window) {
+    self.window = window
+}
+
+proc (^Base_Control).set_widget(self, anon widget: ^Widget) {
+    self.widget = widget
 }
