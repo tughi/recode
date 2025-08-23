@@ -57,6 +57,7 @@ proc (^App).run(self) -> i32 {
             } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
                 let mouse_motion_event = (^event).as(^sdl.Mouse_Motion_Event)
                 window.handle_event(gui.Mouse_Motion_Event(
+                    window: ^window.super
                     x: mouse_motion_event.x
                     y: mouse_motion_event.y
                 ))
@@ -80,7 +81,7 @@ proc (^str).data(self) -> [^]u8 {
     return self.as(^String).data
 }
 
-proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Window !> errors.Error {
+proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.App_Window !> errors.Error {
     if not self.ready {
         raise errors.Error(message: "GUI app was not initialized")
     }
@@ -101,10 +102,10 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Wind
     }
 
     let window = alloc Window(
-        super: gui.Base_Window(
+        super: gui.Window(
             width: width
             height: height
-            renderer: alloc gui.Renderer(sdl_renderer)
+            renderer: sdl_renderer
             content: null
         )
         sdl_window: sdl_window
@@ -119,5 +120,5 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Wind
     }
     self.last_window = window
 
-    return gui.Window(window)
+    return window
 }

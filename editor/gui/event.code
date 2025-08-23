@@ -17,6 +17,7 @@ type Mouse_Button_Up_Event = struct {
 }
 
 type Mouse_Motion_Event = struct {
+    window: ^Window
     x: i32
     y: i32
 }

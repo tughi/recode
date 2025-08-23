@@ -1,20 +1,14 @@
-type Window = trait {
-    proc handle_event(self, anon event: Event)
-    proc render(self)
-    proc set_content(self, anon content: ^Widget)
-}
-
-type Base_Window = struct {
+type Window = struct {
     width: i32
     height: i32
-    renderer: ^Renderer
+    renderer: Renderer
     content: ^Widget
     is_dirty: bool
     hovered_widget: ^Widget
     pressed_widget: ^Widget
 }
 
-proc (^Base_Window).handle_event(self, anon event: Event) {
+proc (^Window).handle_event(self, anon event: Event) {
     if self.content == null {
         return
     }
@@ -35,9 +29,10 @@ proc (^Base_Window).handle_event(self, anon event: Event) {
     }
 }
 
-proc (^Base_Window).render(self) {
+proc (^Window).render(self) {
     if self.content != null {
-        self.content.render(self.renderer)
+        self.content.render(^self.renderer, self)
         self.renderer.present()
     }
+    self.is_dirty = false
 }

@@ -18,43 +18,48 @@ proc main() -> i32 {
         return 1
     }
 
-    let editor_layout = Editor_Layout()
+    let editor_layout = create_editor_layout()
     try editor_layout.init() else {
         os.stderr.write_string("Failed to initialize editor layout: ").write_string(error.message).end_line()
         return 1
     }
 
-    let editor_layout_widget: gui.Widget = editor_layout
-    window.set_content(^editor_layout_widget)
+    window.set_content(^editor_layout.super.super)
 
     return app.run()
 }
 
+proc create_editor_layout() -> ^Editor_Layout {
+    let editor_layout = alloc Editor_Layout()
+    editor_layout.super.super.behavior = editor_layout
+    return editor_layout
+}
+
 type Editor_Layout = struct {
-    super: gui.Base_Layout
+    super: gui.Layout
     glyph_editor: ^gui.Widget
     save_button: ^gui.Widget
     preview: ^gui.Widget
 }
 
 proc (^Editor_Layout).init(self) !> errors.Error {
-    self.glyph_editor = alloc gui.Widget(alloc gui.Button(label: "Glyph Editor"))
+    self.glyph_editor = gui.create_button(label: "Glyph Editor").as(^gui.Widget)
     self.super.add_child(self.glyph_editor)
-    self.save_button = alloc gui.Widget(alloc gui.Button(label: "Save"))
+    self.save_button = gui.create_button(label: "Save").as(^gui.Widget)
     self.super.add_child(self.save_button)
-    self.preview = alloc gui.Widget(alloc gui.Button(label: "Preview"))
+    self.preview = gui.create_button(label: "Preview").as(^gui.Widget)
     self.super.add_child(self.preview)
     return
 }
 
-proc (^Editor_Layout).handle_event(self, anon event: gui.Event) {
-    self.super.handle_event(event)
+proc (^Editor_Layout).on_handle_event(self, anon event: gui.Event) {
+    self.super.on_handle_event(event)
 }
 
 const MARGIN = 16
 const GLYPH_EDITOR_DOT = MARGIN / 2 * 3
 
-proc (^Editor_Layout).layout(self, anon bounds: gui.Rect) {
+proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
     let child_bounds = gui.Rect(
         left: bounds.left + MARGIN
         top: bounds.top + MARGIN
@@ -80,14 +85,6 @@ proc (^Editor_Layout).layout(self, anon bounds: gui.Rect) {
     self.preview.layout(child_bounds)
 }
 
-proc (^Editor_Layout).render(self, anon renderer: ^gui.Renderer) {
-    self.super.render(renderer)
-}
-
-proc (^Editor_Layout).set_window(self, anon window: ^gui.Base_Window) {
-    self.super.set_window(window)
-}
-
-proc (^Editor_Layout).set_widget(self, anon widget: ^gui.Widget) {
-    self.super.set_widget(widget)
+proc (^Editor_Layout).on_render(self, anon renderer: ^gui.Renderer, anon window: ^gui.Window) {
+    self.super.on_render(renderer, window)
 }

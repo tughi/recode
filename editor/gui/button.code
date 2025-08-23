@@ -1,34 +1,32 @@
 import os
 
+proc create_button(label: str) -> ^Button {
+    let button = alloc Button(label: label)
+    button.super.super.behavior = button
+    return button
+}
+
 type Button = struct {
-    super: Base_Control
+    super: Control
     label: str
     label_bounds: Rect
 }
 
-proc (^Button).handle_event(self, anon event: Event) {
-    self.super.handle_event(event)
+proc (^Button).on_handle_event(self, anon event: Event) {
+    self.super.on_handle_event(event)
 
     os.stdout.write("Button event").end_line()
 }
 
-proc (^Button).layout(self, anon bounds: Rect) {
-    self.super.layout(bounds)
+proc (^Button).on_layout(self, anon bounds: Rect) {
+    self.super.on_layout(bounds)
 }
 
-proc (^Button).render(self, anon renderer: ^Renderer) {
-    if self.super.window.hovered_widget == self.super.widget {
+proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    if window.hovered_widget == self.as(^Widget) {
         renderer.set_draw_color(Color(red: 255, green: 100, blue: 100, alpha: 255))
     } else {
         renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
     }
     renderer.draw_rect(self.super.bounds)
-}
-
-proc (^Button).set_window(self, anon window: ^Base_Window) {
-    self.super.set_window(window)
-}
-
-proc (^Button).set_widget(self, anon widget: ^Widget) {
-    self.super.set_widget(widget)
 }

@@ -1,23 +1,17 @@
 import collections
 import errors
 
-type Layout = trait {
-}
-
-type Base_Layout = struct {
-    window: ^Base_Window
-    widget: ^Widget
+type Layout = struct {
+    super: Widget
     children: collections.List<^Widget>
 }
 
-proc (^Base_Layout).add_child(self, anon child: ^Widget) !> errors.Error {
-    child.set_widget(child)
+proc (^Layout).add_child(self, anon child: ^Widget) !> errors.Error {
     self.children.append(child)
-    child.set_window(self.window)
     return
 }
 
-proc (^Base_Layout).handle_event(self, anon event: Event) {
+proc (^Layout).on_handle_event(self, anon event: Event) {
     let index = 0usize
     while index < self.children.length {
         let child = self.children.items[index]
@@ -26,25 +20,11 @@ proc (^Base_Layout).handle_event(self, anon event: Event) {
     }
 }
 
-proc (^Base_Layout).render(self, anon renderer: ^Renderer) {
+proc (^Layout).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     let index = 0usize
     while index < self.children.length {
         let child = self.children.items[index]
-        child.render(renderer)
+        child.render(renderer, window)
         index = index + 1
     }
-}
-
-proc (^Base_Layout).set_window(self, anon window: ^Base_Window) {
-    self.window = window
-    let index = 0usize
-    while index < self.children.length {
-        let child = self.children.items[index]
-        child.set_window(window)
-        index = index + 1
-    }
-}
-
-proc (^Base_Layout).set_widget(self, anon widget: ^Widget) {
-    self.widget = widget
 }

@@ -1,7 +1,21 @@
-type Widget = trait {
-    proc handle_event(self, anon event: Event)
-    proc layout(self, anon bounds: Rect)
-    proc render(self, anon renderer: ^Renderer)
-    proc set_window(self, anon window: ^Base_Window)
-    proc set_widget(self, anon widget: ^Widget)
+type Widget = struct {
+    behavior: Widget_Behavior
+}
+
+proc (^Widget).handle_event(self, anon event: Event) {
+    self.behavior.on_handle_event(event)
+}
+
+proc (^Widget).layout(self, anon bounds: Rect) {
+    self.behavior.on_layout(bounds)
+}
+
+proc (^Widget).render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    self.behavior.on_render(renderer, window)
+}
+
+type Widget_Behavior = trait {
+    proc on_handle_event(self, anon event: Event)
+    proc on_layout(self, anon bounds: Rect)
+    proc on_render(self, anon renderer: ^Renderer, anon window: ^Window)
 }
