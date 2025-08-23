@@ -31,7 +31,7 @@ proc main() -> i32 {
 
 proc create_editor_layout() -> ^Editor_Layout {
     let editor_layout = alloc Editor_Layout()
-    editor_layout.super.super.behavior = editor_layout
+    editor_layout.behavior = editor_layout
     return editor_layout
 }
 

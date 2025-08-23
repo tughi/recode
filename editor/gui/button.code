@@ -2,7 +2,7 @@ import os
 
 proc create_button(label: str) -> ^Button {
     let button = alloc Button(label: label)
-    button.super.super.behavior = button
+    button.behavior = button
     return button
 }
 
@@ -28,5 +28,5 @@ proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     } else {
         renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
     }
-    renderer.draw_rect(self.super.bounds)
+    renderer.draw_rect(self.bounds)
 }

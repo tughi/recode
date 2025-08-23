@@ -1,0 +1,16 @@
+type Vehicle = struct {
+    wheels: i32
+}
+
+type Car = struct {
+    super: Vehicle
+}
+
+type Sports_Car = struct {
+    super: Car
+}
+
+proc main() -> i32 {
+    let my_car = Sports_Car(super: Car(super: Vehicle(wheels: 4)))
+    return my_car.wheels - 4
+}

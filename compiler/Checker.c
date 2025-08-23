@@ -1103,6 +1103,16 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Parse
         Checked_Struct_Type *struct_type = (Checked_Struct_Type *)object_type;
         Checked_Struct_Member *member = Checked_Struct_Type__find_member(struct_type, parsed_expression->member_name->lexeme);
         if (member != NULL) {
+            if (member->struct_type != struct_type) {
+                Checked_Struct_Type *super_struct = struct_type;
+                while (super_struct != NULL) {
+                    object_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_expression->super.location, super_struct->first_member->type, object_expression, super_struct->first_member);
+                    super_struct = (Checked_Struct_Type *)super_struct->first_member->type;
+                    if (super_struct == member->struct_type) {
+                        break;
+                    }
+                }
+            }
             return (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_expression->super.location, member->type, object_expression, member);
         }
         break;
@@ -2173,7 +2183,7 @@ Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Token *t
                 panic();
             }
             Checked_Type__append_dependencies((Checked_Type *)struct_type, struct_member_type, parsed_member->type->location, self);
-            struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
+            struct_member = Checked_Struct_Member__create(parsed_member->name->location, struct_type, parsed_member->name->lexeme, struct_member_type);
             if (last_struct_member == NULL) {
                 struct_type->first_member = struct_member;
             } else {
@@ -2287,7 +2297,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *ty
     trait_type->struct_type = Checked_Struct_Type__create(type_name->location, trait_type->super.name, self->checked_package, NULL);
 
     Checked_Type *trait_receiver_type = (Checked_Type *)Checked_Pointer_Type__create((Source_Location){}, (Checked_Type *)self->builtin_types->any_type);
-    trait_type->self_struct_member = trait_type->struct_type->first_member = Checked_Struct_Member__create((Source_Location){}, String__create_from("self"), trait_receiver_type);
+    trait_type->self_struct_member = trait_type->struct_type->first_member = Checked_Struct_Member__create((Source_Location){}, trait_type->struct_type, String__create_from("self"), trait_receiver_type);
 
     Parsed_Trait_Method *parsed_method = parsed_trait_type_specifier->first_method;
     if (parsed_method != NULL) {
@@ -2296,7 +2306,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Token *ty
         Checked_Trait_Method *last_trait_method = NULL;
         for (; parsed_method != NULL; parsed_method = parsed_method->next_method) {
             Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type, parsed_method->raise_type);
-            Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
+            Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, trait_type->struct_type, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
             Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
             Checked_Procedure_Parameter *trait_method_parameter = trait_method->procedure_type->first_parameter;

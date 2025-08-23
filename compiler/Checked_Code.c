@@ -223,9 +223,10 @@ bool Checked_Result_Type__equals(Checked_Result_Type *self, Checked_Result_Type 
            Checked_Type__equals(self->raise_type, other->raise_type);
 }
 
-Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
+Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, Checked_Struct_Type *struct_type, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
+    member->struct_type = struct_type;
     member->name = name;
     member->type = type;
     member->next_member = NULL;
@@ -243,11 +244,17 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
     Checked_Struct_Member *member = self->first_member;
     while (member != NULL) {
         if (String__equals_string(name, member->name)) {
-            break;
+            return member;
         }
         member = member->next_member;
     }
-    return member;
+    if (self->first_member != NULL && String__equals_cstring(self->first_member->name, "super")) {
+        if (self->first_member->type->kind != CHECKED_TYPE_KIND__STRUCT) {
+            panic(); // Invalid state
+        }
+        return Checked_Struct_Type__find_member((Checked_Struct_Type *)self->first_member->type, name);
+    }
+    return NULL;
 }
 
 Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Procedure_Type *procedure_type, Checked_Struct_Member *struct_member) {

@@ -30,7 +30,7 @@ proc (^App).run(self) -> i32 {
     while running {
         let window = self.first_window
         while window != null {
-            if window.super.is_dirty {
+            if window.is_dirty {
                 window.render()
             }
             window = window.next_window

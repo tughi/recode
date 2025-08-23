@@ -232,14 +232,15 @@ typedef struct Checked_Result_Type {
 
 Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Package *package, Checked_Type *return_type, Checked_Type *raise_type);
 
+struct Checked_Struct_Type;
+
 typedef struct Checked_Struct_Member {
     Source_Location location;
+    struct Checked_Struct_Type *struct_type;
     String *name;
     Checked_Type *type;
     struct Checked_Struct_Member *next_member;
 } Checked_Struct_Member;
-
-Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Struct_Type {
     Checked_Named_Type super;
@@ -247,6 +248,7 @@ typedef struct Checked_Struct_Type {
     Parsed_Struct_Type_Specifier *parsed_type_specifier;
 } Checked_Struct_Type;
 
+Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, Checked_Struct_Type *struct_type, String *name, Checked_Type *type);
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Struct_Type_Specifier *parsed_type_specifier);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);

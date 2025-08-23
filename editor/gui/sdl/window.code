@@ -18,10 +18,10 @@ proc (^Window).render(self) {
 }
 
 proc (^Window).set_content(self, anon content: ^gui.Widget) {
-    self.super.content = content
-    let bounds = gui.Rect(left: 0, top: 0, right: self.super.width - 1, bottom: self.super.height - 1)
+    self.content = content
+    let bounds = gui.Rect(left: 0, top: 0, right: self.width - 1, bottom: self.height - 1)
     content.layout(bounds)
-    self.super.is_dirty = true
+    self.is_dirty = true
 }
 
 proc (^Window).on_window_event(self, anon event: ^sdl.Window_Event) {
