@@ -112,29 +112,19 @@ Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
     return type;
 }
 
+bool Checked_Named_Type__equals(Checked_Named_Type *self, Checked_Named_Type *other) {
+    return self->super.symbol == other->super.symbol;
+}
+
 Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Type_Statement *parsed_type_statement) {
     Checked_Generic_Type *type = (Checked_Generic_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__GENERIC, sizeof(Checked_Generic_Type), location, name, package);
     type->parsed_type_statement = parsed_type_statement;
     return type;
 }
 
-bool Checked_Generic_Type__equals(Checked_Generic_Type *self, Checked_Generic_Type *other) {
-    if (!String__equals_string(self->super.name, other->super.name)) {
-        return false;
-    }
-    todo("Implement Checked_Generic_Type__equals");
-}
-
 Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Package *package) {
     Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, package);
     return type;
-}
-
-bool Checked_External_Type__equals(Checked_External_Type *self, Checked_External_Type *other) {
-    if (!String__equals_string(self->super.name, other->super.name)) {
-        return false;
-    }
-    return true;
 }
 
 Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
@@ -260,18 +250,6 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
     return member;
 }
 
-bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
-}
-
-bool Checked_Trait_Type__equals(Checked_Trait_Type *self, Checked_Trait_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
-}
-
-bool Checked_Variant_Type__equals(Checked_Variant_Type *self, Checked_Variant_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
-}
-
 Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Procedure_Type *procedure_type, Checked_Struct_Member *struct_member) {
     Checked_Trait_Method *method = (Checked_Trait_Method *)malloc(sizeof(Checked_Trait_Method));
     method->location = location;
@@ -315,10 +293,6 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
-    case CHECKED_TYPE_KIND__EXTERNAL:
-        return Checked_External_Type__equals((Checked_External_Type *)self, (Checked_External_Type *)other);
-    case CHECKED_TYPE_KIND__GENERIC:
-        return Checked_Generic_Type__equals((Checked_Generic_Type *)self, (Checked_Generic_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
         return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
@@ -329,12 +303,13 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__RESULT:
         return Checked_Result_Type__equals((Checked_Result_Type *)self, (Checked_Result_Type *)other);
+    case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__STRUCT:
-        return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     case CHECKED_TYPE_KIND__TRAIT:
-        return Checked_Trait_Type__equals((Checked_Trait_Type *)self, (Checked_Trait_Type *)other);
-    case CHECKED_TYPE_KIND__VARIANT:
-        return Checked_Variant_Type__equals((Checked_Variant_Type *)self, (Checked_Variant_Type *)other);
+    case CHECKED_TYPE_KIND__VARIANT: {
+        return Checked_Named_Type__equals((Checked_Named_Type *)self, (Checked_Named_Type *)other);
+    }
     default:
         break;
     }
