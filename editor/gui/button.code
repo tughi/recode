@@ -18,10 +18,6 @@ proc (^Button).on_handle_event(self, anon event: Event) {
     os.stdout.write("Button event").end_line()
 }
 
-proc (^Button).on_layout(self, anon bounds: Rect) {
-    self.super.on_layout(bounds)
-}
-
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     if window.hovered_widget == self.as(^Widget) {
         renderer.set_draw_color(Color(red: 255, green: 100, blue: 100, alpha: 255))

@@ -52,10 +52,6 @@ proc (^Editor_Layout).init(self) !> errors.Error {
     return
 }
 
-proc (^Editor_Layout).on_handle_event(self, anon event: gui.Event) {
-    self.super.on_handle_event(event)
-}
-
 const MARGIN = 16
 const GLYPH_EDITOR_DOT = MARGIN / 2 * 3
 
@@ -83,8 +79,4 @@ proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
         bottom: bounds.bottom - MARGIN
     )
     self.preview.layout(child_bounds)
-}
-
-proc (^Editor_Layout).on_render(self, anon renderer: ^gui.Renderer, anon window: ^gui.Window) {
-    self.super.on_render(renderer, window)
 }

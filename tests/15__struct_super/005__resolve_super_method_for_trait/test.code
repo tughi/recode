@@ -1,0 +1,20 @@
+type Vehicle = struct {
+    wheels: i32
+}
+
+proc (^Vehicle).get_wheels(self) -> i32 {
+    return self.wheels
+}
+
+type Car = struct {
+    super: Vehicle
+}
+
+type Wheeled = trait {
+    proc get_wheels(self) -> i32
+}
+
+proc main() -> i32 {
+    let my_vehicle = alloc Car(super: Vehicle(wheels: 4))
+    return my_vehicle.get_wheels() - 4
+}

@@ -927,12 +927,6 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Source_Locatio
             trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
             pWriter__end_location_message(stderr_writer);
             panic();
-        } else if (!Checked_Procedure_Type__equals(procedure_symbol->procedure_type, trait_method->procedure_type)) {
-            pWriter__begin_location_message(stderr_writer, procedure_symbol->super.location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Procedure type does not match: ");
-            pWriter__write__checked_type(stderr_writer, (Checked_Type *)trait_method->procedure_type);
-            pWriter__end_location_message(stderr_writer);
-            panic();
         }
         trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
         Checked_Symbol_Expression *procedure_symbol_expression = Checked_Symbol_Expression__create(location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
