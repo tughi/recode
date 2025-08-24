@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/15__struct_super/003__require_struct_super_type/test.code:6:12-20: Not a struct type"
+        ]
+    }
+}
