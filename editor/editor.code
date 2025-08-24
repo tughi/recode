@@ -24,7 +24,7 @@ proc main() -> i32 {
         return 1
     }
 
-    window.set_content(^editor_layout.super.super)
+    window.set_content(editor_layout)
 
     return app.run()
 }

@@ -57,7 +57,7 @@ proc (^App).run(self) -> i32 {
             } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
                 let mouse_motion_event = (^event).as(^sdl.Mouse_Motion_Event)
                 window.handle_event(gui.Mouse_Motion_Event(
-                    window: ^window.super
+                    window: window
                     x: mouse_motion_event.x
                     y: mouse_motion_event.y
                 ))

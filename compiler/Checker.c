@@ -1418,6 +1418,24 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
 
     if (expected_type != NULL) {
         switch (expected_type->kind) {
+        case CHECKED_TYPE_KIND__POINTER: {
+            if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+                Checked_Pointer_Type *expression_pointer_type = (Checked_Pointer_Type *)expression->type;
+                Checked_Pointer_Type *expected_pointer_type = (Checked_Pointer_Type *)expected_type;
+                if (expression_pointer_type->other_type != expected_pointer_type->other_type && expression_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT && expected_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+                    Checked_Struct_Type *expression_struct_type = (Checked_Struct_Type *)expression_pointer_type->other_type;
+                    Checked_Struct_Type *expected_struct_type = (Checked_Struct_Type *)expected_pointer_type->other_type;
+                    while (expression_struct_type->first_member != NULL && String__equals_cstring(expression_struct_type->first_member->name, "super")) {
+                        expression_struct_type = (Checked_Struct_Type *)expression_struct_type->first_member->type;
+                        if (expression_struct_type == expected_struct_type) {
+                            expression = (Checked_Expression *)Checked_Cast_Expression__create(expression->location, expected_type, expression);
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
         case CHECKED_TYPE_KIND__TRAIT:
             if (expression->type != expected_type) {
                 expression = Checker__make_trait_expression(self, parsed_expression->location, (Checked_Trait_Type *)expected_type, expression);
