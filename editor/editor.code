@@ -44,11 +44,11 @@ type Editor_Layout = struct {
 
 proc (^Editor_Layout).init(self) !> errors.Error {
     self.glyph_editor = gui.create_button(label: "Glyph Editor").as(^gui.Widget)
-    self.super.add_child(self.glyph_editor)
+    self.add_child(self.glyph_editor)
     self.save_button = gui.create_button(label: "Save").as(^gui.Widget)
-    self.super.add_child(self.save_button)
+    self.add_child(self.save_button)
     self.preview = gui.create_button(label: "Preview").as(^gui.Widget)
-    self.super.add_child(self.preview)
+    self.add_child(self.preview)
     return
 }
 

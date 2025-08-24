@@ -364,6 +364,24 @@ void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Chec
     }
 }
 
+Checked_Expression *Checker__assure_expression_pointer_type(Checker *self, Checked_Expression *expression, Checked_Pointer_Type *expected_pointer_type) {
+    if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+        Checked_Pointer_Type *expression_pointer_type = (Checked_Pointer_Type *)expression->type;
+        if (expression_pointer_type->other_type != expected_pointer_type->other_type && expression_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT && expected_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+            Checked_Struct_Type *expression_struct_type = (Checked_Struct_Type *)expression_pointer_type->other_type;
+            Checked_Struct_Type *expected_struct_type = (Checked_Struct_Type *)expected_pointer_type->other_type;
+            while (expression_struct_type->first_member != NULL && String__equals_cstring(expression_struct_type->first_member->name, "super")) {
+                expression_struct_type = (Checked_Struct_Type *)expression_struct_type->first_member->type;
+                if (expression_struct_type == expected_struct_type) {
+                    return (Checked_Expression *)Checked_Cast_Expression__create(expression->location, (Checked_Type *)expected_pointer_type, expression);
+                }
+            }
+        }
+    }
+    Checker__require_same_type(self, (Checked_Type *)expected_pointer_type, expression->type, expression->location);
+    return expression;
+}
+
 /**
  * Checks if `self` is a specialization of the another type.
  */
@@ -424,6 +442,22 @@ Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checked_
             panic();
         }
         method = method->next_method;
+    }
+    if (receiver_type->kind == CHECKED_TYPE_KIND__POINTER) {
+        Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)receiver_type;
+        if (pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+            Checked_Struct_Type *struct_type = (Checked_Struct_Type *)pointer_type->other_type;
+            if (struct_type->first_member != NULL && String__equals_cstring(struct_type->first_member->name, "super")) {
+                Checked_Pointer_Type super_receiver_type = (Checked_Pointer_Type){
+                    .super = {
+                        .kind = CHECKED_TYPE_KIND__POINTER,
+                        .location = receiver_type->location,
+                    },
+                    .other_type = struct_type->first_member->type,
+                };
+                return Checker__resolve_method_symbol(self, (Checked_Type *)&super_receiver_type, procedure_name);
+            }
+        }
     }
     return NULL;
 }
@@ -645,7 +679,11 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
             panic();
         }
         if (receiver_expression != NULL) {
-            Checker__require_same_type(self, procedure_parameter->type, receiver_expression->type, receiver_expression->location);
+            if (procedure_parameter->type->kind == CHECKED_TYPE_KIND__POINTER) {
+                receiver_expression = Checker__assure_expression_pointer_type(self, receiver_expression, (Checked_Pointer_Type *)procedure_parameter->type);
+            } else {
+                Checker__require_same_type(self, procedure_parameter->type, receiver_expression->type, receiver_expression->location);
+            }
             first_argument = last_argument = Checked_Call_Argument__create(receiver_expression, procedure_parameter->type);
             procedure_parameter = procedure_parameter->next_parameter;
         }
@@ -1419,21 +1457,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *
     if (expected_type != NULL) {
         switch (expected_type->kind) {
         case CHECKED_TYPE_KIND__POINTER: {
-            if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
-                Checked_Pointer_Type *expression_pointer_type = (Checked_Pointer_Type *)expression->type;
-                Checked_Pointer_Type *expected_pointer_type = (Checked_Pointer_Type *)expected_type;
-                if (expression_pointer_type->other_type != expected_pointer_type->other_type && expression_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT && expected_pointer_type->other_type->kind == CHECKED_TYPE_KIND__STRUCT) {
-                    Checked_Struct_Type *expression_struct_type = (Checked_Struct_Type *)expression_pointer_type->other_type;
-                    Checked_Struct_Type *expected_struct_type = (Checked_Struct_Type *)expected_pointer_type->other_type;
-                    while (expression_struct_type->first_member != NULL && String__equals_cstring(expression_struct_type->first_member->name, "super")) {
-                        expression_struct_type = (Checked_Struct_Type *)expression_struct_type->first_member->type;
-                        if (expression_struct_type == expected_struct_type) {
-                            expression = (Checked_Expression *)Checked_Cast_Expression__create(expression->location, expected_type, expression);
-                            break;
-                        }
-                    }
-                }
-            }
+            expression = Checker__assure_expression_pointer_type(self, expression, (Checked_Pointer_Type *)expected_type);
             break;
         }
         case CHECKED_TYPE_KIND__TRAIT:
