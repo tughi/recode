@@ -12,6 +12,8 @@ proc (^Layout).add_child(self, anon child: ^Widget) !> errors.Error {
 }
 
 proc (^Layout).on_handle_event(self, anon event: Event) {
+    self.super.on_handle_event(event)
+
     let index = 0usize
     while index < self.children.length {
         let child = self.children.items[index]

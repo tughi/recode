@@ -5,6 +5,10 @@ proc (^sdl.Renderer).clear(self) {
     sdl.render_clear(self)
 }
 
+proc (^sdl.Renderer).draw_line(self, x1: i32, y1: i32, x2: i32, y2: i32) {
+    sdl.render_draw_line(self, x1, y1, x2, y2)
+}
+
 proc (^sdl.Renderer).draw_rect(self, anon rect: gui.Rect) {
     let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
     sdl.render_draw_rect(self, ^sdl_rect)

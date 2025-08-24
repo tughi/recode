@@ -7,7 +7,7 @@ proc create_button(label: str) -> ^Button {
 }
 
 type Button = struct {
-    super: Control
+    super: Widget
     label: str
     label_bounds: Rect
 }

@@ -6,6 +6,7 @@ proc destroy_renderer(anon renderer: ^Renderer) = external "SDL_DestroyRenderer"
 
 proc render_clear(anon renderer: ^Renderer) = external "SDL_RenderClear"
 
+proc render_draw_line(anon renderer: ^Renderer, anon x1: i32, anon y1: i32, anon x2: i32, anon y2: i32) = external "SDL_RenderDrawLine"
 proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderDrawRect"
 
 proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"

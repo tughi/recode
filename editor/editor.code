@@ -2,6 +2,7 @@ import errors
 import gui
 import gui.sdl
 import os
+import widgets
 
 proc main() -> i32 {
     os.init()
@@ -18,7 +19,7 @@ proc main() -> i32 {
         return 1
     }
 
-    let editor_layout = create_editor_layout()
+    let editor_layout = widgets.create_editor_layout()
     try editor_layout.init() else {
         os.stderr.write_string("Failed to initialize editor layout: ").write_string(error.message).end_line()
         return 1
@@ -27,56 +28,4 @@ proc main() -> i32 {
     window.set_content(editor_layout)
 
     return app.run()
-}
-
-proc create_editor_layout() -> ^Editor_Layout {
-    let editor_layout = alloc Editor_Layout()
-    editor_layout.behavior = editor_layout
-    return editor_layout
-}
-
-type Editor_Layout = struct {
-    super: gui.Layout
-    glyph_editor: ^gui.Widget
-    save_button: ^gui.Widget
-    preview: ^gui.Widget
-}
-
-proc (^Editor_Layout).init(self) !> errors.Error {
-    self.glyph_editor = gui.create_button(label: "Glyph Editor").as(^gui.Widget)
-    self.add_child(self.glyph_editor)
-    self.save_button = gui.create_button(label: "Save").as(^gui.Widget)
-    self.add_child(self.save_button)
-    self.preview = gui.create_button(label: "Preview").as(^gui.Widget)
-    self.add_child(self.preview)
-    return
-}
-
-const MARGIN = 16
-const GLYPH_EDITOR_DOT = MARGIN / 2 * 3
-
-proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
-    let child_bounds = gui.Rect(
-        left: bounds.left + MARGIN
-        top: bounds.top + MARGIN
-        right: bounds.left + MARGIN + (GLYPH_EDITOR_DOT + 1) * 9
-        bottom: bounds.top + MARGIN + (GLYPH_EDITOR_DOT + 1) * 18
-    )
-    self.glyph_editor.layout(child_bounds)
-
-    child_bounds.set(
-        left: child_bounds.left
-        top: child_bounds.bottom + MARGIN
-        right: child_bounds.right
-        bottom: child_bounds.bottom + MARGIN + 30
-    )
-    self.save_button.layout(child_bounds)
-
-    child_bounds.set(
-        left: child_bounds.right + MARGIN
-        top: bounds.top + MARGIN
-        right: bounds.right - MARGIN
-        bottom: bounds.bottom - MARGIN
-    )
-    self.preview.layout(child_bounds)
 }

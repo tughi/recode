@@ -1,0 +1,45 @@
+import font
+import gui
+
+type Glyph_Editor = struct {
+    super: gui.Widget
+    // glyph: ^font.Glyph
+}
+
+proc create_glyph_editor() -> ^Glyph_Editor {
+    let glyph_editor = alloc Glyph_Editor()
+    glyph_editor.behavior = gui.Widget_Behavior(glyph_editor)
+    return glyph_editor
+}
+
+proc (^Glyph_Editor).on_handle_event(self, event: gui.Event) {
+    // self.super.on_handle_event(event)
+
+}
+
+proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: ^gui.Window) {
+    renderer.set_draw_color(gui.Color(red: 255, green: 255, blue: 0, alpha: 255))
+    renderer.draw_rect(self.bounds)
+
+    let left = self.bounds.left + 1 + GLYPH_EDITOR_PIXEL_SIZE
+    let top = self.bounds.top + 1
+    let right = self.bounds.right - 1
+    let bottom = self.bounds.bottom - 1
+    while left < right {
+        renderer.draw_line(x1: left, y1: top, x2: left, y2: bottom)
+        left = left + GLYPH_EDITOR_PIXEL_SIZE + 1
+    }
+
+    left = self.bounds.left + 1
+    top = self.bounds.top + 1 + GLYPH_EDITOR_PIXEL_SIZE
+    right = self.bounds.right - 1
+    bottom = self.bounds.bottom - 1
+    while top < bottom {
+        renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+        top = top + GLYPH_EDITOR_PIXEL_SIZE + 1
+    }
+
+    renderer.set_draw_color(gui.Color(red: 255, green: 0, blue: 0, alpha: 255))
+    top = self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 13
+    renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+}
