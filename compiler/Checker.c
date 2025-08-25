@@ -78,8 +78,6 @@ typedef struct Checked_Methods {
 } Checked_Methods;
 
 typedef struct Checker {
-    Parsed_Package *parsed_package;
-
     Builtin_Types *builtin_types;
 
     Checked_Symbols *global_symbols;
@@ -92,10 +90,8 @@ typedef struct Checker {
     int32_t temp_variable_counter;
 } Checker;
 
-Checker *Checker__create(Parsed_Package *parsed_package) {
+Checker *Checker__create(void) {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
-
-    checker->parsed_package = parsed_package;
 
     checker->builtin_types = Builtin_Types__create();
 
@@ -140,7 +136,7 @@ Checker_Context *Checker_Context__create(Checker *checker, Checked_Package *pack
 }
 
 Checked_Package *Checker__create_package(Checker *self, Parsed_Package *parsed_package) {
-    Checked_Package *package = Checked_Package__create(parsed_package->name);
+    Checked_Package *package = Checked_Package__create(parsed_package);
     Checked_Packages__append(self->packages, package);
     return package;
 }
@@ -325,7 +321,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Par
             }
             return (Checked_Type *)type;
         }
-        Parsed_Module *parsed_module = self->parsed_package->first_module;
+        Parsed_Module *parsed_module = context->checked_package->parsed_package->first_module;
         for (; parsed_module != NULL; parsed_module = parsed_module->next_module) {
             Parsed_Statement *parsed_statement = parsed_module->statements->first_statement;
             for (; parsed_statement != NULL; parsed_statement = parsed_statement->next_statement) {
@@ -3253,8 +3249,6 @@ void Checker__check_package(Checker *self, Checker_Context *context);
 Checked_Package *Checker__check_imported_package(Checker *self, Checker_Context *context, Parsed_Package *parsed_package) {
     Checker package_checker;
 
-    package_checker.parsed_package = parsed_package;
-
     package_checker.builtin_types = self->builtin_types;
 
     package_checker.global_symbols = package_checker.symbols = self->global_symbols;
@@ -3348,7 +3342,7 @@ void Checker__check_module(Checker *self, Checker_Context *context, Parsed_Modul
 }
 
 void Checker__check_package(Checker *self, Checker_Context *context) {
-    Parsed_Module *parsed_module = self->parsed_package->first_module;
+    Parsed_Module *parsed_module = context->checked_package->parsed_package->first_module;
     while (parsed_module != NULL) {
         Checker__check_module(self, context, parsed_module);
         parsed_module = parsed_module->next_module;
@@ -3358,15 +3352,13 @@ void Checker__check_package(Checker *self, Checker_Context *context) {
 void Checker__check_builtin_package(Checker *self, Parsed_Package *parsed_package) {
     Checker package_checker;
 
-    package_checker.parsed_package = parsed_package;
-
     package_checker.builtin_types = self->builtin_types;
 
     package_checker.global_symbols = package_checker.symbols = self->builtin_types->symbols;
 
     package_checker.packages = self->packages;
 
-    Checker_Context context = Checker_Context__make(&package_checker, Checked_Package__create(parsed_package->name));
+    Checker_Context context = Checker_Context__make(&package_checker, Checked_Package__create(parsed_package));
     self->packages->builtin_package = context.checked_package;
 
     package_checker.methods = self->methods;
@@ -3375,7 +3367,7 @@ void Checker__check_builtin_package(Checker *self, Parsed_Package *parsed_packag
 }
 
 Checked_Source *check(Parsed_Package *parsed_builtin_package, Parsed_Package *parsed_package) {
-    Checker *checker = Checker__create(parsed_package);
+    Checker *checker = Checker__create();
 
     Checker__check_builtin_package(checker, parsed_builtin_package);
 

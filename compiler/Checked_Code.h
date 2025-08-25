@@ -4,11 +4,12 @@
 #include "Parsed_Code.h"
 
 typedef struct Checked_Package {
+    Parsed_Package *parsed_package;
     String *name;
     struct Checked_Package *next_package;
 } Checked_Package;
 
-Checked_Package *Checked_Package__create(String *name);
+Checked_Package *Checked_Package__create(Parsed_Package *parsed_package);
 
 Writer *pWriter__write__package_name(Writer *self, Checked_Package *package);
 
