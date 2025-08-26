@@ -62,9 +62,21 @@ proc (^App).run(self) -> i32 {
                     y: mouse_motion_event.y
                 ))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_DOWN {
-                window.on_mouse_button_down_event((^event).as(^sdl.Mouse_Button_Event))
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                window.handle_event(gui.Mouse_Button_Down_Event(
+                    window: window
+                    button: mouse_button_event.button
+                    x: mouse_button_event.x
+                    y: mouse_button_event.y
+                ))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_UP {
-                window.on_mouse_button_up_event((^event).as(^sdl.Mouse_Button_Event))
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                window.handle_event(gui.Mouse_Button_Up_Event(
+                    window: window
+                    button: mouse_button_event.button
+                    x: mouse_button_event.x
+                    y: mouse_button_event.y
+                ))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_WHEEL {
                 window.on_mouse_wheel_event((^event).as(^sdl.Mouse_Wheel_Event))
             } else {

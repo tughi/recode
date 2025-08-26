@@ -28,14 +28,6 @@ proc (^Window).on_key_up_event(self, anon event: ^sdl.Keyboard_Event) {
     os.stdout.write("Key Up (").write_hex(event.type).write("): key=").write_hex(event.key.scan_code).end_line()
 }
 
-proc (^Window).on_mouse_button_down_event(self, anon event: ^sdl.Mouse_Button_Event) {
-    os.stdout.write("Mouse Button Down (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", button=").write_hex(event.button).end_line()
-}
-
-proc (^Window).on_mouse_button_up_event(self, anon event: ^sdl.Mouse_Button_Event) {
-    os.stdout.write("Mouse Button Up (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", button=").write_hex(event.button).end_line()
-}
-
 proc (^Window).on_mouse_wheel_event(self, anon event: ^sdl.Mouse_Wheel_Event) {
     os.stdout.write("Mouse Wheel (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", direction=").write_hex(event.direction).end_line()
 }
