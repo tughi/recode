@@ -2,6 +2,7 @@ type Renderer = trait {
     proc clear(self)
     proc draw_line(self, x1: i32, y1: i32, x2: i32, y2: i32)
     proc draw_rect(self, anon rect: Rect)
+    proc fill_rect(self, anon rect: Rect)
     proc present(self)
     proc set_draw_color(self, anon color: Color)
 }

@@ -19,10 +19,13 @@ proc (^Button).on_handle_event(self, anon event: Event) {
 }
 
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
-    if window.hovered_widget == self.as(^Widget) {
-        renderer.set_draw_color(Color(red: 255, green: 100, blue: 100, alpha: 255))
+    if window.hovered_widget == self {
+        renderer.set_draw_color(Color(red: 0x4f, green: 0x4f, blue: 0x4f, alpha: 255))
     } else {
-        renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
+        renderer.set_draw_color(Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
     }
+    renderer.fill_rect(Rect(left: self.bounds.left + 1, top: self.bounds.top + 1, right: self.bounds.right - 1, bottom: self.bounds.bottom - 1))
+
+    renderer.set_draw_color(Color(red: 0x7f, green: 0x7f, blue: 0x7f, alpha: 255))
     renderer.draw_rect(self.bounds)
 }

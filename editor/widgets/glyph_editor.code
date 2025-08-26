@@ -3,6 +3,8 @@ import gui
 
 type Glyph_Editor = struct {
     super: gui.Widget
+    hovered_column: i32
+    hovered_row: i32
     glyph: ^font.Glyph
 }
 
@@ -13,12 +15,34 @@ proc create_glyph_editor() -> ^Glyph_Editor {
 }
 
 proc (^Glyph_Editor).on_handle_event(self, event: gui.Event) {
-    // self.super.on_handle_event(event)
+    self.super.on_handle_event(event)
 
+    switch event {
+        is gui.Mouse_Motion_Event as mouse_move_event {
+            let mouse_x = mouse_move_event.x
+            let mouse_y = mouse_move_event.y
+            let pixels_bounds = gui.Rect(
+                left: self.bounds.left + 1
+                top: self.bounds.top + 1
+                right: self.bounds.right - 1
+                bottom: self.bounds.bottom - 1
+            )
+            if pixels_bounds.contains(x: mouse_x, y: mouse_y) {
+                let old_column = self.hovered_column
+                let old_row = self.hovered_row
+                self.hovered_column = (mouse_x - self.bounds.left) / (GLYPH_EDITOR_PIXEL_SIZE + 1)
+                self.hovered_row = (mouse_y - self.bounds.top) / (GLYPH_EDITOR_PIXEL_SIZE + 1)
+                mouse_move_event.window.is_dirty = true
+            }
+        }
+        else {
+            // Do nothing
+        }
+    }
 }
 
 proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: ^gui.Window) {
-    renderer.set_draw_color(gui.Color(red: 255, green: 255, blue: 0, alpha: 255))
+    renderer.set_draw_color(gui.Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
     renderer.draw_rect(self.bounds)
 
     let left = self.bounds.left + 1 + GLYPH_EDITOR_PIXEL_SIZE
@@ -35,11 +59,26 @@ proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: 
     right = self.bounds.right - 1
     bottom = self.bounds.bottom - 1
     while top < bottom {
-        renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+        if top == self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 13 {
+            renderer.set_draw_color(gui.Color(red: 0xff, green: 0, blue: 0, alpha: 255))
+            renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+            renderer.set_draw_color(gui.Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
+        } else {
+            renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+        }
         top = top + GLYPH_EDITOR_PIXEL_SIZE + 1
     }
 
-    renderer.set_draw_color(gui.Color(red: 255, green: 0, blue: 0, alpha: 255))
-    top = self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 13
-    renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
+    if window.hovered_widget == self {
+        renderer.set_draw_color(gui.Color(red: 0xff, green: 0, blue: 0, alpha: 255))
+
+        let pixel_left = self.bounds.left + (GLYPH_EDITOR_PIXEL_SIZE + 1) * self.hovered_column
+        let pixel_top = self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * self.hovered_row
+        renderer.draw_rect(gui.Rect(
+            left: pixel_left
+            top: pixel_top
+            right: pixel_left + GLYPH_EDITOR_PIXEL_SIZE + 1
+            bottom: pixel_top + GLYPH_EDITOR_PIXEL_SIZE + 1
+        ))
+    }
 }
