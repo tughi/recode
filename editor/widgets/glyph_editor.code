@@ -3,7 +3,7 @@ import gui
 
 type Glyph_Editor = struct {
     super: gui.Widget
-    // glyph: ^font.Glyph
+    glyph: ^font.Glyph
 }
 
 proc create_glyph_editor() -> ^Glyph_Editor {

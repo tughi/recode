@@ -2191,7 +2191,7 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
     Checked_Type__append_weak_dependencies(self, other, location, checker, false);
 }
 
-Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Checker_Context *context, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
+Checked_Named_Type *Checker__create_struct_type(Checker *self, Checker_Context *context, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, context->checked_package, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && ((Checked_Struct_Type *)other_type)->parsed_type_specifier == parsed_type_specifier) {
@@ -2218,13 +2218,22 @@ Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Checker_
     Checked_Struct_Type *struct_type = Checked_Struct_Type__create(type_name->location, struct_type_name, struct_type_package, parsed_type_specifier);
     struct_type->super.super.symbol = Checker__create_type_symbol(self, context->checked_package, struct_type_name, (Checked_Named_Type *)struct_type);
 
+    return (Checked_Named_Type *)struct_type;
+}
+
+void Checker__check_struct_type(Checker *self, Checker_Context *context, Checked_Struct_Type *struct_type) {
+    struct_type->super.needs_check = false;
+    Parsed_Struct_Type_Specifier *parsed_type_specifier = struct_type->parsed_type_specifier;
     if (parsed_type_specifier->first_member != NULL) {
         Checked_Struct_Member *last_struct_member = NULL;
         Parsed_Struct_Member *parsed_member = parsed_type_specifier->first_member;
         while (parsed_member != NULL) {
             Checked_Struct_Member *struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
             if (struct_member != NULL) {
-                todo("Report duplicate struct member declaration");
+                pWriter__begin_location_message(stderr_writer, parsed_member->name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Duplicate struct member declaration");
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
             Checked_Type *struct_member_type = Checker__resolve_type(self, context, parsed_member->type);
             if (Checked_Type__equals(struct_member_type, (Checked_Type *)struct_type)) {
@@ -2252,8 +2261,6 @@ Checked_Named_Type *Checker__check_struct_type_statement(Checker *self, Checker_
             parsed_member = parsed_member->next_member;
         }
     }
-
-    return (Checked_Named_Type *)struct_type;
 }
 
 Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Checker_Context *context, Source_Location location, Parsed_Procedure_Parameter *first_parsed_parameter, Parsed_Type *parsed_return_type, Parsed_Type *parsed_raise_type) {
@@ -2385,7 +2392,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Checker_C
     return (Checked_Named_Type *)trait_type;
 }
 
-Checked_Named_Type *Checker__check_variant_type_statement(Checker *self, Checker_Context *context, Token *type_name, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier) {
+Checked_Named_Type *Checker__create_variant_type(Checker *self, Checker_Context *context, Token *type_name, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier) {
     Checked_Named_Type *other_type = Checker__find_type(self, context, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__VARIANT && Source_Location__equals(other_type->super.location, type_name->location)) {
@@ -2403,11 +2410,18 @@ Checked_Named_Type *Checker__check_variant_type_statement(Checker *self, Checker
         panic();
     }
 
-    Checked_Variant_Type *variant_type = Checked_Variant_Type__create(type_name->location, type_name->lexeme, context->checked_package);
+    Checked_Variant_Type *variant_type = Checked_Variant_Type__create(type_name->location, type_name->lexeme, context->checked_package, parsed_variant_type_specifier);
     variant_type->super.super.symbol = Checker__create_type_symbol(self, context->checked_package, type_name->lexeme, (Checked_Named_Type *)variant_type);
 
+    return (Checked_Named_Type *)variant_type;
+}
+
+void Checker__check_variant_type(Checker *self, Checker_Context *context, Checked_Variant_Type *variant_type) {
+    variant_type->super.needs_check = false;
+    Parsed_Variant_Type_Specifier *parsed_variant_type_specifier = variant_type->parsed_variant_type_specifier;
+
     // Each variant has the nil variant case
-    Checked_Variant_Case *nil_variant_case = Checked_Variant_Case__create(type_name->location, (Checked_Type *)self->builtin_types->nil_type, 0);
+    Checked_Variant_Case *nil_variant_case = Checked_Variant_Case__create(variant_type->super.super.symbol->super.location, (Checked_Type *)self->builtin_types->nil_type, 0);
     variant_type->first_variant_case = nil_variant_case;
 
     Checked_Variant_Case *last_variant_case = variant_type->first_variant_case;
@@ -2427,8 +2441,6 @@ Checked_Named_Type *Checker__check_variant_type_statement(Checker *self, Checker
     }
 
     variant_type->variant_count = last_variant_case->index;
-
-    return (Checked_Named_Type *)variant_type;
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Checker_Context *context, Parsed_Statement *parsed_statement, Checked_Type *expected_type);
@@ -3131,11 +3143,11 @@ Checked_Named_Type *Checker__check_type_statement(Checker *self, Checker_Context
     case PARSED_TYPE_SPECIFIER_KIND__EXTERNAL:
         return Checker__check_external_type_statement(self, context, type_name);
     case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
-        return Checker__check_struct_type_statement(self, context, type_name, (Parsed_Struct_Type_Specifier *)parsed_type_statement->type_specifier);
+        return Checker__create_struct_type(self, context, type_name, (Parsed_Struct_Type_Specifier *)parsed_type_statement->type_specifier);
     case PARSED_TYPE_SPECIFIER_KIND__TRAIT:
         return Checker__check_trait_type_statement(self, context, type_name, (Parsed_Trait_Type_Specifier *)parsed_type_statement->type_specifier);
     case PARSED_TYPE_SPECIFIER_KIND__VARIANT:
-        return Checker__check_variant_type_statement(self, context, type_name, (Parsed_Variant_Type_Specifier *)parsed_type_statement->type_specifier);
+        return Checker__create_variant_type(self, context, type_name, (Parsed_Variant_Type_Specifier *)parsed_type_statement->type_specifier);
     default:
         pWriter__begin_location_message(stderr_writer, parsed_type_statement->type_specifier->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unsupported type specifier");
@@ -3225,7 +3237,10 @@ Checked_Named_Type *Checker__specialize_type(Checker *self, Checker_Context *con
     Checker_Context generic_type_context = Checker_Context__make(self, generic_type->super.package);
     switch (generic_type->parsed_type_statement->type_specifier->kind) {
     case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
-        type = Checker__check_struct_type_statement(self, &generic_type_context, type_name_token, (Parsed_Struct_Type_Specifier *)generic_type->parsed_type_statement->type_specifier);
+        type = Checker__create_struct_type(self, &generic_type_context, type_name_token, (Parsed_Struct_Type_Specifier *)generic_type->parsed_type_statement->type_specifier);
+        if (type->needs_check) {
+            Checker__check_struct_type(self, &generic_type_context, (Checked_Struct_Type *)type);
+        }
         break;
     default:
         pWriter__begin_location_message(stderr_writer, parsed_type->super.location, WRITER_STYLE__ERROR);
@@ -3281,7 +3296,7 @@ void Checker__check_import_statement(Checker *self, Checker_Context *context, Pa
     Checked_Package *package = Checked_Packages__find(self->packages, parsed_statement->parsed_package->name);
 
     if (package == NULL) {
-        package = Checker__check_imported_package(self, context, parsed_statement->parsed_package);
+        package = Checker__create_package(self, parsed_statement->parsed_package);
     }
 
     Checked_Import_Symbol *import_symbol = Checked_Import_Symbol__create(context->checked_package, parsed_statement->super.location, parsed_statement->import_name, (Checked_Type *)self->builtin_types->package_type, package);
@@ -3290,24 +3305,6 @@ void Checker__check_import_statement(Checker *self, Checker_Context *context, Pa
 
 void Checker__check_module(Checker *self, Checker_Context *context, Parsed_Module *parsed_module) {
     Parsed_Statement *parsed_statement;
-
-    /* Check all imported packages */
-    parsed_statement = parsed_module->statements->first_statement;
-    while (parsed_statement != NULL) {
-        if (parsed_statement->kind == PARSED_STATEMENT_KIND__IMPORT) {
-            Checker__check_import_statement(self, context, (Parsed_Import_Statement *)parsed_statement);
-        }
-        parsed_statement = parsed_statement->next_statement;
-    }
-
-    /* Check all declared types */
-    parsed_statement = parsed_module->statements->first_statement;
-    while (parsed_statement != NULL) {
-        if (parsed_statement->kind == PARSED_STATEMENT_KIND__TYPE) {
-            Checker__check_type_statement(self, context, (Parsed_Type_Statement *)parsed_statement);
-        }
-        parsed_statement = parsed_statement->next_statement;
-    }
 
     /* Collect other declarations */
     parsed_statement = parsed_module->statements->first_statement;
@@ -3341,6 +3338,68 @@ void Checker__check_module(Checker *self, Checker_Context *context, Parsed_Modul
     }
 }
 
+void Checker__check_all_import_statements(Checker *self) {
+    Checked_Package *checked_package = self->packages->first_package;
+    while (checked_package != NULL) {
+        Checker_Context context = Checker_Context__make(self, checked_package);
+        Parsed_Module *parsed_module = checked_package->parsed_package->first_module;
+        while (parsed_module != NULL) {
+            Parsed_Statement *parsed_statement = parsed_module->statements->first_statement;
+            while (parsed_statement != NULL) {
+                if (parsed_statement->kind == PARSED_STATEMENT_KIND__IMPORT) {
+                    Checker__check_import_statement(self, &context, (Parsed_Import_Statement *)parsed_statement);
+                }
+                parsed_statement = parsed_statement->next_statement;
+            }
+            parsed_module = parsed_module->next_module;
+        }
+        checked_package = checked_package->next_package;
+    }
+}
+
+void Checker__check_all_types(Checker *self) {
+    Checked_Package *checked_package = self->packages->first_package;
+    while (checked_package != NULL) {
+        Checker_Context context = Checker_Context__make(self, checked_package);
+        Parsed_Module *parsed_module = checked_package->parsed_package->first_module;
+        while (parsed_module != NULL) {
+            Parsed_Statement *parsed_statement = parsed_module->statements->first_statement;
+            while (parsed_statement != NULL) {
+                if (parsed_statement->kind == PARSED_STATEMENT_KIND__TYPE) {
+                    Checker__check_type_statement(self, &context, (Parsed_Type_Statement *)parsed_statement);
+                }
+                parsed_statement = parsed_statement->next_statement;
+            }
+            parsed_module = parsed_module->next_module;
+        }
+        checked_package = checked_package->next_package;
+    }
+
+    Checked_Symbol *symbol = self->global_symbols->first_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
+            if (type_symbol->named_type->needs_check) {
+                Checker_Context context = Checker_Context__make(self, symbol->package);
+                switch (type_symbol->named_type->super.kind) {
+                case CHECKED_TYPE_KIND__STRUCT:
+                    Checker__check_struct_type(self, &context, (Checked_Struct_Type *)type_symbol->named_type);
+                    break;
+                case CHECKED_TYPE_KIND__VARIANT:
+                    Checker__check_variant_type(self, &context, (Checked_Variant_Type *)type_symbol->named_type);
+                    break;
+                default:
+                    pWriter__begin_location_message(stderr_writer, type_symbol->named_type->super.location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Unexpected type kind");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
+            }
+        }
+        symbol = symbol->next_symbol;
+    }
+}
+
 void Checker__check_package(Checker *self, Checker_Context *context) {
     Parsed_Module *parsed_module = context->checked_package->parsed_package->first_module;
     while (parsed_module != NULL) {
@@ -3358,11 +3417,12 @@ void Checker__check_builtin_package(Checker *self, Parsed_Package *parsed_packag
 
     package_checker.packages = self->packages;
 
-    Checker_Context context = Checker_Context__make(&package_checker, Checked_Package__create(parsed_package));
+    Checker_Context context = Checker_Context__make(&package_checker, Checker__create_package(self, parsed_package));
     self->packages->builtin_package = context.checked_package;
 
     package_checker.methods = self->methods;
 
+    Checker__check_all_types(&package_checker);
     Checker__check_package(&package_checker, &context);
 }
 
@@ -3370,9 +3430,17 @@ Checked_Source *check(Parsed_Package *parsed_builtin_package, Parsed_Package *pa
     Checker *checker = Checker__create();
 
     Checker__check_builtin_package(checker, parsed_builtin_package);
+    checker->packages->first_package = checker->packages->last_package = NULL; // Reset package list
 
-    Checker_Context context = Checker_Context__make(checker, Checker__create_package(checker, parsed_package));
-    Checker__check_package(checker, &context);
+    Checked_Package *checked_package = Checker__create_package(checker, parsed_package);
+    Checker__check_all_import_statements(checker);
+    Checker__check_all_types(checker);
+
+    while (checked_package != NULL) {
+        Checker_Context context = Checker_Context__make(checker, checked_package);
+        Checker__check_package(checker, &context);
+        checked_package = checked_package->next_package;
+    }
 
     /* Check procedure definitions from all packages */
     Checked_Symbol *symbol = checker->global_symbols->first_symbol;

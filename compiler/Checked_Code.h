@@ -164,6 +164,7 @@ typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
     Checked_Package *package;
+    bool needs_check;
 
     struct Checked_Generic_Type *generic_type;
     Checked_Type_Argument *first_type_argument;
@@ -283,11 +284,12 @@ Checked_Variant_Case *Checked_Variant_Case__create(Source_Location location, Che
 
 typedef struct Checked_Variant_Type {
     Checked_Named_Type super;
+    Parsed_Variant_Type_Specifier *parsed_variant_type_specifier;
     Checked_Variant_Case *first_variant_case;
     int32_t variant_count;
 } Checked_Variant_Type;
 
-Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package);
+Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 

@@ -109,6 +109,7 @@ Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     type->package = package;
+    type->needs_check = false;
     return type;
 }
 
@@ -235,6 +236,7 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, C
 
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name, package);
+    type->super.needs_check = true;
     type->first_member = NULL;
     type->parsed_type_specifier = parsed_type_specifier;
     return type;
@@ -283,8 +285,10 @@ Checked_Variant_Case *Checked_Variant_Case__create(Source_Location location, Che
     return member;
 }
 
-Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package) {
+Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier) {
     Checked_Variant_Type *type = (Checked_Variant_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__VARIANT, sizeof(Checked_Variant_Type), location, name, package);
+    type->super.needs_check = true;
+    type->parsed_variant_type_specifier = parsed_variant_type_specifier;
     type->first_variant_case = NULL;
     type->variant_count = 0;
     return type;
