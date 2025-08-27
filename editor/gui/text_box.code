@@ -16,11 +16,6 @@ proc (^Text_Box).on_render(self, anon renderer: ^Renderer, anon window: ^Window)
     renderer.set_draw_color(Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
     renderer.draw_rect(self.bounds)
 
-    renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
-    // renderer.draw_text(
-    //     text: self.content
-    //     x: self.bounds.left + 8
-    //     y: self.bounds.top + 8
-    //     max_width: self.bounds.right - self.bounds.left - 16
-    // )
+    renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
+    renderer.draw_text(self.content, x: self.bounds.left, y: self.bounds.top)
 }

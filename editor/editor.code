@@ -1,4 +1,5 @@
 import errors
+import font
 import gui
 import gui.sdl
 import os
@@ -6,6 +7,8 @@ import widgets
 
 proc main() -> i32 {
     os.init()
+
+    font.init()
 
     let app: gui.App = sdl.App()
 

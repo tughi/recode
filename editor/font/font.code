@@ -1,5 +1,10 @@
+import gui
+import libc
+
+let fixed_size: Font
+
 type Font = struct {
-    glyphs: [^]Glyph
+    glyphs: [^]^Glyph
     height: i32
     base_line: i32
 }
@@ -8,4 +13,36 @@ type Glyph = struct {
     mask: [^]u8
     width: i32
     height: i32
+}
+
+proc init() {
+    fixed_size = Font(
+        glyphs: libc.malloc((sizeof(^Glyph)).as(usize) * 256).as([^]^Glyph)
+        height: 18
+        base_line: 13
+    )
+    let index = 0
+    while index < 256 {
+        fixed_size.glyphs[index] = alloc Glyph(
+            width: 9
+            height: 18
+            mask: libc.malloc(9 * 18).as([^]u8)
+        )
+        index = index + 1
+    }
+}
+
+proc (^Font).measure_text(self, anon text: str) -> gui.Size {
+    let width = 0
+    let height = self.height
+
+    let text_data = text.data()
+    let index = 0usize
+    while index < text.length {
+        let code_point = text_data[index]
+        let glyph = self.glyphs[code_point]
+        width = width + glyph.width
+        index = index + 1
+    }
+    return gui.Size(width: width, height: height)
 }

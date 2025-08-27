@@ -1,3 +1,4 @@
+import font
 import os
 
 proc create_button(label: str) -> ^Button {
@@ -9,13 +10,17 @@ proc create_button(label: str) -> ^Button {
 type Button = struct {
     super: Widget
     label: str
-    label_bounds: Rect
+    label_size: Size
 }
 
 proc (^Button).on_handle_event(self, anon event: Event) {
     self.super.on_handle_event(event)
 
     os.stdout.write("Button event").end_line()
+}
+
+proc (^Button).on_layout(self, anon rect: Rect) {
+    self.super.on_layout(rect)
 }
 
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
@@ -28,4 +33,11 @@ proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
 
     renderer.set_draw_color(Color(red: 0x7f, green: 0x7f, blue: 0x7f, alpha: 255))
     renderer.draw_rect(self.bounds)
+
+    if self.label_size.height == 0 {
+        self.label_size = font.fixed_size.measure_text(self.label)
+    }
+
+    renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
+    renderer.draw_text(self.label, x: self.bounds.left, y: self.bounds.top)
 }
