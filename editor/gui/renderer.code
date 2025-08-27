@@ -18,18 +18,23 @@ proc (^Renderer).draw_text(self, anon text: str, x: i32, y: i32) {
     let index = 0usize
     while index < text.length {
         let code_point = text_data[index]
-        let glyph = glyphs[code_point]
-        let glyph_index = 0
-        while glyph_index < glyph.width * glyph.height {
-            if glyph.mask[glyph_index] != 0 {
-                self.draw_point(
-                    x: left + (glyph_index % glyph.width)
-                    y: top + (glyph_index / glyph.width)
-                )
+        if code_point == '\n' {
+            left = x
+            top = top + font.fixed_size.height
+        } else {
+            let glyph = glyphs[code_point]
+            let glyph_index = 0
+            while glyph_index < glyph.width * glyph.height {
+                if glyph.mask[glyph_index] != 0 {
+                    self.draw_point(
+                        x: left + (glyph_index % glyph.width)
+                        y: top + (glyph_index / glyph.width)
+                    )
+                }
+                glyph_index = glyph_index + 1
             }
-            glyph_index = glyph_index + 1
+            left = left + glyph.width
         }
-        left = left + glyph.width
         index = index + 1
     }
 }
