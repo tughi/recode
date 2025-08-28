@@ -1,0 +1,30 @@
+type Vehicle = struct {
+    wheels: i32
+    seats: i32
+}
+
+proc (^Vehicle).get_wheels(self) -> i32 {
+    return self.wheels
+}
+
+type Car = struct {
+    super: Vehicle
+}
+
+type Sports_Car = struct {
+    super: Car
+    turbo: bool
+}
+
+proc main() -> i32 {
+    let my_vehicle = alloc Sports_Car(
+        super: Car(
+            super: Vehicle(
+                wheels: 4
+            )
+            seats: 2
+        )
+        turbo: true
+    )
+    return my_vehicle.get_wheels() - 4
+}

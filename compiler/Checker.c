@@ -883,6 +883,11 @@ Checked_Expression *Checker__check_init_struct_expression(Checker *self, Checker
                 pWriter__write__cstring(stderr_writer, "No such struct member");
                 pWriter__end_location_message(stderr_writer);
                 panic();
+            } else if (struct_member->struct_type != struct_type) {
+                pWriter__begin_location_message(stderr_writer, parsed_argument->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Super struct member must be initialized in super member");
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
             Checked_Expression *argument_expression = Checker__check_expression(self, context, parsed_argument->expression, struct_member->type);
             Checked_Make_Struct_Argument *argument = first_checked_argument;
@@ -890,13 +895,13 @@ Checked_Expression *Checker__check_init_struct_expression(Checker *self, Checker
                 if (argument->struct_member == struct_member) {
                     pWriter__begin_location_message(stderr_writer, parsed_argument->location, WRITER_STYLE__ERROR);
                     pWriter__write__cstring(stderr_writer, "Struct member already initialized here: ");
-                    pWriter__write__location(stderr_writer, argument->struct_member->location);
+                    pWriter__write__location(stderr_writer, argument->location);
                     pWriter__end_location_message(stderr_writer);
                     panic();
                 }
                 argument = argument->next_argument;
             }
-            argument = Checked_Make_Struct_Argument__create(struct_member, argument_expression);
+            argument = Checked_Make_Struct_Argument__create(Source_Location__merge(parsed_argument->name->super.location, argument_expression->location), struct_member, argument_expression);
             if (last_checked_argument == NULL) {
                 first_checked_argument = argument;
             } else {
@@ -917,7 +922,7 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
 
     Checked_Type *self_type = ((Checked_Pointer_Type *)self_expression->type)->other_type;
 
-    Checked_Make_Struct_Argument *first_make_struct_argument = Checked_Make_Struct_Argument__create(trait_type->self_struct_member, self_expression);
+    Checked_Make_Struct_Argument *first_make_struct_argument = Checked_Make_Struct_Argument__create(self_expression->location, trait_type->self_struct_member, self_expression);
 
     Checked_Make_Struct_Argument *last_make_struct_argument = first_make_struct_argument;
     Checked_Trait_Method *trait_method;
@@ -945,7 +950,7 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
         trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
         Checked_Symbol_Expression *procedure_symbol_expression = Checked_Symbol_Expression__create(location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
         Checked_Cast_Expression *trait_struct_member_argument_expression = Checked_Cast_Expression__create(location, trait_method->struct_member->type, (Checked_Expression *)procedure_symbol_expression);
-        last_make_struct_argument = last_make_struct_argument->next_argument = Checked_Make_Struct_Argument__create(trait_method->struct_member, (Checked_Expression *)trait_struct_member_argument_expression);
+        last_make_struct_argument = last_make_struct_argument->next_argument = Checked_Make_Struct_Argument__create(location, trait_method->struct_member, (Checked_Expression *)trait_struct_member_argument_expression);
     }
 
     return (Checked_Expression *)Checked_Make_Struct_Expression__create(location, (Checked_Type *)trait_type, trait_type->struct_type, first_make_struct_argument);

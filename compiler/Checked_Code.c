@@ -817,8 +817,9 @@ Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location
     return (Checked_Logic_Or_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_OR, location, type, left_expression, right_expression);
 }
 
-Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression) {
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Source_Location location, Checked_Struct_Member *struct_member, Checked_Expression *expression) {
     Checked_Make_Struct_Argument *argument = (Checked_Make_Struct_Argument *)malloc(sizeof(Checked_Make_Struct_Argument));
+    argument->location = location;
     argument->struct_member = struct_member;
     argument->expression = expression;
     argument->next_argument = NULL;

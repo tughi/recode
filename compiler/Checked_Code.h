@@ -642,12 +642,13 @@ typedef struct Checked_Logic_Or_Expression {
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Make_Struct_Argument {
+    Source_Location location;
     Checked_Struct_Member *struct_member;
     Checked_Expression *expression;
     struct Checked_Make_Struct_Argument *next_argument;
 } Checked_Make_Struct_Argument;
 
-Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression);
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Source_Location location, Checked_Struct_Member *struct_member, Checked_Expression *expression);
 
 typedef struct Checked_Make_Struct_Expression {
     Checked_Expression super;
