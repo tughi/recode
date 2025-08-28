@@ -27,6 +27,11 @@ proc (^sdl.Renderer).present(self) {
     sdl.render_present(self)
 }
 
+proc (^sdl.Renderer).set_clip_rect(self, anon rect: gui.Rect) {
+    let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
+    sdl.set_render_clip_rect(self, ^sdl_rect)
+}
+
 proc (^sdl.Renderer).set_draw_color(self, anon color: gui.Color) {
     sdl.set_render_draw_color(self, color.red, color.green, color.blue, color.alpha)
 }

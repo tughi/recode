@@ -13,4 +13,6 @@ proc render_fill_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SD
 
 proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
 
+proc set_render_clip_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderSetClipRect"
+
 proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"

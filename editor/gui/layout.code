@@ -54,6 +54,7 @@ proc (^Layout).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     let index = 0usize
     while index < self.children.length {
         let child = self.children.items[index]
+        renderer.set_clip_rect(self.bounds)
         child.render(renderer, window)
         index = index + 1
     }
