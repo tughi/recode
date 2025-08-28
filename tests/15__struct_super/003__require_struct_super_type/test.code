@@ -1,0 +1,7 @@
+type Vehicle = struct {
+    wheels: i32
+}
+
+type Car = struct {
+    super: ^Vehicle
+}

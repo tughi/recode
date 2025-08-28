@@ -44,7 +44,7 @@ struct test_Result__8 test__auto_raise_error(bool condition) {
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
     {
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
-        struct test_Result__13 __001__ = test__raise_error(condition);
+        struct test_Result__8 __001__ = test__raise_error(condition);
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
         if (__001__.success) {} else return (struct test_Result__8){.success = false, .error = __001__.error};
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
@@ -63,7 +63,7 @@ struct test_Result__8 test__auto_raise_error(bool condition) {
 }
 
 #line 13 "tests/12__error_handling/006__raising_without_return/test.code"
-struct test_Result__13 test__raise_error(bool condition) {
+struct test_Result__8 test__raise_error(bool condition) {
 #line 14 "tests/12__error_handling/006__raising_without_return/test.code"
     if (condition) {
 #line 15 "tests/12__error_handling/006__raising_without_return/test.code"
@@ -71,7 +71,7 @@ struct test_Result__13 test__raise_error(bool condition) {
 #line 15 "tests/12__error_handling/006__raising_without_return/test.code"
             struct test_Error __001__ = (struct test_Error){.code = 42};
 #line 15 "tests/12__error_handling/006__raising_without_return/test.code"
-            return (struct test_Result__13){.success = false, .error = __001__};
+            return (struct test_Result__8){.success = false, .error = __001__};
 #line 15 "tests/12__error_handling/006__raising_without_return/test.code"
         }
 #line 16 "tests/12__error_handling/006__raising_without_return/test.code"
@@ -79,7 +79,7 @@ struct test_Result__13 test__raise_error(bool condition) {
 #line 17 "tests/12__error_handling/006__raising_without_return/test.code"
     {
 #line 17 "tests/12__error_handling/006__raising_without_return/test.code"
-        struct test_Result__13 __002__ = (struct test_Result__13){.success = true};
+        struct test_Result__8 __002__ = (struct test_Result__8){.success = true};
 #line 17 "tests/12__error_handling/006__raising_without_return/test.code"
         return __002__;
 #line 17 "tests/12__error_handling/006__raising_without_return/test.code"

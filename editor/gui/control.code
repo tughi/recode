@@ -1,9 +1,0 @@
-type Base_Control = struct {
-    bounds: Rect
-    is_dirty: bool
-}
-
-proc (^Base_Control).layout(self, anon bounds: Rect) {
-    self.bounds = bounds
-    self.is_dirty = true
-}

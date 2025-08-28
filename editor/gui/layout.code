@@ -1,18 +1,32 @@
 import collections
+import errors
 
-type Layout = trait {
-}
-
-type Base_Layout = struct {
-    parent: ^Widget
+type Layout = struct {
+    super: Widget
     children: collections.List<^Widget>
 }
 
-proc (^Base_Layout).render(self, anon renderer: ^Renderer) {
+proc (^Layout).add_child(self, anon child: ^Widget) !> errors.Error {
+    self.children.append(child)
+    return
+}
+
+proc (^Layout).on_handle_event(self, anon event: Event) {
+    self.super.on_handle_event(event)
+
     let index = 0usize
     while index < self.children.length {
         let child = self.children.items[index]
-        child.render(renderer)
+        child.handle_event(event)
+        index = index + 1
+    }
+}
+
+proc (^Layout).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    let index = 0usize
+    while index < self.children.length {
+        let child = self.children.items[index]
+        child.render(renderer, window)
         index = index + 1
     }
 }

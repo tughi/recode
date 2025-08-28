@@ -1,18 +1,38 @@
-type Window = trait {
-    proc render(self)
-    proc set_widget(self, anon widget: ^Widget)
-}
-
-type Base_Window = struct {
+type Window = struct {
     width: i32
     height: i32
-    renderer: ^Renderer
-    widget: ^Widget
+    renderer: Renderer
+    content: ^Widget
+    is_dirty: bool
+    hovered_widget: ^Widget
+    pressed_widget: ^Widget
 }
 
-proc (^Base_Window).render(self) {
-    if self.widget != null {
-        self.widget.render(self.renderer)
+proc (^Window).handle_event(self, anon event: Event) {
+    if self.content == null {
+        return
+    }
+    if event is Mouse_Motion_Event as mouse_motion_event {
+        let last_hovered_widget = self.hovered_widget
+
+        self.content.handle_event(event)
+
+        if last_hovered_widget != self.hovered_widget {
+            self.is_dirty = true
+        }
+
+        if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
+            self.pressed_widget.handle_event(event)
+        }
+    } else {
+        self.content.handle_event(event)
+    }
+}
+
+proc (^Window).render(self) {
+    if self.content != null {
+        self.content.render(^self.renderer, self)
         self.renderer.present()
     }
+    self.is_dirty = false
 }

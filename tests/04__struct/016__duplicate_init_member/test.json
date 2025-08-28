@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/04__struct/016__duplicate_init_member/test.code:9:9-18: Struct member already initialized here: tests/04__struct/016__duplicate_init_member/test.code:8:9-18"
+        ]
+    }
+}

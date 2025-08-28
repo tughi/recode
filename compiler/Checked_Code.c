@@ -109,7 +109,12 @@ Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     type->package = package;
+    type->needs_check = false;
     return type;
+}
+
+bool Checked_Named_Type__equals(Checked_Named_Type *self, Checked_Named_Type *other) {
+    return self->super.symbol == other->super.symbol;
 }
 
 Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Type_Statement *parsed_type_statement) {
@@ -118,23 +123,9 @@ Checked_Generic_Type *Checked_Generic_Type__create(Source_Location location, Str
     return type;
 }
 
-bool Checked_Generic_Type__equals(Checked_Generic_Type *self, Checked_Generic_Type *other) {
-    if (!String__equals_string(self->super.name, other->super.name)) {
-        return false;
-    }
-    todo("Implement Checked_Generic_Type__equals");
-}
-
 Checked_External_Type *Checked_External_Type__create(Source_Location location, String *name, Checked_Package *package) {
     Checked_External_Type *type = (Checked_External_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__EXTERNAL, sizeof(Checked_External_Type), location, name, package);
     return type;
-}
-
-bool Checked_External_Type__equals(Checked_External_Type *self, Checked_External_Type *other) {
-    if (!String__equals_string(self->super.name, other->super.name)) {
-        return false;
-    }
-    return true;
 }
 
 Checked_Procedure_Parameter *Checked_Procedure_Parameter__create(Source_Location location, String *label, String *name, Checked_Type *type) {
@@ -233,9 +224,10 @@ bool Checked_Result_Type__equals(Checked_Result_Type *self, Checked_Result_Type 
            Checked_Type__equals(self->raise_type, other->raise_type);
 }
 
-Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type) {
+Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, Checked_Struct_Type *struct_type, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
+    member->struct_type = struct_type;
     member->name = name;
     member->type = type;
     member->next_member = NULL;
@@ -244,6 +236,7 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, S
 
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
     Checked_Struct_Type *type = (Checked_Struct_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name, package);
+    type->super.needs_check = true;
     type->first_member = NULL;
     type->parsed_type_specifier = parsed_type_specifier;
     return type;
@@ -253,23 +246,17 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
     Checked_Struct_Member *member = self->first_member;
     while (member != NULL) {
         if (String__equals_string(name, member->name)) {
-            break;
+            return member;
         }
         member = member->next_member;
     }
-    return member;
-}
-
-bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
-}
-
-bool Checked_Trait_Type__equals(Checked_Trait_Type *self, Checked_Trait_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
-}
-
-bool Checked_Variant_Type__equals(Checked_Variant_Type *self, Checked_Variant_Type *other) {
-    return String__equals_string(self->super.name, other->super.name);
+    if (self->first_member != NULL && String__equals_cstring(self->first_member->name, "super")) {
+        if (self->first_member->type->kind != CHECKED_TYPE_KIND__STRUCT) {
+            panic(); // Invalid state
+        }
+        return Checked_Struct_Type__find_member((Checked_Struct_Type *)self->first_member->type, name);
+    }
+    return NULL;
 }
 
 Checked_Trait_Method *Checked_Trait_Method__create(Source_Location location, String *name, Checked_Procedure_Type *procedure_type, Checked_Struct_Member *struct_member) {
@@ -298,8 +285,10 @@ Checked_Variant_Case *Checked_Variant_Case__create(Source_Location location, Che
     return member;
 }
 
-Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package) {
+Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier) {
     Checked_Variant_Type *type = (Checked_Variant_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__VARIANT, sizeof(Checked_Variant_Type), location, name, package);
+    type->super.needs_check = true;
+    type->parsed_variant_type_specifier = parsed_variant_type_specifier;
     type->first_variant_case = NULL;
     type->variant_count = 0;
     return type;
@@ -315,10 +304,6 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     switch (self->kind) {
     case CHECKED_TYPE_KIND__ARRAY:
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
-    case CHECKED_TYPE_KIND__EXTERNAL:
-        return Checked_External_Type__equals((Checked_External_Type *)self, (Checked_External_Type *)other);
-    case CHECKED_TYPE_KIND__GENERIC:
-        return Checked_Generic_Type__equals((Checked_Generic_Type *)self, (Checked_Generic_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
         return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
@@ -329,12 +314,13 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__RESULT:
         return Checked_Result_Type__equals((Checked_Result_Type *)self, (Checked_Result_Type *)other);
+    case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__STRUCT:
-        return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     case CHECKED_TYPE_KIND__TRAIT:
-        return Checked_Trait_Type__equals((Checked_Trait_Type *)self, (Checked_Trait_Type *)other);
-    case CHECKED_TYPE_KIND__VARIANT:
-        return Checked_Variant_Type__equals((Checked_Variant_Type *)self, (Checked_Variant_Type *)other);
+    case CHECKED_TYPE_KIND__VARIANT: {
+        return Checked_Named_Type__equals((Checked_Named_Type *)self, (Checked_Named_Type *)other);
+    }
     default:
         break;
     }
@@ -436,9 +422,10 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
 }
 
-Checked_Package *Checked_Package__create(String *name) {
+Checked_Package *Checked_Package__create(Parsed_Package *parsed_package) {
     Checked_Package *package = (Checked_Package *)malloc(sizeof(Checked_Package));
-    package->name = name;
+    package->parsed_package = parsed_package;
+    package->name = parsed_package->name;
     package->next_package = NULL;
     return package;
 }
@@ -830,8 +817,9 @@ Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location
     return (Checked_Logic_Or_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_OR, location, type, left_expression, right_expression);
 }
 
-Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression) {
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Source_Location location, Checked_Struct_Member *struct_member, Checked_Expression *expression) {
     Checked_Make_Struct_Argument *argument = (Checked_Make_Struct_Argument *)malloc(sizeof(Checked_Make_Struct_Argument));
+    argument->location = location;
     argument->struct_member = struct_member;
     argument->expression = expression;
     argument->next_argument = NULL;

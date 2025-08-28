@@ -4,11 +4,12 @@
 #include "Parsed_Code.h"
 
 typedef struct Checked_Package {
+    Parsed_Package *parsed_package;
     String *name;
     struct Checked_Package *next_package;
 } Checked_Package;
 
-Checked_Package *Checked_Package__create(String *name);
+Checked_Package *Checked_Package__create(Parsed_Package *parsed_package);
 
 Writer *pWriter__write__package_name(Writer *self, Checked_Package *package);
 
@@ -163,6 +164,7 @@ typedef struct Checked_Named_Type {
     Checked_Type super;
     String *name;
     Checked_Package *package;
+    bool needs_check;
 
     struct Checked_Generic_Type *generic_type;
     Checked_Type_Argument *first_type_argument;
@@ -232,14 +234,15 @@ typedef struct Checked_Result_Type {
 
 Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Package *package, Checked_Type *return_type, Checked_Type *raise_type);
 
+struct Checked_Struct_Type;
+
 typedef struct Checked_Struct_Member {
     Source_Location location;
+    struct Checked_Struct_Type *struct_type;
     String *name;
     Checked_Type *type;
     struct Checked_Struct_Member *next_member;
 } Checked_Struct_Member;
-
-Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Struct_Type {
     Checked_Named_Type super;
@@ -247,6 +250,7 @@ typedef struct Checked_Struct_Type {
     Parsed_Struct_Type_Specifier *parsed_type_specifier;
 } Checked_Struct_Type;
 
+Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, Checked_Struct_Type *struct_type, String *name, Checked_Type *type);
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Struct_Type_Specifier *parsed_type_specifier);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
@@ -280,11 +284,12 @@ Checked_Variant_Case *Checked_Variant_Case__create(Source_Location location, Che
 
 typedef struct Checked_Variant_Type {
     Checked_Named_Type super;
+    Parsed_Variant_Type_Specifier *parsed_variant_type_specifier;
     Checked_Variant_Case *first_variant_case;
     int32_t variant_count;
 } Checked_Variant_Type;
 
-Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package);
+Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -637,12 +642,13 @@ typedef struct Checked_Logic_Or_Expression {
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
 
 typedef struct Checked_Make_Struct_Argument {
+    Source_Location location;
     Checked_Struct_Member *struct_member;
     Checked_Expression *expression;
     struct Checked_Make_Struct_Argument *next_argument;
 } Checked_Make_Struct_Argument;
 
-Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression);
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Source_Location location, Checked_Struct_Member *struct_member, Checked_Expression *expression);
 
 typedef struct Checked_Make_Struct_Expression {
     Checked_Expression super;

@@ -30,9 +30,9 @@ proc (^App).run(self) -> i32 {
     while running {
         let window = self.first_window
         while window != null {
-            // if window.must_draw {
-            window.render()
-            // }
+            if window.is_dirty {
+                window.render()
+            }
             window = window.next_window
         }
 
@@ -55,7 +55,12 @@ proc (^App).run(self) -> i32 {
             } else if event.type == sdl.EVENT_TYPE_KEY_UP {
                 window.on_key_up_event((^event).as(^sdl.Keyboard_Event))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
-                window.on_mouse_motion_event((^event).as(^sdl.Mouse_Motion_Event))
+                let mouse_motion_event = (^event).as(^sdl.Mouse_Motion_Event)
+                window.handle_event(gui.Mouse_Motion_Event(
+                    window: window
+                    x: mouse_motion_event.x
+                    y: mouse_motion_event.y
+                ))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_DOWN {
                 window.on_mouse_button_down_event((^event).as(^sdl.Mouse_Button_Event))
             } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_UP {
@@ -76,7 +81,7 @@ proc (^str).data(self) -> [^]u8 {
     return self.as(^String).data
 }
 
-proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Window !> errors.Error {
+proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.App_Window !> errors.Error {
     if not self.ready {
         raise errors.Error(message: "GUI app was not initialized")
     }
@@ -97,11 +102,11 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Wind
     }
 
     let window = alloc Window(
-        super: gui.Base_Window(
+        super: gui.Window(
             width: width
             height: height
-            renderer: alloc gui.Renderer(sdl_renderer)
-            widget: null
+            renderer: sdl_renderer
+            content: null
         )
         sdl_window: sdl_window
         sdl_window_id: sdl_window_id
@@ -115,5 +120,5 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.Wind
     }
     self.last_window = window
 
-    return gui.Window(window)
+    return window
 }

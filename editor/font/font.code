@@ -1,0 +1,11 @@
+type Font = struct {
+    glyphs: [^]Glyph
+    height: i32
+    base_line: i32
+}
+
+type Glyph = struct {
+    mask: [^]u8
+    width: i32
+    height: i32
+}

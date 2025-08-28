@@ -1,22 +1,23 @@
 type Event = variant {
-    MouseButtonDownEvent
-    MouseButtonUpEvent
-    MouseMotionEvent
+    Mouse_Button_Down_Event
+    Mouse_Button_Up_Event
+    Mouse_Motion_Event
 }
 
-type MouseButtonDownEvent = struct {
+type Mouse_Button_Down_Event = struct {
     button: u8
     x: i32
     y: i32
 }
 
-type MouseButtonUpEvent = struct {
+type Mouse_Button_Up_Event = struct {
     button: u8
     x: i32
     y: i32
 }
 
-type MouseMotionEvent = struct {
+type Mouse_Motion_Event = struct {
+    window: ^Window
     x: i32
     y: i32
 }
