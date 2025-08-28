@@ -39,5 +39,8 @@ proc (^Font).measure_text(self, anon text: str) -> gui.Size {
         line_width = line_width + glyph.width
         index = index + 1
     }
+    if line_width > width {
+        width = line_width
+    }
     return gui.Size(width: width, height: height)
 }

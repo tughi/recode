@@ -18,5 +18,5 @@ proc (^Text_Box).on_render(self, anon renderer: ^Renderer, anon window: ^Window)
 
     renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
     renderer.set_clip_rect(Rect(left: self.bounds.left + 1, top: self.bounds.top + 1, right: self.bounds.right - 1, bottom: self.bounds.bottom - 1))
-    renderer.draw_text(self.content, x: self.bounds.left, y: self.bounds.top)
+    renderer.draw_text(self.content, x: self.bounds.left + 2, y: self.bounds.top + 1)
 }

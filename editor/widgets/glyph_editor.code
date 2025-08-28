@@ -12,7 +12,7 @@ type Glyph_Editor = struct {
 
 proc create_glyph_editor() -> ^Glyph_Editor {
     let glyph_editor = alloc Glyph_Editor(
-        glyph: font.fixed_size.glyphs['a']
+        glyph: font.fixed_size.glyphs['C']
     )
     glyph_editor.behavior = gui.Widget_Behavior(glyph_editor)
     return glyph_editor

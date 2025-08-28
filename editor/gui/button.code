@@ -34,10 +34,10 @@ proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     renderer.set_draw_color(Color(red: 0x7f, green: 0x7f, blue: 0x7f, alpha: 255))
     renderer.draw_rect(self.bounds)
 
-    if self.label_size.height == 0 {
+    if self.label_size.width == 0 {
         self.label_size = font.fixed_size.measure_text(self.label)
     }
 
     renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
-    renderer.draw_text(self.label, x: self.bounds.left, y: self.bounds.top)
+    renderer.draw_text(self.label, x: (self.bounds.left + self.bounds.right - self.label_size.width) / 2, y: (self.bounds.top + self.bounds.bottom - self.label_size.height) / 2)
 }
