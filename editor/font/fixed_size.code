@@ -14,7 +14,7 @@ proc (^Fixed_Size_Glyph_Factory).select(self, anon code_point: u8) {
     self.mask_index = 0
     let glyph = fixed_size.glyphs[self.code_point]
     if glyph.mask == null {
-        glyph.mask = libc.malloc(9 * 18).as([^]u8)
+        glyph.mask = libc.malloc(((sizeof(u8)).as(i32) * glyph.width * glyph.height).as(usize)).as([^]u8)
     }
 }
 
@@ -293,7 +293,7 @@ proc (^Fixed_Size_Font).init(self) {
     factory.mask("                  ")
     factory.mask("                  ")
 
-    // glyph: -")
+    factory.select('-')
     factory.mask("                  ")
     factory.mask("                  ")
     factory.mask("                  ")
