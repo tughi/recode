@@ -54,3 +54,12 @@ proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
     )
     self.preview_text_box.layout(child_bounds)
 }
+
+proc (^Editor_Layout).on_handle_event(self, event: gui.Event) {
+    if event is gui.Key_Up_Event as key_up_event {
+        self.glyph_editor.glyph = font.fixed_size.glyphs[key_up_event.key_code]
+        key_up_event.window.is_dirty = true
+    } else {
+        self.super.on_handle_event(event)
+    }
+}

@@ -15,19 +15,3 @@ proc (^Window).set_content(self, anon content: ^gui.Widget) {
     content.layout(bounds)
     self.is_dirty = true
 }
-
-proc (^Window).on_window_event(self, anon event: ^sdl.Window_Event) {
-    os.stdout.write("Window Event (").write_hex(event.type).write("): ").write_hex(event.event).end_line()
-}
-
-proc (^Window).on_key_down_event(self, anon event: ^sdl.Keyboard_Event) {
-    os.stdout.write("Key Down (").write_hex(event.type).write("): key=").write_hex(event.key.scan_code).end_line()
-}
-
-proc (^Window).on_key_up_event(self, anon event: ^sdl.Keyboard_Event) {
-    os.stdout.write("Key Up (").write_hex(event.type).write("): key=").write_hex(event.key.scan_code).end_line()
-}
-
-proc (^Window).on_mouse_wheel_event(self, anon event: ^sdl.Mouse_Wheel_Event) {
-    os.stdout.write("Mouse Wheel (").write_hex(event.type).write("): x=").write(event.x).write(", y=").write(event.y).write(", direction=").write_hex(event.direction).end_line()
-}
