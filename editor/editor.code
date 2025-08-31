@@ -22,13 +22,13 @@ proc main() -> i32 {
         return 1
     }
 
-    let editor_layout = widgets.create_editor_layout()
-    try editor_layout.init() else {
+    let font_editor = widgets.create_font_editor()
+    try font_editor.init() else {
         os.stderr.write_string("Failed to initialize editor layout: ").write_string(error.message).end_line()
         return 1
     }
 
-    window.set_content(editor_layout)
+    window.set_content(font_editor)
 
     return app.run()
 }

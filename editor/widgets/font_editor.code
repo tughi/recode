@@ -1,13 +1,13 @@
 import errors
 import gui
 
-proc create_editor_layout() -> ^Editor_Layout {
-    let editor_layout = alloc Editor_Layout()
-    editor_layout.behavior = editor_layout
-    return editor_layout
+proc create_font_editor() -> ^Font_Editor {
+    let font_editor = alloc Font_Editor()
+    font_editor.behavior = font_editor
+    return font_editor
 }
 
-type Editor_Layout = struct {
+type Font_Editor = struct {
     super: gui.Layout
     glyph_editor: ^Glyph_Editor
     save_button: ^gui.Button
@@ -15,7 +15,7 @@ type Editor_Layout = struct {
     preview_text_box: ^gui.Text_Box
 }
 
-proc (^Editor_Layout).init(self) !> errors.Error {
+proc (^Font_Editor).init(self) !> errors.Error {
     self.glyph_editor = create_glyph_editor()
     self.add_child(self.glyph_editor)
 
@@ -34,7 +34,7 @@ proc (^Editor_Layout).init(self) !> errors.Error {
 const MARGIN = 16
 const GLYPH_EDITOR_PIXEL_SIZE = MARGIN / 2 * 3
 
-proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
+proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
     self.super.on_layout(bounds)
 
     let child_bounds = gui.Rect(
@@ -70,7 +70,7 @@ proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
     self.preview_text_box.layout(child_bounds)
 }
 
-proc (^Editor_Layout).on_handle_event(self, event: gui.Event) {
+proc (^Font_Editor).on_handle_event(self, event: gui.Event) {
     if event is gui.Key_Up_Event as key_up_event {
         let key_code = key_up_event.key_code
         if key_code >= '!'.as(u32) and key_code <= '~'.as(u32) {
@@ -83,14 +83,14 @@ proc (^Editor_Layout).on_handle_event(self, event: gui.Event) {
 }
 
 type Editor_Save_Action = struct {
-    editor: ^Editor_Layout
+    editor: ^Font_Editor
 }
 
 proc (^Editor_Save_Action).on_click(self, button: ^gui.Button) {
 }
 
 type Editor_Change_Glyph_Action = struct {
-    editor: ^Editor_Layout
+    editor: ^Font_Editor
 }
 
 proc (^Editor_Change_Glyph_Action).on_click(self, button: ^gui.Button) {
