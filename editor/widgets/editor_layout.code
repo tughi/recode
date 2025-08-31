@@ -11,16 +11,23 @@ type Editor_Layout = struct {
     super: gui.Layout
     glyph_editor: ^Glyph_Editor
     save_button: ^gui.Button
+    glyph_chooser: ^Glyph_Chooser
     preview_text_box: ^gui.Text_Box
 }
 
 proc (^Editor_Layout).init(self) !> errors.Error {
     self.glyph_editor = create_glyph_editor()
     self.add_child(self.glyph_editor)
-    self.save_button = gui.create_button(label: "Save")
+
+    self.save_button = gui.create_button(label: "Save", click_listener: alloc Editor_Save_Action(editor: self))
     self.add_child(self.save_button)
+
+    self.glyph_chooser = create_glyph_chooser(glyph_click_listener: alloc Editor_Change_Glyph_Action(editor: self))
+    self.add_child(self.glyph_chooser)
+
     self.preview_text_box = gui.create_text_box(content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\nincididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis\nnostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\nfugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\nculpa qui officia deserunt mollit anim id est laborum.")
     self.add_child(self.preview_text_box)
+
     return
 }
 
@@ -50,6 +57,14 @@ proc (^Editor_Layout).on_layout(self, anon bounds: gui.Rect) {
         left: child_bounds.right + MARGIN
         top: bounds.top + MARGIN
         right: bounds.right - MARGIN
+        bottom: bounds.top + MARGIN
+    )
+    self.glyph_chooser.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.left
+        top: self.glyph_chooser.bounds.bottom + MARGIN
+        right: child_bounds.right
         bottom: bounds.bottom - MARGIN
     )
     self.preview_text_box.layout(child_bounds)
@@ -65,4 +80,19 @@ proc (^Editor_Layout).on_handle_event(self, event: gui.Event) {
     } else {
         self.super.on_handle_event(event)
     }
+}
+
+type Editor_Save_Action = struct {
+    editor: ^Editor_Layout
+}
+
+proc (^Editor_Save_Action).on_click(self, button: ^gui.Button) {
+}
+
+type Editor_Change_Glyph_Action = struct {
+    editor: ^Editor_Layout
+}
+
+proc (^Editor_Change_Glyph_Action).on_click(self, button: ^gui.Button) {
+    self.editor.glyph_editor.glyph = font.fixed_size.glyphs[button.label.data()[0]]
 }

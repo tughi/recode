@@ -1,9 +1,10 @@
 import font
 import os
 
-proc create_button(label: str) -> ^Button {
+proc create_button(label: str, click_listener: Button_Click_Listener) -> ^Button {
     let button = alloc Button(label: label)
     button.behavior = button
+    button.click_listener = click_listener
     return button
 }
 
@@ -11,6 +12,11 @@ type Button = struct {
     super: Widget
     label: str
     label_size: Size
+    click_listener: Button_Click_Listener
+}
+
+type Button_Click_Listener = trait {
+    proc on_click(self, button: ^Button)
 }
 
 proc (^Button).on_handle_event(self, anon event: Event) {
@@ -26,7 +32,7 @@ proc (^Button).on_handle_event(self, anon event: Event) {
             if mouse_button_event.button == 1 and mouse_button_event.window.pressed_widget == self {
                 mouse_button_event.window.pressed_widget = null
                 if mouse_button_event.window.hovered_widget == self {
-                    os.stdout.write("Button clicked").end_line()
+                    self.click_listener.on_click(button: self)
                 }
                 mouse_button_event.window.is_dirty = true
             }
@@ -35,8 +41,9 @@ proc (^Button).on_handle_event(self, anon event: Event) {
             // ignored
         }
     }
+}
 
-    os.stdout.write("Button event").end_line()
+proc (^Button).on_click(self) {
 }
 
 proc (^Button).on_layout(self, anon rect: Rect) {

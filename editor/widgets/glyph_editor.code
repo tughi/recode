@@ -64,9 +64,9 @@ proc (^Glyph_Editor).on_mouse_action(self, mouse_x: i32, mouse_y: i32, window: ^
                 self.glyph.mask[index] = 0
                 window.is_dirty = true
             }
-        } else {
-            window.is_dirty = old_column != self.hovered_column or old_row != self.hovered_row
         }
+
+        window.is_dirty = window.is_dirty or old_column != self.hovered_column or old_row != self.hovered_row
     }
 }
 

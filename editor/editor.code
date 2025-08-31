@@ -17,7 +17,7 @@ proc main() -> i32 {
         return 1
     }
 
-    let window = try app.create_window(title: "Editor", width: 800, height: 600) else {
+    let window = try app.create_window(title: "Editor", width: 1024, height: 768) else {
         os.stderr.write_string("Failed to create window: ").write_string(error.message).end_line()
         return 1
     }
