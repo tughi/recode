@@ -1,8 +1,6 @@
 import gui
 import libc
 
-let fixed_size: Fixed_Size_Font
-
 type Font = struct {
     glyphs: [^]^Glyph
     height: i32

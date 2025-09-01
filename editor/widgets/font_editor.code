@@ -1,5 +1,6 @@
 import errors
 import gui
+import os
 
 proc create_font_editor() -> ^Font_Editor {
     let font_editor = alloc Font_Editor()
@@ -32,7 +33,7 @@ proc (^Font_Editor).init(self) !> errors.Error {
 }
 
 const MARGIN = 16
-const GLYPH_EDITOR_PIXEL_SIZE = MARGIN / 2 * 3
+const GLYPH_EDITOR_PIXEL_SIZE = MARGIN
 
 proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
     self.super.on_layout(bounds)
@@ -87,6 +88,9 @@ type Editor_Save_Action = struct {
 }
 
 proc (^Editor_Save_Action).on_click(self, button: ^gui.Button) {
+    try font.fixed_size.save() else {
+        os.stdout.write(error.message).end_line()
+    }
 }
 
 type Editor_Change_Glyph_Action = struct {

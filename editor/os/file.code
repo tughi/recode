@@ -1,0 +1,25 @@
+import errors
+import libc
+
+type File = struct {
+    file: ^libc.FILE
+}
+
+proc open_file(anon filename: str, anon mode: str) -> File !> errors.Error {
+    let file = libc.fopen(filename.data(), mode.data())
+    if file == null {
+        raise errors.Error(message: "Failed to open file")
+    }
+    return File(file: file)
+}
+
+proc (^File).close(self) !> errors.Error {
+    if libc.fclose(self.file) != 0 {
+        raise errors.Error(message: "Failed to close file")
+    }
+    return
+}
+
+proc (^File).write_char(self, anon c: u8) {
+    libc.fputc(c.as(i32), self.file)
+}
