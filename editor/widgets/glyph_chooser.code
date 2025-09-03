@@ -36,18 +36,14 @@ proc (^Glyph_Chooser).on_layout(self, anon bounds: gui.Rect) {
         if child_index >= self.children.length {
             break
         }
-        child_bounds.set(
-            left: child_bounds.right
+        child_bounds.set_location(
+            left: child_bounds.right + 1
             top: child_bounds.top
-            right: child_bounds.right + 31
-            bottom: child_bounds.bottom
         )
         if child_bounds.right > bounds.right {
-            child_bounds.set(
+            child_bounds.set_location(
                 left: bounds.left
-                top: child_bounds.bottom
-                right: bounds.left + 31
-                bottom: child_bounds.bottom + 30
+                top: child_bounds.bottom + 1
             )
         }
     }
