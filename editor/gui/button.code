@@ -51,6 +51,8 @@ proc (^Button).on_layout(self, anon rect: Rect) {
 }
 
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    let button_font = font.fixed_size
+
     if window.pressed_widget == self {
         renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 255))
     } else if window.hovered_widget == self {
@@ -69,9 +71,9 @@ proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     renderer.draw_line(x1: self.bounds.right, y1: self.bounds.top + 1, x2: self.bounds.right, y2: self.bounds.bottom - 1)
 
     if self.label_size.width == 0 {
-        self.label_size = font.fixed_size.measure_text(self.label)
+        self.label_size = button_font.measure_text(self.label)
     }
 
     renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
-    renderer.draw_text(self.label, x: (self.bounds.left + self.bounds.right - self.label_size.width) / 2, y: (self.bounds.top + self.bounds.bottom - self.label_size.height) / 2)
+    renderer.draw_text(self.label, x: (self.bounds.left + self.bounds.right - self.label_size.width) / 2, y: self.bounds.top + (self.bounds.height() - button_font.height) / 2)
 }

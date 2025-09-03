@@ -4,14 +4,17 @@ import libc
 
 type Glyph_Editor = struct {
     super: gui.Widget
+    pixel_size: i32
     mouse_button: u8
     hovered_column: i32
     hovered_row: i32
+    font: ^font.Font
     glyph: ^font.Glyph
 }
 
 proc create_glyph_editor() -> ^Glyph_Editor {
     let glyph_editor = alloc Glyph_Editor(
+        font: ^font.fixed_size
         glyph: font.fixed_size.glyphs['C']
     )
     glyph_editor.behavior = gui.Widget_Behavior(glyph_editor)
@@ -49,8 +52,8 @@ proc (^Glyph_Editor).on_mouse_action(self, mouse_x: i32, mouse_y: i32, window: ^
     if pixels_bounds.contains(x: mouse_x, y: mouse_y) {
         let old_column = self.hovered_column
         let old_row = self.hovered_row
-        self.hovered_column = (mouse_x - self.bounds.left) / (GLYPH_EDITOR_PIXEL_SIZE + 1)
-        self.hovered_row = (mouse_y - self.bounds.top) / (GLYPH_EDITOR_PIXEL_SIZE + 1)
+        self.hovered_column = (mouse_x - self.bounds.left) / (self.pixel_size + 1)
+        self.hovered_row = (mouse_y - self.bounds.top) / (self.pixel_size + 1)
 
         if self.mouse_button == 1 {
             let index = self.hovered_row * self.glyph.width + self.hovered_column
@@ -70,34 +73,41 @@ proc (^Glyph_Editor).on_mouse_action(self, mouse_x: i32, mouse_y: i32, window: ^
     }
 }
 
+proc (^Glyph_Editor).on_layout(self, anon bounds: gui.Rect) {
+    self.super.on_layout(bounds)
+    self.pixel_size = (bounds.width() - 1) / self.font.max_width - 1
+}
+
 proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: ^gui.Window) {
+    let pixel_size = self.pixel_size
+
     // Draw the background
 
     renderer.set_draw_color(gui.Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
     renderer.draw_rect(self.bounds)
 
-    let left = self.bounds.left + 1 + GLYPH_EDITOR_PIXEL_SIZE
+    let left = self.bounds.left + 1 + pixel_size
     let top = self.bounds.top + 1
     let right = self.bounds.right - 1
     let bottom = self.bounds.bottom - 1
     while left < right {
         renderer.draw_line(x1: left, y1: top, x2: left, y2: bottom)
-        left = left + GLYPH_EDITOR_PIXEL_SIZE + 1
+        left = left + pixel_size + 1
     }
 
     left = self.bounds.left + 1
-    top = self.bounds.top + 1 + GLYPH_EDITOR_PIXEL_SIZE
+    top = self.bounds.top + 1 + pixel_size
     right = self.bounds.right - 1
     bottom = self.bounds.bottom - 1
     while top < bottom {
-        if top == self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 13 {
+        if top == self.bounds.top + (pixel_size + 1) * self.font.base_line {
             renderer.set_draw_color(gui.Color(red: 0xff, green: 0, blue: 0, alpha: 255))
             renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
             renderer.set_draw_color(gui.Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
         } else {
             renderer.draw_line(x1: left, y1: top, x2: right, y2: top)
         }
-        top = top + GLYPH_EDITOR_PIXEL_SIZE + 1
+        top = top + pixel_size + 1
     }
 
     // Draw the glyph
@@ -107,13 +117,13 @@ proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: 
     let index = 0
     while index < self.glyph.width * self.glyph.height {
         if self.glyph.mask[index] != 0 {
-            let pixel_left = self.bounds.left + (index % self.glyph.width) * (GLYPH_EDITOR_PIXEL_SIZE + 1)
-            let pixel_top = self.bounds.top + (index / self.glyph.width) * (GLYPH_EDITOR_PIXEL_SIZE + 1)
+            let pixel_left = self.bounds.left + (index % self.glyph.width) * (pixel_size + 1)
+            let pixel_top = self.bounds.top + (index / self.glyph.width) * (pixel_size + 1)
             renderer.fill_rect(gui.Rect(
                 left: pixel_left + 1
                 top: pixel_top + 1
-                right: pixel_left + GLYPH_EDITOR_PIXEL_SIZE
-                bottom: pixel_top + GLYPH_EDITOR_PIXEL_SIZE
+                right: pixel_left + pixel_size
+                bottom: pixel_top + pixel_size
             ))
         }
         index = index + 1
@@ -124,13 +134,13 @@ proc (^Glyph_Editor).on_render(self, anon renderer: ^gui.Renderer, anon window: 
 
         renderer.set_draw_color(gui.Color(red: 0xff, green: 0, blue: 0, alpha: 255))
 
-        let pixel_left = self.bounds.left + (GLYPH_EDITOR_PIXEL_SIZE + 1) * self.hovered_column
-        let pixel_top = self.bounds.top + (GLYPH_EDITOR_PIXEL_SIZE + 1) * self.hovered_row
+        let pixel_left = self.bounds.left + (pixel_size + 1) * self.hovered_column
+        let pixel_top = self.bounds.top + (pixel_size + 1) * self.hovered_row
         renderer.draw_rect(gui.Rect(
             left: pixel_left
             top: pixel_top
-            right: pixel_left + GLYPH_EDITOR_PIXEL_SIZE + 1
-            bottom: pixel_top + GLYPH_EDITOR_PIXEL_SIZE + 1
+            right: pixel_left + pixel_size + 1
+            bottom: pixel_top + pixel_size + 1
         ))
     }
 }

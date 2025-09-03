@@ -13,16 +13,18 @@ proc (^Fixed_Size_Font).init(self) {
     fixed_size = Fixed_Size_Font(
         super: Font(
             glyphs: libc.malloc((sizeof(^Glyph)).as(usize) * 256).as([^]^Glyph)
-            height: 18
-            base_line: 13
+            max_width: 7
+            height: 15
+            base_line: 12
+            spacing: 2
         )
     )
     let index = 0usize
     while index < 256 {
         fixed_size.glyphs[index] = alloc Glyph(
             mask: null
-            width: 9
-            height: 18
+            width: 7
+            height: 15
         )
         index = index + 1
     }

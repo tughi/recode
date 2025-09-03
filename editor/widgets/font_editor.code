@@ -33,7 +33,7 @@ proc (^Font_Editor).init(self) !> errors.Error {
 }
 
 const MARGIN = 16
-const GLYPH_EDITOR_PIXEL_SIZE = MARGIN
+const BUTTON_HEIGHT = 32
 
 proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
     self.super.on_layout(bounds)
@@ -41,8 +41,8 @@ proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
     let child_bounds = gui.Rect(
         left: bounds.left + MARGIN
         top: bounds.top + MARGIN
-        right: bounds.left + MARGIN + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 9
-        bottom: bounds.top + MARGIN + (GLYPH_EDITOR_PIXEL_SIZE + 1) * 18
+        right: bounds.left + MARGIN + (MARGIN / 3 * 4 + 1) * self.glyph_editor.font.max_width
+        bottom: bounds.top + MARGIN + (MARGIN / 3 * 4 + 1) * self.glyph_editor.font.height
     )
     self.glyph_editor.layout(child_bounds)
 
@@ -50,7 +50,7 @@ proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
         left: child_bounds.left
         top: child_bounds.bottom + MARGIN
         right: child_bounds.right
-        bottom: child_bounds.bottom + MARGIN + 30
+        bottom: child_bounds.bottom + MARGIN + BUTTON_HEIGHT
     )
     self.save_button.layout(child_bounds)
 

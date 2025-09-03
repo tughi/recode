@@ -12,16 +12,18 @@ type Renderer = trait {
 }
 
 proc (^Renderer).draw_text(self, anon text: str, x: i32, y: i32) {
+    let text_font = font.fixed_size
+
     let left = x
     let top = y
-    let glyphs = font.fixed_size.glyphs
+    let glyphs = text_font.glyphs
     let text_data = text.data()
     let index = 0usize
     while index < text.length {
         let code_point = text_data[index]
         if code_point == '\n' {
             left = x
-            top = top + font.fixed_size.height
+            top = top + text_font.height + text_font.spacing
         } else {
             let glyph = glyphs[code_point]
             let glyph_mask = glyph.mask
@@ -37,7 +39,7 @@ proc (^Renderer).draw_text(self, anon text: str, x: i32, y: i32) {
                     glyph_index = glyph_index + 1
                 }
             }
-            left = left + glyph.width
+            left = left + glyph.width + text_font.spacing
         }
         index = index + 1
     }

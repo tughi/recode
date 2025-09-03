@@ -3,8 +3,10 @@ import libc
 
 type Font = struct {
     glyphs: [^]^Glyph
+    max_width: i32
     height: i32
     base_line: i32
+    spacing: i32
 }
 
 type Glyph = struct {
