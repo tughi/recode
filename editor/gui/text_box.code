@@ -1,0 +1,24 @@
+type Text_Box = struct {
+    super: Widget
+    content: str
+}
+
+proc create_text_box(content: str) -> ^Text_Box {
+    let text_box = alloc Text_Box(content: content)
+    text_box.behavior = Widget_Behavior(text_box)
+    return text_box
+}
+
+proc (^Text_Box).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    let text_box_font = font.fixed_size
+
+    renderer.set_draw_color(Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
+    renderer.draw_rect(self.bounds)
+
+    renderer.set_draw_color(Color(red: 0x0f, green: 0x0f, blue: 0x0f, alpha: 255))
+    renderer.fill_rect(Rect(left: self.bounds.left + 1, top: self.bounds.top + 1, right: self.bounds.right - 1, bottom: self.bounds.bottom - 1))
+
+    renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
+    renderer.set_clip_rect(Rect(left: self.bounds.left + 1, top: self.bounds.top + 1, right: self.bounds.right - 1, bottom: self.bounds.bottom - 1))
+    renderer.draw_text(self.content, x: self.bounds.left + 1 + text_box_font.spacing, y: self.bounds.top + 1 + text_box_font.spacing)
+}

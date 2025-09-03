@@ -1,0 +1,105 @@
+import errors
+import io
+import libc
+import os
+
+let fixed_size: Fixed_Size_Font
+
+type Fixed_Size_Font = struct {
+    super: Font
+}
+
+proc (^Fixed_Size_Font).init(self) {
+    fixed_size = Fixed_Size_Font(
+        super: Font(
+            glyphs: libc.malloc((sizeof(^Glyph)).as(usize) * 256).as([^]^Glyph)
+            max_width: 7
+            height: 15
+            base_line: 12
+            spacing: 2
+        )
+    )
+    let index = 0usize
+    while index < 256 {
+        fixed_size.glyphs[index] = alloc Glyph(
+            mask: null
+            width: 7
+            height: 15
+        )
+        index = index + 1
+    }
+
+    let helper: Fixed_Size_Font_Helper
+    helper.init_glyphs()
+}
+
+proc (^Fixed_Size_Font).save(self) !> errors.Error {
+    let file = os.open_file("editor/font/fixed_size_font_glyphs.code", "w")
+
+    let file_writer: io.Writer = file
+
+    file_writer.write("proc (^Fixed_Size_Font_Helper).init_glyphs(self) {").end_line()
+
+    let index = 0
+    let needs_newline = false
+    while index < 256 {
+        let glyph = fixed_size.glyphs[index]
+        if glyph.mask != null {
+            if needs_newline {
+                file_writer.end_line()
+            }
+            file_writer.write("    self.select(").write_hex(index).write(")").end_line()
+            let row = 0
+            while row < glyph.height {
+                file_writer.write("    self.mask(\"")
+                let col = 0
+                while col < glyph.width {
+                    if glyph.mask[row * glyph.width + col] == 0xFF {
+                        file_writer.write("FF")
+                    } else {
+                        file_writer.write("  ")
+                    }
+                    col = col + 1
+                }
+                file_writer.write("\")").end_line()
+                row = row + 1
+            }
+            needs_newline = true
+        }
+        index = index + 1
+    }
+
+    file_writer.write("}").end_line()
+
+    file.close()
+    return
+}
+
+type Fixed_Size_Font_Helper = struct {
+    code_point: u8
+    mask_index: i32
+}
+
+proc (^Fixed_Size_Font_Helper).select(self, anon code_point: u8) {
+    self.code_point = code_point
+    self.mask_index = 0
+    let glyph = fixed_size.glyphs[self.code_point]
+    if glyph.mask == null {
+        glyph.mask = libc.malloc(((sizeof(u8)).as(i32) * glyph.width * glyph.height).as(usize)).as([^]u8)
+    }
+}
+
+proc (^Fixed_Size_Font_Helper).mask(self, anon mask_line: str) {
+    let glyph = fixed_size.glyphs[self.code_point]
+    let mask_line_data = mask_line.data()
+    let index = 0usize
+    while index < mask_line.length {
+        if mask_line_data[index] == 'F' {
+            glyph.mask[self.mask_index] = 0xFF
+        } else {
+            glyph.mask[self.mask_index] = 0x00
+        }
+        self.mask_index = self.mask_index + 1
+        index = index + 2
+    }
+}

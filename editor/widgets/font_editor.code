@@ -1,0 +1,102 @@
+import errors
+import gui
+import os
+
+proc create_font_editor() -> ^Font_Editor {
+    let font_editor = alloc Font_Editor()
+    font_editor.behavior = font_editor
+    return font_editor
+}
+
+type Font_Editor = struct {
+    super: gui.Layout
+    glyph_editor: ^Glyph_Editor
+    save_button: ^gui.Button
+    glyph_chooser: ^Glyph_Chooser
+    preview_text_box: ^gui.Text_Box
+}
+
+proc (^Font_Editor).init(self) !> errors.Error {
+    self.glyph_editor = create_glyph_editor()
+    self.add_child(self.glyph_editor)
+
+    self.save_button = gui.create_button(label: "Save", click_listener: alloc Editor_Save_Action(editor: self))
+    self.add_child(self.save_button)
+
+    self.glyph_chooser = create_glyph_chooser(glyph_click_listener: alloc Editor_Change_Glyph_Action(editor: self))
+    self.add_child(self.glyph_chooser)
+
+    self.preview_text_box = gui.create_text_box(content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\nincididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis\nnostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\nfugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\nculpa qui officia deserunt mollit anim id est laborum.")
+    self.add_child(self.preview_text_box)
+
+    return
+}
+
+const MARGIN = 16
+const BUTTON_HEIGHT = 32
+
+proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
+    self.super.on_layout(bounds)
+
+    let child_bounds = gui.Rect(
+        left: bounds.left + MARGIN
+        top: bounds.top + MARGIN
+        right: bounds.left + MARGIN + (MARGIN / 3 * 4 + 1) * self.glyph_editor.font.max_width
+        bottom: bounds.top + MARGIN + (MARGIN / 3 * 4 + 1) * self.glyph_editor.font.height
+    )
+    self.glyph_editor.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.left
+        top: child_bounds.bottom + MARGIN
+        right: child_bounds.right
+        bottom: child_bounds.bottom + MARGIN + BUTTON_HEIGHT
+    )
+    self.save_button.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.right + MARGIN
+        top: bounds.top + MARGIN
+        right: bounds.right - MARGIN
+        bottom: bounds.top + MARGIN
+    )
+    self.glyph_chooser.layout(child_bounds)
+
+    child_bounds.set(
+        left: child_bounds.left
+        top: self.glyph_chooser.bounds.bottom + MARGIN
+        right: child_bounds.right
+        bottom: bounds.bottom - MARGIN
+    )
+    self.preview_text_box.layout(child_bounds)
+}
+
+proc (^Font_Editor).on_handle_event(self, event: gui.Event) {
+    if event is gui.Key_Up_Event as key_up_event {
+        let key_code = key_up_event.key_code
+        if key_code >= '!'.as(u32) and key_code <= '~'.as(u32) {
+            self.glyph_editor.glyph = font.fixed_size.glyphs[key_code]
+        }
+        key_up_event.window.is_dirty = true
+    } else {
+        self.super.on_handle_event(event)
+    }
+}
+
+type Editor_Save_Action = struct {
+    editor: ^Font_Editor
+}
+
+proc (^Editor_Save_Action).on_click(self, button: ^gui.Button) {
+    try font.fixed_size.save() else {
+        os.stdout.write(error.message).end_line()
+    }
+}
+
+type Editor_Change_Glyph_Action = struct {
+    editor: ^Font_Editor
+}
+
+proc (^Editor_Change_Glyph_Action).on_click(self, button: ^gui.Button) {
+    self.editor.glyph_editor.glyph = font.fixed_size.glyphs[button.label.data()[0]]
+}

@@ -1,28 +1,79 @@
+import font
 import os
 
-proc create_button(label: str) -> ^Button {
+proc create_button(label: str, click_listener: Button_Click_Listener) -> ^Button {
     let button = alloc Button(label: label)
     button.behavior = button
+    button.click_listener = click_listener
     return button
 }
 
 type Button = struct {
     super: Widget
     label: str
-    label_bounds: Rect
+    label_size: Size
+    click_listener: Button_Click_Listener
+}
+
+type Button_Click_Listener = trait {
+    proc on_click(self, button: ^Button)
 }
 
 proc (^Button).on_handle_event(self, anon event: Event) {
     self.super.on_handle_event(event)
 
-    os.stdout.write("Button event").end_line()
+    switch event {
+        is Mouse_Button_Down_Event as mouse_button_event {
+            if mouse_button_event.button == 1 {
+                mouse_button_event.window.pressed_widget = self
+            }
+        }
+        is Mouse_Button_Up_Event as mouse_button_event {
+            if mouse_button_event.button == 1 and mouse_button_event.window.pressed_widget == self {
+                mouse_button_event.window.pressed_widget = null
+                if mouse_button_event.window.hovered_widget == self {
+                    self.click_listener.on_click(button: self)
+                }
+                mouse_button_event.window.is_dirty = true
+            }
+        }
+        else {
+            // ignored
+        }
+    }
+}
+
+proc (^Button).on_click(self) {
+}
+
+proc (^Button).on_layout(self, anon rect: Rect) {
+    self.super.on_layout(rect)
 }
 
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
-    if window.hovered_widget == self.as(^Widget) {
-        renderer.set_draw_color(Color(red: 255, green: 100, blue: 100, alpha: 255))
+    let button_font = font.fixed_size
+
+    if window.pressed_widget == self {
+        renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 255))
+    } else if window.hovered_widget == self {
+        renderer.set_draw_color(Color(red: 0x27, green: 0x27, blue: 0x27, alpha: 255))
     } else {
-        renderer.set_draw_color(Color(red: 255, green: 255, blue: 255, alpha: 255))
+        renderer.set_draw_color(Color(red: 0x1f, green: 0x1f, blue: 0x1f, alpha: 255))
     }
-    renderer.draw_rect(self.bounds)
+    renderer.fill_rect(Rect(left: self.bounds.left + 1, top: self.bounds.top + 1, right: self.bounds.right - 1, bottom: self.bounds.bottom - 1))
+
+    renderer.set_draw_color(Color(red: 0x3f, green: 0x3f, blue: 0x3f, alpha: 255))
+    renderer.draw_line(x1: self.bounds.left, y1: self.bounds.top, x2: self.bounds.right - 1, y2: self.bounds.top)
+    renderer.draw_line(x1: self.bounds.left, y1: self.bounds.top + 1, x2: self.bounds.left, y2: self.bounds.bottom - 1)
+
+    renderer.set_draw_color(Color(red: 0x07, green: 0x07, blue: 0x07, alpha: 255))
+    renderer.draw_line(x1: self.bounds.left + 1, y1: self.bounds.bottom, x2: self.bounds.right, y2: self.bounds.bottom)
+    renderer.draw_line(x1: self.bounds.right, y1: self.bounds.top + 1, x2: self.bounds.right, y2: self.bounds.bottom - 1)
+
+    if self.label_size.width == 0 {
+        self.label_size = button_font.measure_text(self.label)
+    }
+
+    renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
+    renderer.draw_text(self.label, x: (self.bounds.left + self.bounds.right - self.label_size.width) / 2, y: self.bounds.top + (self.bounds.height() - button_font.height) / 2)
 }

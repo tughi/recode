@@ -9,13 +9,27 @@ proc (^sdl.Renderer).draw_line(self, x1: i32, y1: i32, x2: i32, y2: i32) {
     sdl.render_draw_line(self, x1, y1, x2, y2)
 }
 
+proc (^sdl.Renderer).draw_point(self, x: i32, y: i32) {
+    sdl.render_draw_point(self, x, y)
+}
+
 proc (^sdl.Renderer).draw_rect(self, anon rect: gui.Rect) {
     let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
     sdl.render_draw_rect(self, ^sdl_rect)
 }
 
+proc (^sdl.Renderer).fill_rect(self, anon rect: gui.Rect) {
+    let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
+    sdl.render_fill_rect(self, ^sdl_rect)
+}
+
 proc (^sdl.Renderer).present(self) {
     sdl.render_present(self)
+}
+
+proc (^sdl.Renderer).set_clip_rect(self, anon rect: gui.Rect) {
+    let sdl_rect = sdl.Rect(x: rect.left, y: rect.top, w: rect.width(), h: rect.height())
+    sdl.set_render_clip_rect(self, ^sdl_rect)
 }
 
 proc (^sdl.Renderer).set_draw_color(self, anon color: gui.Color) {

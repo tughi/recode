@@ -12,24 +12,44 @@ proc (^Window).handle_event(self, anon event: Event) {
     if self.content == null {
         return
     }
-    if event is Mouse_Motion_Event as mouse_motion_event {
-        let last_hovered_widget = self.hovered_widget
+    switch event {
+        is Mouse_Motion_Event as mouse_motion_event {
+            let last_hovered_widget = self.hovered_widget
 
-        self.content.handle_event(event)
+            self.content.handle_event(event)
 
-        if last_hovered_widget != self.hovered_widget {
-            self.is_dirty = true
+            if last_hovered_widget != self.hovered_widget {
+                self.is_dirty = true
+            }
+
+            if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
+                self.pressed_widget.handle_event(event)
+            }
         }
+        is Mouse_Button_Down_Event as mouse_button_event {
+            let last_pressed_widget = self.pressed_widget
 
-        if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
-            self.pressed_widget.handle_event(event)
+            self.hovered_widget.handle_event(event)
+
+            if last_pressed_widget != self.pressed_widget {
+                self.is_dirty = true
+            }
         }
-    } else {
-        self.content.handle_event(event)
+        is Mouse_Button_Up_Event as mouse_button_event {
+            self.hovered_widget.handle_event(event)
+            if self.pressed_widget != null {
+                self.pressed_widget.handle_event(event)
+            }
+        }
+        else {
+            self.content.handle_event(event)
+        }
     }
 }
 
 proc (^Window).render(self) {
+    self.renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 255))
+    self.renderer.clear()
     if self.content != null {
         self.content.render(^self.renderer, self)
         self.renderer.present()

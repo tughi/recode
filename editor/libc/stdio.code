@@ -4,4 +4,6 @@ let stdin: ^FILE = external "__stdinp"
 let stdout: ^FILE = external "__stdoutp"
 let stderr: ^FILE = external "__stderrp"
 
+proc fclose(anon file: ^FILE) -> i32 = external
+proc fopen(anon filename: [^]u8, anon mode: [^]u8) -> ^FILE = external
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external

@@ -1,11 +1,46 @@
+import gui
+import libc
+
 type Font = struct {
-    glyphs: [^]Glyph
+    glyphs: [^]^Glyph
+    max_width: i32
     height: i32
     base_line: i32
+    spacing: i32
 }
 
 type Glyph = struct {
     mask: [^]u8
     width: i32
     height: i32
+}
+
+proc init() {
+    fixed_size.init()
+}
+
+proc (^Font).measure_text(self, anon text: str) -> gui.Size {
+    let line_width = 0
+    let height = self.height
+    let width = 0
+
+    let text_data = text.data()
+    let index = 0usize
+    while index < text.length {
+        let code_point = text_data[index]
+        if code_point == '\n' {
+            height = height + self.height
+            line_width = 0
+            if line_width > width {
+                width = line_width
+            }
+        }
+        let glyph = self.glyphs[code_point]
+        line_width = line_width + glyph.width
+        index = index + 1
+    }
+    if line_width > width {
+        width = line_width
+    }
+    return gui.Size(width: width, height: height)
 }

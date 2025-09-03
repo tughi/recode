@@ -7,8 +7,12 @@ proc destroy_renderer(anon renderer: ^Renderer) = external "SDL_DestroyRenderer"
 proc render_clear(anon renderer: ^Renderer) = external "SDL_RenderClear"
 
 proc render_draw_line(anon renderer: ^Renderer, anon x1: i32, anon y1: i32, anon x2: i32, anon y2: i32) = external "SDL_RenderDrawLine"
+proc render_draw_point(anon renderer: ^Renderer, anon x: i32, anon y: i32) = external "SDL_RenderDrawPoint"
 proc render_draw_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderDrawRect"
+proc render_fill_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderFillRect"
 
 proc render_present(anon renderer: ^Renderer) = external "SDL_RenderPresent"
+
+proc set_render_clip_rect(anon renderer: ^Renderer, anon rect: ^Rect) = external "SDL_RenderSetClipRect"
 
 proc set_render_draw_color(anon renderer: ^Renderer, anon r: u8, anon g: u8, anon b: u8, anon a: u8) = external "SDL_SetRenderDrawColor"
