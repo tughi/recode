@@ -71,16 +71,12 @@ proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
     self.preview_text_box.layout(child_bounds)
 }
 
-proc (^Font_Editor).on_handle_event(self, event: gui.Event) {
-    if event is gui.Key_Up_Event as key_up_event {
-        let key_code = key_up_event.key_code
-        if key_code >= '!'.as(u32) and key_code <= '~'.as(u32) {
-            self.glyph_editor.glyph = font.fixed_size.glyphs[key_code]
-        }
-        key_up_event.window.is_dirty = true
-    } else {
-        self.super.on_handle_event(event)
+proc (^Font_Editor).on_key_up_event(self, anon event: gui.Key_Up_Event) {
+    let key_code = event.key_code
+    if key_code >= '!'.as(u32) and key_code <= '~'.as(u32) {
+        self.glyph_editor.glyph = font.fixed_size.glyphs[key_code]
     }
+    event.window.is_dirty = true
 }
 
 type Editor_Save_Action = struct {

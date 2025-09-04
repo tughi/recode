@@ -11,42 +11,38 @@ proc (^Layout).add_child(self, anon child: ^Widget) !> errors.Error {
     return
 }
 
-proc (^Layout).on_handle_event(self, anon event: Event) {
-    self.super.on_handle_event(event)
-
-    let is_mouse_event: bool
-    let mouse_x = 0
-    let mouse_y = 0
-    switch event {
-        is Mouse_Motion_Event as mouse_event {
-            is_mouse_event = true
-            mouse_x = mouse_event.x
-            mouse_y = mouse_event.y
+proc (^Layout).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+    let index = 0usize
+    while index < self.children.length {
+        let child = self.children.items[index]
+        if child.bounds.contains(x: event.x, y: event.y) {
+            child.handle_mouse_button_down_event(event)
         }
-        is Mouse_Button_Down_Event as mouse_event {
-            is_mouse_event = true
-            mouse_x = mouse_event.x
-            mouse_y = mouse_event.y
-        }
-        is Mouse_Button_Up_Event as mouse_event {
-            is_mouse_event = true
-            mouse_x = mouse_event.x
-            mouse_y = mouse_event.y
-        }
-        else {
-            is_mouse_event = false
-        }
+        index = index + 1
     }
+}
 
-    if is_mouse_event {
-        let index = 0usize
-        while index < self.children.length {
-            let child = self.children.items[index]
-            if child.bounds.contains(x: mouse_x, y: mouse_y) {
-                child.handle_event(event)
-            }
-            index = index + 1
+proc (^Layout).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+    let index = 0usize
+    while index < self.children.length {
+        let child = self.children.items[index]
+        if child.bounds.contains(x: event.x, y: event.y) {
+            child.handle_mouse_button_up_event(event)
         }
+        index = index + 1
+    }
+}
+
+proc (^Layout).on_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+    self.super.on_mouse_motion_event(event)
+
+    let index = 0usize
+    while index < self.children.length {
+        let child = self.children.items[index]
+        if child.bounds.contains(x: event.x, y: event.y) {
+            child.handle_mouse_motion_event(event)
+        }
+        index = index + 1
     }
 }
 

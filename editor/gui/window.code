@@ -8,43 +8,56 @@ type Window = struct {
     pressed_widget: ^Widget
 }
 
-proc (^Window).handle_event(self, anon event: Event) {
+proc (^Window).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
     if self.content == null {
         return
     }
-    switch event {
-        is Mouse_Motion_Event as mouse_motion_event {
-            let last_hovered_widget = self.hovered_widget
 
-            self.content.handle_event(event)
+    let last_pressed_widget = self.pressed_widget
 
-            if last_hovered_widget != self.hovered_widget {
-                self.is_dirty = true
-            }
+    self.hovered_widget.handle_mouse_button_down_event(event)
 
-            if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
-                self.pressed_widget.handle_event(event)
-            }
-        }
-        is Mouse_Button_Down_Event as mouse_button_event {
-            let last_pressed_widget = self.pressed_widget
-
-            self.hovered_widget.handle_event(event)
-
-            if last_pressed_widget != self.pressed_widget {
-                self.is_dirty = true
-            }
-        }
-        is Mouse_Button_Up_Event as mouse_button_event {
-            self.hovered_widget.handle_event(event)
-            if self.pressed_widget != null {
-                self.pressed_widget.handle_event(event)
-            }
-        }
-        else {
-            self.content.handle_event(event)
-        }
+    if last_pressed_widget != self.pressed_widget {
+        self.is_dirty = true
     }
+}
+
+proc (^Window).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+    if self.content == null {
+        return
+    }
+
+    self.hovered_widget.handle_mouse_button_up_event(event)
+
+    if self.pressed_widget != null {
+        self.pressed_widget.handle_mouse_button_up_event(event)
+    }
+}
+
+proc (^Window).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+    if self.content == null {
+        return
+    }
+
+    let last_hovered_widget = self.hovered_widget
+
+    self.content.handle_mouse_motion_event(event)
+
+    if last_hovered_widget != self.hovered_widget {
+        self.is_dirty = true
+    }
+
+    if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
+        self.pressed_widget.handle_mouse_motion_event(event)
+    }
+}
+
+proc (^Window).handle_key_up_event(self, anon event: Key_Up_Event) {
+    if self.content == null {
+        return
+    }
+
+    self.content.handle_key_up_event(event)
 }
 
 proc (^Window).render(self) {

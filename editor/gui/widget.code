@@ -3,16 +3,38 @@ type Widget = struct {
     bounds: Rect
 }
 
-proc (^Widget).handle_event(self, anon event: Event) {
-    self.behavior.on_handle_event(event)
+proc (^Widget).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+    self.behavior.on_mouse_button_down_event(event)
 }
 
-proc (^Widget).on_handle_event(self, anon event: Event) {
-    if event is Mouse_Motion_Event as mouse_motion_event {
-        if self.bounds.contains(x: mouse_motion_event.x, y: mouse_motion_event.y) {
-            mouse_motion_event.window.hovered_widget = self
-        }
+proc (^Widget).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+    // Nothing to do
+}
+
+proc (^Widget).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+    self.behavior.on_mouse_button_up_event(event)
+}
+
+proc (^Widget).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+    // Nothing to do
+}
+
+proc (^Widget).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+    self.behavior.on_mouse_motion_event(event)
+}
+
+proc (^Widget).on_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+    if self.bounds.contains(x: event.x, y: event.y) {
+        event.window.hovered_widget = self
     }
+}
+
+proc (^Widget).handle_key_up_event(self, anon event: Key_Up_Event) {
+    self.behavior.on_key_up_event(event)
+}
+
+proc (^Widget).on_key_up_event(self, anon event: Key_Up_Event) {
+    // Nothing to do
 }
 
 proc (^Widget).layout(self, anon bounds: Rect) {
@@ -28,7 +50,12 @@ proc (^Widget).render(self, anon renderer: ^Renderer, anon window: ^Window) {
 }
 
 type Widget_Behavior = trait {
-    proc on_handle_event(self, anon event: Event)
+    proc on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event)
+    proc on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event)
+    proc on_mouse_motion_event(self, anon event: Mouse_Motion_Event)
+    // proc on_key_down_event(self, anon event: Key_Down_Event)
+    proc on_key_up_event(self, anon event: Key_Up_Event)
     proc on_layout(self, anon bounds: Rect)
     proc on_render(self, anon renderer: ^Renderer, anon window: ^Window)
 }
+
