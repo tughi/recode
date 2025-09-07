@@ -37,6 +37,7 @@ void Generator__generate_add_expression(Generator *self, Checked_Add_Expression 
 void Generator__generate_address_of_expression(Generator *self, Checked_Address_Of_Expression *expression) {
     Checked_Expression *other_expression = expression->super.other_expression;
     switch (other_expression->kind) {
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         pWriter__write__cstring(self->writer, "&");
