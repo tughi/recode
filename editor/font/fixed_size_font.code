@@ -12,7 +12,7 @@ type Fixed_Size_Font = struct {
 proc (^Fixed_Size_Font).init(self) {
     fixed_size = Fixed_Size_Font(
         super: Font(
-            glyphs: libc.malloc((sizeof(^Glyph)).as(usize) * 256).as([^]^Glyph)
+            glyphs: libc.malloc(type_size(^Glyph) * 256).as([^]^Glyph)
             max_width: 7
             height: 15
             base_line: 12
@@ -85,7 +85,7 @@ proc (^Fixed_Size_Font_Helper).select(self, anon code_point: u8) {
     self.mask_index = 0
     let glyph = fixed_size.glyphs[self.code_point]
     if glyph.mask == null {
-        glyph.mask = libc.malloc(((sizeof(u8)).as(i32) * glyph.width * glyph.height).as(usize)).as([^]u8)
+        glyph.mask = libc.malloc(((type_size(u8)).as(i32) * glyph.width * glyph.height).as(usize)).as([^]u8)
     }
 }
 

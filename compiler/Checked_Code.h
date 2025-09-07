@@ -121,12 +121,12 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__RESULT_SUCCESS,
     CHECKED_EXPRESSION_KIND__RESULT_VALUE,
     CHECKED_EXPRESSION_KIND__RESULT,
-    CHECKED_EXPRESSION_KIND__SIZEOF,
     CHECKED_EXPRESSION_KIND__STRING_LENGTH,
     CHECKED_EXPRESSION_KIND__STRING,
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
     CHECKED_EXPRESSION_KIND__TRY,
+    CHECKED_EXPRESSION_KIND__TYPE_SIZE,
     CHECKED_EXPRESSION_KIND__TYPE,
     CHECKED_EXPRESSION_KIND__UNWRAP_RESULT,
 } Checked_Expression_Kind;
@@ -755,13 +755,6 @@ typedef struct Checked_Result_Value_Expression {
 
 Checked_Result_Value_Expression *Checked_Result_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *result_expression);
 
-typedef struct Checked_Sizeof_Expression {
-    Checked_Expression super;
-    Checked_Type *sized_type;
-} Checked_Sizeof_Expression;
-
-Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type);
-
 typedef struct Checked_String_Expression {
     Checked_Expression super;
     String *value;
@@ -797,6 +790,13 @@ typedef struct Checked_Try_Expression {
 } Checked_Try_Expression;
 
 Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol);
+
+typedef struct Checked_Type_Size_Expression {
+    Checked_Expression super;
+    Checked_Type *sized_type;
+} Checked_Type_Size_Expression;
+
+Checked_Type_Size_Expression *Checked_Type_Size_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type);
 
 typedef struct Checked_Type_Expression {
     Checked_Expression super;

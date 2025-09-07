@@ -1,0 +1,7 @@
+proc main() -> i32 {
+    let size: usize = type_size(i32)
+    if size != 4 {
+        return 1
+    }
+    return 0
+}

@@ -368,12 +368,6 @@ void Generator__generate_result_value_expression(Generator *self, Checked_Result
     pWriter__write__cstring(self->writer, ".value");
 }
 
-void Generator__generate_sizeof_expression(Generator *self, Checked_Sizeof_Expression *expression) {
-    pWriter__write__cstring(self->writer, "sizeof(");
-    pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
-    pWriter__write__cstring(self->writer, ")");
-}
-
 void Generator__generate_string_expression(Generator *self, Checked_String_Expression *expression) {
     pWriter__write__cstring(self->writer, "(struct String){.data = ");
     if (expression->value->length == 0) {
@@ -451,6 +445,12 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
     default:
         pWriter__write__string(self->writer, expression->symbol->name);
     }
+}
+
+void Generator__generate_type_size_expression(Generator *self, Checked_Type_Size_Expression *expression) {
+    pWriter__write__cstring(self->writer, "sizeof(");
+    pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
+    pWriter__write__cstring(self->writer, ")");
 }
 
 void Generator__generate_expression(Generator *self, Checked_Expression *expression) {
@@ -556,9 +556,6 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     case CHECKED_EXPRESSION_KIND__RESULT_VALUE:
         Generator__generate_result_value_expression(self, (Checked_Result_Value_Expression *)expression);
         break;
-    case CHECKED_EXPRESSION_KIND__SIZEOF:
-        Generator__generate_sizeof_expression(self, (Checked_Sizeof_Expression *)expression);
-        break;
     case CHECKED_EXPRESSION_KIND__STRING:
         Generator__generate_string_expression(self, (Checked_String_Expression *)expression);
         break;
@@ -570,6 +567,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         break;
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         Generator__generate_symbol_expression(self, (Checked_Symbol_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__TYPE_SIZE:
+        Generator__generate_type_size_expression(self, (Checked_Type_Size_Expression *)expression);
         break;
     default:
         pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);

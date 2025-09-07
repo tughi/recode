@@ -198,10 +198,6 @@ bool Token__is_return(Token *self) {
     return Token__is_keyword(self, "return");
 }
 
-bool Token__is_sizeof(Token *self) {
-    return Token__is_keyword(self, "sizeof");
-}
-
 bool Token__is_struct(Token *self) {
     return Token__is_keyword(self, "struct");
 }
@@ -220,6 +216,10 @@ bool Token__is_true(Token *self) {
 
 bool Token__is_try(Token *self) {
     return Token__is_keyword(self, "try");
+}
+
+bool Token__is_type_size(Token *self) {
+    return Token__is_keyword(self, "type_size");
 }
 
 bool Token__is_type(Token *self) {

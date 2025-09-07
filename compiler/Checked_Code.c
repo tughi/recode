@@ -901,12 +901,6 @@ Checked_Result_Value_Expression *Checked_Result_Value_Expression__create(Source_
     return expression;
 }
 
-Checked_Sizeof_Expression *Checked_Sizeof_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type) {
-    Checked_Sizeof_Expression *expression = (Checked_Sizeof_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SIZEOF, sizeof(Checked_Sizeof_Expression), location, type);
-    expression->sized_type = sized_type;
-    return expression;
-}
-
 Checked_String_Expression *Checked_String_Expression__create(Source_Location location, Checked_Type *type, String *value) {
     Checked_String_Expression *expression = (Checked_String_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__STRING, sizeof(Checked_String_Expression), location, type);
     expression->value = value;
@@ -934,6 +928,12 @@ Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location,
     expression->call_expression = call_expression;
     expression->else_expression = else_expression;
     expression->result_error_symbol = result_error_symbol;
+    return expression;
+}
+
+Checked_Type_Size_Expression *Checked_Type_Size_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *sized_type) {
+    Checked_Type_Size_Expression *expression = (Checked_Type_Size_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE_SIZE, sizeof(Checked_Type_Size_Expression), location, type);
+    expression->sized_type = sized_type;
     return expression;
 }
 

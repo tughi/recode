@@ -1252,12 +1252,6 @@ Checked_Expression *Checker__check_null_expression(Checker *self, Checker_Contex
     return (Checked_Expression *)Checked_Null_Expression__create(parsed_expression->super.literal->location, expression_type);
 }
 
-Checked_Expression *Checker__check_sizeof_expression(Checker *self, Checker_Context *context, Parsed_Sizeof_Expression *parsed_expression) {
-    Checked_Type *expression_type = (Checked_Type *)self->builtin_types->isize_type;
-    Checked_Type *sized_type = Checker__resolve_type(self, context, parsed_expression->type);
-    return (Checked_Expression *)Checked_Sizeof_Expression__create(parsed_expression->super.location, expression_type, sized_type);
-}
-
 Checked_Expression *Checker__check_string_expression(Checker *self, Checker_Context *context, Parsed_String_Expression *parsed_expression) {
     Checked_Type *string_type = (Checked_Type *)self->builtin_types->str_type;
     String *string_value = parsed_expression->value;
@@ -1323,6 +1317,12 @@ Checked_Expression *Checker__check_try_expression(Checker *self, Checker_Context
     self->symbols = self->symbols->parent;
 
     return (Checked_Expression *)Checked_Try_Expression__create(parsed_expression->super.location, result_type->return_type, (Checked_Call_Expression *)call_expression, else_expression, result_error_symbol);
+}
+
+Checked_Expression *Checker__check_type_size_expression(Checker *self, Checker_Context *context, Parsed_Type_Size_Expression *parsed_expression) {
+    Checked_Type *expression_type = (Checked_Type *)self->builtin_types->usize_type;
+    Checked_Type *sized_type = Checker__resolve_type(self, context, parsed_expression->type);
+    return (Checked_Expression *)Checked_Type_Size_Expression__create(parsed_expression->super.location, expression_type, sized_type);
 }
 
 Checked_Expression *Checker__check_type_specialization_expression(Checker *self, Checker_Context *context, Parsed_Type_Specialization_Expression *parsed_expression) {
@@ -1442,9 +1442,6 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
     case PARSED_EXPRESSION_KIND__NULL:
         expression = Checker__check_null_expression(self, context, (Parsed_Null_Expression *)parsed_expression);
         break;
-    case PARSED_EXPRESSION_KIND__SIZEOF:
-        expression = Checker__check_sizeof_expression(self, context, (Parsed_Sizeof_Expression *)parsed_expression);
-        break;
     case PARSED_EXPRESSION_KIND__STRING:
         expression = Checker__check_string_expression(self, context, (Parsed_String_Expression *)parsed_expression);
         break;
@@ -1456,6 +1453,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         break;
     case PARSED_EXPRESSION_KIND__TRY:
         expression = Checker__check_try_expression(self, context, (Parsed_Try_Expression *)parsed_expression);
+        break;
+    case PARSED_EXPRESSION_KIND__TYPE_SIZE:
+        expression = Checker__check_type_size_expression(self, context, (Parsed_Type_Size_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION:
         expression = Checker__check_type_specialization_expression(self, context, (Parsed_Type_Specialization_Expression *)parsed_expression);
@@ -1822,8 +1822,6 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__NULL:
         return expression;
-    case CHECKED_EXPRESSION_KIND__SIZEOF:
-        return expression;
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__STRING:
@@ -1834,6 +1832,8 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return expression;
     case CHECKED_EXPRESSION_KIND__TRY:
         return Checked_Expression_Decomposer__decompose_try_expression(self, (Checked_Try_Expression *)expression);
+    case CHECKED_EXPRESSION_KIND__TYPE_SIZE:
+        return expression;
     case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
         return Checked_Expression_Decomposer__decompose_unwrap_result_expression(self, (Checked_Unwrap_Result_Expression *)expression);
     default:
@@ -1979,8 +1979,6 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return false;
     case CHECKED_EXPRESSION_KIND__RESULT:
         return Checked_Result_Expression__needs_decomposition((Checked_Result_Expression *)self);
-    case CHECKED_EXPRESSION_KIND__SIZEOF:
-        return false;
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
         return Checked_Unary_Expression__needs_decomposition((Checked_Unary_Expression *)self); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__STRING:
@@ -1991,6 +1989,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return false;
     case CHECKED_EXPRESSION_KIND__TRY:
         return true;
+    case CHECKED_EXPRESSION_KIND__TYPE_SIZE:
+        return false;
     case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:
         return true;
     default:

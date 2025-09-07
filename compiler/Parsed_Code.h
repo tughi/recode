@@ -32,11 +32,11 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__NOT_EQUALS,
     PARSED_EXPRESSION_KIND__NOT,
     PARSED_EXPRESSION_KIND__NULL,
-    PARSED_EXPRESSION_KIND__SIZEOF,
     PARSED_EXPRESSION_KIND__STRING,
     PARSED_EXPRESSION_KIND__SUBTRACT,
     PARSED_EXPRESSION_KIND__SYMBOL,
     PARSED_EXPRESSION_KIND__TRY,
+    PARSED_EXPRESSION_KIND__TYPE_SIZE,
     PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION,
 } Parsed_Expression_Kind;
 
@@ -334,13 +334,6 @@ typedef struct Parsed_Null_Expression {
 
 Parsed_Null_Expression *Parsed_Null_Expression__create(Token *literal);
 
-typedef struct Parsed_Sizeof_Expression {
-    Parsed_Expression super;
-    Parsed_Type *type;
-} Parsed_Sizeof_Expression;
-
-Parsed_Sizeof_Expression *Parsed_Sizeof_Expression__create(Source_Location location, Parsed_Type *type);
-
 typedef struct Parsed_String_Expression {
     Parsed_Literal_Expression super;
     String *value;
@@ -368,6 +361,13 @@ typedef struct Parsed_Try_Expression {
 } Parsed_Try_Expression;
 
 Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, Parsed_Expression *expression, Parsed_Expression *else_expression);
+
+typedef struct Parsed_Type_Size_Expression {
+    Parsed_Expression super;
+    Parsed_Type *type;
+} Parsed_Type_Size_Expression;
+
+Parsed_Type_Size_Expression *Parsed_Type_Size_Expression__create(Source_Location location, Parsed_Type *type);
 
 typedef struct Parsed_Type_Specialization_Expression {
     Parsed_Expression super;

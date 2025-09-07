@@ -231,12 +231,6 @@ Parsed_Null_Expression *Parsed_Null_Expression__create(Token *literal) {
     return (Parsed_Null_Expression *)Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__NULL, sizeof(Parsed_Null_Expression), literal);
 }
 
-Parsed_Sizeof_Expression *Parsed_Sizeof_Expression__create(Source_Location location, Parsed_Type *type) {
-    Parsed_Sizeof_Expression *expression = (Parsed_Sizeof_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__SIZEOF, sizeof(Parsed_Sizeof_Expression), location);
-    expression->type = type;
-    return expression;
-}
-
 Parsed_String_Expression *Parsed_String_Expression__create(String_Token *literal) {
     Parsed_String_Expression *expression = (Parsed_String_Expression *)Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__STRING, sizeof(Parsed_String_Expression), (Token *)literal);
     expression->value = literal->value;
@@ -258,6 +252,12 @@ Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, P
     try_expression->expression = expression;
     try_expression->else_expression = else_expression;
     return try_expression;
+}
+
+Parsed_Type_Size_Expression *Parsed_Type_Size_Expression__create(Source_Location location, Parsed_Type *type) {
+    Parsed_Type_Size_Expression *expression = (Parsed_Type_Size_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_SIZE, sizeof(Parsed_Type_Size_Expression), location);
+    expression->type = type;
+    return expression;
 }
 
 Parsed_Type_Specialization_Expression *Parsed_Type_Specialization_Expression__create(Source_Location location, Parsed_Expression *type_expression, Parsed_Type_Argument *first_type_argument) {

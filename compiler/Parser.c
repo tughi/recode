@@ -382,7 +382,7 @@ unary_expression
     | "-" unary_expression
     | "not" unary_expression
     | "^" unary_expression
-    | "sizeof" "(" type ")"
+    | "type_size" "(" type ")"
     | access_expression
 */
 Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
@@ -404,15 +404,15 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
         Parsed_Expression *expression = Parser__parse_unary_expression(self);
         return (Parsed_Expression *)Parsed_Address_Of_Expression__create(Source_Location__merge(first_token->location, expression->location), expression);
     }
-    if (Parser__matches_one(self, Token__is_sizeof)) {
-        Token *first_token = Parser__consume_token(self, Token__is_sizeof);
+    if (Parser__matches_one(self, Token__is_type_size)) {
+        Token *first_token = Parser__consume_token(self, Token__is_type_size);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_opening_paren);
         Parser__consume_space(self, 0);
         Parsed_Type *type = Parser__parse_type(self);
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Sizeof_Expression__create(Source_Location__merge(first_token->location, last_token->location), type);
+        return (Parsed_Expression *)Parsed_Type_Size_Expression__create(Source_Location__merge(first_token->location, last_token->location), type);
     }
     return Parser__parse_access_expression(self);
 }
