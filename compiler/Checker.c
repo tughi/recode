@@ -1679,6 +1679,16 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_is_variant_case_exp
     return (Checked_Expression *)expression;
 }
 
+Checked_Expression *Checked_Expression_Decomposer__decompose_result_expression(Checked_Expression_Decomposer *self, Checked_Result_Expression *expression) {
+    if (expression->raise_expression != NULL) {
+        expression->raise_expression = Checked_Expression_Decomposer__decompose(self, expression->raise_expression);
+    }
+    if (expression->return_expression != NULL) {
+        expression->return_expression = Checked_Expression_Decomposer__decompose(self, expression->return_expression);
+    }
+    return Checked_Expression_Decomposer__create_temp_variable(self, (Checked_Expression *)expression);
+}
+
 Checked_Expression *Checked_Expression_Decomposer__decompose_try_expression(Checked_Expression_Decomposer *self, Checked_Try_Expression *expression) {
     Checked_Expression *result_expression = Checked_Expression_Decomposer__create_temp_variable(self, Checked_Expression_Decomposer__decompose(self, (Checked_Expression *)expression->call_expression));
     if (result_expression->type->kind != CHECKED_TYPE_KIND__RESULT) {
@@ -1822,6 +1832,8 @@ Checked_Expression *Checked_Expression_Decomposer__decompose(Checked_Expression_
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__NULL:
         return expression;
+    case CHECKED_EXPRESSION_KIND__RESULT:
+        return Checked_Expression_Decomposer__decompose_result_expression(self, (Checked_Result_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH:
         return Checked_Expression_Decomposer__decompose_unary_expression(self, (Checked_Unary_Expression *)expression); // Treat as unary expressions
     case CHECKED_EXPRESSION_KIND__STRING:
