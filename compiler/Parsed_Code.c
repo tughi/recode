@@ -254,6 +254,12 @@ Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, P
     return try_expression;
 }
 
+Parsed_Type_Alignment_Expression *Parsed_Type_Alignment_Expression__create(Source_Location location, Parsed_Type *type) {
+    Parsed_Type_Alignment_Expression *expression = (Parsed_Type_Alignment_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_ALIGNMENT, sizeof(Parsed_Type_Alignment_Expression), location);
+    expression->type = type;
+    return expression;
+}
+
 Parsed_Type_Size_Expression *Parsed_Type_Size_Expression__create(Source_Location location, Parsed_Type *type) {
     Parsed_Type_Size_Expression *expression = (Parsed_Type_Size_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__TYPE_SIZE, sizeof(Parsed_Type_Size_Expression), location);
     expression->type = type;

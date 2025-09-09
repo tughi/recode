@@ -52,6 +52,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__I64:
     case CHECKED_TYPE_KIND__I8:
+    case CHECKED_TYPE_KIND__ISIZE:
     case CHECKED_TYPE_KIND__STR:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
@@ -59,6 +60,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
     case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Named_Type *checked_named_type = (Checked_Named_Type *)type;
         if (checked_named_type->package != NULL) {
@@ -928,6 +930,12 @@ Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location,
     expression->call_expression = call_expression;
     expression->else_expression = else_expression;
     expression->result_error_symbol = result_error_symbol;
+    return expression;
+}
+
+Checked_Type_Alignment_Expression *Checked_Type_Alignment_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *aligned_type) {
+    Checked_Type_Alignment_Expression *expression = (Checked_Type_Alignment_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT, sizeof(Checked_Type_Alignment_Expression), location, type);
+    expression->aligned_type = aligned_type;
     return expression;
 }
 

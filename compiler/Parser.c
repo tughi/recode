@@ -382,6 +382,7 @@ unary_expression
     | "-" unary_expression
     | "not" unary_expression
     | "^" unary_expression
+    | "type_alignment" "(" type ")"
     | "type_size" "(" type ")"
     | access_expression
 */
@@ -413,6 +414,16 @@ Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Type_Size_Expression__create(Source_Location__merge(first_token->location, last_token->location), type);
+    }
+    if (Parser__matches_one(self, Token__is_type_alignment)) {
+        Token *first_token = Parser__consume_token(self, Token__is_type_alignment);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_opening_paren);
+        Parser__consume_space(self, 0);
+        Parsed_Type *type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
+        return (Parsed_Expression *)Parsed_Type_Alignment_Expression__create(Source_Location__merge(first_token->location, last_token->location), type);
     }
     return Parser__parse_access_expression(self);
 }

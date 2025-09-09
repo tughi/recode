@@ -218,16 +218,16 @@ bool Token__is_try(Token *self) {
     return Token__is_keyword(self, "try");
 }
 
+bool Token__is_type_alignment(Token *self) {
+    return Token__is_keyword(self, "type_alignment");
+}
+
 bool Token__is_type_size(Token *self) {
     return Token__is_keyword(self, "type_size");
 }
 
 bool Token__is_type(Token *self) {
     return Token__is_keyword(self, "type");
-}
-
-bool Token__is_typedef(Token *self) {
-    return Token__is_keyword(self, "typedef");
 }
 
 bool Token__is_union(Token *self) {

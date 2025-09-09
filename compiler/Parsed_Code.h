@@ -36,6 +36,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__SUBTRACT,
     PARSED_EXPRESSION_KIND__SYMBOL,
     PARSED_EXPRESSION_KIND__TRY,
+    PARSED_EXPRESSION_KIND__TYPE_ALIGNMENT,
     PARSED_EXPRESSION_KIND__TYPE_SIZE,
     PARSED_EXPRESSION_KIND__TYPE_SPECIALIZATION,
 } Parsed_Expression_Kind;
@@ -361,6 +362,13 @@ typedef struct Parsed_Try_Expression {
 } Parsed_Try_Expression;
 
 Parsed_Try_Expression *Parsed_Try_Expression__create(Source_Location location, Parsed_Expression *expression, Parsed_Expression *else_expression);
+
+typedef struct Parsed_Type_Alignment_Expression {
+    Parsed_Expression super;
+    Parsed_Type *type;
+} Parsed_Type_Alignment_Expression;
+
+Parsed_Type_Alignment_Expression *Parsed_Type_Alignment_Expression__create(Source_Location location, Parsed_Type *type);
 
 typedef struct Parsed_Type_Size_Expression {
     Parsed_Expression super;

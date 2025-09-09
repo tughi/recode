@@ -1,0 +1,44 @@
+proc main() -> i32 {
+    if type_alignment(bool) != 1 {
+        return 1
+    }
+    if type_alignment(i16) != 2 {
+        return 2
+    }
+    if type_alignment(i32) != 4 {
+        return 3
+    }
+    if type_alignment(i64) != 8 {
+        return 4
+    }
+    if type_alignment(i8) != 1 {
+        return 5
+    }
+    if type_alignment(isize) != 8 {
+        // we assume a 64-bit architecture
+        return 6
+    }
+    if type_alignment(u16) != 2 {
+        return 7
+    }
+    if type_alignment(u32) != 4 {
+        return 8
+    }
+    if type_alignment(u64) != 8 {
+        return 9
+    }
+    if type_alignment(u8) != 1 {
+        return 10
+    }
+    if type_alignment(usize) != 8 {
+        // we assume a 64-bit architecture
+        return 11
+    }
+    if type_alignment(^bool) != type_alignment(usize) {
+        return 12
+    }
+    if type_alignment(proc (value: i32) -> i32) != type_alignment(usize) {
+        return 13
+    }
+    return 0
+}

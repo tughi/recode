@@ -1,0 +1,8 @@
+type Data = struct {
+    byte: u8
+    count: i32
+}
+
+proc main() -> i32 {
+    return (type_alignment(Data) - type_alignment(i32)).as(i32)
+}

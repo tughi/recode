@@ -1319,9 +1319,27 @@ Checked_Expression *Checker__check_try_expression(Checker *self, Checker_Context
     return (Checked_Expression *)Checked_Try_Expression__create(parsed_expression->super.location, result_type->return_type, (Checked_Call_Expression *)call_expression, else_expression, result_error_symbol);
 }
 
+Checked_Expression *Checker__check_type_alignment_expression(Checker *self, Checker_Context *context, Parsed_Type_Alignment_Expression *parsed_expression) {
+    Checked_Type *expression_type = (Checked_Type *)self->builtin_types->usize_type;
+    Checked_Type *aligned_type = Checker__resolve_type(self, context, parsed_expression->type);
+    if (aligned_type->kind == CHECKED_TYPE_KIND__ANY) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->type->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type Any has no alignment");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    return (Checked_Expression *)Checked_Type_Alignment_Expression__create(parsed_expression->super.location, expression_type, aligned_type);
+}
+
 Checked_Expression *Checker__check_type_size_expression(Checker *self, Checker_Context *context, Parsed_Type_Size_Expression *parsed_expression) {
     Checked_Type *expression_type = (Checked_Type *)self->builtin_types->usize_type;
     Checked_Type *sized_type = Checker__resolve_type(self, context, parsed_expression->type);
+    if (sized_type->kind == CHECKED_TYPE_KIND__ANY) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->type->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type Any has no size");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     return (Checked_Expression *)Checked_Type_Size_Expression__create(parsed_expression->super.location, expression_type, sized_type);
 }
 
@@ -1453,6 +1471,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         break;
     case PARSED_EXPRESSION_KIND__TRY:
         expression = Checker__check_try_expression(self, context, (Parsed_Try_Expression *)parsed_expression);
+        break;
+    case PARSED_EXPRESSION_KIND__TYPE_ALIGNMENT:
+        expression = Checker__check_type_alignment_expression(self, context, (Parsed_Type_Alignment_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__TYPE_SIZE:
         expression = Checker__check_type_size_expression(self, context, (Parsed_Type_Size_Expression *)parsed_expression);
@@ -2001,6 +2022,8 @@ bool Checked_Expression__needs_decomposition(Checked_Expression *self) {
         return false;
     case CHECKED_EXPRESSION_KIND__TRY:
         return true;
+    case CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT:
+        return false;
     case CHECKED_EXPRESSION_KIND__TYPE_SIZE:
         return false;
     case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT:

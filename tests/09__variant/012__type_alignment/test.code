@@ -1,0 +1,19 @@
+type Data = variant {
+    bool
+    i8
+}
+
+type More_Data = variant {
+    Data
+    i64
+}
+
+proc main() -> i32 {
+    if type_alignment(Data) != type_alignment(i32) {
+        return 1
+    }
+    if type_alignment(More_Data) != type_alignment(i64) {
+        return 2
+    }
+    return 0
+}

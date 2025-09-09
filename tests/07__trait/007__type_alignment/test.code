@@ -1,0 +1,10 @@
+type Input_Stream = trait {
+    proc read(self) -> u8
+}
+
+proc main() -> i32 {
+    if type_alignment(Input_Stream) != type_alignment(usize) {
+        return 1
+    }
+    return 0
+}

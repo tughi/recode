@@ -447,6 +447,70 @@ void Generator__generate_symbol_expression(Generator *self, Checked_Symbol_Expre
     }
 }
 
+int Checked_Type__get_alignment(Checked_Type *self) {
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__I8:
+    case CHECKED_TYPE_KIND__U8:
+        return 1;
+    case CHECKED_TYPE_KIND__I16:
+    case CHECKED_TYPE_KIND__U16:
+        return 2;
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__U32:
+        return 4;
+    case CHECKED_TYPE_KIND__I64:
+    case CHECKED_TYPE_KIND__U64:
+        return 8;
+    case CHECKED_TYPE_KIND__ISIZE:
+    case CHECKED_TYPE_KIND__POINTER:
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
+    case CHECKED_TYPE_KIND__STR:
+    case CHECKED_TYPE_KIND__USIZE:
+        return 8;
+    case CHECKED_TYPE_KIND__MULTI_POINTER:
+        return Checked_Type__get_alignment(((Checked_Multi_Pointer_Type *)self)->item_type);
+    case CHECKED_TYPE_KIND__STRUCT: {
+        Checked_Struct_Type *struct_type = (Checked_Struct_Type *)self;
+        int alignment = 1;
+        Checked_Struct_Member *struct_member = struct_type->first_member;
+        for (; struct_member != NULL; struct_member = struct_member->next_member) {
+            int struct_member_alignment = Checked_Type__get_alignment(struct_member->type);
+            if (struct_member_alignment > alignment) {
+                alignment = struct_member_alignment;
+            }
+        }
+        return alignment;
+    }
+    case CHECKED_TYPE_KIND__TRAIT:
+        return Checked_Type__get_alignment((Checked_Type *)((Checked_Trait_Type *)self)->struct_type);
+    case CHECKED_TYPE_KIND__VARIANT: {
+        Checked_Variant_Type *variant_type = (Checked_Variant_Type *)self;
+        int alignment = 4; // alignment of variant discriminator
+        Checked_Variant_Case *variant_case = variant_type->first_variant_case;
+        for (; variant_case != NULL; variant_case = variant_case->next_variant) {
+            if (variant_case->type->kind == CHECKED_TYPE_KIND__NIL) {
+                continue;
+            }
+            int variant_case_alignment = Checked_Type__get_alignment(variant_case->type);
+            if (variant_case_alignment > alignment) {
+                alignment = variant_case_alignment;
+            }
+        }
+        return alignment;
+    }
+    default:
+        pWriter__begin_location_message(stderr_writer, self->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported type");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+}
+
+void Generator__generate_type_alignment_expression(Generator *self, Checked_Type_Alignment_Expression *expression) {
+    pWriter__write__int64(self->writer, Checked_Type__get_alignment(expression->aligned_type));
+}
+
 void Generator__generate_type_size_expression(Generator *self, Checked_Type_Size_Expression *expression) {
     pWriter__write__cstring(self->writer, "sizeof(");
     pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
@@ -567,6 +631,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         break;
     case CHECKED_EXPRESSION_KIND__SYMBOL:
         Generator__generate_symbol_expression(self, (Checked_Symbol_Expression *)expression);
+        break;
+    case CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT:
+        Generator__generate_type_alignment_expression(self, (Checked_Type_Alignment_Expression *)expression);
         break;
     case CHECKED_EXPRESSION_KIND__TYPE_SIZE:
         Generator__generate_type_size_expression(self, (Checked_Type_Size_Expression *)expression);

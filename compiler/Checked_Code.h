@@ -126,6 +126,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__SUBTRACT,
     CHECKED_EXPRESSION_KIND__SYMBOL,
     CHECKED_EXPRESSION_KIND__TRY,
+    CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT,
     CHECKED_EXPRESSION_KIND__TYPE_SIZE,
     CHECKED_EXPRESSION_KIND__TYPE,
     CHECKED_EXPRESSION_KIND__UNWRAP_RESULT,
@@ -790,6 +791,13 @@ typedef struct Checked_Try_Expression {
 } Checked_Try_Expression;
 
 Checked_Try_Expression *Checked_Try_Expression__create(Source_Location location, Checked_Type *type, Checked_Call_Expression *call_expression, Checked_Expression *else_expression, Checked_Result_Error_Symbol *result_error_symbol);
+
+typedef struct Checked_Type_Alignment_Expression {
+    Checked_Expression super;
+    Checked_Type *aligned_type;
+} Checked_Type_Alignment_Expression;
+
+Checked_Type_Alignment_Expression *Checked_Type_Alignment_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *aligned_type);
 
 typedef struct Checked_Type_Size_Expression {
     Checked_Expression super;

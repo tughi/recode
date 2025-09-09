@@ -1,0 +1,13 @@
+type Data<T> = struct {
+    value: T
+}
+
+proc main() -> i32 {
+    if type_alignment(Data<i8>) != type_alignment(i8) {
+        return 1
+    }
+    if type_alignment(Data<isize>) != type_alignment(isize) {
+        return 1
+    }
+    return 0
+}
