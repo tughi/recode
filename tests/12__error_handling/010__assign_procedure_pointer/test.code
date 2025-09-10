@@ -1,0 +1,9 @@
+proc main() -> i32 {
+    let procedure: proc () -> i32 !> i32
+    procedure = demo
+    return (try procedure() else error) - 42
+}
+
+proc demo() -> i32 !> i32 {
+    raise 42
+}

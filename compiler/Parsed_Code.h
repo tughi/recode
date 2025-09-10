@@ -83,9 +83,10 @@ typedef struct Parsed_Procedure_Type {
     Parsed_Type super;
     Parsed_Procedure_Parameter *first_parameter;
     Parsed_Type *return_type;
+    Parsed_Type *raise_type;
 } Parsed_Procedure_Type;
 
-Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type);
+Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type);
 
 typedef struct Parsed_Multi_Pointer_Type {
     Parsed_Type super;

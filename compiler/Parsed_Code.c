@@ -23,10 +23,11 @@ Parsed_Procedure_Parameter *Parsed_Procedure_Parameter__create(Token *label, Tok
     return parameter;
 }
 
-Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type) {
+Parsed_Type *Parsed_Procedure_Type__create(Source_Location location, Parsed_Procedure_Parameter *first_parameter, Parsed_Type *return_type, Parsed_Type *raise_type) {
     Parsed_Procedure_Type *type = (Parsed_Procedure_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__PROCEDURE, sizeof(Parsed_Procedure_Type), location);
     type->first_parameter = first_parameter;
     type->return_type = return_type;
+    type->raise_type = raise_type;
     return (Parsed_Type *)type;
 }
 
@@ -44,7 +45,11 @@ Parsed_Type_Argument *Parsed_Type_Argument__create(Parsed_Type *type) {
 }
 
 Parsed_Named_Type *Parsed_Named_Type__create(Token *package, Token *name) {
-    Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
+    Source_Location location = name->location;
+    if (package != NULL) {
+        location = Source_Location__merge(package->location, name->location);
+    }
+    Parsed_Named_Type *type = (Parsed_Named_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), location);
     type->package = package;
     type->name = name->lexeme;
     type->first_type_argument = NULL;

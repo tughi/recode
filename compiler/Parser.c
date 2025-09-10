@@ -907,7 +907,7 @@ type
     | "^" type
     | "[" ( expression | "^" ) "]" type
     | IDENTIFIER ( "." IDENTIFIER )? type_arguments?
-    | proc "(" procedure_parameters? ")" ( "->" type )?
+    | proc "(" procedure_parameters? ")" ( "->" type )? ( "!>" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
     if (Parser__matches_one(self, Token__is_caret)) {
@@ -935,12 +935,12 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type, size_expression);
     }
     if (Parser__matches_one(self, Token__is_proc)) {
-        Token *first_token = Parser__consume_token(self, Token__is_proc);
+        Source_Location location = Parser__consume_token(self, Token__is_proc)->location;
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_opening_paren);
         Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_parameters(self, NULL);
         Parser__consume_space(self, 0);
-        Token *closing_paren = Parser__consume_token(self, Token__is_closing_paren);
+        location = Source_Location__merge(location, Parser__consume_token(self, Token__is_closing_paren)->location);
         Parsed_Type *return_type = NULL;
         if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
             Parser__consume_space(self, 1);
@@ -948,8 +948,18 @@ Parsed_Type *Parser__parse_type(Parser *self) {
             Parser__consume_token(self, Token__is_greater_than);
             Parser__consume_space(self, 1);
             return_type = Parser__parse_type(self);
+            location = Source_Location__merge(location, return_type->location);
         }
-        return Parsed_Procedure_Type__create(Source_Location__merge(first_token->location, (return_type ? return_type->location : closing_paren->location)), first_parameter, return_type);
+        Parsed_Type *raise_type = NULL;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_exclamation_mark)) {
+            Parser__consume_space(self, 1);
+            Parser__consume_token(self, Token__is_exclamation_mark);
+            Parser__consume_token(self, Token__is_greater_than);
+            Parser__consume_space(self, 1);
+            raise_type = Parser__parse_type(self);
+            location = Source_Location__merge(location, raise_type->location);
+        }
+        return Parsed_Procedure_Type__create(location, first_parameter, return_type, raise_type);
     }
     Token *module = NULL;
     Token *name = Parser__consume_token(self, Token__is_identifier);

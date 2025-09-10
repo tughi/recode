@@ -331,7 +331,10 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
 
 void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     switch (type->kind) {
+    case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__EXTERNAL:
+    case CHECKED_TYPE_KIND__GENERIC:
     case CHECKED_TYPE_KIND__I16:
     case CHECKED_TYPE_KIND__I32:
     case CHECKED_TYPE_KIND__I64:
@@ -339,17 +342,15 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__ISIZE:
     case CHECKED_TYPE_KIND__MODULE:
     case CHECKED_TYPE_KIND__NIL:
+    case CHECKED_TYPE_KIND__NOTHING:
+    case CHECKED_TYPE_KIND__STR:
+    case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__U16:
     case CHECKED_TYPE_KIND__U32:
     case CHECKED_TYPE_KIND__U64:
     case CHECKED_TYPE_KIND__U8:
     case CHECKED_TYPE_KIND__USIZE:
-    case CHECKED_TYPE_KIND__ANY:
-    case CHECKED_TYPE_KIND__EXTERNAL:
-    case CHECKED_TYPE_KIND__GENERIC:
-    case CHECKED_TYPE_KIND__STR:
-    case CHECKED_TYPE_KIND__STRUCT:
-    case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         if (named_type->package != NULL) {

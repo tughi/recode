@@ -271,6 +271,11 @@ Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Par
         } else {
             procedure_return_type = Checker__resolve_type(self, context, parsed_procedure_type->return_type);
         }
+        if (parsed_procedure_type->raise_type != NULL) {
+            Checked_Type *procedure_raise_type = Checker__resolve_type(self, context, parsed_procedure_type->raise_type);
+            procedure_return_type = (Checked_Type *)Checked_Result_Type__create(parsed_procedure_type->return_type ? Source_Location__merge(parsed_procedure_type->return_type->location, parsed_procedure_type->raise_type->location) : procedure_raise_type->location, context->checked_package, procedure_return_type, procedure_raise_type);
+            procedure_return_type->symbol = Checker__create_type_symbol(self, context->checked_package, ((Checked_Result_Type *)procedure_return_type)->super.name, (Checked_Named_Type *)procedure_return_type);
+        }
         Checked_Procedure_Type *procedure_type = Checked_Procedure_Type__create(parsed_procedure_type->super.location, procedure_first_parameter, procedure_return_type);
         return (Checked_Type *)Checked_Procedure_Pointer_Type__create(parsed_type->location, procedure_type);
     }
@@ -361,11 +366,16 @@ void Checker__require_numeric_type(Checker *self, Checked_Type *type, Source_Loc
 }
 
 void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Checked_Type *actual_type, Source_Location location) {
-    if (expected_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
-        return;
-    }
-    if (expected_type->kind == CHECKED_TYPE_KIND__POINTER && actual_type->kind == CHECKED_TYPE_KIND__NULL) {
-        return;
+    if (actual_type->kind == CHECKED_TYPE_KIND__NULL) {
+        if (expected_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+            return;
+        }
+        if (expected_type->kind == CHECKED_TYPE_KIND__POINTER) {
+            return;
+        }
+        if (expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+            return;
+        }
     }
     if (!Checked_Type__equals(expected_type, actual_type)) {
         pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
@@ -2483,6 +2493,45 @@ void Checker__check_variant_type(Checker *self, Checker_Context *context, Checke
     variant_type->variant_count = last_variant_case->index;
 }
 
+bool Checked_Type__is_identical(Checked_Type *self, Checked_Type *other) {
+    if (self == other) {
+        return true;
+    }
+    if (self->kind != other->kind) {
+        return false;
+    }
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        return Checked_Type__is_identical(((Checked_Multi_Pointer_Type *)self)->item_type, ((Checked_Multi_Pointer_Type *)other)->item_type);
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
+        return Checked_Type__is_identical(((Checked_Pointer_Type *)self)->other_type, ((Checked_Pointer_Type *)other)->other_type);
+    }
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+        Checked_Procedure_Type *self_procedure_type = ((Checked_Procedure_Pointer_Type *)self)->procedure_type;
+        Checked_Procedure_Type *other_procedure_type = ((Checked_Procedure_Pointer_Type *)other)->procedure_type;
+        if (!Checked_Type__is_identical(self_procedure_type->return_type, other_procedure_type->return_type)) {
+            return false;
+        }
+        Checked_Procedure_Parameter *self_parameter = self_procedure_type->first_parameter;
+        Checked_Procedure_Parameter *other_parameter = other_procedure_type->first_parameter;
+        while (self_parameter != NULL && other_parameter != NULL) {
+            if (!Checked_Type__is_identical(self_parameter->type, other_parameter->type)) {
+                return false;
+            }
+            self_parameter = self_parameter->next_parameter;
+            other_parameter = other_parameter->next_parameter;
+        }
+        return self_parameter == NULL && other_parameter == NULL;
+    }
+    case CHECKED_TYPE_KIND__RESULT: {
+        return false;
+    }
+    default:
+        todo("Handle unexpected Checked_Type");
+    }
+}
+
 Checked_Statement *Checker__check_statement(Checker *self, Checker_Context *context, Parsed_Statement *parsed_statement, Checked_Type *expected_type);
 
 Checked_Statement *Checker__check_assignment_statement(Checker *self, Checker_Context *context, Parsed_Assignment_Statement *parsed_statement) {
@@ -2494,6 +2543,9 @@ Checked_Statement *Checker__check_assignment_statement(Checker *self, Checker_Co
         panic();
     }
     Decomposed_Expression value = Checker__decompose_expression(self, context, Checker__check_expression(self, context, parsed_statement->value_expression, object.expression->type));
+    if (!Checked_Type__is_identical(object.expression->type, value.expression->type)) {
+        value.expression = (Checked_Expression *)Checked_Cast_Expression__create(value.expression->location, object.expression->type, value.expression);
+    }
     Checked_Assignment_Statement *assignment_statement = Checked_Assignment_Statement__create(parsed_statement->super.location, object.expression, value.expression);
     if (object.statements != NULL || value.statements != NULL) {
         // Create block statement
@@ -2862,6 +2914,8 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Checker_Cont
                 break;
             }
             variable_type = expression->type;
+        } else if (!Checked_Type__is_identical(variable_type, expression->type)) {
+            expression = (Checked_Expression *)Checked_Cast_Expression__create(expression->location, variable_type, expression);
         }
         decomposed_expression = Checker__decompose_expression(self, context, expression);
     }
