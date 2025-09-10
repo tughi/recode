@@ -8,6 +8,7 @@ const EVENT_TYPE_MOUSE_BUTTON_UP = 0x0402u32 // SDL_MOUSEBUTTONUP
 const EVENT_TYPE_MOUSE_WHEEL = 0x0403u32 // SDL_MOUSEWHEEL
 
 proc poll_event(anon event: ^Event) -> i32 = external "SDL_PollEvent"
+proc wait_event(anon event: ^Event) -> i32 = external "SDL_WaitEvent"
 
 type Event = struct { // SDL_Event
     type: u32

@@ -37,7 +37,7 @@ proc (^App).run(self) -> i32 {
         }
 
         let event: sdl.Event
-        while sdl.poll_event(^event) != 0 {
+        if sdl.wait_event(^event) != 0 {
             if event.type == sdl.EVENT_TYPE_QUIT {
                 running = false
             }
