@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
     {
 #line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
-        int32_t __001__ = test__deref(NULL);
+        int32_t __001__ = test__deref(((int32_t *) NULL));
 #line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"
         return __001__;
 #line 2 "tests/01__basics/032__call_procedure_with_null_parameter/test.code"

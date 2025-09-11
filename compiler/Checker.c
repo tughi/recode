@@ -233,6 +233,45 @@ void Checker__append_method(Checker *self, Checked_Type *receiver_type, Checked_
     self->methods->last_method = method;
 }
 
+bool Checked_Type__is_identical(Checked_Type *self, Checked_Type *other) {
+    if (self == other) {
+        return true;
+    }
+    if (self->kind != other->kind) {
+        return false;
+    }
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__MULTI_POINTER: {
+        return Checked_Type__is_identical(((Checked_Multi_Pointer_Type *)self)->item_type, ((Checked_Multi_Pointer_Type *)other)->item_type);
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
+        return Checked_Type__is_identical(((Checked_Pointer_Type *)self)->other_type, ((Checked_Pointer_Type *)other)->other_type);
+    }
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+        Checked_Procedure_Type *self_procedure_type = ((Checked_Procedure_Pointer_Type *)self)->procedure_type;
+        Checked_Procedure_Type *other_procedure_type = ((Checked_Procedure_Pointer_Type *)other)->procedure_type;
+        if (!Checked_Type__is_identical(self_procedure_type->return_type, other_procedure_type->return_type)) {
+            return false;
+        }
+        Checked_Procedure_Parameter *self_parameter = self_procedure_type->first_parameter;
+        Checked_Procedure_Parameter *other_parameter = other_procedure_type->first_parameter;
+        while (self_parameter != NULL && other_parameter != NULL) {
+            if (!Checked_Type__is_identical(self_parameter->type, other_parameter->type)) {
+                return false;
+            }
+            self_parameter = self_parameter->next_parameter;
+            other_parameter = other_parameter->next_parameter;
+        }
+        return self_parameter == NULL && other_parameter == NULL;
+    }
+    case CHECKED_TYPE_KIND__RESULT: {
+        return false;
+    }
+    default:
+        todo("Handle unexpected Checked_Type");
+    }
+}
+
 Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *context, Parsed_Expression *parsed_expression, Checked_Type *expected_type);
 
 Checked_Named_Type *Checker__check_type_statement(Checker *self, Checker_Context *context, Parsed_Type_Statement *parsed_type_statement);
@@ -736,6 +775,9 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
                 panic();
             }
             Checked_Expression *argument_expression = Checker__check_expression(self, context, parsed_argument->expression, procedure_parameter->type);
+            if (!Checked_Type__is_identical(procedure_parameter->type, argument_expression->type)) {
+                argument_expression = (Checked_Expression *)Checked_Cast_Expression__create(argument_expression->location, procedure_parameter->type, argument_expression);
+            }
             Checked_Call_Argument *argument = Checked_Call_Argument__create(argument_expression, procedure_parameter->type);
             if (last_argument == NULL) {
                 first_argument = argument;
@@ -912,6 +954,9 @@ Checked_Expression *Checker__check_init_struct_expression(Checker *self, Checker
                     panic();
                 }
                 argument = argument->next_argument;
+            }
+            if (!Checked_Type__is_identical(struct_member->type, argument_expression->type)) {
+                argument_expression = (Checked_Expression *)Checked_Cast_Expression__create(argument_expression->location, struct_member->type, argument_expression);
             }
             argument = Checked_Make_Struct_Argument__create(Source_Location__merge(parsed_argument->name->super.location, argument_expression->location), struct_member, argument_expression);
             if (last_checked_argument == NULL) {
@@ -2500,45 +2545,6 @@ void Checker__check_variant_type(Checker *self, Checker_Context *context, Checke
     }
 
     variant_type->variant_count = last_variant_case->index;
-}
-
-bool Checked_Type__is_identical(Checked_Type *self, Checked_Type *other) {
-    if (self == other) {
-        return true;
-    }
-    if (self->kind != other->kind) {
-        return false;
-    }
-    switch (self->kind) {
-    case CHECKED_TYPE_KIND__MULTI_POINTER: {
-        return Checked_Type__is_identical(((Checked_Multi_Pointer_Type *)self)->item_type, ((Checked_Multi_Pointer_Type *)other)->item_type);
-    }
-    case CHECKED_TYPE_KIND__POINTER: {
-        return Checked_Type__is_identical(((Checked_Pointer_Type *)self)->other_type, ((Checked_Pointer_Type *)other)->other_type);
-    }
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Type *self_procedure_type = ((Checked_Procedure_Pointer_Type *)self)->procedure_type;
-        Checked_Procedure_Type *other_procedure_type = ((Checked_Procedure_Pointer_Type *)other)->procedure_type;
-        if (!Checked_Type__is_identical(self_procedure_type->return_type, other_procedure_type->return_type)) {
-            return false;
-        }
-        Checked_Procedure_Parameter *self_parameter = self_procedure_type->first_parameter;
-        Checked_Procedure_Parameter *other_parameter = other_procedure_type->first_parameter;
-        while (self_parameter != NULL && other_parameter != NULL) {
-            if (!Checked_Type__is_identical(self_parameter->type, other_parameter->type)) {
-                return false;
-            }
-            self_parameter = self_parameter->next_parameter;
-            other_parameter = other_parameter->next_parameter;
-        }
-        return self_parameter == NULL && other_parameter == NULL;
-    }
-    case CHECKED_TYPE_KIND__RESULT: {
-        return false;
-    }
-    default:
-        todo("Handle unexpected Checked_Type");
-    }
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Checker_Context *context, Parsed_Statement *parsed_statement, Checked_Type *expected_type);
