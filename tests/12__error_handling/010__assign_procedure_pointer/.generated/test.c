@@ -5,13 +5,13 @@ void *malloc(uintmax_t size);
 #line 1 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
 int32_t test__main() {
 #line 2 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
-    struct test_Result__2 (*procedure)();
+    struct test_Result__7_16 (*procedure)();
 #line 3 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
-    procedure = ((struct test_Result__2 (*)()) test__demo);
+    procedure = test__demo;
 #line 4 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
     {
 #line 4 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
-        struct test_Result__2 __001__ = procedure();
+        struct test_Result__7_16 __001__ = procedure();
 #line 4 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
         int32_t __002__;
 #line 4 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
@@ -36,13 +36,13 @@ int32_t test__main() {
 }
 
 #line 7 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
-struct test_Result__7 test__demo() {
+struct test_Result__7_16 test__demo() {
 #line 8 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
     {
 #line 8 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
         int32_t __001__ = 42;
 #line 8 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
-        return (struct test_Result__7){.success = false, .error = __001__};
+        return (struct test_Result__7_16){.success = false, .error = __001__};
 #line 8 "tests/12__error_handling/010__assign_procedure_pointer/test.code"
     }
 #line 9 "tests/12__error_handling/010__assign_procedure_pointer/test.code"

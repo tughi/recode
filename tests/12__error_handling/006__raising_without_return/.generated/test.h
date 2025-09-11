@@ -8,7 +8,7 @@ struct test_Error {
     int32_t code;
 };
 
-struct test_Result__8 {
+struct test_Result__8_48 {
     bool success;
     union {
         struct test_Error error;
@@ -17,8 +17,8 @@ struct test_Result__8 {
 
 int32_t test__main();
 
-struct test_Result__8 test__auto_raise_error(bool condition);
+struct test_Result__8_48 test__auto_raise_error(bool condition);
 
-struct test_Result__8 test__raise_error(bool condition);
+struct test_Result__8_48 test__raise_error(bool condition);
 
 #endif // __test_H__

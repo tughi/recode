@@ -8,7 +8,7 @@ struct test_Error {
     int32_t code;
 };
 
-struct test_Result__11 {
+struct test_Result__11_36 {
     bool success;
     union {
         int32_t value;
@@ -18,6 +18,6 @@ struct test_Result__11 {
 
 int32_t test__main();
 
-struct test_Result__11 test__increment(int32_t value);
+struct test_Result__11_36 test__increment(int32_t value);
 
 #endif // __test_H__

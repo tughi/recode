@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/001__try/test.code"
     {
 #line 2 "tests/12__error_handling/001__try/test.code"
-        struct test_Result__9 __001__ = test__increment(13);
+        struct test_Result__9_36 __001__ = test__increment(13);
 #line 2 "tests/12__error_handling/001__try/test.code"
         int32_t __002__;
 #line 2 "tests/12__error_handling/001__try/test.code"
@@ -28,7 +28,7 @@ int32_t test__main() {
 }
 
 #line 9 "tests/12__error_handling/001__try/test.code"
-struct test_Result__9 test__increment(int32_t value) {
+struct test_Result__9_36 test__increment(int32_t value) {
 #line 10 "tests/12__error_handling/001__try/test.code"
     if (value > 10) {
 #line 11 "tests/12__error_handling/001__try/test.code"
@@ -36,7 +36,7 @@ struct test_Result__9 test__increment(int32_t value) {
 #line 11 "tests/12__error_handling/001__try/test.code"
             struct test_Error __001__ = (struct test_Error){.code = 42};
 #line 11 "tests/12__error_handling/001__try/test.code"
-            return (struct test_Result__9){.success = false, .error = __001__};
+            return (struct test_Result__9_36){.success = false, .error = __001__};
 #line 11 "tests/12__error_handling/001__try/test.code"
         }
 #line 12 "tests/12__error_handling/001__try/test.code"
@@ -44,7 +44,7 @@ struct test_Result__9 test__increment(int32_t value) {
 #line 13 "tests/12__error_handling/001__try/test.code"
     {
 #line 13 "tests/12__error_handling/001__try/test.code"
-        struct test_Result__9 __002__ = (struct test_Result__9){.success = true, .value = value + 1};
+        struct test_Result__9_36 __002__ = (struct test_Result__9_36){.success = true, .value = value + 1};
 #line 13 "tests/12__error_handling/001__try/test.code"
         return __002__;
 #line 13 "tests/12__error_handling/001__try/test.code"

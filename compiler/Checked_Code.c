@@ -215,6 +215,8 @@ Checked_Type_Argument *Checked_Type_Argument__create(Source_Location location, S
 Checked_Result_Type *Checked_Result_Type__create(Source_Location location, Checked_Package *package, Checked_Type *return_type, Checked_Type *raise_type) {
     String *name = String__create_from("Result__");
     String__append_int16_t(name, location.start_line);
+    String__append_char(name, '_');
+    String__append_int16_t(name, location.start_column);
     Checked_Result_Type *type = (Checked_Result_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__RESULT, sizeof(Checked_Result_Type), location, name, package);
     type->return_type = return_type;
     type->raise_type = raise_type;

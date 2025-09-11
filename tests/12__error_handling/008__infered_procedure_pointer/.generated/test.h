@@ -4,7 +4,7 @@
 #include "builtin_types.h"
 
 
-struct test_Result__6 {
+struct test_Result__6_16 {
     bool success;
     union {
         int32_t value;
@@ -14,6 +14,6 @@ struct test_Result__6 {
 
 int32_t test__main();
 
-struct test_Result__6 test__demo();
+struct test_Result__6_16 test__demo();
 
 #endif // __test_H__

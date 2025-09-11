@@ -9,7 +9,7 @@ int32_t test__main() {
 #line 4 "tests/13__defer/008__try_else_defer/test.code"
     {
 #line 4 "tests/13__defer/008__try_else_defer/test.code"
-        struct test_Result__11 __001__ = test__raise_forty_two();
+        struct test_Result__11_27 __001__ = test__raise_forty_two();
 #line 4 "tests/13__defer/008__try_else_defer/test.code"
         int32_t __002__;
 #line 4 "tests/13__defer/008__try_else_defer/test.code"
@@ -44,7 +44,7 @@ int32_t test__main() {
 }
 
 #line 11 "tests/13__defer/008__try_else_defer/test.code"
-struct test_Result__11 test__raise_forty_two() {
+struct test_Result__11_27 test__raise_forty_two() {
 #line 12 "tests/13__defer/008__try_else_defer/test.code"
     int32_t value = 42;
 #line 14 "tests/13__defer/008__try_else_defer/test.code"
@@ -54,7 +54,7 @@ struct test_Result__11 test__raise_forty_two() {
 #line 13 "tests/13__defer/008__try_else_defer/test.code"
         value = 0;
 #line 14 "tests/13__defer/008__try_else_defer/test.code"
-        return (struct test_Result__11){.success = false, .error = __001__};
+        return (struct test_Result__11_27){.success = false, .error = __001__};
 #line 14 "tests/13__defer/008__try_else_defer/test.code"
     }
 #line 15 "tests/13__defer/008__try_else_defer/test.code"

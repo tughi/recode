@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/13__defer/007__execute_before_raise/test.code"
     {
 #line 2 "tests/13__defer/007__execute_before_raise/test.code"
-        struct test_Result__5 __001__ = test__raise_forty_two();
+        struct test_Result__5_27 __001__ = test__raise_forty_two();
 #line 2 "tests/13__defer/007__execute_before_raise/test.code"
         int32_t __002__;
 #line 2 "tests/13__defer/007__execute_before_raise/test.code"
@@ -28,7 +28,7 @@ int32_t test__main() {
 }
 
 #line 5 "tests/13__defer/007__execute_before_raise/test.code"
-struct test_Result__5 test__raise_forty_two() {
+struct test_Result__5_27 test__raise_forty_two() {
 #line 6 "tests/13__defer/007__execute_before_raise/test.code"
     int32_t value = 42;
 #line 8 "tests/13__defer/007__execute_before_raise/test.code"
@@ -38,7 +38,7 @@ struct test_Result__5 test__raise_forty_two() {
 #line 7 "tests/13__defer/007__execute_before_raise/test.code"
         value = 0;
 #line 8 "tests/13__defer/007__execute_before_raise/test.code"
-        return (struct test_Result__5){.success = false, .error = __001__};
+        return (struct test_Result__5_27){.success = false, .error = __001__};
 #line 8 "tests/13__defer/007__execute_before_raise/test.code"
     }
 #line 9 "tests/13__defer/007__execute_before_raise/test.code"
