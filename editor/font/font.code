@@ -1,3 +1,4 @@
+import allocator
 import gui
 import libc
 
@@ -15,8 +16,9 @@ type Glyph = struct {
     height: i32
 }
 
-proc init() {
+proc init() !> allocator.Out_Of_Memory {
     fixed_size.init()
+    return
 }
 
 proc (^Font).measure_text(self, anon text: str) -> gui.Size {

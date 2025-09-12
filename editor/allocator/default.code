@@ -1,0 +1,13 @@
+let default_allocator = Arena()
+
+type Out_Of_Memory = struct {
+    message: str
+}
+
+type Allocator = trait {
+    proc alloc(self, size: usize, alignment: usize) -> ^Any !> Out_Of_Memory
+}
+
+proc alloc(size: usize, alignment: usize) -> ^Any !> Out_Of_Memory {
+    return default_allocator.alloc(size: size, alignment: alignment)
+}

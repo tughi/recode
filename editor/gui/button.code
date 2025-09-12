@@ -1,8 +1,11 @@
+import allocator
 import font
 import os
 
-proc create_button(label: str, click_listener: Button_Click_Listener) -> ^Button {
-    let button = alloc Button(label: label)
+
+proc create_button(label: str, click_listener: Button_Click_Listener) -> ^Button !> allocator.Out_Of_Memory {
+    let button = allocator.alloc(size: type_size(Button), alignment: type_alignment(Button)).as(^Button)
+    button.^ = Button(label: label)
     button.behavior = button
     button.click_listener = click_listener
     return button

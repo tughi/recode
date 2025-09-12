@@ -1,3 +1,4 @@
+import allocator
 import errors
 import os
 import sdl
@@ -121,7 +122,10 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.App_
         raise errors.Error(message: "Failed to create SDL renderer")
     }
 
-    let window = alloc Window(
+    let window = try allocator.alloc(size: type_size(Window), alignment: type_alignment(Window)) else {
+        raise errors.Error(message: error.message)
+    }.as(^Window)
+    window.^ = Window(
         super: gui.Window(
             width: width
             height: height

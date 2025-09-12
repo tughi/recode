@@ -1,4 +1,4 @@
-import errors
+import allocator
 import gui
 import string
 
@@ -6,8 +6,9 @@ type Glyph_Chooser = struct {
     super: gui.Layout
 }
 
-proc create_glyph_chooser(glyph_click_listener: gui.Button_Click_Listener) -> ^Glyph_Chooser !> errors.Error {
-    let layout = alloc Glyph_Chooser()
+proc create_glyph_chooser(glyph_click_listener: gui.Button_Click_Listener) -> ^Glyph_Chooser !> allocator.Out_Of_Memory {
+    let layout = allocator.alloc(size: type_size(Glyph_Chooser), alignment: type_alignment(Glyph_Chooser)).as(^Glyph_Chooser)
+    layout.^ = Glyph_Chooser()
     layout.behavior = layout
 
     let code_point = ' '

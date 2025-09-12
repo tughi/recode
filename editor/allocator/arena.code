@@ -1,0 +1,62 @@
+import libc
+
+type Arena = struct {
+    buffer: [^]u8
+    capacity: usize
+    offset: usize
+}
+
+proc (^Arena).alloc(self, size: usize, alignment: usize) -> ^Any !> Out_Of_Memory {
+    // Calculate padding needed for alignment
+    let padding = 0usize
+    let remainder = self.offset % alignment
+    if remainder != 0 {
+        padding = alignment - remainder
+    }
+
+    // Compute the new offset
+    let aligned_offset = self.offset + padding
+
+    // Check for capacity
+    if aligned_offset + size > self.capacity {
+        raise Out_Of_Memory(message: "Out of memory")
+    }
+
+    // Update the offset
+    self.offset = aligned_offset + size
+
+    // Return a pointer to the allocated memory
+    let pointer = ^self.buffer[aligned_offset]
+    return pointer.as(^Any)
+}
+
+proc (^Arena).clear(self) {
+    // Zero out the used memory
+    let index = 0usize
+    let dirty = self.offset / 8
+    let buffer = self.buffer.as([^]u64)
+    while index < dirty {
+        buffer[index] = 0
+        index = index + 1
+    }
+
+    // Reset offset
+    self.offset = 0
+}
+
+proc (^Arena).reserve(self, size: usize) !> Out_Of_Memory {
+    if self.capacity != 0 {
+        raise Out_Of_Memory(message: "Arena already reserved")
+    }
+    let buffer_size = size
+    if buffer_size % 8 != 0 {
+        buffer_size = buffer_size + 8 - buffer_size % 8
+    }
+    self.buffer = libc.malloc(buffer_size).as([^]u8)
+    if self.buffer == null {
+        raise Out_Of_Memory(message: "Failed to allocate arena memory")
+    }
+    self.capacity = buffer_size
+    self.offset = 0
+    return
+}

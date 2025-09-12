@@ -1,3 +1,4 @@
+import allocator
 import font
 import gui
 import libc
@@ -12,8 +13,9 @@ type Glyph_Editor = struct {
     glyph: ^font.Glyph
 }
 
-proc create_glyph_editor() -> ^Glyph_Editor {
-    let glyph_editor = alloc Glyph_Editor(
+proc create_glyph_editor() -> ^Glyph_Editor !> allocator.Out_Of_Memory {
+    let glyph_editor = allocator.alloc(size: type_size(Glyph_Editor), alignment: type_alignment(Glyph_Editor)).as(^Glyph_Editor)
+    glyph_editor.^ = Glyph_Editor(
         font: ^font.fixed_size
         glyph: font.fixed_size.glyphs['C']
     )

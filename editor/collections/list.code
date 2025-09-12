@@ -1,4 +1,4 @@
-import errors
+import allocator
 import libc
 
 type List<T> = struct {
@@ -19,7 +19,7 @@ proc (^List<T>).init<T>(self) {
     self.length = 0
 }
 
-proc (^List<T>).append<T>(self, anon item: T) !> errors.Error {
+proc (^List<T>).append<T>(self, anon item: T) !> allocator.Out_Of_Memory {
     if self.length >= self.capacity {
         let new_capacity = self.capacity + self.capacity / 2
         if new_capacity == 0 {
@@ -28,7 +28,7 @@ proc (^List<T>).append<T>(self, anon item: T) !> errors.Error {
         let item_size = type_size(T)
         let new_items = libc.realloc(self.items.as(^Any), new_capacity * item_size)
         if new_items == null {
-            raise errors.Error(message: "Failed to allocate memory for list items")
+            raise allocator.Out_Of_Memory(message: "Failed to allocate memory for list items")
         }
         self.items = new_items.as([^]T)
         self.capacity = new_capacity

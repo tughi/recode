@@ -839,6 +839,8 @@ Checked_Expression *Checker__check_cast_expression(Checker *self, Checker_Contex
     } else if (expression_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
         if (other_expression_type->kind == CHECKED_TYPE_KIND__POINTER) {
             can_cast = true;
+        } else if (other_expression_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+            can_cast = true;
         }
     }
     if (Checked_Type__equals(expression_type, other_expression_type)) {

@@ -1,10 +1,13 @@
+import allocator
+
 type Text_Box = struct {
     super: Widget
     content: str
 }
 
-proc create_text_box(content: str) -> ^Text_Box {
-    let text_box = alloc Text_Box(content: content)
+proc create_text_box(content: str) -> ^Text_Box !> allocator.Out_Of_Memory {
+    let text_box = allocator.alloc(size: type_size(Text_Box), alignment: type_alignment(Text_Box)).as(^Text_Box)
+    text_box.^ = Text_Box(content: content)
     text_box.behavior = Widget_Behavior(text_box)
     return text_box
 }

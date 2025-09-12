@@ -1,4 +1,6 @@
-proc (^Fixed_Size_Font_Helper).init_glyphs(self) {
+import allocator
+
+proc (^Fixed_Size_Font_Helper).init_glyphs(self) !> allocator.Out_Of_Memory {
     self.select(0x20)
     self.mask("              ")
     self.mask("              ")
@@ -103,11 +105,11 @@ proc (^Fixed_Size_Font_Helper).init_glyphs(self) {
 
     self.select(0x26)
     self.mask("              ")
-    self.mask("      FFFF    ")
-    self.mask("    FF    FF  ")
-    self.mask("  FF          ")
+    self.mask("    FFFFFF    ")
+    self.mask("  FF      FF  ")
     self.mask("  FF          ")
     self.mask("    FF        ")
+    self.mask("      FF      ")
     self.mask("    FFFF    FF")
     self.mask("  FF    FF  FF")
     self.mask("FF        FF  ")
@@ -1613,4 +1615,6 @@ proc (^Fixed_Size_Font_Helper).init_glyphs(self) {
     self.mask("              ")
     self.mask("              ")
     self.mask("              ")
+
+    return
 }

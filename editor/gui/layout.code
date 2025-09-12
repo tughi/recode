@@ -1,12 +1,12 @@
+import allocator
 import collections
-import errors
 
 type Layout = struct {
     super: Widget
     children: collections.List<^Widget>
 }
 
-proc (^Layout).add_child(self, anon child: ^Widget) !> errors.Error {
+proc (^Layout).add_child(self, anon child: ^Widget) !> allocator.Out_Of_Memory {
     self.children.append(child)
     return
 }

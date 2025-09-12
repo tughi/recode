@@ -1,6 +1,6 @@
+import allocator
 import errors
 import io
-import libc
 import os
 
 let fixed_size: Fixed_Size_Font
@@ -9,10 +9,10 @@ type Fixed_Size_Font = struct {
     super: Font
 }
 
-proc (^Fixed_Size_Font).init(self) {
+proc (^Fixed_Size_Font).init(self) !> allocator.Out_Of_Memory {
     fixed_size = Fixed_Size_Font(
         super: Font(
-            glyphs: libc.malloc(type_size(^Glyph) * 256).as([^]^Glyph)
+            glyphs: allocator.alloc(size: (type_size(^Glyph)) * 256, alignment: type_alignment(^Glyph)).as([^]^Glyph)
             max_width: 7
             height: 15
             base_line: 12
@@ -21,7 +21,8 @@ proc (^Fixed_Size_Font).init(self) {
     )
     let index = 0usize
     while index < 256 {
-        fixed_size.glyphs[index] = alloc Glyph(
+        fixed_size.glyphs[index] = allocator.alloc(size: type_size(Glyph), alignment: type_alignment(Glyph)).as(^Glyph)
+        fixed_size.glyphs[index].^ = Glyph(
             mask: null
             width: 7
             height: 15
@@ -31,14 +32,25 @@ proc (^Fixed_Size_Font).init(self) {
 
     let helper: Fixed_Size_Font_Helper
     helper.init_glyphs()
+
+    return
 }
 
-proc (^Fixed_Size_Font).save(self) !> errors.Error {
-    let file = os.open_file("editor/font/fixed_size_font_glyphs.code", "w")
+type Save_Fixed_Font_Error = variant {
+    allocator.Out_Of_Memory
+    errors.Error
+}
+
+proc (^Fixed_Size_Font).save(self) !> Save_Fixed_Font_Error {
+    let file = try os.open_file("editor/font/fixed_size_font_glyphs.code", "w") else {
+        raise error
+    }
 
     let file_writer: io.Writer = file
 
-    file_writer.write("proc (^Fixed_Size_Font_Helper).init_glyphs(self) {").end_line()
+    file_writer.write("import allocator").end_line()
+    file_writer.end_line()
+    file_writer.write("proc (^Fixed_Size_Font_Helper).init_glyphs(self) !> allocator.Out_Of_Memory {").end_line()
 
     let index = 0
     let needs_newline = false
@@ -69,9 +81,14 @@ proc (^Fixed_Size_Font).save(self) !> errors.Error {
         index = index + 1
     }
 
+    file_writer.end_line()
+    file_writer.write("    return").end_line()
     file_writer.write("}").end_line()
 
-    file.close()
+    try file.close() else {
+        raise error
+    }
+
     return
 }
 
@@ -80,13 +97,14 @@ type Fixed_Size_Font_Helper = struct {
     mask_index: i32
 }
 
-proc (^Fixed_Size_Font_Helper).select(self, anon code_point: u8) {
+proc (^Fixed_Size_Font_Helper).select(self, anon code_point: u8) !> allocator.Out_Of_Memory {
     self.code_point = code_point
     self.mask_index = 0
     let glyph = fixed_size.glyphs[self.code_point]
     if glyph.mask == null {
-        glyph.mask = libc.malloc(((type_size(u8)).as(i32) * glyph.width * glyph.height).as(usize)).as([^]u8)
+        glyph.mask = allocator.alloc(size: type_size(u8) * (glyph.width * glyph.height).as(usize), alignment: type_alignment(u8)).as([^]u8)
     }
+    return
 }
 
 proc (^Fixed_Size_Font_Helper).mask(self, anon mask_line: str) {

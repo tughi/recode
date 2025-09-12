@@ -1,9 +1,11 @@
+import allocator
 import errors
 import gui
 import os
 
-proc create_font_editor() -> ^Font_Editor {
-    let font_editor = alloc Font_Editor()
+proc create_font_editor() -> ^Font_Editor !> allocator.Out_Of_Memory {
+    let font_editor = allocator.alloc(size: type_size(Font_Editor), alignment: type_alignment(Font_Editor)).as(^Font_Editor)
+    font_editor.^ = Font_Editor()
     font_editor.behavior = font_editor
     return font_editor
 }
@@ -16,14 +18,18 @@ type Font_Editor = struct {
     preview_text_box: ^gui.Text_Box
 }
 
-proc (^Font_Editor).init(self) !> errors.Error {
+proc (^Font_Editor).init(self) !> allocator.Out_Of_Memory {
     self.glyph_editor = create_glyph_editor()
     self.add_child(self.glyph_editor)
 
-    self.save_button = gui.create_button(label: "Save", click_listener: alloc Editor_Save_Action(editor: self))
+    let save_button_click_listener = allocator.alloc(size: type_size(Editor_Save_Action), alignment: type_alignment(Editor_Save_Action)).as(^Editor_Save_Action)
+    save_button_click_listener.^ = Editor_Save_Action(editor: self)
+    self.save_button = gui.create_button(label: "Save", click_listener: save_button_click_listener)
     self.add_child(self.save_button)
 
-    self.glyph_chooser = create_glyph_chooser(glyph_click_listener: alloc Editor_Change_Glyph_Action(editor: self))
+    let glyph_chooser_click_listener = allocator.alloc(size: type_size(Editor_Change_Glyph_Action), alignment: type_alignment(Editor_Change_Glyph_Action)).as(^Editor_Change_Glyph_Action)
+    glyph_chooser_click_listener.^ = Editor_Change_Glyph_Action(editor: self)
+    self.glyph_chooser = create_glyph_chooser(glyph_click_listener: glyph_chooser_click_listener)
     self.add_child(self.glyph_chooser)
 
     self.preview_text_box = gui.create_text_box(content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\nincididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis\nnostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\nfugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\nculpa qui officia deserunt mollit anim id est laborum.")
@@ -85,7 +91,17 @@ type Editor_Save_Action = struct {
 
 proc (^Editor_Save_Action).on_click(self, button: ^gui.Button) {
     try font.fixed_size.save() else {
-        os.stdout.write(error.message).end_line()
+        switch error {
+            is allocator.Out_Of_Memory as save_error {
+                os.stdout.write(save_error.message).end_line()
+            }
+            is errors.Error as save_error {
+                os.stdout.write(save_error.message).end_line()
+            }
+            is nil {
+                // ignored
+            }
+        }
     }
 }
 
