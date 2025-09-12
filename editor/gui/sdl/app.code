@@ -102,7 +102,7 @@ proc (^str).data(self) -> [^]u8 {
     return self.as(^String).data
 }
 
-proc (^App).create_window(self, title: str, width: i32, height: i32) -> gui.App_Window !> errors.Error {
+proc (^App).create_window(self, title: str, width: i32, height: i32) -> ^gui.Window !> errors.Error {
     if not self.ready {
         raise errors.Error(message: "GUI app was not initialized")
     }

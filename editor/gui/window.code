@@ -8,6 +8,13 @@ type Window = struct {
     pressed_widget: ^Widget
 }
 
+proc (^Window).set_content(self, anon content: ^Widget) {
+    self.content = content
+    let bounds = Rect(left: 0, top: 0, right: self.width - 1, bottom: self.height - 1)
+    content.layout(bounds)
+    self.is_dirty = true
+}
+
 proc (^Window).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
     if self.content == null {
         return

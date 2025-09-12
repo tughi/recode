@@ -1,16 +1,7 @@
 import errors
 
 type App = trait {
-    proc create_window(self, title: str, width: i32, height: i32) -> App_Window !> errors.Error
+    proc create_window(self, title: str, width: i32, height: i32) -> ^Window !> errors.Error
     proc init(self) !> errors.Error
     proc run(self) -> i32
-}
-
-type App_Window = trait {
-    proc handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event)
-    proc handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event)
-    proc handle_mouse_motion_event(self, anon event: Mouse_Motion_Event)
-    proc handle_key_up_event(self, anon event: Key_Up_Event)
-    proc render(self)
-    proc set_content(self, anon content: ^Widget)
 }
