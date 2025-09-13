@@ -1007,6 +1007,17 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
         Checked_Type *saved_first_parameter_type = trait_method->procedure_type->first_parameter->type;
         trait_method->procedure_type->first_parameter->type = self_expression->type;
         Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, self_expression->type, trait_method->name);
+        Checked_Procedure_Symbol *procedure_symbol_candidate = NULL;
+        if (procedure_symbol != NULL) {
+            Checked_Type *saved_procedure_receiver_type = procedure_symbol->receiver_type;
+            procedure_symbol->procedure_type->first_parameter->type = self_expression->type;
+            bool is_match = Checked_Type__equals((Checked_Type *)trait_method->procedure_type, (Checked_Type *)procedure_symbol->procedure_type);
+            procedure_symbol->procedure_type->first_parameter->type = saved_procedure_receiver_type;
+            if (!is_match) {
+                procedure_symbol_candidate = procedure_symbol;
+                procedure_symbol = NULL;
+            }
+        }
         if (procedure_symbol == NULL) {
             pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "The ");
@@ -1015,13 +1026,25 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
             pWriter__write__checked_type(stderr_writer, (Checked_Type *)trait_type);
             pWriter__write__cstring(stderr_writer, " trait.");
             pWriter__end_location_message(stderr_writer);
-            pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Missing procedure: ");
-            Checked_Procedure_Symbol missing_procedure_symbol = {.procedure_name = trait_method->name, .procedure_type = trait_method->procedure_type};
+            pWriter__begin_location_message(stderr_writer, trait_method->location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Required method: ");
+            Checked_Procedure_Symbol missing_procedure_symbol = {
+                .procedure_name = trait_method->name,
+                .procedure_type = trait_method->procedure_type,
+                .receiver_type = self_expression->type,
+            };
             trait_method->procedure_type->first_parameter->type = self_expression->type;
             pWriter__write__checked_procedure_symbol(stderr_writer, &missing_procedure_symbol);
             trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
             pWriter__end_location_message(stderr_writer);
+            if (procedure_symbol_candidate != NULL) {
+                pWriter__begin_location_message(stderr_writer, procedure_symbol_candidate->super.location, WRITER_STYLE__WARNING);
+                pWriter__write__cstring(stderr_writer, "Candidate method: ");
+                trait_method->procedure_type->first_parameter->type = self_expression->type;
+                pWriter__write__checked_procedure_symbol(stderr_writer, procedure_symbol_candidate);
+                trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
+                pWriter__end_location_message(stderr_writer);
+            }
             panic();
         }
         trait_method->procedure_type->first_parameter->type = saved_first_parameter_type;
