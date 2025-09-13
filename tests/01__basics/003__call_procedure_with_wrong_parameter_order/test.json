@@ -2,7 +2,8 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/003__call_procedure_with_wrong_parameter_order/test.code:2:23-25: Expected argument name: v1"
+            "tests/01__basics/003__call_procedure_with_wrong_parameter_order/test.code:2:23-25: Expected argument name: v1",
+            "tests/01__basics/003__call_procedure_with_wrong_parameter_order/test.code:5:1: Procedure type: proc (v1: i32, v2: i32) -> i32"
         ]
     }
 }

@@ -200,6 +200,7 @@ typedef struct Checked_Procedure_Type {
     Checked_Type super;
     Checked_Type *return_type;
     Checked_Procedure_Parameter *first_parameter;
+    bool is_method;
 } Checked_Procedure_Type;
 
 Checked_Procedure_Type *Checked_Procedure_Type__create(Source_Location location, Checked_Procedure_Parameter *first_parameter, Checked_Type *return_type);

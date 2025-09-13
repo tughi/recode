@@ -654,6 +654,18 @@ Checked_Make_Variant_Expression *Checker__make_variant_expression(Checker *self,
 
 Checked_Expression *Checker__check_init_expression(Checker *self, Checker_Context *context, Checked_Named_Type *type, Parsed_Call_Argument *first_parsed_argument, Source_Location location);
 
+Writer *pWriter__write_procedure_type_message(Writer *self, Checked_Procedure_Type *procedure_type) {
+    pWriter__begin_location_start_message(self, procedure_type->super.location, WRITER_STYLE__WARNING);
+    if (procedure_type->is_method) {
+        pWriter__write__cstring(self, "Method type: ");
+    } else {
+        pWriter__write__cstring(self, "Procedure type: ");
+    }
+    pWriter__write__checked_type(self, (Checked_Type *)procedure_type);
+    pWriter__end_location_message(self);
+    return self;
+}
+
 Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Context *context, Parsed_Call_Expression *parsed_expression, bool unwarp_result) {
     Checked_Expression *callee_expression = Checker__check_expression(self, context, parsed_expression->callee_expression, NULL);
 
@@ -741,6 +753,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
             pWriter__begin_location_message(stderr_writer, procedure_expression->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Procedure has no parameters");
             pWriter__end_location_message(stderr_writer);
+            pWriter__write_procedure_type_message(stderr_writer, procedure_type);
             panic();
         }
         if (receiver_expression != NULL) {
@@ -759,12 +772,14 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
                     pWriter__begin_location_message(stderr_writer, parsed_argument->name->super.location, WRITER_STYLE__ERROR);
                     pWriter__write__cstring(stderr_writer, "Unexpected argument name for annonymous parameter");
                     pWriter__end_location_message(stderr_writer);
+                    pWriter__write_procedure_type_message(stderr_writer, procedure_type);
                     panic();
                 } else if (!String__equals_string(procedure_parameter->label, parsed_argument->name->super.lexeme)) {
                     pWriter__begin_location_message(stderr_writer, parsed_argument->name->super.location, WRITER_STYLE__ERROR);
                     pWriter__write__cstring(stderr_writer, "Expected argument name: ");
                     pWriter__write__string(stderr_writer, procedure_parameter->label);
                     pWriter__end_location_message(stderr_writer);
+                    pWriter__write_procedure_type_message(stderr_writer, procedure_type);
                     panic();
                 }
             } else if (procedure_parameter->label != NULL) {
@@ -772,6 +787,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
                 pWriter__write__cstring(stderr_writer, "Missing argument name: ");
                 pWriter__write__string(stderr_writer, procedure_parameter->label);
                 pWriter__end_location_message(stderr_writer);
+                pWriter__write_procedure_type_message(stderr_writer, procedure_type);
                 panic();
             }
             Checked_Expression *argument_expression = Checker__check_expression(self, context, parsed_argument->expression, procedure_parameter->type);
@@ -792,12 +808,14 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
             pWriter__begin_location_message(stderr_writer, procedure_expression->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Too few arguments");
             pWriter__end_location_message(stderr_writer);
+            pWriter__write_procedure_type_message(stderr_writer, procedure_type);
             panic();
         }
         if (parsed_argument != NULL) {
-            pWriter__begin_location_message(stderr_writer, parsed_argument->expression->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Too many arguments");
+            pWriter__begin_location_message(stderr_writer, parsed_argument->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Unexpected argument");
             pWriter__end_location_message(stderr_writer);
+            pWriter__write_procedure_type_message(stderr_writer, procedure_type);
             panic();
         }
     }
@@ -2475,6 +2493,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Checker_C
         Checked_Trait_Method *last_trait_method = NULL;
         for (; parsed_method != NULL; parsed_method = parsed_method->next_method) {
             Checked_Procedure_Type *procedure_type = Checker__check_procedure_type(self, context, parsed_method->location, parsed_method->first_parameter, parsed_method->return_type, parsed_method->raise_type);
+            procedure_type->is_method = true;
             Checked_Struct_Member *trait_method_struct_member = Checked_Struct_Member__create((Source_Location){}, trait_type->struct_type, parsed_method->name->lexeme, (Checked_Type *)Checked_Procedure_Pointer_Type__create((Source_Location){}, procedure_type));
             last_struct_member = last_struct_member->next_member = trait_method_struct_member;
             Checked_Trait_Method *trait_method = Checked_Trait_Method__create(parsed_method->location, parsed_method->name->lexeme, procedure_type, trait_method_struct_member);
@@ -3089,7 +3108,8 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Ch
             pWriter__end_location_message(stderr_writer);
             panic();
         }
-        receiver_type = Checker__resolve_type(self, context, parsed_statement->first_parameter->type);
+        procedure_type->is_method = true;
+        receiver_type = procedure_type->first_parameter->type;
         String__append_mangled_type_name(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
     }

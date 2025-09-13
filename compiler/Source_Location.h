@@ -20,6 +20,7 @@ bool Source_Location__equals(Source_Location self, Source_Location other);
 Writer *pWriter__write__location(Writer *self, Source_Location location);
 
 Writer *pWriter__begin_location_message(Writer *writer, Source_Location location, Writer_Style style);
+Writer *pWriter__begin_location_start_message(Writer *writer, Source_Location location, Writer_Style style);
 
 Writer *pWriter__end_location_message(Writer *writer);
 

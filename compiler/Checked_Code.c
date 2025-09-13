@@ -366,6 +366,11 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         Checked_Procedure_Type *procedure_type = (Checked_Procedure_Type *)type;
         pWriter__write__cstring(self, "proc (");
         Checked_Procedure_Parameter *procedure_parameter = procedure_type->first_parameter;
+        if (procedure_type->is_method) {
+            pWriter__write__checked_type(self, procedure_parameter->type);
+            procedure_parameter = procedure_parameter->next_parameter;
+            pWriter__write__cstring(self, ").(");
+        }
         while (procedure_parameter != NULL) {
             if (procedure_parameter->label != NULL) {
                 pWriter__write__string(self, procedure_parameter->label);
@@ -411,11 +416,9 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__RESULT: {
         Checked_Result_Type *result_type = (Checked_Result_Type *)type;
-        pWriter__write__cstring(self, "Result(");
         pWriter__write__checked_type(self, result_type->return_type);
-        pWriter__write__cstring(self, ", ");
+        pWriter__write__cstring(self, " !> ");
         pWriter__write__checked_type(self, result_type->raise_type);
-        pWriter__write__char(self, ')');
         break;
     }
     case CHECKED_TYPE_KIND__TYPE: {
