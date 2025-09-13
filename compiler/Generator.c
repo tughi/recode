@@ -973,6 +973,11 @@ void Generator__generate_procedure(Generator *self, Checked_Procedure_Symbol *pr
     pWriter__write__cstring(self->writer, "\n\n");
 }
 
+void Generator__declare_result_type(Generator *self, Checked_Result_Type *result_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)result_type);
+    pWriter__write__cstring(self->writer, ";\n");
+}
+
 void Generator__generate_result_type(Generator *self, Checked_Result_Type *result_type) {
     pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)result_type);
     pWriter__write__cstring(self->writer, " {\n");
@@ -1077,6 +1082,9 @@ void Generator__declare_type(Generator *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__EXTERNAL:
         Generator__declare_external_type(self, (Checked_External_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__RESULT:
+        Generator__declare_result_type(self, (Checked_Result_Type *)type);
         break;
     case CHECKED_TYPE_KIND__STRUCT:
         Generator__declare_struct(self, (Checked_Struct_Type *)type);

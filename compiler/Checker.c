@@ -2286,6 +2286,7 @@ void Checked_Type__append_weak_dependencies(Checked_Type *self, Checked_Type *ot
         Checked_Type__append_weak_dependencies(self, procedure_pointer_type->procedure_type->return_type, location, checker, true);
         return;
     }
+    case CHECKED_TYPE_KIND__RESULT:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT:
