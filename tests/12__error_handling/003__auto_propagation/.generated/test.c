@@ -63,7 +63,11 @@ struct test_Result__9_36 test__count_from(int32_t value) {
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
             struct test_Result__9_36 __001__ = test__increment(new_value);
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
-            if (__001__.success) {} else return (struct test_Result__9_36){.success = false, .error = __001__.error};
+            if (__001__.success) {} else {
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+                return (struct test_Result__9_36){.success = false, .error = __001__.error};
+#line 19 "tests/12__error_handling/003__auto_propagation/test.code"
+            }
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
             new_value = __001__.value;
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"

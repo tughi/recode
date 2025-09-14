@@ -1878,8 +1878,11 @@ Checked_Expression *Checked_Expression_Decomposer__decompose_unwrap_result_expre
     }
     Checked_Result_Error_Expression *result_error_expression = Checked_Result_Error_Expression__create(expression->super.location, result_type->raise_type, result_expression);
 
-    Checked_Return_Statement *return_statement = Checked_Return_Statement__create(expression->super.location, (Checked_Expression *)Checked_Result_Expression__create(expression->super.location, self->context->return_type, NULL, (Checked_Expression *)result_error_expression));
-    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, NULL, (Checked_Statement *)return_statement));
+    // Create error return wrapped in a block statement so that deferred statements can land in the correct scope
+    Checked_Block_Statement *error_block_statement = Checked_Block_Statement__create(expression->super.location, Checked_Statements__create());
+    Checked_Statements__append(error_block_statement->statements, (Checked_Statement *)Checked_Return_Statement__create(expression->super.location, (Checked_Expression *)Checked_Result_Expression__create(expression->super.location, self->context->return_type, NULL, (Checked_Expression *)result_error_expression)));
+
+    Checked_Statements__append(self->statements, (Checked_Statement *)Checked_If_Statement__create(expression->super.location, (Checked_Expression *)result_success_expression, NULL, (Checked_Statement *)error_block_statement));
 
     free(expression); // replaced by result_value_expression
 

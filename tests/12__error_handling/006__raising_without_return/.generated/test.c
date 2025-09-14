@@ -46,7 +46,11 @@ struct test_Result__8_48 test__auto_raise_error(bool condition) {
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
         struct test_Result__8_48 __001__ = test__raise_error(condition);
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
-        if (__001__.success) {} else return (struct test_Result__8_48){.success = false, .error = __001__.error};
+        if (__001__.success) {} else {
+#line 9 "tests/12__error_handling/006__raising_without_return/test.code"
+            return (struct test_Result__8_48){.success = false, .error = __001__.error};
+#line 9 "tests/12__error_handling/006__raising_without_return/test.code"
+        }
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
         ;
 #line 9 "tests/12__error_handling/006__raising_without_return/test.code"
