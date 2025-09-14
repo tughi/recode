@@ -1,0 +1,19 @@
+proc (^str).data(self) -> [^]u8 {
+    return self.as(^String).data
+}
+
+proc (str).equals(self, anon other: str) -> bool {
+    if self.length != other.length {
+        return false
+    }
+    let index = 0usize
+    let self_data = self.data()
+    let other_data = other.data()
+    while index < self.length {
+        if self_data[index] != other_data[index] {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
