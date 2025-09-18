@@ -28,68 +28,62 @@ proc (^App).init(self) !> errors.Error {
 
 proc (^App).run(self) -> i32 {
     let running = true
-    while running {
+    let event: sdl.Event
+    while running and sdl.wait_event(^event) != 0 {
+        if event.type == sdl.EVENT_TYPE_QUIT {
+            running = false
+        }
+
         let window = self.first_window
         while window != null {
-            if window.is_dirty {
-                window.render()
+            if window.sdl_window_id == event.window_id {
+                break
             }
             window = window.next_window
         }
 
-        let event: sdl.Event
-        if sdl.wait_event(^event) != 0 {
-            if event.type == sdl.EVENT_TYPE_QUIT {
-                running = false
+        if window != null {
+            if event.type == sdl.EVENT_TYPE_WINDOW {
+                // TODO: Handle window events
+            } else if event.type == sdl.EVENT_TYPE_KEY_DOWN {
+                // TODO: Handle key down events
+            } else if event.type == sdl.EVENT_TYPE_KEY_UP {
+                let keyboard_event = (^event).as(^sdl.Keyboard_Event)
+                window.handle_key_up_event(gui.Key_Up_Event(
+                    window: window
+                    key_code: keyboard_event.key.key_code
+                ))
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
+                let mouse_motion_event = (^event).as(^sdl.Mouse_Motion_Event)
+                window.handle_mouse_motion_event(gui.Mouse_Motion_Event(
+                    window: window
+                    x: mouse_motion_event.x
+                    y: mouse_motion_event.y
+                ))
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_DOWN {
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                window.handle_mouse_button_down_event(gui.Mouse_Button_Down_Event(
+                    window: window
+                    button: mouse_button_event.button
+                    x: mouse_button_event.x
+                    y: mouse_button_event.y
+                ))
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_UP {
+                let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
+                window.handle_mouse_button_up_event(gui.Mouse_Button_Up_Event(
+                    window: window
+                    button: mouse_button_event.button
+                    x: mouse_button_event.x
+                    y: mouse_button_event.y
+                ))
+            } else if event.type == sdl.EVENT_TYPE_MOUSE_WHEEL {
+                // TODO: Handle mouse wheel events
+            } else {
+                os.stdout.write("Unsupported event (").write_hex(event.type).write(')').end_line()
             }
 
-            window = self.first_window
-            while window != null {
-                if window.sdl_window_id == event.window_id {
-                    break
-                }
-                window = window.next_window
-            }
-
-            if window != null {
-                if event.type == sdl.EVENT_TYPE_WINDOW {
-                    // TODO: Handle window events
-                } else if event.type == sdl.EVENT_TYPE_KEY_DOWN {
-                    // TODO: Handle key down events
-                } else if event.type == sdl.EVENT_TYPE_KEY_UP {
-                    let keyboard_event = (^event).as(^sdl.Keyboard_Event)
-                    window.handle_key_up_event(gui.Key_Up_Event(
-                        window: window
-                        key_code: keyboard_event.key.key_code
-                    ))
-                } else if event.type == sdl.EVENT_TYPE_MOUSE_MOTION {
-                    let mouse_motion_event = (^event).as(^sdl.Mouse_Motion_Event)
-                    window.handle_mouse_motion_event(gui.Mouse_Motion_Event(
-                        window: window
-                        x: mouse_motion_event.x
-                        y: mouse_motion_event.y
-                    ))
-                } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_DOWN {
-                    let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
-                    window.handle_mouse_button_down_event(gui.Mouse_Button_Down_Event(
-                        window: window
-                        button: mouse_button_event.button
-                        x: mouse_button_event.x
-                        y: mouse_button_event.y
-                    ))
-                } else if event.type == sdl.EVENT_TYPE_MOUSE_BUTTON_UP {
-                    let mouse_button_event = (^event).as(^sdl.Mouse_Button_Event)
-                    window.handle_mouse_button_up_event(gui.Mouse_Button_Up_Event(
-                        window: window
-                        button: mouse_button_event.button
-                        x: mouse_button_event.x
-                        y: mouse_button_event.y
-                    ))
-                } else if event.type == sdl.EVENT_TYPE_MOUSE_WHEEL {
-                    // TODO: Handle mouse wheel events
-                } else {
-                    os.stdout.write("Unsupported event (").write_hex(event.type).write(')').end_line()
-                }
+            if window.is_dirty {
+                window.render()
             }
         }
     }
