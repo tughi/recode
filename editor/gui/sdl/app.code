@@ -97,7 +97,7 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> ^gui.Win
         raise errors.Error(message: "GUI app was not initialized")
     }
 
-    let sdl_window = sdl.create_window(title.data(), 0x2fff0001, 0x2fff0001, width, height, 0)
+    let sdl_window = sdl.create_window(title.data(), 0x2fff0001, 0x2fff0001, width, height, 0x2000) // SDL_WINDOW_ALLOW_HIGHDPI
     if sdl_window == null {
         raise errors.Error(message: "Failed to create SDL window")
     }
@@ -110,6 +110,10 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> ^gui.Win
     let sdl_renderer = sdl.create_renderer(sdl_window, -1, 0)
     if sdl_renderer == null {
         raise errors.Error(message: "Failed to create SDL renderer")
+    }
+
+    if sdl.render_set_logical_size(sdl_renderer, width, height) != 0 {
+        raise errors.Error(message: "Failed to set SDL renderer logical size")
     }
 
     let window = try allocator.alloc(size: type_size(Window), alignment: type_alignment(Window)) else {
