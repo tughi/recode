@@ -1,0 +1,49 @@
+import allocator
+
+type Builder = struct {
+    frame_allocator: allocator.Arena
+    shadow_allocator: allocator.Arena
+    methods: Builder_Methods
+
+    parent_widget: ^Widget
+    last_widget: ^Widget
+
+    shadow_widget: ^Widget
+}
+
+type Builder_Methods = trait {
+    proc build(gui) -> ^Widget !> allocator.Out_Of_Memory
+}
+
+proc (^Builder).build(self) -> ^Widget !> allocator.Out_Of_Memory {
+    // prepare shadow
+    let frame_allocator = self.frame_allocator
+    self.frame_allocator = self.shadow_allocator
+    self.shadow_allocator = frame_allocator
+    self.shadow_widget = self.last_widget
+    // prepare new frame
+    self.frame_allocator.clear()
+    self.parent_widget = null
+    self.last_widget = null
+
+    let widget = try self.methods.build() else {
+        os.stderr.write(error.message).end_line()
+        yield null
+    }
+
+    return widget
+}
+
+proc (^Builder).layout(gui, bounds: Rect) {
+    let root_widget = gui.last_widget
+    if root_widget != null {
+        root_widget.layout(bounds)
+    }
+}
+
+proc (^Builder).render(gui, anon renderer: ^Renderer, anon window: ^Window) {
+    let root_widget = gui.last_widget
+    if root_widget != null {
+        root_widget.render(renderer, window)
+    }
+}

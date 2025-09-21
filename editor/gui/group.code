@@ -1,0 +1,29 @@
+import allocator
+
+proc (^Builder).group(gui, id: str) -> ^Widget !> allocator.Out_Of_Memory {
+    let widget = gui.widget(id: id)
+    widget.behavior = widget.as(^Group)
+    gui.parent_widget = widget
+    gui.last_widget = widget.first_child
+    return widget
+}
+
+type Group = struct {
+    super: Widget
+}
+
+proc (^Group).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    let child = self.first_child
+    while child != null {
+        child.render(renderer, window)
+        child = child.next_sibling
+    }
+}
+
+proc (^Builder).end_group(gui) {
+    if gui.parent_widget != null {
+        let group = gui.parent_widget
+        gui.last_widget = group
+        gui.parent_widget = group.parent
+    }
+}

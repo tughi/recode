@@ -5,6 +5,7 @@ type Window = struct {
     super: gui.Window
     sdl_window: ^sdl.Window
     sdl_window_id: u32
+    sdl_renderer: ^sdl.Renderer
     must_draw: bool
     next_window: ^Window
 }

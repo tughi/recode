@@ -1,6 +1,7 @@
 import allocator
 import gui
 import libc
+import string
 
 type Font = struct {
     glyphs: [^]^Glyph
@@ -29,9 +30,12 @@ proc (^Font).measure_text(self, anon text: str) -> gui.Size {
     let text_data = text.data()
     let index = 0usize
     while index < text.length {
+        if line_width > 0 {
+            line_width = line_width + self.spacing
+        }
         let code_point = text_data[index]
         if code_point == '\n' {
-            height = height + self.height
+            height = height + self.height + self.spacing
             line_width = 0
             if line_width > width {
                 width = line_width

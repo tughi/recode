@@ -1,10 +1,10 @@
 import allocator
 import errors
 import font
+import font_editor
 import gui
 import gui.sdl
 import os
-import widgets
 
 proc main() -> i32 {
     try allocator.default_allocator.reserve(size: 1024 * 1024) else { // 1MB
@@ -26,21 +26,15 @@ proc main() -> i32 {
         return 1
     }
 
-    let window = try app.create_window(title: "Editor", width: 1024, height: 768) else {
+    let builder = try font_editor.builder() else {
+        os.stderr.write("Failed to create the font editor builder: ").write(error.message).end_line()
+        return 1
+    }
+
+    let window = try app.create_window(title: "Editor", width: 1024, height: 768, builder: builder) else {
         os.stderr.write("Failed to create the window: ").write(error.message).end_line()
         return 1
     }
-
-    let font_editor = try widgets.create_font_editor() else {
-        os.stderr.write("Failed to create the font editor: ").write(error.message).end_line()
-        return 1
-    }
-    try font_editor.init() else {
-        os.stderr.write("Failed to initialize the font editor layout: ").write(error.message).end_line()
-        return 1
-    }
-
-    window.set_content(font_editor)
 
     return app.run()
 }

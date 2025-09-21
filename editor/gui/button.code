@@ -2,56 +2,62 @@ import allocator
 import font
 import os
 
+const BUTTON_PADDING = 8
 
-proc create_button(label: str, click_listener: Button_Click_Listener) -> ^Button !> allocator.Out_Of_Memory {
-    let button = allocator.alloc(size: type_size(Button), alignment: type_alignment(Button)).as(^Button)
-    button.^ = Button(label: label)
-    button.behavior = button
-    button.click_listener = click_listener
+proc (^Builder).button(gui, id: str, label: str) -> ^Widget !> allocator.Out_Of_Memory {
+    let button = gui.widget(id: id)
+    button.text = label
+    button.text_size = font.fixed_size.measure_text(label)
+    button.behavior = button.as(^Button)
+    button.preferred_size = Size(
+        width: button.text_size.width + BUTTON_PADDING * 2 - 1
+        height: button.text_size.height + BUTTON_PADDING * 2 - 1
+    )
+    let min_width = font.fixed_size.height + BUTTON_PADDING * 2 - 1
+    if button.preferred_size.width < min_width {
+        button.preferred_size.width = min_width
+    }
     return button
 }
 
 type Button = struct {
     super: Widget
-    label: str
-    label_size: Size
-    click_listener: Button_Click_Listener
 }
 
-type Button_Click_Listener = trait {
-    proc on_click(self, button: ^Button)
-}
+// type Button_Click_Listener = trait {
+//     proc on_click(self, button: ^Button)
+// }
 
-proc (^Button).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
-    if event.button == 1 {
-        event.window.pressed_widget = self
-    }
-}
+// proc (^Button).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+//     if event.button == 1 {
+//         event.window.pressed_widget = self
+//     }
+// }
 
-proc (^Button).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
-    if event.button == 1 and event.window.pressed_widget == self {
-        event.window.pressed_widget = null
-        if event.window.hovered_widget == self {
-            self.click_listener.on_click(button: self)
-        }
-        event.window.is_dirty = true
-    }
-}
+// proc (^Button).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+//     if event.button == 1 and event.window.pressed_widget == self {
+//         event.window.pressed_widget = null
+//         if event.window.hovered_widget == self {
+//             self.click_listener.on_click(button: self)
+//         }
+//         event.window.is_dirty = true
+//     }
+// }
 
-proc (^Button).on_click(self) {
-    // Nothing to do
-}
+// proc (^Button).on_click(self) {
+//     // Nothing to do
+// }
 
-proc (^Button).on_layout(self, anon rect: Rect) {
-    self.super.on_layout(rect)
-}
+// proc (^Button).on_layout(self, anon rect: Rect) {
+//     self.super.on_layout(rect)
+// }
 
 proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     let button_font = font.fixed_size
 
-    if window.pressed_widget == self {
+    if self.is_pressed {
         renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 255))
-    } else if window.hovered_widget == self {
+    } else if self.is_hovered {
         renderer.set_draw_color(Color(red: 0x27, green: 0x27, blue: 0x27, alpha: 255))
     } else {
         renderer.set_draw_color(Color(red: 0x1f, green: 0x1f, blue: 0x1f, alpha: 255))
@@ -66,10 +72,10 @@ proc (^Button).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
     renderer.draw_line(x1: self.bounds.left + 1, y1: self.bounds.bottom, x2: self.bounds.right, y2: self.bounds.bottom)
     renderer.draw_line(x1: self.bounds.right, y1: self.bounds.top + 1, x2: self.bounds.right, y2: self.bounds.bottom - 1)
 
-    if self.label_size.width == 0 {
-        self.label_size = button_font.measure_text(self.label)
+    if self.is_pressed {
+        renderer.set_draw_color(Color(red: 0xaf, green: 0xaf, blue: 0xaf, alpha: 255))
+    } else {
+        renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
     }
-
-    renderer.set_draw_color(Color(red: 0xcf, green: 0xcf, blue: 0xcf, alpha: 255))
-    renderer.draw_text(self.label, x: (self.bounds.left + self.bounds.right - self.label_size.width) / 2, y: self.bounds.top + (self.bounds.height() - button_font.height) / 2)
+    renderer.draw_text(self.text, x: (self.bounds.left + self.bounds.right - self.text_size.width) / 2, y: self.bounds.top + (self.bounds.height() - button_font.height) / 2)
 }

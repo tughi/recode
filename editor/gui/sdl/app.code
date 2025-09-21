@@ -1,5 +1,6 @@
 import allocator
 import errors
+import gui
 import os
 import sdl
 
@@ -44,7 +45,13 @@ proc (^App).run(self) -> i32 {
 
         if window != null {
             if event.type == sdl.EVENT_TYPE_WINDOW {
-                // TODO: Handle window events
+                let window_event = (^event).as(^sdl.Window_Event)
+                if window_event.event == 0x06 { // SDL_WINDOWEVENT_SIZE_CHANGED
+                    window.width = window_event.data1
+                    window.height = window_event.data2
+                    sdl.render_set_logical_size(window.sdl_renderer, window.width, window.height)
+                    window.is_dirty = true
+                }
             } else if event.type == sdl.EVENT_TYPE_KEY_DOWN {
                 // TODO: Handle key down events
             } else if event.type == sdl.EVENT_TYPE_KEY_UP {
@@ -82,9 +89,7 @@ proc (^App).run(self) -> i32 {
                 os.stdout.write("Unsupported event (").write_hex(event.type).write(')').end_line()
             }
 
-            if window.is_dirty {
-                window.render()
-            }
+            window.render()
         }
     }
 
@@ -92,12 +97,13 @@ proc (^App).run(self) -> i32 {
     return 0
 }
 
-proc (^App).create_window(self, title: str, width: i32, height: i32) -> ^gui.Window !> errors.Error {
+proc (^App).create_window(self, title: str, width: i32, height: i32, builder: ^gui.Builder) -> ^gui.Window !> errors.Error {
     if not self.ready {
         raise errors.Error(message: "GUI app was not initialized")
     }
 
-    let sdl_window = sdl.create_window(title.data(), 0x2fff0001, 0x2fff0001, width, height, 0x2000) // SDL_WINDOW_ALLOW_HIGHDPI
+    let xy = 0x2fff0001
+    let sdl_window = sdl.create_window(title.data(), xy, xy, width, height, 0x2020) // SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE
     if sdl_window == null {
         raise errors.Error(message: "Failed to create SDL window")
     }
@@ -124,10 +130,11 @@ proc (^App).create_window(self, title: str, width: i32, height: i32) -> ^gui.Win
             width: width
             height: height
             renderer: sdl_renderer
-            content: null
+            builder: builder
         )
         sdl_window: sdl_window
         sdl_window_id: sdl_window_id
+        sdl_renderer: sdl_renderer
         next_window: null
     )
 

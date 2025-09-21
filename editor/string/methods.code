@@ -17,3 +17,15 @@ proc (str).equals(self, anon other: str) -> bool {
     }
     return true
 }
+
+proc (str).hash(self) -> u64 {
+    // TODO: Replace djb2 algorithm with FNV-1a once XOR is implemented
+    let data = self.data()
+    let hash = 5381u64
+    let index = 0usize
+    while index < self.length {
+        hash = hash * 33 + data[index].as(u64)
+        index = index + 1
+    }
+    return hash
+}

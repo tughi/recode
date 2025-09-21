@@ -1,0 +1,76 @@
+import allocator
+import font
+import gui
+import os
+
+type Builder = struct {
+    super: gui.Builder
+    state: State
+}
+
+proc builder() -> ^Builder !> allocator.Out_Of_Memory {
+    let builder = allocator.alloc(size: type_size(Builder), alignment: type_alignment(Builder)).as(^Builder)
+    builder.frame_allocator.reserve(size: 1024 * 16) // 16KB
+    builder.shadow_allocator.reserve(size: 1024 * 16) // 16KB
+    builder.methods = gui.Builder_Methods(builder)
+    builder.state = State(selected_glyph: 'A')
+    return builder
+}
+
+proc (^Builder).build(gui) -> ^gui.Widget !> allocator.Out_Of_Memory {
+    let root = gui.group(id: "root")
+    root.behavior = root.as(^Font_Editor)
+    defer gui.end_group()
+
+    gui.glyph_editor(id: "glyph_editor")
+
+    if gui.button(id: "save", label: "Save").was_clicked {
+        os.stderr.write("TODO: Save font").end_line()
+    }
+
+    gui.glyph_chooser(id: "glyphs")
+
+    gui.button(id: "preview", label: "the quick brown fox jumps over the lazy dog...\nThe Quick Brown Fox Jumps Over The Lazy Dog...\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG...\n0123456789 !@#$%^&*()-_=+[]{};:'\",.<>/?\\|`~")
+
+    return root
+}
+
+type Font_Editor = struct {
+    super: gui.Group
+}
+
+proc (^Font_Editor).on_layout(self, anon bounds: gui.Rect) {
+    self.super.on_layout(bounds)
+
+    let glyph_editor = self.first_child
+    glyph_editor.layout(gui.Rect(
+        left: 16
+        top: 16
+        right: 16 + font.fixed_size.max_width * 25 + 1
+        bottom: 16 + font.fixed_size.height * 24 + 2
+    ))
+
+    let save_button = glyph_editor.next_sibling
+    save_button.layout(gui.Rect(
+        left: glyph_editor.bounds.left
+        top: glyph_editor.bounds.bottom + 16
+        right: glyph_editor.bounds.right
+        bottom: glyph_editor.bounds.bottom + 16 + save_button.preferred_size.height - 1
+    ))
+
+    let glyph_chooser = save_button.next_sibling
+    glyph_chooser.layout(gui.Rect(
+        left: glyph_editor.bounds.right + 16
+        top: glyph_editor.bounds.top
+        right: bounds.right - 16
+        bottom: bounds.bottom - 16
+    ))
+
+    let preview_button = glyph_chooser.next_sibling
+    preview_button.layout(gui.Rect(
+        left: glyph_chooser.bounds.left
+        top: glyph_chooser.bounds.bottom + 16
+        right: bounds.right - 16
+        bottom: bounds.bottom - 16
+    ))
+}

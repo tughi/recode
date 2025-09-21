@@ -1,41 +1,126 @@
-type Widget = struct {
-    behavior: Widget_Behavior
-    bounds: Rect
-}
+import allocator
 
-proc (^Widget).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
-    self.behavior.on_mouse_button_down_event(event)
-}
+proc (^Builder).widget(gui, id: str) -> ^Widget !> allocator.Out_Of_Memory {
+    let widget = gui.frame_allocator.alloc(size: type_size(Widget), alignment: type_alignment(Widget)).as(^Widget)
+    widget.^ = Widget(
+        id: id
+        id_hash: gui.hash(id)
+        behavior: widget
+    )
 
-proc (^Widget).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
-    // Nothing to do
-}
-
-proc (^Widget).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
-    self.behavior.on_mouse_button_up_event(event)
-}
-
-proc (^Widget).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
-    // Nothing to do
-}
-
-proc (^Widget).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
-    self.behavior.on_mouse_motion_event(event)
-}
-
-proc (^Widget).on_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
-    if self.bounds.contains(x: event.x, y: event.y) {
-        event.window.hovered_widget = self
+    let shadow = gui.shadow_widget
+    while shadow != null {
+        if shadow.id_hash == widget.id_hash {
+            widget.is_hovered = shadow.is_hovered
+            widget.is_pressed = shadow.is_pressed
+            widget.was_clicked = shadow.was_clicked
+            break
+        }
+        shadow = shadow.next()
     }
+
+    if gui.last_widget != null {
+        gui.last_widget.next_sibling = widget
+        widget.prev_sibling = gui.last_widget
+    }
+    gui.last_widget = widget
+    if gui.parent_widget != null {
+        if gui.parent_widget.first_child == null {
+            gui.parent_widget.first_child = widget
+        }
+        widget.parent = gui.parent_widget
+        widget.parent.last_child = widget
+    }
+    return widget
 }
 
-proc (^Widget).handle_key_up_event(self, anon event: Key_Up_Event) {
-    self.behavior.on_key_up_event(event)
+proc (^Builder).hash(self, anon string: str) -> u64 {
+    let hash = string.hash()
+    if self.parent_widget != null {
+        hash = hash * self.parent_widget.id_hash
+    }
+    return hash
 }
 
-proc (^Widget).on_key_up_event(self, anon event: Key_Up_Event) {
-    // Nothing to do
+type Widget = struct {
+    id: str
+    id_hash: u64
+
+    parent: ^Widget
+    first_child: ^Widget
+    last_child: ^Widget
+    prev_sibling: ^Widget
+    next_sibling: ^Widget
+
+    bounds: Rect
+    preferred_size: Size
+
+    text: str
+    text_size: Size
+
+    is_hovered: bool
+    is_pressed: bool
+    was_clicked: bool
+
+    behavior: Widget_Behavior
 }
+
+proc (^Widget).next(self) -> ^Widget {
+    if self.first_child != null {
+        return self.first_child
+    }
+    let widget = self
+    while widget != null and widget.next_sibling == null {
+        widget = widget.parent
+    }
+    if widget != null {
+        return widget.next_sibling
+    }
+    return null.as(^Widget)
+}
+
+type Widget_Behavior = trait {
+    // proc on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event)
+    // proc on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event)
+    // proc on_mouse_motion_event(self, anon event: Mouse_Motion_Event)
+    // proc on_key_up_event(self, anon event: Key_Up_Event)
+    proc on_layout(self, anon bounds: Rect)
+    proc on_render(self, anon renderer: ^Renderer, anon window: ^Window)
+}
+
+// proc (^Widget).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+//     self.behavior.on_mouse_button_down_event(event)
+// }
+
+// proc (^Widget).on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
+//     // Nothing to do
+// }
+
+// proc (^Widget).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+//     self.behavior.on_mouse_button_up_event(event)
+// }
+
+// proc (^Widget).on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
+//     // Nothing to do
+// }
+
+// proc (^Widget).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+//     self.behavior.on_mouse_motion_event(event)
+// }
+
+// proc (^Widget).on_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
+//     if self.bounds.contains(x: event.x, y: event.y) {
+//         event.window.hovered_widget = self
+//     }
+// }
+
+// proc (^Widget).handle_key_up_event(self, anon event: Key_Up_Event) {
+//     self.behavior.on_key_up_event(event)
+// }
+
+// proc (^Widget).on_key_up_event(self, anon event: Key_Up_Event) {
+//     // Nothing to do
+// }
 
 proc (^Widget).layout(self, anon bounds: Rect) {
     self.behavior.on_layout(bounds)
@@ -46,15 +131,9 @@ proc (^Widget).on_layout(self, anon bounds: Rect) {
 }
 
 proc (^Widget).render(self, anon renderer: ^Renderer, anon window: ^Window) {
+    self.was_clicked = false
     self.behavior.on_render(renderer, window)
 }
 
-type Widget_Behavior = trait {
-    proc on_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event)
-    proc on_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event)
-    proc on_mouse_motion_event(self, anon event: Mouse_Motion_Event)
-    proc on_key_up_event(self, anon event: Key_Up_Event)
-    proc on_layout(self, anon bounds: Rect)
-    proc on_render(self, anon renderer: ^Renderer, anon window: ^Window)
+proc (^Widget).on_render(self, anon renderer: ^Renderer, anon window: ^Window) {
 }
-

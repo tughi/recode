@@ -2,77 +2,78 @@ type Window = struct {
     width: i32
     height: i32
     renderer: Renderer
-    content: ^Widget
+    builder: ^Builder
     is_dirty: bool
     hovered_widget: ^Widget
     pressed_widget: ^Widget
 }
 
-proc (^Window).set_content(self, anon content: ^Widget) {
-    self.content = content
-    let bounds = Rect(left: 0, top: 0, right: self.width - 1, bottom: self.height - 1)
-    content.layout(bounds)
-    self.is_dirty = true
-}
-
 proc (^Window).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
-    if self.content == null {
+    let widget = self.builder.last_widget
+    if widget == null {
         return
     }
 
-    let last_pressed_widget = self.pressed_widget
+    while widget != null {
+        if widget.is_hovered {
+            widget.is_pressed = true
+        }
 
-    self.hovered_widget.handle_mouse_button_down_event(event)
-
-    if last_pressed_widget != self.pressed_widget {
-        self.is_dirty = true
+        widget = widget.next()
     }
 }
 
 proc (^Window).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
-    if self.content == null {
+    let widget = self.builder.last_widget
+    if widget == null {
         return
     }
 
-    self.hovered_widget.handle_mouse_button_up_event(event)
+    while widget != null {
+        if widget.is_pressed {
+            widget.is_pressed = false
+            if widget.is_hovered {
+                widget.was_clicked = true
+            }
+        }
 
-    if self.pressed_widget != null {
-        self.pressed_widget.handle_mouse_button_up_event(event)
+        widget = widget.next()
     }
 }
 
 proc (^Window).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
-    if self.content == null {
+    let widget = self.builder.last_widget
+    if widget == null {
         return
     }
 
-    let last_hovered_widget = self.hovered_widget
+    while widget != null {
+        widget.is_hovered = widget.bounds.contains(x: event.x, y: event.y)
 
-    self.content.handle_mouse_motion_event(event)
-
-    if last_hovered_widget != self.hovered_widget {
-        self.is_dirty = true
-    }
-
-    if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
-        self.pressed_widget.handle_mouse_motion_event(event)
+        widget = widget.next()
     }
 }
 
 proc (^Window).handle_key_up_event(self, anon event: Key_Up_Event) {
-    if self.content == null {
-        return
-    }
+    // if self.content == null {
+    //     return
+    // }
 
-    self.content.handle_key_up_event(event)
+    // self.content.handle_key_up_event(event)
 }
 
 proc (^Window).render(self) {
-    self.renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 255))
+    self.renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 0xFF))
     self.renderer.clear()
-    if self.content != null {
-        self.content.render(^self.renderer, self)
-        self.renderer.present()
+
+    try self.builder.build() else {
+        os.stderr.write(error.message).end_line()
     }
+
+    self.builder.layout(bounds: Rect(left: 0, top: 0, right: self.width - 1, bottom: self.height - 1))
+
+    self.builder.render(^self.renderer, self)
+
+    self.renderer.present()
     self.is_dirty = false
 }
