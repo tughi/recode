@@ -1,39 +1,78 @@
 import allocator
-import libc
+import errors
 
 type List<T> = struct {
-    items: [^]T
-    capacity: usize
+    first_chunk: ^List_Chunk<T>
+    last_chunk: ^List_Chunk<T>
     length: usize
 }
 
-// proc new<T>() -> ^List<T> {
-//     let list = alloc List<T>()
-//     list.init()
-//     return list
-// }
-
-proc (^List<T>).init<T>(self) {
-    self.items = null
-    self.capacity = 0
-    self.length = 0
+type List_Chunk<T> = struct {
+    items: [^]T
+    capacity: usize
+    length: usize
+    prev: ^List_Chunk<T>
+    next: ^List_Chunk<T>
 }
 
 proc (^List<T>).append<T>(self, anon item: T) !> allocator.Out_Of_Memory {
-    if self.length >= self.capacity {
-        let new_capacity = self.capacity + self.capacity / 2
-        if new_capacity == 0 {
-            new_capacity = 10
-        }
-        let item_size = type_size(T)
-        let new_items = libc.realloc(self.items.as(^Any), new_capacity * item_size)
-        if new_items == null {
-            raise allocator.Out_Of_Memory(message: "Failed to allocate memory for list items")
-        }
-        self.items = new_items.as([^]T)
-        self.capacity = new_capacity
+    let last_chunk = self.last_chunk
+
+    // Create last chunk if needed
+    if last_chunk == null {
+        last_chunk = allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)).as(^List_Chunk<T>)
+        self.first_chunk = last_chunk
+        self.last_chunk = last_chunk
+    } else if last_chunk.length == last_chunk.capacity {
+        last_chunk = allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)).as(^List_Chunk<T>)
+        last_chunk.prev = self.last_chunk
+        self.last_chunk.next = last_chunk
+        self.last_chunk = last_chunk
     }
-    self.items[self.length] = item
+
+    // Initialize the last chunk
+    if last_chunk.capacity == 0 {
+        if last_chunk.prev == null {
+            last_chunk.capacity = 4
+        } else {
+            let prev_capacity = last_chunk.prev.capacity
+            if prev_capacity == 4 and last_chunk.prev.prev == null {
+                last_chunk.capacity = 4
+            } else if prev_capacity < 64 {
+                last_chunk.capacity = prev_capacity * 2
+            } else {
+                last_chunk.capacity = 128
+            }
+        }
+        last_chunk.items = allocator.alloc(size: last_chunk.capacity * type_size(T), alignment: type_alignment(T)).as([^]T)
+    }
+
+    // Append the item
+    last_chunk.items[last_chunk.length] = item
+    last_chunk.length = last_chunk.length + 1
     self.length = self.length + 1
+
+    // Done
     return
+}
+
+proc (^List<T>).get<T>(self, anon index: usize) -> T !> errors.Error {
+    return self.get_ref(index).^
+}
+
+proc (^List<T>).get_ref<T>(self, anon index: usize) -> ^T !> errors.Error {
+    if index >= self.length {
+        raise errors.Error(message: "Index out of bounds")
+    }
+    // Find the chunk containing the index
+    let chunk = self.first_chunk
+    let chunk_start: usize = 0
+    let chunk_stop = chunk.length
+    while index >= chunk_stop {
+        chunk = chunk.next
+        chunk_start = chunk_stop
+        chunk_stop = chunk_start + chunk.length
+    }
+    // Return item reference
+    return ^chunk.items[index - chunk_start]
 }
