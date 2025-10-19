@@ -1,50 +1,31 @@
 import allocator
 import errors
 
+const LIST_CHUNK_MIN_SIZE = 4u16 // Must be power of two
+const LIST_CHUNK_MAX_SIZE = 64u16 // Must be power of two
+
 type List<T> = struct {
     first_chunk: ^List_Chunk<T>
     last_chunk: ^List_Chunk<T>
+    chunk_min_size: u16
+    chunk_max_size: u16
     length: usize
 }
 
 type List_Chunk<T> = struct {
     items: [^]T
-    capacity: usize
+    size: usize
     length: usize
     prev: ^List_Chunk<T>
     next: ^List_Chunk<T>
 }
 
-proc (^List<T>).append<T>(self, anon item: T) !> allocator.Out_Of_Memory {
+proc (^List<T>).append<T>(self, anon item: T) !> errors.Error {
     let last_chunk = self.last_chunk
 
-    // Create last chunk if needed
-    if last_chunk == null {
-        last_chunk = allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)).as(^List_Chunk<T>)
-        self.first_chunk = last_chunk
-        self.last_chunk = last_chunk
-    } else if last_chunk.length == last_chunk.capacity {
-        last_chunk = allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)).as(^List_Chunk<T>)
-        last_chunk.prev = self.last_chunk
-        self.last_chunk.next = last_chunk
-        self.last_chunk = last_chunk
-    }
-
-    // Initialize the last chunk
-    if last_chunk.capacity == 0 {
-        if last_chunk.prev == null {
-            last_chunk.capacity = 4
-        } else {
-            let prev_capacity = last_chunk.prev.capacity
-            if prev_capacity == 4 and last_chunk.prev.prev == null {
-                last_chunk.capacity = 4
-            } else if prev_capacity < 64 {
-                last_chunk.capacity = prev_capacity * 2
-            } else {
-                last_chunk.capacity = 128
-            }
-        }
-        last_chunk.items = allocator.alloc(size: last_chunk.capacity * type_size(T), alignment: type_alignment(T)).as([^]T)
+    // Append chunk if needed
+    if last_chunk == null or last_chunk.length == last_chunk.size {
+        last_chunk = self.append_chunk()
     }
 
     // Append the item
@@ -56,6 +37,85 @@ proc (^List<T>).append<T>(self, anon item: T) !> allocator.Out_Of_Memory {
     return
 }
 
+proc (^List<T>).append_chunk<T>(self) -> ^List_Chunk<T> !> errors.Error {
+    let chunk: ^List_Chunk<T>
+
+    // Create chunk
+    if self.first_chunk == null {
+        // Validate chunk size settings before creating the first chunk
+        self.validate_chunk_size_settings()
+
+        chunk = try allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)) else {
+            raise errors.Error(message: "Failed to allocate memory for list first chunk")
+        }.as(^List_Chunk<T>)
+
+        self.first_chunk = chunk
+        self.last_chunk = chunk
+    } else {
+        chunk = try allocator.alloc(size: type_size(List_Chunk<T>), alignment: type_alignment(List_Chunk<T>)) else {
+            raise errors.Error(message: "Failed to allocate memory for list chunk")
+        }.as(^List_Chunk<T>)
+
+        chunk.prev = self.last_chunk
+        self.last_chunk.next = chunk
+        self.last_chunk = chunk
+    }
+
+    // Determine chunk size
+    if chunk.prev == null {
+        // First chunk uses min size
+        chunk.size = self.chunk_min_size.as(usize)
+    } else {
+        let prev_size = chunk.prev.size
+        if prev_size == self.chunk_min_size.as(usize) and chunk.prev.prev == null {
+            // Second chunk has the same size as first chunk to maintain power of two sizes
+            chunk.size = self.chunk_min_size.as(usize)
+        } else if prev_size < self.chunk_max_size.as(usize) {
+            // Double size
+            chunk.size = prev_size * 2
+        } else {
+            // Max size
+            chunk.size = self.chunk_max_size.as(usize)
+        }
+    }
+
+    // Allocate chunk items
+    chunk.items = try allocator.alloc(size: chunk.size * type_size(T), alignment: type_alignment(T)) else {
+        raise errors.Error(message: "Failed to allocate memory for list chunk items")
+    }.as([^]T)
+
+    // Done
+    return chunk
+}
+
+proc (^List<T>).validate_chunk_size_settings<T>(self) !> errors.Error {
+    if self.chunk_min_size == 0 {
+        self.chunk_min_size = LIST_CHUNK_MIN_SIZE
+    } else {
+        self.chunk_min_size.validate_power_of_two(error_message: "Chunk min size is not a power of two")
+    }
+    if self.chunk_max_size == 0 {
+        self.chunk_max_size = LIST_CHUNK_MAX_SIZE
+    } else {
+        self.chunk_max_size.validate_power_of_two(error_message: "Chunk max size is not a power of two")
+    }
+    if self.chunk_min_size > self.chunk_max_size {
+        raise errors.Error(message: "Chunk min size is greater than chunk max size")
+    }
+    return
+}
+
+proc (u16).validate_power_of_two(self, error_message: str) !> errors.Error {
+    let value = self
+    while value > 1 {
+        if value % 2 != 0 {
+            raise errors.Error(message: error_message)
+        }
+        value = value / 2
+    }
+    return
+}
+
 proc (^List<T>).get<T>(self, anon index: usize) -> T !> errors.Error {
     return self.get_ref(index).^
 }
@@ -64,15 +124,29 @@ proc (^List<T>).get_ref<T>(self, anon index: usize) -> ^T !> errors.Error {
     if index >= self.length {
         raise errors.Error(message: "Index out of bounds")
     }
-    // Find the chunk containing the index
-    let chunk = self.first_chunk
-    let chunk_start: usize = 0
-    let chunk_stop = chunk.length
-    while index >= chunk_stop {
-        chunk = chunk.next
-        chunk_start = chunk_stop
-        chunk_stop = chunk_start + chunk.length
+
+    // Decide direction based on index
+    if index < self.length / 2 {
+        // Forward from first chunk
+        let chunk = self.first_chunk
+        let chunk_start: usize = 0
+        let chunk_stop = chunk.length
+        while index >= chunk_stop {
+            chunk = chunk.next
+            chunk_start = chunk_stop
+            chunk_stop = chunk_start + chunk.length
+        }
+        return ^chunk.items[index - chunk_start]
+    } else {
+        // Backward from last chunk
+        let chunk = self.last_chunk
+        let chunk_stop = self.length
+        let chunk_start = chunk_stop - chunk.length
+        while index < chunk_start {
+            chunk = chunk.prev
+            chunk_stop = chunk_start
+            chunk_start = chunk_stop - chunk.length
+        }
+        return ^chunk.items[index - chunk_start]
     }
-    // Return item reference
-    return ^chunk.items[index - chunk_start]
 }
