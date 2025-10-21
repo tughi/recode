@@ -1,0 +1,47 @@
+import errors
+import libc
+
+type Map<K, V> = struct {
+    entries: List<Map_Entry<K, V>>
+}
+
+type Map_Entry<K, V> = struct {
+    key: K
+    value: V
+}
+
+proc (^Map<K, V>).get<K, V>(self, anon key: K) -> V !> errors.Error {
+    return self.get_ref(key).^
+}
+
+proc (^Map<K, V>).get_ref<K, V>(self, anon key: K) -> ^V !> errors.Error {
+    let index = 0usize
+    while index < self.entries.length {
+        let entry_ref = self.entries.get_ref(index)
+        if entry_ref.key.equals(key) {
+            return ^entry_ref.value
+        }
+        index = index + 1
+    }
+    raise errors.Error(message: "Key not found")
+}
+
+proc (^Map<K, V>).put<K, V>(self, anon key: K, anon value: V) !> errors.Error {
+    // Replace existing value if key exists
+    let index = 0usize
+    while index < self.entries.length {
+        let entry_ref = try self.entries.get_ref(index) else {
+            raise errors.Error(message: "Failed to retrieve map entry")
+        }
+        if entry_ref.key.equals(key) {
+            entry_ref.value = value
+            return
+        }
+        index = index + 1
+    }
+    // Append new entry
+    try self.entries.append(Map_Entry<K, V>(key: key, value: value)) else {
+        raise errors.Error(message: error.message)
+    }
+    return
+}
