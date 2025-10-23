@@ -1,15 +1,11 @@
 #ifndef __calculator__parser_H__
 #define __calculator__parser_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
 #include "calculator__expression.h"
 #include "calculator__source.h"
 #include "calculator__tokenizer.h"
-
-struct calculator__parser_Parser {
-    struct calculator__tokenizer_Tokenizer tokenizer;
-};
 
 struct calculator__expression_Expression pcalculator__parser_Parser__parse_expression(struct calculator__parser_Parser *self);
 

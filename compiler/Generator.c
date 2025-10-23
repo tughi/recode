@@ -1100,12 +1100,10 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     }
     struct Checked_Type_Dependency *dependency = type->first_dependency;
     while (dependency != NULL) {
-        if (dependency->type->symbol->super.package == type->symbol->super.package) {
-            if (dependency->weak) {
-                Generator__declare_type(self, dependency->type);
-            } else {
-                Generator__define_type(self, dependency->type);
-            }
+        if (dependency->weak) {
+            Generator__declare_type(self, dependency->type);
+        } else {
+            Generator__define_type(self, dependency->type);
         }
         dependency = dependency->next_dependency;
     }
@@ -1131,18 +1129,18 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
     type->has_generated_definition = true;
 }
 
-void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *output_dir) {
+void generate_types_header(Checked_Source *checked_source, String *output_dir) {
     String *output_file_path = String__create_copy(output_dir);
     if (!String__ends_with_cstring(output_file_path, "/")) {
         String__append_char(output_file_path, '/');
     }
-    String__append_cstring(output_file_path, "builtin_types.h");
+    String__append_cstring(output_file_path, "types.h");
 
     Generator generator = Generator__make(File__create_writer(output_file_path));
 
     /* Header guard */
-    pWriter__write__cstring(generator.writer, "#ifndef __BUILTIN_TYPES_H__\n");
-    pWriter__write__cstring(generator.writer, "#define __BUILTIN_TYPES_H__\n\n");
+    pWriter__write__cstring(generator.writer, "#ifndef __TYPES_H__\n");
+    pWriter__write__cstring(generator.writer, "#define __TYPES_H__\n\n");
 
     /* Standard includes */
     pWriter__write__cstring(generator.writer, "#include <inttypes.h>\n");
@@ -1150,7 +1148,7 @@ void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *out
     pWriter__write__cstring(generator.writer, "#include <stddef.h>\n\n");
 
     /* Generate all builtin types */
-    Checked_Symbol *checked_symbol = builtin_symbols->first_symbol;
+    Checked_Symbol *checked_symbol = checked_source->symbols->parent->first_symbol;
     while (checked_symbol != NULL) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
             Checked_Named_Type *checked_named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
@@ -1161,8 +1159,20 @@ void generate_builtin_types_header(Checked_Symbols *builtin_symbols, String *out
         checked_symbol = checked_symbol->next_symbol;
     }
 
+    /* Generate all defined types */
+    checked_symbol = checked_source->symbols->first_symbol;
+    while (checked_symbol != NULL) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
+            if (!type->has_generated_definition) {
+                Generator__define_type(&generator, type);
+            }
+        }
+        checked_symbol = checked_symbol->next_symbol;
+    }
+
     /* Close header guard */
-    pWriter__write__cstring(generator.writer, "#endif // __BUILTIN_TYPES_H__\n");
+    pWriter__write__cstring(generator.writer, "#endif // __TYPES_H__\n");
 }
 
 void generate_package_header(Checked_Source *checked_source, Checked_Package *checked_package, String *output_dir) {
@@ -1184,8 +1194,8 @@ void generate_package_header(Checked_Source *checked_source, Checked_Package *ch
     pWriter__write__package_name(generator.writer, checked_package);
     pWriter__write__cstring(generator.writer, "_H__\n\n");
 
-    /* Include builtin types header */
-    pWriter__write__cstring(generator.writer, "#include \"builtin_types.h\"\n\n");
+    /* Include types header */
+    pWriter__write__cstring(generator.writer, "#include \"types.h\"\n\n");
 
     Checked_Symbol *checked_symbol;
     Checked_Procedure_Symbol *malloc_procedure = NULL;
@@ -1202,20 +1212,6 @@ void generate_package_header(Checked_Source *checked_source, Checked_Package *ch
         checked_symbol = checked_symbol->next_symbol;
     }
     pWriter__end_line(generator.writer);
-
-    /* Generate all defined types */
-    checked_symbol = checked_source->symbols->first_symbol;
-    while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->package == checked_package) {
-            Checked_Type *type = (Checked_Type *)((Checked_Type_Symbol *)checked_symbol)->named_type;
-            if (!type->has_generated_definition) {
-                Generator__define_type(&generator, type);
-            }
-        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && String__equals_cstring(checked_symbol->name, "malloc")) {
-            malloc_procedure = (Checked_Procedure_Symbol *)checked_symbol;
-        }
-        checked_symbol = checked_symbol->next_symbol;
-    }
 
     /* Declare all global variables */
     checked_symbol = checked_source->symbols->first_symbol;
@@ -1320,7 +1316,7 @@ void generate_package(Checked_Source *checked_source, Checked_Package *checked_p
 }
 
 void generate(Checked_Source *checked_source, String *output_dir, bool generate_main) {
-    generate_builtin_types_header(checked_source->symbols->parent, output_dir);
+    generate_types_header(checked_source, output_dir);
 
     Checked_Package *checked_package = checked_source->first_package;
     while (checked_package != NULL) {

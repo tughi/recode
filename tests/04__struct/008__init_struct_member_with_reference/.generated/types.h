@@ -1,0 +1,18 @@
+#ifndef __TYPES_H__
+#define __TYPES_H__
+
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct String {
+    uint8_t *data;
+    uintmax_t length;
+};
+
+struct test_Number {
+    int32_t value;
+    struct test_Number *next;
+};
+
+#endif // __TYPES_H__

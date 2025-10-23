@@ -1,21 +1,8 @@
 #ifndef __collections_H__
 #define __collections_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
-
-struct collections_List_Item__i32;
-
-struct collections_List__i32 {
-    struct collections_List_Item__i32 *first_item;
-    struct collections_List_Item__i32 *last_item;
-    uintmax_t length;
-};
-
-struct collections_List_Item__i32 {
-    int32_t data;
-    struct collections_List_Item__i32 *next;
-};
 
 void pcollections_List__i32__prepend(struct collections_List__i32 *self, int32_t data);
 

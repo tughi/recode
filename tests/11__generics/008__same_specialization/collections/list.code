@@ -1,0 +1,12 @@
+type List<T> = struct {
+    first: ^List_item<T>
+}
+
+type List_item<T> = struct {
+    data: T
+    next: ^List_item<T>
+}
+
+proc (^List<T>).first<T>(self) -> ^List_item<T> {
+    return self.first
+}

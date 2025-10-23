@@ -1,18 +1,8 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
-
-struct test_Writer {
-    void *self;
-    void (*write_char)(void *self, uint8_t c);
-};
-
-struct test_Writable {
-    void *self;
-    void (*write_to)(void *self, struct test_Writer *writer);
-};
 
 extern struct test_FILE *__stdoutp;
 

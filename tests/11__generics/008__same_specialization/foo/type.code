@@ -1,0 +1,6 @@
+import collections
+import tokens
+
+type Foo_Demo = struct {
+    tokens: collections.List<tokens.Token>
+}

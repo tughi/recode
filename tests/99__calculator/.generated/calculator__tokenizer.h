@@ -1,51 +1,12 @@
 #ifndef __calculator__tokenizer_H__
 #define __calculator__tokenizer_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
 #include "calculator__expression.h"
 #include "calculator__source.h"
 #include "io.h"
 #include "libc.h"
-
-struct calculator__tokenizer_Plus {
-    struct calculator__source_Span span;
-};
-
-struct calculator__tokenizer_Minus {
-    struct calculator__source_Span span;
-};
-
-struct calculator__tokenizer_Multiply {
-    struct calculator__source_Span span;
-};
-
-struct calculator__tokenizer_Divide {
-    struct calculator__source_Span span;
-};
-
-struct calculator__tokenizer_Stop {
-    struct calculator__source_Span span;
-};
-
-struct calculator__tokenizer_Token {
-    int32_t variant;
-    union {
-        struct calculator__expression_Number variant_1;
-        struct calculator__tokenizer_Plus variant_2;
-        struct calculator__tokenizer_Minus variant_3;
-        struct calculator__tokenizer_Multiply variant_4;
-        struct calculator__tokenizer_Divide variant_5;
-        struct calculator__tokenizer_Stop variant_6;
-        struct calculator__source_Error variant_7;
-    };
-};
-
-struct calculator__tokenizer_Tokenizer {
-    uint8_t *data;
-    int32_t index;
-    struct calculator__tokenizer_Token current_token;
-};
 
 struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calculator__tokenizer_Token *self);
 

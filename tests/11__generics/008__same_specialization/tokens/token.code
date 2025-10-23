@@ -1,0 +1,12 @@
+type Identifier = struct {
+    name: str
+}
+
+type Number = struct {
+    value: i32
+}
+
+type Token = variant {
+    Identifier
+    Number
+}

@@ -1,19 +1,8 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
-
-struct test_Error {
-    int32_t code;
-};
-
-struct test_Result__8_48 {
-    bool success;
-    union {
-        struct test_Error error;
-    };
-};
 
 int32_t test__main();
 

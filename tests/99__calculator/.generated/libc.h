@@ -1,7 +1,7 @@
 #ifndef __libc_H__
 #define __libc_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
 
 extern struct libc_FILE *__stdinp;

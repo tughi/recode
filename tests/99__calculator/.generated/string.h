@@ -1,15 +1,9 @@
 #ifndef __string_H__
 #define __string_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
 #include "libc.h"
-
-struct string_Builder {
-    uint8_t *data;
-    uintmax_t data_size;
-    uintmax_t length;
-};
 
 struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8_t c);
 

@@ -1,16 +1,8 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
-
-struct test_Result__11_27 {
-    bool success;
-    union {
-        int32_t value;
-        int32_t error;
-    };
-};
 
 int32_t test__main();
 

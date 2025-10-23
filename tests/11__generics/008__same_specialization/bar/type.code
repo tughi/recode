@@ -1,0 +1,6 @@
+import collections
+import tokens
+
+type Bar_Demo = struct {
+    tokens: collections.List<tokens.Token>
+}

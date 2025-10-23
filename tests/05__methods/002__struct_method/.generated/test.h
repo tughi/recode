@@ -1,12 +1,8 @@
 #ifndef __test_H__
 #define __test_H__
 
-#include "builtin_types.h"
+#include "types.h"
 
-
-struct test_Number {
-    int32_t value;
-};
 
 int32_t ptest_Number__get_value(struct test_Number *self);
 
