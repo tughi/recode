@@ -1,0 +1,4 @@
+type Composer = trait {
+    proc reset(self)
+    proc compose(gui) -> ^View !> allocator.Out_Of_Memory
+}

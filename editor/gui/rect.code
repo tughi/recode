@@ -1,81 +1,60 @@
 type Rect = struct {
-    left: i32
-    top: i32
-    right: i32
-    bottom: i32
-}
-
-proc (^Rect).width(self) -> i32 {
-    return self.right - self.left + 1
-}
-
-proc (^Rect).height(self) -> i32 {
-    return self.bottom - self.top + 1
+    x: i32
+    y: i32
+    width: i32
+    height: i32
 }
 
 proc (^Rect).contains(self, x: i32, y: i32) -> bool {
-    return x >= self.left and x <= self.right and y >= self.top and y <= self.bottom
+    let dx = x - self.x
+    let dy = y - self.y
+    return dx >= 0 and dx < self.width and dy >= 0 and dy < self.height
 }
 
-proc (^Rect).set(self, left: i32, top: i32, right: i32, bottom: i32) {
-    self.left = left
-    self.top = top
-    self.right = right
-    self.bottom = bottom
+proc (^Rect).set(self, x: i32, y: i32, width: i32, height: i32) {
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
 }
 
 proc (^Rect).set_from_rect(self, anon rect: Rect) {
-    self.set(left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom)
+    self.set(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
 }
 
-proc (^Rect).set_location(self, left: i32, top: i32) {
-    self.right = self.right - self.left + left
-    self.bottom = self.bottom - self.top + top
-    self.left = left
-    self.top = top
+proc (^Rect).set_location(self, x: i32, y: i32) {
+    self.x = x
+    self.y = y
 }
 
 proc (^Rect).set_size(self, width: i32, height: i32) {
     if width < 1 {
-        self.right = self.left
+        self.width = 0
     } else {
-        self.right = self.left + width - 1
+        self.width = width
     }
     if height < 1 {
-        self.bottom = self.top
+        self.height = 0
     } else {
-        self.bottom = self.top + height - 1
+        self.height = height
     }
-}
-
-proc (^Rect).intersect(self, rect: Rect) {
-    let left = self.left
-    if rect.left > left {
-        left = rect.left
-    }
-    let right = self.right
-    if rect.right < right {
-        right = rect.right
-    }
-    if left > right {
-        right = left
-    }
-    let top = self.top
-    if rect.top > top {
-        top = rect.top
-    }
-    let bottom = self.bottom
-    if rect.bottom < bottom {
-        bottom = rect.bottom
-    }
-    if top > bottom {
-        bottom = top
-    }
-    self.set(left: left, top: top, right: right, bottom: bottom)
 }
 
 proc (^Rect).intersects(self, rect: Rect) -> bool {
-    if self.left > rect.right or self.top > rect.bottom or self.right < rect.left or self.bottom < rect.top {
+    if self.x > rect.x + rect.width - 1 {
+        // after
+        return false
+    }
+    if self.y > rect.y + rect.height - 1 {
+        // below
+        return false
+    }
+    if self.x + self.width - 1 < rect.x {
+        // before
+        return false
+    }
+    if self.y + self.height - 1 < rect.y {
+        // above
         return false
     }
     return true

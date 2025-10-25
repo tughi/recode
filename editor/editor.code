@@ -26,12 +26,15 @@ proc main() -> i32 {
         return 1
     }
 
-    let builder = try font_editor.builder() else {
-        os.stderr.write("Failed to create the font editor builder: ").write(error.message).end_line()
+    let font_editor = font_editor.Font_Editor(
+        selected_glyph: 65
+    )
+    try font_editor.views_allocator.reserve(size: 1024 * 16) else { // 16KB
+        os.stderr.write("Failed to reserve memory for font editor views: ").write(error.message).end_line()
         return 1
     }
 
-    let window = try app.create_window(title: "Editor", width: 1024, height: 768, builder: builder) else {
+    let window = try app.create_window(title: "Editor", width: 1024, height: 768, content: font_editor) else {
         os.stderr.write("Failed to create the window: ").write(error.message).end_line()
         return 1
     }

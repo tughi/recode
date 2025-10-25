@@ -1,3 +1,0 @@
-type State = struct {
-    selected_glyph: u8
-}

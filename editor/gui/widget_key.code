@@ -1,0 +1,14 @@
+type Widget_Key = struct {
+    id: str
+    parent: ^Widget_Key
+}
+
+proc (Widget_Key).equals(self, anon other: Widget_Key) -> bool {
+    if not self.id.equals(other.id) {
+        return false
+    }
+    if self.parent != null and other.parent != null {
+        return self.parent.^.equals(other.parent.^)
+    }
+    return self.parent == null and other.parent == null
+}

@@ -1,0 +1,34 @@
+import allocator
+import collections
+
+type Context = struct {
+    widgets: collections.Map<Widget_Key, Widget>
+
+    views_allocator: allocator.Arena
+
+    parent_view: ^View
+    last_view: ^View
+}
+
+proc (^Context).reset(self) {
+    self.views_allocator.clear()
+    self.parent_view = null
+    self.last_view = null
+}
+
+proc (^Context).use_widget(gui, anon id: str, factory: Widget_Factory) -> Widget !> allocator.Out_Of_Memory {
+    let widget_key: Widget_Key
+    if gui.parent_view != null {
+        widget_key = Widget_Key(id: id, parent: ^gui.parent_view.widget_key)
+    } else {
+        widget_key = Widget_Key(id: id, parent: null)
+    }
+    let widget = try gui.widgets.get(widget_key) else {
+        let new_widget = factory.create()
+        try gui.widgets.put(widget_key, new_widget) else {
+            raise allocator.Out_Of_Memory(message: error.message)
+        }
+        yield new_widget
+    }
+    return widget
+}

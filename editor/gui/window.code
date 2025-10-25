@@ -1,78 +1,43 @@
+import os
+
 type Window = struct {
     width: i32
     height: i32
     renderer: Renderer
-    builder: ^Builder
+    content: Composer
     is_dirty: bool
-    hovered_widget: ^Widget
-    pressed_widget: ^Widget
 }
 
 proc (^Window).handle_mouse_button_down_event(self, anon event: Mouse_Button_Down_Event) {
-    let widget = self.builder.last_widget
-    if widget == null {
-        return
-    }
-
-    while widget != null {
-        if widget.is_hovered {
-            widget.is_pressed = true
-        }
-
-        widget = widget.next()
-    }
+    os.stderr.write("Mouse button down at (").write(event.x).write(", ").write(event.y).write(")").end_line()
 }
 
 proc (^Window).handle_mouse_button_up_event(self, anon event: Mouse_Button_Up_Event) {
-    let widget = self.builder.last_widget
-    if widget == null {
-        return
-    }
-
-    while widget != null {
-        if widget.is_pressed {
-            widget.is_pressed = false
-            if widget.is_hovered {
-                widget.was_clicked = true
-            }
-        }
-
-        widget = widget.next()
-    }
+    os.stderr.write("Mouse button up at (").write(event.x).write(", ").write(event.y).write(")").end_line()
 }
 
 proc (^Window).handle_mouse_motion_event(self, anon event: Mouse_Motion_Event) {
-    let widget = self.builder.last_widget
-    if widget == null {
-        return
-    }
-
-    while widget != null {
-        widget.is_hovered = widget.bounds.contains(x: event.x, y: event.y)
-
-        widget = widget.next()
-    }
+    os.stderr.write("Mouse motion at (").write(event.x).write(", ").write(event.y).write(")").end_line()
 }
 
 proc (^Window).handle_key_up_event(self, anon event: Key_Up_Event) {
-    // if self.content == null {
-    //     return
-    // }
-
-    // self.content.handle_key_up_event(event)
+    os.stderr.write("Key up: ").write(event.key_code).end_line()
 }
 
 proc (^Window).render(self) {
     self.renderer.set_draw_color(Color(red: 0x17, green: 0x17, blue: 0x17, alpha: 0xFF))
     self.renderer.clear()
 
-    try self.builder.build() else {
-        os.stderr.write(error.message).end_line()
+    self.content.reset()
+
+    let scene = try self.content.compose() else {
+        os.stderr.write("Failed to compose content").end_line()
+        os.exit(1)
     }
 
-    self.builder.layout(bounds: Rect(left: 0, top: 0, right: self.width - 1, bottom: self.height - 1))
+    scene.layout(bounds: Rect(x: 0, y: 0, width: self.width, height: self.height))
 
-    self.builder.render(^self.renderer, self)
+    scene.render(renderer: ^self.renderer)
 
     self.renderer.present()
     self.is_dirty = false

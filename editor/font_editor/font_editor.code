@@ -1,0 +1,18 @@
+import allocator
+import gui
+
+type Font_Editor = struct {
+    super: gui.Context
+
+    selected_glyph: u8
+}
+
+proc (^Font_Editor).compose(gui) -> ^gui.View !> allocator.Out_Of_Memory {
+    let view = gui.group(id: "font_editor", layout_factory: Font_Editor_Layout_Factory(margin: 16))
+    {
+        defer gui.end_group()
+
+        let save_button = gui.button(id: "save_button", label: "Save")
+    }
+    return view
+}

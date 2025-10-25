@@ -1,7 +1,7 @@
 import errors
 
 type App = trait {
-    proc create_window(self, title: str, width: i32, height: i32, builder: ^Builder) -> ^Window !> errors.Error
+    proc create_window(self, title: str, width: i32, height: i32, content: Composer) -> ^Window !> errors.Error
     proc init(self) !> errors.Error
     proc run(self) -> i32
 }

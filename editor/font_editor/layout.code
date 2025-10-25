@@ -1,0 +1,26 @@
+type Font_Editor_Layout = struct {
+    super: gui.Group
+    margin: i32
+}
+
+proc (^Font_Editor_Layout).layout(self, view: ^gui.View) {
+    let save_button_view = view.first_child
+    save_button_view.layout(
+        bounds: gui.Rect(
+            x: view.bounds.x + self.margin
+            y: view.bounds.y + self.margin
+            width: 80
+            height: 30
+        )
+    )
+}
+
+type Font_Editor_Layout_Factory = struct {
+    margin: i32
+}
+
+proc (^Font_Editor_Layout_Factory).create(self) -> gui.Widget !> allocator.Out_Of_Memory {
+    let layout = allocator.alloc(size: type_size(Font_Editor_Layout), alignment: type_alignment(Font_Editor_Layout)).as(^Font_Editor_Layout)
+    layout.margin = self.margin
+    return layout
+}

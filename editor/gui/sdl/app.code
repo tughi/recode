@@ -12,7 +12,7 @@ type App = struct {
 
 proc (^App).init(self) !> errors.Error {
     if self.ready {
-        raise errors.Error(message: "GUI app was already initialized")
+        raise errors.Error(message: "App was already initialized")
     }
 
     self.first_window = null
@@ -97,9 +97,9 @@ proc (^App).run(self) -> i32 {
     return 0
 }
 
-proc (^App).create_window(self, title: str, width: i32, height: i32, builder: ^gui.Builder) -> ^gui.Window !> errors.Error {
+proc (^App).create_window(self, title: str, width: i32, height: i32, content: gui.Composer) -> ^gui.Window !> errors.Error {
     if not self.ready {
-        raise errors.Error(message: "GUI app was not initialized")
+        raise errors.Error(message: "App was not initialized")
     }
 
     let xy = 0x2fff0001
@@ -130,7 +130,7 @@ proc (^App).create_window(self, title: str, width: i32, height: i32, builder: ^g
             width: width
             height: height
             renderer: sdl_renderer
-            builder: builder
+            content: content
         )
         sdl_window: sdl_window
         sdl_window_id: sdl_window_id

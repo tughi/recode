@@ -1,0 +1,48 @@
+type View = struct {
+    id: str
+    parent: ^View
+    first_child: ^View
+    last_child: ^View
+    prev_sibling: ^View
+    next_sibling: ^View
+
+    bounds: Rect
+
+    widget: Widget
+    widget_key: Widget_Key
+}
+
+proc (^View).layout(self, bounds: Rect) {
+    self.bounds = bounds
+    self.widget.layout(view: self)
+}
+
+proc (^View).render(self, renderer: ^Renderer) {
+    self.widget.render(view: self, renderer: renderer)
+}
+
+proc (^Context).view(gui, id: str, widget: Widget) -> ^View !> allocator.Out_Of_Memory {
+    let view = gui.views_allocator.alloc(size: type_size(View), alignment: type_alignment(View)).as(^View)
+    view.id = id
+    view.widget = widget
+    if gui.parent_view != null {
+        view.widget_key = Widget_Key(id: id, parent: ^gui.parent_view.widget_key)
+    } else {
+        view.widget_key = Widget_Key(id: id, parent: null)
+    }
+
+    if gui.last_view != null {
+        gui.last_view.next_sibling = view
+        view.prev_sibling = gui.last_view
+    }
+    gui.last_view = view
+    if gui.parent_view != null {
+        if gui.parent_view.first_child == null {
+            gui.parent_view.first_child = view
+        }
+        view.parent = gui.parent_view
+        view.parent.last_child = view
+    }
+
+    return view
+}
