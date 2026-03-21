@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/007__if_as_assign/test.code:10:9-15: Cannot assign to immutable expression"
+        ]
+    }
+}

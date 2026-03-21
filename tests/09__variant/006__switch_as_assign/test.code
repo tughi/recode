@@ -1,0 +1,23 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 42
+
+    switch value {
+        is i32 as number {
+            number = 0
+        }
+        else {
+            return 1
+        }
+    }
+
+    if value is i32 as number {
+        return number
+    }
+
+    return 1
+}
