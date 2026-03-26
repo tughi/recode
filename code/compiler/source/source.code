@@ -1,7 +1,12 @@
 import libc
 import string
 
-proc load(anon file_path: str) -> str !> str {
+type Source = struct {
+    path: str
+    content: str
+}
+
+proc load(anon file_path: str) -> Source !> str {
     let file = libc.fopen(file_path.data(), "r".data())
     if file == null {
         raise "Failed to open the file"
@@ -34,5 +39,31 @@ proc load(anon file_path: str) -> str !> str {
 
     let result = String(data: content, length: file_size.as(usize))
 
-    return (^result).as(^str).^
+    return Source(
+        path: file_path
+        content: (^result).as(^str).^
+    )
+}
+
+proc (^libc.FILE).write_source_location(file, anon source: Source, anon source_position: usize) -> ^libc.FILE {
+    file.write(source.path).write_char(':')
+
+    let column = 1i64
+
+    let index = source_position
+    let source_content = source.content.data()
+    while index > 0 and source_content[index] != '\n' {
+        column = column + 1
+        index = index - 1
+    }
+
+    let line = 1i64
+    while index > 0 {
+        if source_content[index] == '\n' {
+            line = line + 1
+        }
+        index = index - 1
+    }
+
+    return file.write_integer(line).write_char(':').write_integer(column)
 }

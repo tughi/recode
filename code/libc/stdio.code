@@ -9,6 +9,7 @@ proc fflush(anon file: ^FILE) -> i32 = external
 proc fopen(anon filename: [^]u8, anon mode: [^]u8) -> ^FILE = external
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external
 proc fputs(anon str: [^]u8, anon file: ^FILE) -> i32 = external
+proc fwrite(anon buffer: ^Any, anon size: usize, anon count: usize, anon file: ^FILE) -> usize = external
 proc fread(anon data: [^]u8, anon size: u64, anon count: u64, anon file: ^FILE) -> u64 = external
 proc fseek(anon file: ^FILE, anon offset: u64, anon whence: i32) -> i32 = external
 proc ftell(anon file: ^FILE) -> u64 = external
@@ -16,12 +17,31 @@ proc ftell(anon file: ^FILE) -> u64 = external
 const SEEK_SET = 0
 const SEEK_END = 2
 
-proc (^FILE).putc(file, anon c: u8) -> ^FILE {
+proc (^FILE).end_line(file) -> ^FILE {
+    return file.write_char('\n')
+}
+
+proc (^FILE).write_char(file, anon c: u8) -> ^FILE {
     fputc(c.as(i32), file)
     return file
 }
 
-proc (^FILE).puts(file, anon s: str) -> ^FILE {
-    fputs(s.data(), file)
+proc (^FILE).write(file, anon string: str) -> ^FILE {
+    let copy = string
+    return file.write_string((^copy).as(^String).^)
+}
+
+proc (^FILE).write_string(file, anon string: String) -> ^FILE {
+    fwrite(string.data.as(^Any), type_size(u8), string.length, file)
     return file
+}
+
+proc (^FILE).write_integer(file, anon value: i64) -> ^FILE {
+    if value < 0 {
+        file.write_char('-')
+    }
+    if value > 10 {
+        file.write_integer(value / 10)
+    }
+    return file.write_char((value % 10).as(u8) + '0')
 }

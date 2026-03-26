@@ -1,0 +1,50 @@
+import libc
+
+type Builder = struct {
+    data: [^]u8
+    data_size: usize
+    length: usize
+}
+
+proc (^Builder).append(self, anon suffix: str) -> ^Builder {
+    return self.append_chars(suffix.data(), count: suffix.length)
+}
+
+proc (^Builder).append_char(self, anon c: u8) -> ^Builder {
+    if self.length == self.data_size {
+        self.data_size = self.data_size + 8
+        self.data = libc.realloc(
+            self.data.as(^Any)
+            self.data_size
+        ).as([^]u8)
+    }
+    self.data[self.length] = c
+    self.length = self.length + 1
+    return self
+}
+
+proc (^Builder).append_chars(self, anon content: [^]u8, count: usize) -> ^Builder {
+    let index = 0usize
+    while index < count {
+        self.append_char(content[index])
+        index = index + 1
+    }
+    return self
+}
+
+proc (^Builder).build(self) -> str {
+    self.append_char(0)
+    let string = String(
+        data: self.data
+        length: self.length - 1
+    )
+    return (^string).as(^str).^
+}
+
+proc new() -> Builder {
+    return Builder(
+        data: null
+        data_size: 0
+        length: 0
+    )
+}

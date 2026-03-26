@@ -1,0 +1,106 @@
+import string
+
+proc (^Parser).consume(parser, anon expected: str) !> Error {
+    if not parser.source.content.starts_with(expected, from: parser.source_position) {
+        let error_message = string.new_builder()
+        error_message.append("Expected \"").append(expected).append("\"")
+        raise parser.error(error_message.build())
+    }
+    parser.source_position = parser.source_position + expected.length
+    return
+}
+
+type Identifier = struct {
+    lexeme: str
+    source_position: usize
+}
+
+proc (^Parser).matches_identifier(parser, from start_position: usize) -> usize {
+    let position = start_position
+    if parser.source.content.char_at(position).is_identifier_start() {
+        position = position + 1
+        while parser.source.content.char_at(position).is_identifier_char() {
+            position = position + 1
+        }
+        return position
+    }
+    return 0
+}
+
+proc (^Parser).consume_identifier(parser) -> Identifier !> Error {
+    let source_position = parser.source_position
+    if parser.source.content.char_at(source_position).is_identifier_start() {
+        let identifier_source_position = source_position
+        loop {
+            source_position = source_position + 1
+            if not parser.source.content.char_at(source_position).is_identifier_char() {
+                break
+            }
+        }
+        parser.source_position = source_position
+        return Identifier(
+            lexeme: parser.source.content.slice(identifier_source_position, source_position)
+            source_position: identifier_source_position
+        )
+    }
+    raise parser.error("Expected identifier")
+}
+
+proc (u8).is_identifier_start(self) -> bool {
+    return (self >= 'a' and self <= 'z') or (self >= 'A' and self <= 'Z') or (self == '_')
+}
+
+proc (u8).is_identifier_char(self) -> bool {
+    return self.is_identifier_start() or self.is_digit()
+}
+
+type Integer_Literal = struct {
+    lexeme: str
+    source_position: usize
+    value: u64
+}
+
+proc (^Parser).consume_integer_literal(parser) -> Integer_Literal !> Error {
+    let source_position = parser.source_position
+    let value = 0u64
+    loop {
+        let digit = parser.source.content.char_at(source_position)
+        if not digit.is_digit() {
+            break
+        }
+        value = value * 10 + (digit - '0').as(u64)
+        source_position = source_position + 1
+    }
+    if source_position == parser.source_position {
+        raise parser.error("Expected integer literal")
+    }
+    let integer_literal = Integer_Literal(
+        lexeme: parser.source.content.slice(parser.source_position, source_position)
+        source_position: parser.source_position
+        value: value
+    )
+    parser.source_position = source_position
+    return integer_literal
+}
+
+proc (u8).is_digit(self) -> bool {
+    return self >= '0' and self <= '9'
+}
+
+proc (^Parser).consume_space(parser, anon count: i32) {
+    let consumed = 0
+    let source_position = parser.source_position
+    while parser.source.content.char_at(source_position) == ' ' {
+        source_position = source_position + 1
+        consumed = consumed + 1
+    }
+    if consumed != count {
+        // TODO: Warn about space count deviation
+    }
+    parser.source_position = source_position
+}
+
+proc (^Parser).consume_end_of_line(parser) !> Error {
+    parser.consume("\n")
+    return
+}

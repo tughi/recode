@@ -1,0 +1,16 @@
+import compiler.source
+import string
+
+type Error = struct {
+    message: str
+    source: source.Source
+    source_position: usize
+}
+
+proc (^Parser).error(parser, anon message: str) -> Error {
+    return Error(
+        message: message
+        source: parser.source
+        source_position: parser.source_position
+    )
+}

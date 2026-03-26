@@ -1,13 +1,18 @@
+import compiler.parser
 import compiler.source
 import libc
 
 proc main() -> i32 {
-    let source = try source.load("code/compiler/main.code") else {
-        libc.stderr.puts("Error: ").puts(error).putc('\n')
+    let source = try source.load("tests/01__basics/001__first_procedure/test.code") else {
+        libc.stderr.write("Error: ").write(error).end_line()
         return 1
     }
 
-    libc.stdout.puts(source)
+    libc.stdout.write(source.content)
+
+    try parser.parse(source) else {
+        libc.stderr.write_source_location(error.source, error.source_position).write(": Error: ").write(error.message).end_line()
+    }
 
     return 0
 }

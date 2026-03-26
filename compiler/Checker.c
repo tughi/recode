@@ -695,9 +695,21 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
         }
         case CHECKED_SYMBOL_KIND__TYPE:
             return Checker__check_init_expression(self, context, ((Checked_Type_Symbol *)callee_symbol)->named_type, parsed_expression->first_argument, parsed_expression->super.location);
+        case CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER: {
+            Checked_Type *parameter_type = callee_symbol->type;
+            if (parameter_type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+                pWriter__begin_location_message(stderr_writer, callee_expression->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            procedure_type = ((Checked_Procedure_Pointer_Type *)parameter_type)->procedure_type;
+            procedure_expression = callee_expression;
+            receiver_expression = NULL;
+            break;
+        }
         case CHECKED_SYMBOL_KIND__VARIABLE: {
-            Checked_Variable_Symbol *variable_symbol = (Checked_Variable_Symbol *)callee_symbol;
-            Checked_Type *variable_type = variable_symbol->super.type;
+            Checked_Type *variable_type = callee_symbol->type;
             if (variable_type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
                 pWriter__begin_location_message(stderr_writer, callee_expression->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
