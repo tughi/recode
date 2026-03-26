@@ -1480,8 +1480,8 @@ void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
     }
 }
 
-Parsed_Module *Parser__parse_module(Parser *self, String *project_dir, String *package_dir, String *package_file) {
-    String *source_path = String__create_copy(project_dir);
+Parsed_Module *Parser__parse_module(Parser *self, String *source_dir, String *package_dir, String *package_file) {
+    String *source_path = String__create_copy(source_dir);
     if (!String__ends_with_cstring(source_path, "/")) {
         String__append_char(source_path, '/');
     }
@@ -1516,12 +1516,12 @@ Parsed_Module *Parser__parse_module(Parser *self, String *project_dir, String *p
     return module;
 }
 
-void Parser__parse_package(Parser *self, String *project_dir, Parsed_Package *package) {
+void Parser__parse_package(Parser *self, String *source_dir, Parsed_Package *package) {
     String *package_dir;
     String **package_files;
     if (package->is_root) {
         package_dir = NULL;
-        package_files = Path__get_children(project_dir);
+        package_files = Path__get_children(source_dir);
     } else {
         package_dir = String__create_copy(package->name);
         size_t package_dir_index = 0;
@@ -1532,7 +1532,7 @@ void Parser__parse_package(Parser *self, String *project_dir, Parsed_Package *pa
             package_dir_index++;
         }
 
-        String *path = String__create_copy(project_dir);
+        String *path = String__create_copy(source_dir);
         if (!String__ends_with_cstring(path, "/")) {
             String__append_char(path, '/');
         }
@@ -1559,7 +1559,7 @@ void Parser__parse_package(Parser *self, String *project_dir, Parsed_Package *pa
             continue;
         }
 
-        Parsed_Module *module = Parser__parse_module(self, project_dir, package_dir, package_file);
+        Parsed_Module *module = Parser__parse_module(self, source_dir, package_dir, package_file);
 
         if (last_module == NULL) {
             package->first_module = module;
@@ -1585,8 +1585,8 @@ String *make_package_name(String *package_dir) {
     return package_name;
 }
 
-Parsed_Package *parse_package(String *project_dir, String *package_dir, String *package_name) {
-    Parsed_Package *package = Parsed_Package__create(package_name, package_dir == NULL);
+Parsed_Package *parse_package(String *source_dir, String *package_name, String *binary_name) {
+    Parsed_Package *package = package_name != NULL ? Parsed_Package__create(package_name, false) : Parsed_Package__create(binary_name, true);
 
     Parser parser = {
         .first_package = package,
@@ -1594,7 +1594,7 @@ Parsed_Package *parse_package(String *project_dir, String *package_dir, String *
     };
 
     while (package != NULL) {
-        Parser__parse_package(&parser, project_dir, package);
+        Parser__parse_package(&parser, source_dir, package);
         package = package->next_package;
     }
 

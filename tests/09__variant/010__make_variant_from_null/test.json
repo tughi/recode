@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/09__variant/010__make_variant_from_null/test.code:8:23-27: Too many variant cases accepting null value"
+            "tests/09__variant/010__make_variant_from_null/test.code:8:23-27: \"null\" cannot be used with non-pointer type: test.Value"
         ]
     }
 }

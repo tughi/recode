@@ -3,108 +3,101 @@
 #include "Generator.h"
 #include "Parser.h"
 
-void help_recode() {
-    fprintf(stderr, "Usage: \033[1mrecode\033[0m [OPTIONS] CODE\n");
-    fprintf(stderr, "  ReCode: The Code compiler\n");
+void help_recode(char *executable) {
+    fprintf(stderr, "Usage: \033[1m%s\033[0m [OPTIONS] <SOURCE-DIR> [PACKAGE]\n", executable);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Arguments:\n");
+    fprintf(stderr, "  \033[1m<SOURCE-DIR>\033[0m                Path to the source directory\n");
+    fprintf(stderr, "  \033[1m[PACKAGE]\033[0m                   The specific package name to build (optional)\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Options:\n");
+    fprintf(stderr, "  \033[1m-o\033[0m, \033[1m--output\033[0m <DIR>          Output directory [default: ./build]\n");
+    fprintf(stderr, "  \033[1m-n\033[0m, \033[1m--name\033[0m <NAME>           Name of the resulting executable [default: PACKAGE or app]\n");
     fprintf(stderr, "  \033[1m-h\033[0m, \033[1m--help\033[0m                  Show this help message\n");
-    fprintf(stderr, "  \033[1m-o\033[0m, \033[1m--output-dir\033[0m PATH       Directory for generated files\n");
-    fprintf(stderr, "  \033[1m-p\033[0m, \033[1m--project-name\033[0m PATH     Project name\n");
 }
 
 int32_t main(int32_t argc, char **argv) {
     File__init();
 
     if (argc == 1) {
-        help_recode();
+        help_recode(argv[0]);
         return 1;
     }
 
     int arg = 1;
     String *output_dir = NULL;
-    String *project_dir = NULL;
-    String *project_name = NULL;
-    while (argv[arg][0] == '-') {
+    String *binary_name = NULL;
+    while (arg < argc && argv[arg][0] == '-') {
         char *option = argv[arg];
         if (strcmp(option, "-h") == 0 || strcmp(option, "--help") == 0) {
-            help_recode();
+            help_recode(argv[0]);
             return 0;
-        } else if (strcmp(option, "-o") == 0 || strcmp(option, "--output-dir") == 0) {
-            if (output_dir != NULL) {
-                help_recode();
-                fprintf(stderr, "\nUnexpected extra option: %s\n", option);
-                return 1;
-            }
+        } else if (strcmp(option, "-o") == 0 || strcmp(option, "--output") == 0) {
             arg++;
             if (arg >= argc) {
-                help_recode();
-                fprintf(stderr, "\nExpected <dir> after %s\n", option);
+                fprintf(stderr, "\nExpected <DIR> after %s\n", option);
                 return 1;
             }
             output_dir = String__create_from(argv[arg]);
             arg++;
-        } else if (strcmp(option, "-p") == 0 || strcmp(option, "--project-name") == 0) {
-            if (project_name != NULL) {
-                help_recode();
-                fprintf(stderr, "\nUnexpected extra option: %s\n", option);
-                return 1;
-            }
+        } else if (strcmp(option, "-n") == 0 || strcmp(option, "--name") == 0) {
             arg++;
             if (arg >= argc) {
-                help_recode();
-                fprintf(stderr, "\nExpected <name> after %s\n", option);
+                fprintf(stderr, "\nExpected <NAME> after %s\n", option);
                 return 1;
             }
-            project_name = String__create_from(argv[arg]);
+            binary_name = String__create_from(argv[arg]);
             arg++;
         } else {
-            help_recode();
             fprintf(stderr, "\nUnknown option: %s\n", option);
             return 1;
         }
     }
 
     if (arg >= argc) {
-        help_recode();
-        fprintf(stderr, "\nMissing file\n");
+        fprintf(stderr, "\nMissing <SOURCE-DIR>\n");
         return 1;
     }
-    String *path = String__create_from(argv[arg]);
-    if (!Path__exists(path)) {
-        help_recode();
-        fprintf(stderr, "\nPath does not exist: %s\n", path->data);
+    String *source_dir = String__create_from(argv[arg]);
+    if (!Path__is_directory(source_dir)) {
+        fprintf(stderr, "\nNot a directory: %s\n", source_dir->data);
         return 1;
     }
-    if (Path__is_directory(path)) {
-        project_dir = path;
-    } else if (path->length <= 5 || !String__ends_with_cstring(path, ".code")) {
-        help_recode();
-        fprintf(stderr, "\nExpected a .code file\n");
-        return 1;
-    } else {
-        project_dir = Path__get_parent(path);
+    arg++;
+
+    String *package_name = NULL;
+    if (arg < argc) {
+        package_name = String__create_from(argv[arg]);
+        arg++;
     }
 
-    arg++;
     if (arg < argc) {
-        help_recode();
         fprintf(stderr, "\nToo many arguments\n");
         return 1;
     }
 
-    if (project_name == NULL) {
-        project_name = String__create_from("main");
+    if (binary_name == NULL) {
+        if (package_name != NULL) {
+            binary_name = String__create_from(package_name->data);
+        } else {
+            binary_name = String__create_from("app");
+        }
     }
 
-    Parsed_Package *main_package = parse_package(project_dir, NULL, project_name);
+    if (output_dir == NULL) {
+        output_dir = String__create_from("./build");
+    }
+    if (!Path__is_directory(output_dir)) {
+        fprintf(stderr, "\nNot a directory: %s\n", output_dir->data);
+        return 1;
+    }
 
-    Parsed_Package *builtin_package = parse_package(String__create_from("code"), String__create_from("builtin"), String__create_from("builtin"));
+    Parsed_Package *main_package = parse_package(source_dir, package_name, binary_name);
+
+    Parsed_Package *builtin_package = parse_package(String__create_from("code"), String__create_from("builtin"), NULL);
 
     Checked_Source *checked_source = check(builtin_package, main_package);
 
-    if (output_dir == NULL) {
-        output_dir = String__create_from(".generated");
-    }
     generate(checked_source, output_dir, true);
 
     return 0;

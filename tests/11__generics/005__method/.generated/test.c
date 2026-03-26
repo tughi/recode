@@ -6,7 +6,7 @@ void *malloc(uintmax_t size);
 #line 14 "tests/11__generics/005__method/test.code"
 int32_t test__main() {
 #line 15 "tests/11__generics/005__method/test.code"
-    struct collections_List__i32 list = (struct collections_List__i32){.first_item = ((struct collections_List_Item__i32 *) NULL), .last_item = ((struct collections_List_Item__i32 *) NULL), .length = 0u};
+    struct collections_List__i32 list = (struct collections_List__i32){.first_item = NULL, .last_item = NULL, .length = 0u};
 #line 16 "tests/11__generics/005__method/test.code"
     pcollections_List__i32__append(&list, 42);
 #line 17 "tests/11__generics/005__method/test.code"
@@ -31,7 +31,7 @@ void pcollections_List__i32__append(struct collections_List__i32 *self, int32_t 
 #line 4 "tests/11__generics/005__method/test.code"
         struct collections_List_Item__i32 *__001__ = (struct collections_List_Item__i32 *)malloc(sizeof(struct collections_List_Item__i32));
 #line 4 "tests/11__generics/005__method/test.code"
-        *__001__ = (struct collections_List_Item__i32){.data = data, .next = ((struct collections_List_Item__i32 *) NULL)};
+        *__001__ = (struct collections_List_Item__i32){.data = data, .next = NULL};
 #line 4 "tests/11__generics/005__method/test.code"
         new_item = __001__;
 #line 4 "tests/11__generics/005__method/test.code"

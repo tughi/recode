@@ -1304,8 +1304,25 @@ Checked_Expression *Checker__check_not_equals_expression(Checker *self, Checker_
     return (Checked_Expression *)Checked_Not_Equals_Expression__create(parsed_expression->super.super.location, (Checked_Type *)self->builtin_types->bool_type, left_expression, right_expression);
 }
 
-Checked_Expression *Checker__check_null_expression(Checker *self, Checker_Context *context, Parsed_Null_Expression *parsed_expression) {
-    Checked_Type *expression_type = (Checked_Type *)self->builtin_types->null_type;
+Checked_Expression *Checker__check_null_expression(Checker *self, Checker_Context *context, Parsed_Null_Expression *parsed_expression, Checked_Type *expected_type) {
+    Checked_Type *expression_type;
+    if (expected_type != NULL) {
+        switch (expected_type->kind) {
+        case CHECKED_TYPE_KIND__MULTI_POINTER:
+        case CHECKED_TYPE_KIND__POINTER:
+        case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
+            expression_type = expected_type;
+            break;
+        default:
+            pWriter__begin_location_message(stderr_writer, parsed_expression->super.super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "\"null\" cannot be used with non-pointer type: ");
+            pWriter__write__checked_type(stderr_writer, expected_type);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+    } else {
+        expression_type = (Checked_Type *)self->builtin_types->null_type;
+    }
     return (Checked_Expression *)Checked_Null_Expression__create(parsed_expression->super.literal->location, expression_type);
 }
 
@@ -1515,7 +1532,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         expression = Checker__check_not_equals_expression(self, context, (Parsed_Not_Equals_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__NULL:
-        expression = Checker__check_null_expression(self, context, (Parsed_Null_Expression *)parsed_expression);
+        expression = Checker__check_null_expression(self, context, (Parsed_Null_Expression *)parsed_expression, expected_type);
         break;
     case PARSED_EXPRESSION_KIND__STRING:
         expression = Checker__check_string_expression(self, context, (Parsed_String_Expression *)parsed_expression);
