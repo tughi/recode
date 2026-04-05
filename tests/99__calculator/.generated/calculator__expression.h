@@ -9,6 +9,6 @@
 
 struct calculator__source_Span pcalculator__expression_Expression__span(struct calculator__expression_Expression *self);
 
-struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct calculator__expression_Expression *expression);
+struct io_Writer *pio_Writer__write_expression__anon(struct io_Writer *self, struct calculator__expression_Expression *expression);
 
 #endif // __calculator__expression_H__

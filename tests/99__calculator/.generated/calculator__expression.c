@@ -96,7 +96,7 @@ struct calculator__source_Span pcalculator__expression_Expression__span(struct c
 }
 
 #line 70 "tests/99__calculator/calculator/expression/expression.code"
-struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct calculator__expression_Expression *expression) {
+struct io_Writer *pio_Writer__write_expression__anon(struct io_Writer *self, struct calculator__expression_Expression *expression) {
 #line 71 "tests/99__calculator/calculator/expression/expression.code"
     struct calculator__expression_Expression *__switch_71_value__ = expression;
 #line 72 "tests/99__calculator/calculator/expression/expression.code"
@@ -104,7 +104,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 73 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 73 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__001__ = pio_Writer__write_signed(self, __switch_71_value__->variant_1.value);
+            struct io_Writer *__001__ = pio_Writer__write_signed__signed(self, __switch_71_value__->variant_1.value);
 #line 73 "tests/99__calculator/calculator/expression/expression.code"
             return __001__;
 #line 73 "tests/99__calculator/calculator/expression/expression.code"
@@ -116,7 +116,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 76 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 76 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__002__ = pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_71_value__->variant_2.right), (struct String){.data = ")", .length = 1});
+            struct io_Writer *__002__ = pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_2.left), (struct String){.data = " + ", .length = 3}), __switch_71_value__->variant_2.right), (struct String){.data = ")", .length = 1});
 #line 76 "tests/99__calculator/calculator/expression/expression.code"
             return __002__;
 #line 76 "tests/99__calculator/calculator/expression/expression.code"
@@ -128,7 +128,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 79 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 79 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__003__ = pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_71_value__->variant_3.right), (struct String){.data = ")", .length = 1});
+            struct io_Writer *__003__ = pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_3.left), (struct String){.data = " / ", .length = 3}), __switch_71_value__->variant_3.right), (struct String){.data = ")", .length = 1});
 #line 79 "tests/99__calculator/calculator/expression/expression.code"
             return __003__;
 #line 79 "tests/99__calculator/calculator/expression/expression.code"
@@ -140,7 +140,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 82 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 82 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__004__ = pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_71_value__->variant_4.right), (struct String){.data = ")", .length = 1});
+            struct io_Writer *__004__ = pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_4.left), (struct String){.data = " * ", .length = 3}), __switch_71_value__->variant_4.right), (struct String){.data = ")", .length = 1});
 #line 82 "tests/99__calculator/calculator/expression/expression.code"
             return __004__;
 #line 82 "tests/99__calculator/calculator/expression/expression.code"
@@ -152,7 +152,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 85 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 85 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__005__ = pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(pio_Writer__write_expression(pio_Writer__write_string(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_71_value__->variant_5.right), (struct String){.data = ")", .length = 1});
+            struct io_Writer *__005__ = pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(self, (struct String){.data = "(", .length = 1}), __switch_71_value__->variant_5.left), (struct String){.data = " - ", .length = 3}), __switch_71_value__->variant_5.right), (struct String){.data = ")", .length = 1});
 #line 85 "tests/99__calculator/calculator/expression/expression.code"
             return __005__;
 #line 85 "tests/99__calculator/calculator/expression/expression.code"
@@ -164,7 +164,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 88 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 88 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__006__ = pio_Writer__write_string(pio_Writer__write_string(self, (struct String){.data = "Error: ", .length = 7}), __switch_71_value__->variant_6.message);
+            struct io_Writer *__006__ = pio_Writer__write_string__anon(pio_Writer__write_string__anon(self, (struct String){.data = "Error: ", .length = 7}), __switch_71_value__->variant_6.message);
 #line 88 "tests/99__calculator/calculator/expression/expression.code"
             return __006__;
 #line 88 "tests/99__calculator/calculator/expression/expression.code"
@@ -176,7 +176,7 @@ struct io_Writer *pio_Writer__write_expression(struct io_Writer *self, struct ca
 #line 91 "tests/99__calculator/calculator/expression/expression.code"
         {
 #line 91 "tests/99__calculator/calculator/expression/expression.code"
-            struct io_Writer *__007__ = pio_Writer__write_string(self, (struct String){.data = "Nil!", .length = 4});
+            struct io_Writer *__007__ = pio_Writer__write_string__anon(self, (struct String){.data = "Nil!", .length = 4});
 #line 91 "tests/99__calculator/calculator/expression/expression.code"
             return __007__;
 #line 91 "tests/99__calculator/calculator/expression/expression.code"

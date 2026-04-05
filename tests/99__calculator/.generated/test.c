@@ -11,7 +11,7 @@
 void *malloc(uintmax_t size);
 
 #line 10 "tests/99__calculator/test.code"
-int32_t test__main(int32_t argc, uint8_t **argv) {
+int32_t test__main__anon__anon(int32_t argc, uint8_t **argv) {
 #line 11 "tests/99__calculator/test.code"
     os__init();
 #line 13 "tests/99__calculator/test.code"
@@ -27,7 +27,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 23 "tests/99__calculator/test.code"
         struct calculator__tokenizer_Token token = pcalculator__tokenizer_Tokenizer__next_token(&input_tokenizer);
 #line 24 "tests/99__calculator/test.code"
-        pio_Writer__end_line(pio_Writer__write_token(os__stdout, &token));
+        pio_Writer__end_line(pio_Writer__write_token__anon(os__stdout, &token));
 #line 25 "tests/99__calculator/test.code"
     }
 #line 27 "tests/99__calculator/test.code"
@@ -35,11 +35,11 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 #line 31 "tests/99__calculator/test.code"
     struct calculator__expression_Expression expression = pcalculator__parser_Parser__parse_expression(&input_parser);
 #line 32 "tests/99__calculator/test.code"
-    pio_Writer__end_line(pio_Writer__write_expression(pio_Writer__write_string(os__stdout, (struct String){.data = "Expression: ", .length = 12}), &expression));
+    pio_Writer__end_line(pio_Writer__write_expression__anon(pio_Writer__write_string__anon(os__stdout, (struct String){.data = "Expression: ", .length = 12}), &expression));
 #line 34 "tests/99__calculator/test.code"
-    int32_t result = test__evaluate(&expression);
+    int32_t result = test__evaluate__expression(&expression);
 #line 35 "tests/99__calculator/test.code"
-    pio_Writer__end_line(pio_Writer__write_signed(pio_Writer__write_string(os__stdout, (struct String){.data = "Result: ", .length = 8}), result));
+    pio_Writer__end_line(pio_Writer__write_signed__signed(pio_Writer__write_string__anon(os__stdout, (struct String){.data = "Result: ", .length = 8}), result));
 #line 37 "tests/99__calculator/test.code"
     {
 #line 37 "tests/99__calculator/test.code"
@@ -52,7 +52,7 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 }
 
 #line 40 "tests/99__calculator/test.code"
-int32_t test__evaluate(struct calculator__expression_Expression *expression) {
+int32_t test__evaluate__expression(struct calculator__expression_Expression *expression) {
 #line 41 "tests/99__calculator/test.code"
     struct calculator__expression_Expression *__switch_41_value__ = expression;
 #line 42 "tests/99__calculator/test.code"
@@ -72,7 +72,7 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
 #line 46 "tests/99__calculator/test.code"
         {
 #line 46 "tests/99__calculator/test.code"
-            int32_t __002__ = test__evaluate(__switch_41_value__->variant_2.left) + test__evaluate(__switch_41_value__->variant_2.right);
+            int32_t __002__ = test__evaluate__expression(__switch_41_value__->variant_2.left) + test__evaluate__expression(__switch_41_value__->variant_2.right);
 #line 46 "tests/99__calculator/test.code"
             return __002__;
 #line 46 "tests/99__calculator/test.code"
@@ -84,7 +84,7 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
 #line 49 "tests/99__calculator/test.code"
         {
 #line 49 "tests/99__calculator/test.code"
-            int32_t __003__ = test__evaluate(__switch_41_value__->variant_3.left) / test__evaluate(__switch_41_value__->variant_3.right);
+            int32_t __003__ = test__evaluate__expression(__switch_41_value__->variant_3.left) / test__evaluate__expression(__switch_41_value__->variant_3.right);
 #line 49 "tests/99__calculator/test.code"
             return __003__;
 #line 49 "tests/99__calculator/test.code"
@@ -96,7 +96,7 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
 #line 52 "tests/99__calculator/test.code"
         {
 #line 52 "tests/99__calculator/test.code"
-            int32_t __004__ = test__evaluate(__switch_41_value__->variant_4.left) * test__evaluate(__switch_41_value__->variant_4.right);
+            int32_t __004__ = test__evaluate__expression(__switch_41_value__->variant_4.left) * test__evaluate__expression(__switch_41_value__->variant_4.right);
 #line 52 "tests/99__calculator/test.code"
             return __004__;
 #line 52 "tests/99__calculator/test.code"
@@ -108,7 +108,7 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
 #line 55 "tests/99__calculator/test.code"
         {
 #line 55 "tests/99__calculator/test.code"
-            int32_t __005__ = test__evaluate(__switch_41_value__->variant_5.left) - test__evaluate(__switch_41_value__->variant_5.right);
+            int32_t __005__ = test__evaluate__expression(__switch_41_value__->variant_5.left) - test__evaluate__expression(__switch_41_value__->variant_5.right);
 #line 55 "tests/99__calculator/test.code"
             return __005__;
 #line 55 "tests/99__calculator/test.code"
@@ -125,6 +125,6 @@ int32_t test__evaluate(struct calculator__expression_Expression *expression) {
 }
 
 int32_t main(int argc, const char **argv) {
-    return test__main(argc, (uint8_t **)argv);
+    return test__main__anon__anon(argc, (uint8_t **)argv);
 }
 

@@ -13,7 +13,7 @@ int32_t test__main() {
 #line 10 "tests/09__variant/004__variant_value_argument/test.code"
     other_value = value;
 #line 11 "tests/09__variant/004__variant_value_argument/test.code"
-    struct test_Value another_value = test__demo((struct test_Value){.variant = 1, .variant_1 = true});
+    struct test_Value another_value = test__demo__value((struct test_Value){.variant = 1, .variant_1 = true});
 #line 12 "tests/09__variant/004__variant_value_argument/test.code"
     {
 #line 12 "tests/09__variant/004__variant_value_argument/test.code"
@@ -26,7 +26,7 @@ int32_t test__main() {
 }
 
 #line 15 "tests/09__variant/004__variant_value_argument/test.code"
-struct test_Value test__demo(struct test_Value value) {
+struct test_Value test__demo__value(struct test_Value value) {
 #line 16 "tests/09__variant/004__variant_value_argument/test.code"
     {
 #line 16 "tests/09__variant/004__variant_value_argument/test.code"

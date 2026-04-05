@@ -1,4 +1,5 @@
 import compiler.source
+import libc
 import string
 
 type Error = struct {
@@ -13,4 +14,27 @@ proc (^Parser).error(parser, anon message: str) -> Error {
         source: parser.source
         source_position: parser.source_position
     )
+}
+
+proc (^libc.FILE).write(file, parser_error: Error) -> ^libc.FILE {
+    file.write(parser_error.source.path).write_char(':')
+
+    let column = 1i64
+
+    let index = parser_error.source_position
+    let source_content = parser_error.source.content.data()
+    while index > 0 and source_content[index] != '\n' {
+        column = column + 1
+        index = index - 1
+    }
+
+    let line = 1i64
+    while index > 0 {
+        if source_content[index] == '\n' {
+            line = line + 1
+        }
+        index = index - 1
+    }
+
+    return file.write_integer(line).write_char(':').write_integer(column)
 }

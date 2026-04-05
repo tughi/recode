@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-bool test__test_not(bool v);
+bool test__test_not__anon(bool v);
 
 #endif // __test_H__

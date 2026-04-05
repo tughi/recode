@@ -10,7 +10,7 @@
 
 struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calculator__tokenizer_Token *self);
 
-struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calculator__tokenizer_Token *token);
+struct io_Writer *pio_Writer__write_token__anon(struct io_Writer *self, struct calculator__tokenizer_Token *token);
 
 struct calculator__tokenizer_Token pcalculator__tokenizer_Tokenizer__peek_token(struct calculator__tokenizer_Tokenizer *self);
 

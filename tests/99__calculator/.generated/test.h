@@ -12,8 +12,8 @@
 #include "os.h"
 #include "string.h"
 
-int32_t test__main(int32_t argc, uint8_t **argv);
+int32_t test__main__anon__anon(int32_t argc, uint8_t **argv);
 
-int32_t test__evaluate(struct calculator__expression_Expression *expression);
+int32_t test__evaluate__expression(struct calculator__expression_Expression *expression);
 
 #endif // __test_H__

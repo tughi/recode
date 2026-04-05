@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/01__basics/015__break/test.code"
     {
 #line 2 "tests/01__basics/015__break/test.code"
-        int32_t __001__ = test__fibonacci(12) - 144;
+        int32_t __001__ = test__fibonacci__n(12) - 144;
 #line 2 "tests/01__basics/015__break/test.code"
         return __001__;
 #line 2 "tests/01__basics/015__break/test.code"
@@ -16,7 +16,7 @@ int32_t test__main() {
 }
 
 #line 5 "tests/01__basics/015__break/test.code"
-int32_t test__fibonacci(int32_t n) {
+int32_t test__fibonacci__n(int32_t n) {
 #line 6 "tests/01__basics/015__break/test.code"
     if (n <= 1) {
 #line 7 "tests/01__basics/015__break/test.code"

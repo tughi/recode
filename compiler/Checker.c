@@ -482,7 +482,7 @@ Checked_Type_Argument *Checked_Type__is_specialization(Checked_Type *self, Check
 
 Checked_Procedure_Symbol *Checker__specialize_method(Checker *self, Checker_Context *context, Checked_Generic_Procedure_Symbol *generic_procedure_symbol, Checked_Type_Argument *first_type_argument);
 
-Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checker_Context *context, Checked_Type *receiver_type, String *procedure_name) {
+Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checker_Context *context, Checked_Type *receiver_type, String *procedure_name, Parsed_Call_Argument *first_argument) {
     Checked_Method *method = self->methods->first_method;
     while (method != NULL) {
         switch (method->procedure_symbol->kind) {
@@ -499,6 +499,31 @@ Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checker_
         case CHECKED_SYMBOL_KIND__PROCEDURE: {
             Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)method->procedure_symbol;
             if (String__equals_string(procedure_symbol->procedure_name, procedure_name) && Checked_Type__equals(method->receiver_type, receiver_type)) {
+                if (first_argument != NULL) {
+                    Checked_Procedure_Parameter *procedure_parameter = procedure_symbol->procedure_type->first_parameter;
+                    if (procedure_parameter == NULL) {
+                        panic(); // Missing receiver parameter
+                    }
+                    procedure_parameter = procedure_parameter->next_parameter; // Skip receiver parameter
+                    Parsed_Call_Argument *call_argument = first_argument;
+                    bool labels_match = true;
+                    while (labels_match && procedure_parameter != NULL && call_argument != NULL) {
+                        if (procedure_parameter->label == NULL) {
+                            if (call_argument->name != NULL) {
+                                labels_match = false;
+                            }
+                        } else if (call_argument->name == NULL) {
+                            labels_match = false;
+                        } else {
+                            labels_match = String__equals_string(procedure_parameter->label, call_argument->name->super.lexeme);
+                        }
+                        procedure_parameter = procedure_parameter->next_parameter;
+                        call_argument = call_argument->next_argument;
+                    }
+                    if (!labels_match || procedure_parameter != NULL || call_argument != NULL) {
+                        break;
+                    }
+                }
                 return procedure_symbol;
             }
             break;
@@ -520,21 +545,21 @@ Checked_Procedure_Symbol *Checker__resolve_method_symbol(Checker *self, Checker_
                     },
                     .other_type = struct_type->first_member->type,
                 };
-                return Checker__resolve_method_symbol(self, context, (Checked_Type *)&super_receiver_type, procedure_name);
+                return Checker__resolve_method_symbol(self, context, (Checked_Type *)&super_receiver_type, procedure_name, first_argument);
             }
         }
     }
     return NULL;
 }
 
-Checked_Procedure_Symbol *Checker__resolve_reference_method_symbol(Checker *self, Checker_Context *context, Checked_Type *receiver_type, String *procedure_name) {
+Checked_Procedure_Symbol *Checker__resolve_reference_method_symbol(Checker *self, Checker_Context *context, Checked_Type *receiver_type, String *procedure_name, Parsed_Call_Argument *first_argument) {
     Checked_Pointer_Type pointer_type = {
         .super = {
             .kind = CHECKED_TYPE_KIND__POINTER,
         },
         .other_type = receiver_type,
     };
-    return Checker__resolve_method_symbol(self, context, (Checked_Type *)&pointer_type, procedure_name);
+    return Checker__resolve_method_symbol(self, context, (Checked_Type *)&pointer_type, procedure_name, first_argument);
 }
 
 Checked_Expression *Checker__check_add_expression(Checker *self, Checker_Context *context, Parsed_Add_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -654,8 +679,75 @@ Checked_Make_Variant_Expression *Checker__make_variant_expression(Checker *self,
 
 Checked_Expression *Checker__check_init_expression(Checker *self, Checker_Context *context, Checked_Named_Type *type, Parsed_Call_Argument *first_parsed_argument, Source_Location location);
 
+String *Checker__build_mangled_callee_name(String *base_name, Parsed_Call_Argument *first_argument) {
+    String *mangled_name = String__create();
+    String__append_string(mangled_name, base_name);
+    Parsed_Call_Argument *call_argument;
+    for (call_argument = first_argument; call_argument != NULL; call_argument = call_argument->next_argument) {
+        String__append_cstring(mangled_name, "__");
+        if (call_argument->name != NULL) {
+            String__append_string(mangled_name, call_argument->name->super.lexeme);
+        } else {
+            String__append_cstring(mangled_name, "anon");
+        }
+    }
+    return mangled_name;
+}
+
+Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_Context *context, Checked_Expression *object_expression, Token *member_name);
+
 Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Context *context, Parsed_Call_Expression *parsed_expression, bool unwarp_result) {
-    Checked_Expression *callee_expression = Checker__check_expression(self, context, parsed_expression->callee_expression, NULL);
+    Checked_Expression *callee_expression = NULL;
+    if (parsed_expression->callee_expression->kind == PARSED_EXPRESSION_KIND__SYMBOL) {
+        // Resolve callee using mangled name
+        Parsed_Symbol_Expression *parsed_symbol_expression = (Parsed_Symbol_Expression *)parsed_expression->callee_expression;
+        String *mangled_name = Checker__build_mangled_callee_name(parsed_symbol_expression->name->lexeme, parsed_expression->first_argument);
+        Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, context->checked_package, mangled_name);
+        if (symbol == NULL) {
+            symbol = Checked_Symbols__find_symbol(self->global_symbols->parent, self->packages->builtin_package, mangled_name);
+        }
+        String__delete(mangled_name);
+        if (symbol != NULL && symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(parsed_symbol_expression->super.location, symbol->type, symbol);
+        }
+    } else if (parsed_expression->callee_expression->kind == PARSED_EXPRESSION_KIND__MEMBER_ACCESS) {
+        Parsed_Member_Access_Expression *parsed_member_access_expression = (Parsed_Member_Access_Expression *)parsed_expression->callee_expression;
+        Checked_Expression *object_expression = Checker__check_expression(self, context, parsed_member_access_expression->object_expression, NULL);
+        if (object_expression->type->kind == CHECKED_TYPE_KIND__MODULE) {
+            // Resolve module callee using mangled name
+            Checked_Symbol *import_symbol = ((Checked_Symbol_Expression *)object_expression)->symbol;
+            if (import_symbol->kind == CHECKED_SYMBOL_KIND__IMPORT) {
+                Checked_Package *package = ((Checked_Import_Symbol *)import_symbol)->other_package;
+                String *mangled_name = Checker__build_mangled_callee_name(parsed_member_access_expression->member_name->lexeme, parsed_expression->first_argument);
+                Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->global_symbols, package, mangled_name);
+                String__delete(mangled_name);
+                if (symbol != NULL && symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+                    callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(parsed_member_access_expression->super.location, symbol->type, symbol);
+                }
+            }
+        } else {
+            // Resolve method call using mangled name
+            Checked_Type *object_type = object_expression->type;
+            Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, object_type, parsed_member_access_expression->member_name->lexeme, parsed_expression->first_argument);
+            if (procedure_symbol == NULL && object_type->kind != CHECKED_TYPE_KIND__POINTER) {
+                procedure_symbol = Checker__resolve_reference_method_symbol(self, context, object_type, parsed_member_access_expression->member_name->lexeme, parsed_expression->first_argument);
+                if (procedure_symbol != NULL) {
+                    object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
+                    object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
+                }
+            }
+            if (procedure_symbol != NULL) {
+                Checked_Symbol_Expression *procedure_sym_expression = Checked_Symbol_Expression__create(parsed_member_access_expression->member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+                callee_expression = (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_member_access_expression->super.location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_sym_expression, procedure_symbol->procedure_type);
+            }
+        }
+        if (callee_expression == NULL) {
+            callee_expression = Checker__check_object_member_access(self, context, object_expression, parsed_member_access_expression->member_name);
+        }
+    }
+    if (callee_expression == NULL) {
+        callee_expression = Checker__check_expression(self, context, parsed_expression->callee_expression, NULL);
+    }
 
     Checked_Expression *procedure_expression = NULL;
     Checked_Procedure_Type *procedure_type = NULL;
@@ -998,7 +1090,7 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
     for (trait_method = trait_type->first_method; trait_method != NULL; trait_method = trait_method->next_method) {
         Checked_Type *saved_first_parameter_type = trait_method->procedure_type->first_parameter->type;
         trait_method->procedure_type->first_parameter->type = self_expression->type;
-        Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, self_expression->type, trait_method->name);
+        Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, self_expression->type, trait_method->name, NULL);
         if (procedure_symbol == NULL) {
             pWriter__begin_location_message(stderr_writer, location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "The ");
@@ -1176,8 +1268,8 @@ Checked_Expression *Checker__check_logic_or_expression(Checker *self, Checker_Co
 
 Checked_Expression *Checker__check_package_symbol_expression(Checker *self, Checked_Package *checked_package, Source_Location expression_location, Token *symbol_name);
 
-Checked_Expression *Checker__check_member_access_expression(Checker *self, Checker_Context *context, Parsed_Member_Access_Expression *parsed_expression) {
-    Checked_Expression *object_expression = Checker__check_expression(self, context, parsed_expression->object_expression, NULL);
+Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_Context *context, Checked_Expression *object_expression, Token *member_name) {
+    Source_Location expression_location = Source_Location__merge(object_expression->location, member_name->location);
     Checked_Type *object_type = object_expression->type;
 
     if (object_type->kind == CHECKED_TYPE_KIND__MODULE) {
@@ -1190,18 +1282,18 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Check
                 panic();
             }
             Checked_Package *package = ((Checked_Import_Symbol *)symbol_expression->symbol)->other_package;
-            Checked_Symbol *pakcage_symbol = Checked_Symbols__find_symbol(self->global_symbols, package, parsed_expression->member_name->lexeme);
+            Checked_Symbol *pakcage_symbol = Checked_Symbols__find_symbol(self->global_symbols, package, member_name->lexeme);
             if (pakcage_symbol == NULL) {
-                pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+                pWriter__begin_location_message(stderr_writer, expression_location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Module ");
                 pWriter__write__string(stderr_writer, package->name);
                 pWriter__write__cstring(stderr_writer, " has no ");
-                pWriter__write__string(stderr_writer, parsed_expression->member_name->lexeme);
+                pWriter__write__string(stderr_writer, member_name->lexeme);
                 pWriter__write__cstring(stderr_writer, " symbol");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, pakcage_symbol->type, pakcage_symbol);
+            return (Checked_Expression *)Checked_Symbol_Expression__create(expression_location, pakcage_symbol->type, pakcage_symbol);
         }
         pWriter__begin_location_message(stderr_writer, object_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not an import");
@@ -1215,25 +1307,25 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Check
     }
     switch (object_type->kind) {
     case CHECKED_TYPE_KIND__STR:
-        if (String__equals_cstring(parsed_expression->member_name->lexeme, "length")) {
-            return (Checked_Expression *)Checked_String_Length_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->usize_type, object_expression);
+        if (String__equals_cstring(member_name->lexeme, "length")) {
+            return (Checked_Expression *)Checked_String_Length_Expression__create(expression_location, (Checked_Type *)self->builtin_types->usize_type, object_expression);
         }
         break;
     case CHECKED_TYPE_KIND__STRUCT: {
         Checked_Struct_Type *struct_type = (Checked_Struct_Type *)object_type;
-        Checked_Struct_Member *member = Checked_Struct_Type__find_member(struct_type, parsed_expression->member_name->lexeme);
+        Checked_Struct_Member *member = Checked_Struct_Type__find_member(struct_type, member_name->lexeme);
         if (member != NULL) {
             if (member->struct_type != struct_type) {
                 Checked_Struct_Type *super_struct = struct_type;
                 while (super_struct != NULL) {
-                    object_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_expression->super.location, super_struct->first_member->type, object_expression, super_struct->first_member);
+                    object_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(expression_location, super_struct->first_member->type, object_expression, super_struct->first_member);
                     super_struct = (Checked_Struct_Type *)super_struct->first_member->type;
                     if (super_struct == member->struct_type) {
                         break;
                     }
                 }
             }
-            return (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_expression->super.location, member->type, object_expression, member);
+            return (Checked_Expression *)Checked_Member_Access_Expression__create(expression_location, member->type, object_expression, member);
         }
         break;
     }
@@ -1241,10 +1333,10 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Check
         Checked_Trait_Type *trait_type = (Checked_Trait_Type *)object_type;
         Checked_Trait_Method *trait_method;
         for (trait_method = trait_type->first_method; trait_method != NULL; trait_method = trait_method->next_method) {
-            if (String__equals_string(trait_method->name, parsed_expression->member_name->lexeme)) {
+            if (String__equals_string(trait_method->name, member_name->lexeme)) {
                 Checked_Member_Access_Expression *receiver_expression = Checked_Member_Access_Expression__create(object_expression->location, trait_type->self_struct_member->type, object_expression, trait_type->self_struct_member);
-                Checked_Member_Access_Expression *procedure_expression = Checked_Member_Access_Expression__create(parsed_expression->member_name->location, trait_method->struct_member->type, object_expression, trait_method->struct_member);
-                return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, trait_method->procedure_type->return_type, (Checked_Expression *)receiver_expression, (Checked_Expression *)procedure_expression, trait_method->procedure_type);
+                Checked_Member_Access_Expression *procedure_expression = Checked_Member_Access_Expression__create(member_name->location, trait_method->struct_member->type, object_expression, trait_method->struct_member);
+                return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, trait_method->procedure_type->return_type, (Checked_Expression *)receiver_expression, (Checked_Expression *)procedure_expression, trait_method->procedure_type);
             }
         }
         break;
@@ -1255,27 +1347,32 @@ Checked_Expression *Checker__check_member_access_expression(Checker *self, Check
 
     /* Check method */
     object_type = object_expression->type;
-    Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, object_type, parsed_expression->member_name->lexeme);
+    Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, object_type, member_name->lexeme, NULL);
     if (procedure_symbol != NULL) {
-        Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-        return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
+        Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+        return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
     }
 
     /* Check referenced method */
     if (object_type->kind != CHECKED_TYPE_KIND__POINTER) {
-        procedure_symbol = Checker__resolve_reference_method_symbol(self, context, object_type, parsed_expression->member_name->lexeme);
+        procedure_symbol = Checker__resolve_reference_method_symbol(self, context, object_type, member_name->lexeme, NULL);
         if (procedure_symbol != NULL) {
             object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
             object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
-            Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(parsed_expression->member_name->location, (Checked_Type *)procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_expression->super.location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
+            Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(member_name->location, (Checked_Type *)procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
+            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->procedure_type->return_type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
         }
     }
 
-    pWriter__begin_location_message(stderr_writer, parsed_expression->member_name->location, WRITER_STYLE__ERROR);
+    pWriter__begin_location_message(stderr_writer, member_name->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "No such struct member");
     pWriter__end_location_message(stderr_writer);
     panic();
+}
+
+Checked_Expression *Checker__check_member_access_expression(Checker *self, Checker_Context *context, Parsed_Member_Access_Expression *parsed_expression) {
+    Checked_Expression *object_expression = Checker__check_expression(self, context, parsed_expression->object_expression, NULL);
+    return Checker__check_object_member_access(self, context, object_expression, parsed_expression->member_name);
 }
 
 Checked_Expression *Checker__check_minus_expression(Checker *self, Checker_Context *context, Parsed_Minus_Expression *parsed_expression, Checked_Type *expected_type) {
@@ -1361,6 +1458,28 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Checker_Cont
     }
     if (symbol == NULL) {
         symbol = Checked_Symbols__find_symbol(self->builtin_types->symbols, NULL, parsed_expression->name->lexeme);
+    }
+    if (symbol == NULL) {
+        // Find a procedure by its procedure_name when the mangled symbol isn't found
+        Checked_Symbol *candidate_symbol = self->global_symbols->first_symbol;
+        Checked_Procedure_Symbol *matching_procedure_symbol = NULL;
+        while (candidate_symbol != NULL) {
+            if (candidate_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && candidate_symbol->package == context->checked_package) {
+                Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)candidate_symbol;
+                if (String__equals_string(procedure_symbol->procedure_name, parsed_expression->name->lexeme)) {
+                    if (matching_procedure_symbol == NULL) {
+                        matching_procedure_symbol = procedure_symbol;
+                    } else {
+                        matching_procedure_symbol = NULL; // more than one candidate
+                        break;
+                    }
+                }
+            }
+            candidate_symbol = candidate_symbol->next_symbol;
+        }
+        if (matching_procedure_symbol != NULL) {
+            symbol = (Checked_Symbol *)matching_procedure_symbol;
+        }
     }
     Source_Location expression_location = parsed_expression->name->location;
     if (symbol == NULL || symbol->kind == CHECKED_SYMBOL_KIND__EXTERNAL) {
@@ -3121,6 +3240,23 @@ Checked_Procedure_Symbol *Checker__check_procedure_declaration(Checker *self, Ch
         String__append_cstring(symbol_name, "__");
     }
     String__append_string(symbol_name, parsed_statement->super.name->lexeme);
+
+    if (!parsed_statement->is_external) {
+        // Mangle parameter labels into symbol name to support procedure overloading
+        Parsed_Procedure_Parameter *procedure_parameter = parsed_statement->first_parameter;
+        if (parsed_statement->is_method && procedure_parameter != NULL) {
+            procedure_parameter = procedure_parameter->next_parameter; // Skip receiver
+        }
+        while (procedure_parameter != NULL) {
+            String__append_cstring(symbol_name, "__");
+            if (procedure_parameter->label != NULL) {
+                String__append_string(symbol_name, procedure_parameter->label->lexeme);
+            } else {
+                String__append_cstring(symbol_name, "anon");
+            }
+            procedure_parameter = procedure_parameter->next_parameter;
+        }
+    }
 
     Checked_Symbol *existing_symbol = Checked_Symbols__find_symbol(self->global_symbols, context->checked_package, symbol_name);
     if (existing_symbol != NULL) {

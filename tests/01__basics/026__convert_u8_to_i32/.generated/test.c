@@ -5,7 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/026__convert_u8_to_i32/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/026__convert_u8_to_i32/test.code"
-    if (test__cast(255) != 255) {
+    if (test__cast__anon(255) != 255) {
 #line 3 "tests/01__basics/026__convert_u8_to_i32/test.code"
         {
 #line 3 "tests/01__basics/026__convert_u8_to_i32/test.code"
@@ -17,7 +17,7 @@ int32_t test__main() {
 #line 4 "tests/01__basics/026__convert_u8_to_i32/test.code"
     }
 #line 5 "tests/01__basics/026__convert_u8_to_i32/test.code"
-    if (test__cast(0) != 0) {
+    if (test__cast__anon(0) != 0) {
 #line 6 "tests/01__basics/026__convert_u8_to_i32/test.code"
         {
 #line 6 "tests/01__basics/026__convert_u8_to_i32/test.code"
@@ -40,7 +40,7 @@ int32_t test__main() {
 }
 
 #line 11 "tests/01__basics/026__convert_u8_to_i32/test.code"
-int32_t test__cast(uint8_t value) {
+int32_t test__cast__anon(uint8_t value) {
 #line 12 "tests/01__basics/026__convert_u8_to_i32/test.code"
     {
 #line 12 "tests/01__basics/026__convert_u8_to_i32/test.code"

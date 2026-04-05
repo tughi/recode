@@ -5,7 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/009__logic_not/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/009__logic_not/test.code"
-    if (test__test_not(true)) {
+    if (test__test_not__anon(true)) {
 #line 3 "tests/01__basics/009__logic_not/test.code"
         {
 #line 3 "tests/01__basics/009__logic_not/test.code"
@@ -17,7 +17,7 @@ int32_t test__main() {
 #line 4 "tests/01__basics/009__logic_not/test.code"
     }
 #line 5 "tests/01__basics/009__logic_not/test.code"
-    if (test__test_not(false)) {
+    if (test__test_not__anon(false)) {
 #line 7 "tests/01__basics/009__logic_not/test.code"
     } else {
 #line 8 "tests/01__basics/009__logic_not/test.code"
@@ -31,7 +31,7 @@ int32_t test__main() {
 #line 9 "tests/01__basics/009__logic_not/test.code"
     }
 #line 10 "tests/01__basics/009__logic_not/test.code"
-    if (!test__test_not(false)) {
+    if (!test__test_not__anon(false)) {
 #line 11 "tests/01__basics/009__logic_not/test.code"
         {
 #line 11 "tests/01__basics/009__logic_not/test.code"
@@ -43,7 +43,7 @@ int32_t test__main() {
 #line 12 "tests/01__basics/009__logic_not/test.code"
     }
 #line 13 "tests/01__basics/009__logic_not/test.code"
-    if (!!test__test_not(true)) {
+    if (!!test__test_not__anon(true)) {
 #line 14 "tests/01__basics/009__logic_not/test.code"
         {
 #line 14 "tests/01__basics/009__logic_not/test.code"
@@ -66,7 +66,7 @@ int32_t test__main() {
 }
 
 #line 19 "tests/01__basics/009__logic_not/test.code"
-bool test__test_not(bool v) {
+bool test__test_not__anon(bool v) {
 #line 20 "tests/01__basics/009__logic_not/test.code"
     {
 #line 20 "tests/01__basics/009__logic_not/test.code"

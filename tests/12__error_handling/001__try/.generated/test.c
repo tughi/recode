@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/001__try/test.code"
     {
 #line 2 "tests/12__error_handling/001__try/test.code"
-        struct test_Result__9_36 __001__ = test__increment(13);
+        struct test_Result__9_36 __001__ = test__increment__anon(13);
 #line 2 "tests/12__error_handling/001__try/test.code"
         int32_t __002__;
 #line 2 "tests/12__error_handling/001__try/test.code"
@@ -28,7 +28,7 @@ int32_t test__main() {
 }
 
 #line 9 "tests/12__error_handling/001__try/test.code"
-struct test_Result__9_36 test__increment(int32_t value) {
+struct test_Result__9_36 test__increment__anon(int32_t value) {
 #line 10 "tests/12__error_handling/001__try/test.code"
     if (value > 10) {
 #line 11 "tests/12__error_handling/001__try/test.code"

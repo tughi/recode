@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-int32_t test__echo(int32_t value);
+int32_t test__echo__value(int32_t value);
 
 #endif // __test_H__

@@ -11,7 +11,7 @@
 void *malloc(uintmax_t size);
 
 #line 9 "tests/99__calculator/string/builder.code"
-struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8_t c) {
+struct string_Builder *pstring_Builder__write__char(struct string_Builder *self, uint8_t c) {
 #line 10 "tests/99__calculator/string/builder.code"
     if (self->length == self->data_size) {
 #line 11 "tests/99__calculator/string/builder.code"
@@ -38,7 +38,7 @@ struct string_Builder *pstring_Builder__write(struct string_Builder *self, uint8
 #line 22 "tests/99__calculator/string/builder.code"
 struct String pstring_Builder__build(struct string_Builder *self) {
 #line 23 "tests/99__calculator/string/builder.code"
-    pstring_Builder__write(self, 0);
+    pstring_Builder__write__char(self, 0);
 #line 24 "tests/99__calculator/string/builder.code"
     struct String string = (struct String){.data = self->data, .length = self->length - 1u};
 #line 28 "tests/99__calculator/string/builder.code"
@@ -57,7 +57,7 @@ struct string_Builder string__make_string_builder() {
 #line 32 "tests/99__calculator/string/builder.code"
     {
 #line 32 "tests/99__calculator/string/builder.code"
-        struct string_Builder __001__ = string__make_string_builder_with_data_size(4u);
+        struct string_Builder __001__ = string__make_string_builder_with_data_size__anon(4u);
 #line 32 "tests/99__calculator/string/builder.code"
         return __001__;
 #line 32 "tests/99__calculator/string/builder.code"
@@ -66,7 +66,7 @@ struct string_Builder string__make_string_builder() {
 }
 
 #line 35 "tests/99__calculator/string/builder.code"
-struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_size) {
+struct string_Builder string__make_string_builder_with_data_size__anon(uintmax_t data_size) {
 #line 36 "tests/99__calculator/string/builder.code"
     {
 #line 36 "tests/99__calculator/string/builder.code"
@@ -79,9 +79,9 @@ struct string_Builder string__make_string_builder_with_data_size(uintmax_t data_
 }
 
 #line 43 "tests/99__calculator/string/builder.code"
-void pstring_Builder__write_char(struct string_Builder *self, uint8_t c) {
+void pstring_Builder__write_char__anon(struct string_Builder *self, uint8_t c) {
 #line 44 "tests/99__calculator/string/builder.code"
-    pstring_Builder__write(self, c);
+    pstring_Builder__write__char(self, c);
 #line 45 "tests/99__calculator/string/builder.code"
 }
 

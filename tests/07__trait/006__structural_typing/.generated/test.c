@@ -5,7 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/07__trait/006__structural_typing/test.code"
 int32_t test__main() {
 #line 2 "tests/07__trait/006__structural_typing/test.code"
-    struct test_Writer out = (struct test_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) ptest_FILE__write_char)};
+    struct test_Writer out = (struct test_Writer){.self = __stdoutp, .write_char = ((void (*)(void *self, uint8_t c)) ptest_FILE__write_char__anon)};
 #line 7 "tests/07__trait/006__structural_typing/test.code"
     {
 #line 7 "tests/07__trait/006__structural_typing/test.code"
@@ -15,11 +15,11 @@ int32_t test__main() {
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         void *__003__ = &__002__;
 #line 7 "tests/07__trait/006__structural_typing/test.code"
-        void (*__004__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pstr__write_to);
+        void (*__004__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pstr__write_to__anon);
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writable __005__ = (struct test_Writable){.self = __003__, .write_to = __004__};
 #line 7 "tests/07__trait/006__structural_typing/test.code"
-        struct test_Writer *__006__ = ptest_Writer__write(__001__, __005__);
+        struct test_Writer *__006__ = ptest_Writer__write__anon(__001__, __005__);
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         ptest_Writer__end_line(__006__);
 #line 7 "tests/07__trait/006__structural_typing/test.code"
@@ -33,11 +33,11 @@ int32_t test__main() {
 #line 12 "tests/07__trait/006__structural_typing/test.code"
         void *__009__ = &__008__;
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        void (*__010__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pi32__write_to);
+        void (*__010__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pi32__write_to__anon);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writable __011__ = (struct test_Writable){.self = __009__, .write_to = __010__};
 #line 12 "tests/07__trait/006__structural_typing/test.code"
-        struct test_Writer *__012__ = ptest_Writer__write(__007__, __011__);
+        struct test_Writer *__012__ = ptest_Writer__write__anon(__007__, __011__);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
         ptest_Writer__end_line(__012__);
 #line 12 "tests/07__trait/006__structural_typing/test.code"
@@ -54,7 +54,7 @@ int32_t test__main() {
 }
 
 #line 17 "tests/07__trait/006__structural_typing/test.code"
-void pi32__write_to(int32_t *self, struct test_Writer *writer) {
+void pi32__write_to__anon(int32_t *self, struct test_Writer *writer) {
 #line 18 "tests/07__trait/006__structural_typing/test.code"
     int32_t number = *self;
 #line 19 "tests/07__trait/006__structural_typing/test.code"
@@ -70,7 +70,7 @@ void pi32__write_to(int32_t *self, struct test_Writer *writer) {
 #line 24 "tests/07__trait/006__structural_typing/test.code"
         int32_t factor = number / 10;
 #line 25 "tests/07__trait/006__structural_typing/test.code"
-        pi32__write_to(&factor, writer);
+        pi32__write_to__anon(&factor, writer);
 #line 26 "tests/07__trait/006__structural_typing/test.code"
     }
 #line 27 "tests/07__trait/006__structural_typing/test.code"
@@ -79,7 +79,7 @@ void pi32__write_to(int32_t *self, struct test_Writer *writer) {
 }
 
 #line 30 "tests/07__trait/006__structural_typing/test.code"
-void pstr__write_to(struct String *self, struct test_Writer *writer) {
+void pstr__write_to__anon(struct String *self, struct test_Writer *writer) {
 #line 31 "tests/07__trait/006__structural_typing/test.code"
     struct String *string = ((struct String *) self);
 #line 32 "tests/07__trait/006__structural_typing/test.code"
@@ -111,7 +111,7 @@ struct test_Writer *ptest_Writer__end_line(struct test_Writer *self) {
 }
 
 #line 56 "tests/07__trait/006__structural_typing/test.code"
-struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct test_Writable writable) {
+struct test_Writer *ptest_Writer__write__anon(struct test_Writer *self, struct test_Writable writable) {
 #line 57 "tests/07__trait/006__structural_typing/test.code"
     writable.write_to(writable.self, self);
 #line 58 "tests/07__trait/006__structural_typing/test.code"
@@ -126,7 +126,7 @@ struct test_Writer *ptest_Writer__write(struct test_Writer *self, struct test_Wr
 }
 
 #line 69 "tests/07__trait/006__structural_typing/test.code"
-void ptest_FILE__write_char(struct test_FILE *self, uint8_t c) {
+void ptest_FILE__write_char__anon(struct test_FILE *self, uint8_t c) {
 #line 70 "tests/07__trait/006__structural_typing/test.code"
     fputc(((int32_t) c), self);
 #line 71 "tests/07__trait/006__structural_typing/test.code"

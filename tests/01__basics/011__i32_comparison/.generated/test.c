@@ -7,13 +7,13 @@ int32_t test__main() {
 #line 2 "tests/01__basics/011__i32_comparison/test.code"
     int32_t errors = 6;
 #line 3 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) == 42) {
+    if (test__echo__anon(42) == 42) {
 #line 4 "tests/01__basics/011__i32_comparison/test.code"
         errors = errors - 1;
 #line 5 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 6 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) != 42) {
+    if (test__echo__anon(42) != 42) {
 #line 8 "tests/01__basics/011__i32_comparison/test.code"
     } else {
 #line 9 "tests/01__basics/011__i32_comparison/test.code"
@@ -21,7 +21,7 @@ int32_t test__main() {
 #line 10 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 11 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) < 13) {
+    if (test__echo__anon(42) < 13) {
 #line 13 "tests/01__basics/011__i32_comparison/test.code"
     } else {
 #line 14 "tests/01__basics/011__i32_comparison/test.code"
@@ -29,19 +29,19 @@ int32_t test__main() {
 #line 15 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 16 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) <= 42) {
+    if (test__echo__anon(42) <= 42) {
 #line 17 "tests/01__basics/011__i32_comparison/test.code"
         errors = errors - 1;
 #line 18 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 19 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) > 13) {
+    if (test__echo__anon(42) > 13) {
 #line 20 "tests/01__basics/011__i32_comparison/test.code"
         errors = errors - 1;
 #line 21 "tests/01__basics/011__i32_comparison/test.code"
     }
 #line 22 "tests/01__basics/011__i32_comparison/test.code"
-    if (test__echo(42) >= 42) {
+    if (test__echo__anon(42) >= 42) {
 #line 23 "tests/01__basics/011__i32_comparison/test.code"
         errors = errors - 1;
 #line 24 "tests/01__basics/011__i32_comparison/test.code"
@@ -58,7 +58,7 @@ int32_t test__main() {
 }
 
 #line 28 "tests/01__basics/011__i32_comparison/test.code"
-int32_t test__echo(int32_t v) {
+int32_t test__echo__anon(int32_t v) {
 #line 29 "tests/01__basics/011__i32_comparison/test.code"
     {
 #line 29 "tests/01__basics/011__i32_comparison/test.code"

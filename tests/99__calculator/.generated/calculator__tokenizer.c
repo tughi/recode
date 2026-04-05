@@ -108,7 +108,7 @@ struct calculator__source_Span pcalculator__tokenizer_Token__span(struct calcula
 }
 
 #line 66 "tests/99__calculator/calculator/tokenizer/tokens.code"
-struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calculator__tokenizer_Token *token) {
+struct io_Writer *pio_Writer__write_token__anon(struct io_Writer *self, struct calculator__tokenizer_Token *token) {
 #line 67 "tests/99__calculator/calculator/tokenizer/tokens.code"
     struct calculator__tokenizer_Token *__switch_67_value__ = token;
 #line 68 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -116,7 +116,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 69 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 69 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__001__ = pio_Writer__write_signed(pio_Writer__write_string(self, (struct String){.data = "Number: ", .length = 8}), __switch_67_value__->variant_1.value);
+            struct io_Writer *__001__ = pio_Writer__write_signed__signed(pio_Writer__write_string__anon(self, (struct String){.data = "Number: ", .length = 8}), __switch_67_value__->variant_1.value);
 #line 69 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __001__;
 #line 69 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -128,7 +128,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 72 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 72 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__002__ = pio_Writer__write_string(self, (struct String){.data = "Plus", .length = 4});
+            struct io_Writer *__002__ = pio_Writer__write_string__anon(self, (struct String){.data = "Plus", .length = 4});
 #line 72 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __002__;
 #line 72 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -140,7 +140,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 75 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 75 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__003__ = pio_Writer__write_string(self, (struct String){.data = "Minus", .length = 5});
+            struct io_Writer *__003__ = pio_Writer__write_string__anon(self, (struct String){.data = "Minus", .length = 5});
 #line 75 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __003__;
 #line 75 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -152,7 +152,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 78 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 78 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__004__ = pio_Writer__write_string(self, (struct String){.data = "Multiply", .length = 8});
+            struct io_Writer *__004__ = pio_Writer__write_string__anon(self, (struct String){.data = "Multiply", .length = 8});
 #line 78 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __004__;
 #line 78 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -164,7 +164,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 81 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 81 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__005__ = pio_Writer__write_string(self, (struct String){.data = "Divide", .length = 6});
+            struct io_Writer *__005__ = pio_Writer__write_string__anon(self, (struct String){.data = "Divide", .length = 6});
 #line 81 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __005__;
 #line 81 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -176,7 +176,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 84 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 84 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__006__ = pio_Writer__write_string(self, (struct String){.data = "Stop", .length = 4});
+            struct io_Writer *__006__ = pio_Writer__write_string__anon(self, (struct String){.data = "Stop", .length = 4});
 #line 84 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __006__;
 #line 84 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -188,7 +188,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 87 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 87 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__007__ = pio_Writer__write_string(pio_Writer__write_string(self, (struct String){.data = "Error: ", .length = 7}), __switch_67_value__->variant_7.message);
+            struct io_Writer *__007__ = pio_Writer__write_string__anon(pio_Writer__write_string__anon(self, (struct String){.data = "Error: ", .length = 7}), __switch_67_value__->variant_7.message);
 #line 87 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __007__;
 #line 87 "tests/99__calculator/calculator/tokenizer/tokens.code"
@@ -200,7 +200,7 @@ struct io_Writer *pio_Writer__write_token(struct io_Writer *self, struct calcula
 #line 90 "tests/99__calculator/calculator/tokenizer/tokens.code"
         {
 #line 90 "tests/99__calculator/calculator/tokenizer/tokens.code"
-            struct io_Writer *__008__ = pio_Writer__write_string(self, (struct String){.data = "Nil!", .length = 4});
+            struct io_Writer *__008__ = pio_Writer__write_string__anon(self, (struct String){.data = "Nil!", .length = 4});
 #line 90 "tests/99__calculator/calculator/tokenizer/tokens.code"
             return __008__;
 #line 90 "tests/99__calculator/calculator/tokenizer/tokens.code"

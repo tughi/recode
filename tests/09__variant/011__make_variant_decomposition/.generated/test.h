@@ -4,7 +4,7 @@
 #include "types.h"
 
 
-int32_t test__evaluate(struct test_Expression expression);
+int32_t test__evaluate__expression(struct test_Expression expression);
 
 void exit(int32_t status);
 

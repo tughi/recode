@@ -7,7 +7,7 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/003__auto_propagation/test.code"
     {
 #line 2 "tests/12__error_handling/003__auto_propagation/test.code"
-        struct test_Result__9_36 __001__ = test__count_from(0);
+        struct test_Result__9_36 __001__ = test__count_from__anon(0);
 #line 2 "tests/12__error_handling/003__auto_propagation/test.code"
         int32_t __002__;
 #line 2 "tests/12__error_handling/003__auto_propagation/test.code"
@@ -28,7 +28,7 @@ int32_t test__main() {
 }
 
 #line 9 "tests/12__error_handling/003__auto_propagation/test.code"
-struct test_Result__9_36 test__increment(int32_t value) {
+struct test_Result__9_36 test__increment__anon(int32_t value) {
 #line 10 "tests/12__error_handling/003__auto_propagation/test.code"
     if (value > 10) {
 #line 11 "tests/12__error_handling/003__auto_propagation/test.code"
@@ -53,7 +53,7 @@ struct test_Result__9_36 test__increment(int32_t value) {
 }
 
 #line 16 "tests/12__error_handling/003__auto_propagation/test.code"
-struct test_Result__9_36 test__count_from(int32_t value) {
+struct test_Result__9_36 test__count_from__anon(int32_t value) {
 #line 17 "tests/12__error_handling/003__auto_propagation/test.code"
     int32_t new_value = value;
 #line 18 "tests/12__error_handling/003__auto_propagation/test.code"
@@ -61,7 +61,7 @@ struct test_Result__9_36 test__count_from(int32_t value) {
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
         {
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
-            struct test_Result__9_36 __001__ = test__increment(new_value);
+            struct test_Result__9_36 __001__ = test__increment__anon(new_value);
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"
             if (__001__.success) {} else return (struct test_Result__9_36){.success = false, .error = __001__.error};
 #line 19 "tests/12__error_handling/003__auto_propagation/test.code"

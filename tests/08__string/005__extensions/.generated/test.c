@@ -3,7 +3,7 @@
 void *malloc(uintmax_t size);
 
 #line 3 "tests/08__string/005__extensions/test.code"
-struct String str__concat(struct String self, struct String other) {
+struct String str__concat__anon(struct String self, struct String other) {
 #line 4 "tests/08__string/005__extensions/test.code"
     if (self.length == 0u) {
 #line 5 "tests/08__string/005__extensions/test.code"
@@ -66,7 +66,7 @@ struct String str__concat(struct String self, struct String other) {
 }
 
 #line 32 "tests/08__string/005__extensions/test.code"
-bool str__equals(struct String self, struct String other) {
+bool str__equals__anon(struct String self, struct String other) {
 #line 33 "tests/08__string/005__extensions/test.code"
     if (self.length != other.length) {
 #line 34 "tests/08__string/005__extensions/test.code"
@@ -133,9 +133,9 @@ bool str__equals(struct String self, struct String other) {
 #line 53 "tests/08__string/005__extensions/test.code"
 int32_t test__main() {
 #line 54 "tests/08__string/005__extensions/test.code"
-    struct String message = str__concat((struct String){.data = "Hello", .length = 5}, (struct String){.data = " world!", .length = 7});
+    struct String message = str__concat__anon((struct String){.data = "Hello", .length = 5}, (struct String){.data = " world!", .length = 7});
 #line 55 "tests/08__string/005__extensions/test.code"
-    if (!str__equals(message, (struct String){.data = "Hello world!", .length = 12})) {
+    if (!str__equals__anon(message, (struct String){.data = "Hello world!", .length = 12})) {
 #line 56 "tests/08__string/005__extensions/test.code"
         {
 #line 56 "tests/08__string/005__extensions/test.code"
@@ -147,7 +147,7 @@ int32_t test__main() {
 #line 57 "tests/08__string/005__extensions/test.code"
     }
 #line 58 "tests/08__string/005__extensions/test.code"
-    if (!str__equals((struct String){.data = "Hello", .length = 5}, (struct String){.data = "Hello", .length = 5})) {
+    if (!str__equals__anon((struct String){.data = "Hello", .length = 5}, (struct String){.data = "Hello", .length = 5})) {
 #line 59 "tests/08__string/005__extensions/test.code"
         {
 #line 59 "tests/08__string/005__extensions/test.code"
@@ -159,7 +159,7 @@ int32_t test__main() {
 #line 60 "tests/08__string/005__extensions/test.code"
     }
 #line 61 "tests/08__string/005__extensions/test.code"
-    if (str__concat((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
+    if (str__concat__anon((struct String){.data = 0, .length = 0}, (struct String){.data = 0, .length = 0}).length != 0u) {
 #line 62 "tests/08__string/005__extensions/test.code"
         {
 #line 62 "tests/08__string/005__extensions/test.code"

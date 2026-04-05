@@ -5,7 +5,7 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
-    int32_t (*echo_pointer)(int32_t value) = test__echo;
+    int32_t (*echo_pointer)(int32_t value) = test__echo__value;
 #line 4 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
     {
 #line 4 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
@@ -18,7 +18,7 @@ int32_t test__main() {
 }
 
 #line 7 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
-int32_t test__echo(int32_t value) {
+int32_t test__echo__value(int32_t value) {
 #line 8 "tests/01__basics/024__call_procedure_pointer_variable/test.code"
     {
 #line 8 "tests/01__basics/024__call_procedure_pointer_variable/test.code"

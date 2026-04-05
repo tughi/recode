@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-void test__set(int32_t *pointer, int32_t value);
+void test__set__pointer__value(int32_t *pointer, int32_t value);
 
 #endif // __test_H__

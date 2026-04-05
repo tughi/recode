@@ -4,7 +4,7 @@
 void *malloc(uintmax_t size);
 
 #line 12 "tests/11__generics/005__method/collections/list.code"
-void pcollections_List__i32__prepend(struct collections_List__i32 *self, int32_t data) {
+void pcollections_List__i32__prepend__data(struct collections_List__i32 *self, int32_t data) {
 #line 13 "tests/11__generics/005__method/collections/list.code"
     struct collections_List_Item__i32 *new_item;
 #line 13 "tests/11__generics/005__method/collections/list.code"

@@ -1,0 +1,5 @@
+import math
+
+proc main() -> i32 {
+    return math.add(left: 3, right: 7) - math.add(value: 5)
+}

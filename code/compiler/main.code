@@ -11,7 +11,7 @@ proc main() -> i32 {
     libc.stdout.write(source.content)
 
     try parser.parse(source) else {
-        libc.stderr.write_source_location(error.source, error.source_position).write(": Error: ").write(error.message).end_line()
+        libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
     }
 
     return 0

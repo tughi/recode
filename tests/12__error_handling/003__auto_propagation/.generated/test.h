@@ -6,8 +6,8 @@
 
 int32_t test__main();
 
-struct test_Result__9_36 test__increment(int32_t value);
+struct test_Result__9_36 test__increment__anon(int32_t value);
 
-struct test_Result__9_36 test__count_from(int32_t value);
+struct test_Result__9_36 test__count_from__anon(int32_t value);
 
 #endif // __test_H__

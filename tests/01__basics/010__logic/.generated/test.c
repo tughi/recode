@@ -5,9 +5,9 @@ void *malloc(uintmax_t size);
 #line 1 "tests/01__basics/010__logic/test.code"
 int32_t test__main() {
 #line 2 "tests/01__basics/010__logic/test.code"
-    bool t = test__echo(true);
+    bool t = test__echo__anon(true);
 #line 3 "tests/01__basics/010__logic/test.code"
-    bool f = test__echo(false);
+    bool f = test__echo__anon(false);
 #line 4 "tests/01__basics/010__logic/test.code"
     if ((t && f || f && t) || !((t || f) && (f || t))) {
 #line 5 "tests/01__basics/010__logic/test.code"
@@ -32,7 +32,7 @@ int32_t test__main() {
 }
 
 #line 10 "tests/01__basics/010__logic/test.code"
-bool test__echo(bool v) {
+bool test__echo__anon(bool v) {
 #line 11 "tests/01__basics/010__logic/test.code"
     {
 #line 11 "tests/01__basics/010__logic/test.code"

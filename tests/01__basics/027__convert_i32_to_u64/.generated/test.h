@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-uint64_t test__cast(int32_t value);
+uint64_t test__cast__anon(int32_t value);
 
 #endif // __test_H__

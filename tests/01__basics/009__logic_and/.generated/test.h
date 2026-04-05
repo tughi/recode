@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-bool test__echo(bool v);
+bool test__echo__anon(bool v);
 
 #endif // __test_H__

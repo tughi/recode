@@ -24,7 +24,7 @@ int32_t d_u8_b__length(uint8_t *self) {
 }
 
 #line 9 "tests/05__methods/004__multi_pointer_method/test.code"
-int32_t test__main(int32_t argc, uint8_t **argv) {
+int32_t test__main__anon__anon(int32_t argc, uint8_t **argv) {
 #line 10 "tests/05__methods/004__multi_pointer_method/test.code"
     if (argc != 2) {
 #line 11 "tests/05__methods/004__multi_pointer_method/test.code"
@@ -61,6 +61,6 @@ int32_t test__main(int32_t argc, uint8_t **argv) {
 }
 
 int32_t main(int argc, const char **argv) {
-    return test__main(argc, (uint8_t **)argv);
+    return test__main__anon__anon(argc, (uint8_t **)argv);
 }
 

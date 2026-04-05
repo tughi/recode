@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-int32_t test__fibonacci(int32_t n);
+int32_t test__fibonacci__n(int32_t n);
 
 #endif // __test_H__

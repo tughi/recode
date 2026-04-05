@@ -6,6 +6,6 @@
 
 int32_t test__main();
 
-struct test_Value test__demo(struct test_Value value);
+struct test_Value test__demo__value(struct test_Value value);
 
 #endif // __test_H__
