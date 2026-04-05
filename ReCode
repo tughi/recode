@@ -472,7 +472,7 @@ def stage():
     run("cp -R bootstrap/stage0 compiler")
 
 
-def compiler():
+def compiler(skip_tests=False):
     build()
 
     if not os.path.exists(f"build/compiler"):
@@ -483,9 +483,20 @@ def compiler():
         trace(*compiler_command)
         exit(1)
 
-    if assemble([f"build/compiler/{file}" for file in os.listdir("build/compiler")], "build/compiler/ReCode", check=True):
-        # run('build/compiler/ReCode', check=True)
-        pass
+    assemble([f"build/compiler/{file}" for file in os.listdir("build/compiler")], "build/compiler/ReCode", check=True)
+
+    if skip_tests:
+        return
+
+    for test_dir in sorted(test_dirs(["tests"])):
+        test_data = json.loads(open(f"{test_dir}/test.json").read()) if os.path.exists(f"{test_dir}/test.json") else {}
+        if test_data.get("compile", {}).get("error", 0):
+            continue
+
+        test_file = f"{test_dir}/test.code"
+        logger.info(f"Compiling: {test_file}")
+        if run(["build/compiler/ReCode", test_file], check=False).returncode != 0:
+            exit(1)
 
 
 def editor(launch):
@@ -541,6 +552,7 @@ if __name__ == "__main__":
 
     compiler_args_parser = args_command_parser.add_parser("compiler", help="run the compiler")
     compiler_args_parser.add_argument("--clean", action="store_true", help="clean before running")
+    compiler_args_parser.add_argument("--skip-tests", action="store_true", help="skip running tests")
 
     args = args_parsers.parse_args()
     if args.command == "clean":
@@ -555,7 +567,7 @@ if __name__ == "__main__":
         elif args.command == "test":
             test(args.path, save=args.save, stage=1)
         elif args.command == "compiler":
-            compiler()
+            compiler(skip_tests=args.skip_tests)
         elif args.command == "editor":
             editor(args.launch)
         else:

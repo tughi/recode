@@ -2,16 +2,20 @@ import compiler.parser
 import compiler.source
 import libc
 
-proc main() -> i32 {
-    let source = try source.load("tests/01__basics/002__call_procedure_without_arguments/test.code") else {
+proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
+    if argc < 2 {
+        libc.stderr.write("Usage: ReCode <source.code>").end_line()
+        return 1
+    }
+
+    let source = try source.load(argv[1].to_str()) else {
         libc.stderr.write("Error: ").write(error).end_line()
         return 1
     }
 
-    libc.stdout.write(source.content)
-
     try parser.parse(source) else {
         libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
+        return 1
     }
 
     return 0
