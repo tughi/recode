@@ -19,21 +19,22 @@ proc (^Parser).error(parser, anon message: str) -> Error {
 proc (^libc.FILE).write(file, parser_error: Error) -> ^libc.FILE {
     file.write(parser_error.source.path).write_char(':')
 
-    let column = 1i64
-
-    let index = parser_error.source_position
-    let source_content = parser_error.source.content.data()
-    while index > 0 and source_content[index] != '\n' {
-        column = column + 1
-        index = index - 1
-    }
-
     let line = 1i64
-    while index > 0 {
+    let column = 1i64
+    let index = 0usize
+    let source_content = parser_error.source.content.data()
+    let end = parser_error.source_position
+    if end > parser_error.source.content.length {
+        end = parser_error.source.content.length
+    }
+    while index < end {
         if source_content[index] == '\n' {
             line = line + 1
+            column = 1
+        } else {
+            column = column + 1
         }
-        index = index - 1
+        index = index + 1
     }
 
     return file.write_integer(line).write_char(':').write_integer(column)

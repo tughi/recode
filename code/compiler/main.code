@@ -3,7 +3,7 @@ import compiler.source
 import libc
 
 proc main() -> i32 {
-    let source = try source.load("tests/01__basics/001__first_procedure/test.code") else {
+    let source = try source.load("tests/01__basics/002__call_procedure_without_arguments/test.code") else {
         libc.stderr.write("Error: ").write(error).end_line()
         return 1
     }

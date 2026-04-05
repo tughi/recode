@@ -15,18 +15,6 @@ type Identifier = struct {
     source_position: usize
 }
 
-proc (^Parser).matches_identifier(parser, from start_position: usize) -> usize {
-    let position = start_position
-    if parser.source.content.char_at(position).is_identifier_start() {
-        position = position + 1
-        while parser.source.content.char_at(position).is_identifier_char() {
-            position = position + 1
-        }
-        return position
-    }
-    return 0
-}
-
 proc (^Parser).consume_identifier(parser) -> Identifier !> Error {
     let source_position = parser.source_position
     if parser.source.content.char_at(source_position).is_identifier_start() {

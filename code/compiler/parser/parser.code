@@ -18,36 +18,11 @@ proc parse(anon source: source.Source) !> Error {
     return
 }
 
-proc (^Parser).matches_two(self, first: proc (parser: ^Parser, from: usize) -> usize !> Error, second: proc (parser: ^Parser, from: usize) -> usize !> Error) -> bool {
-    let index = try first(parser: self, from: self.source_position) else {
-        return false
-    }
-    index = try second(parser: self, from: index) else {
-        return false
-    }
-    return true
-}
-
-proc matches_closing_brace(parser: ^Parser, from index: usize) -> usize !> Error {
-    if parser.source.content.char_at(index) == '}' {
-        return index + 1
-    }
-    raise parser.error("")
-}
-
-proc matches_space(parser: ^Parser, from index: usize) -> usize !> Error {
-    let source_position = index
-    while parser.source.content.char_at(source_position) == ' ' {
-        source_position = source_position + 1
-    }
-    return source_position
-}
-
 proc (^Parser).parse_block_statement(self) !> Error {
     self.consume("{")
     self.consume_end_of_line()
     self.increase_alignment()
-    while not self.matches_two(first: matches_space, second: matches_closing_brace) {
+    while not self.matches(first: Space(), second: "}") {
         self.consume_space(self.alignment)
         self.parse_statement()
         self.consume_end_of_line()
@@ -73,20 +48,20 @@ proc (^Parser).parse_procedure_statement(self) !> Error {
 }
 
 proc (^Parser).parse_statement(self) !> Error {
-    if self.matches_identifier(from: self.source_position) > 0 {
-        let saved_source_position = self.source_position
-        let identifier = self.consume_identifier()
-        if identifier.lexeme.equals("return") {
-            self.parse_return_statement(keyword: identifier)
-        } else {
-            self.source_position = saved_source_position
-            raise self.error("Unsupported statement")
-        }
+    let peek_end = try self.matches(Identifier_Match(), from: self.source_position) else {
+        return
+    }
+    let peek = self.source.content.slice(self.source_position, peek_end)
+    if peek.equals("return") {
+        self.parse_return_statement()
+    } else {
+        raise self.error("Unsupported statement")
     }
     return
 }
 
-proc (^Parser).parse_return_statement(self, keyword: Identifier) !> Error {
+proc (^Parser).parse_return_statement(self) !> Error {
+    self.consume("return")
     self.consume_space(1)
     self.parse_expression()
     return

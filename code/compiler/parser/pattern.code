@@ -1,0 +1,64 @@
+type Match = variant {
+    str
+    Space
+    Identifier_Match
+}
+
+type Space = struct {
+    required: bool
+}
+
+type Identifier_Match = struct {
+    _: bool // TODO: remove when empty structs are supported
+}
+
+type No_Match = struct {
+    _: bool // TODO: remove when empty structs are supported
+}
+
+proc (^Parser).matches(self, first: Match, second: Match) -> bool {
+    let index = self.source_position
+    index = try self.matches(first, from: index) else {
+        return false
+    }
+    index = try self.matches(second, from: index) else {
+        return false
+    }
+    return true
+}
+
+proc (^Parser).matches(self, anon match: Match, from start_index: usize) -> usize !> No_Match {
+    switch match {
+        is str as lexeme {
+            if not self.source.content.starts_with(lexeme, from: start_index) {
+                raise No_Match()
+            }
+            return start_index + lexeme.length
+        }
+        is Space as space {
+            let index = start_index
+            while self.source.content.char_at(index) == ' ' {
+                index = index + 1
+            }
+            if space.required and index == start_index {
+                raise No_Match()
+            }
+            return index
+        }
+        is Identifier_Match {
+            let index = start_index
+            if not self.source.content.char_at(index).is_identifier_start() {
+                raise No_Match()
+            }
+            index = index + 1
+            while self.source.content.char_at(index).is_identifier_char() {
+                index = index + 1
+            }
+            return index
+        }
+        is nil {
+            // Ignored
+        }
+    }
+    raise No_Match()
+}
