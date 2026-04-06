@@ -105,6 +105,43 @@ proc (^Parser).parse_return_statement(self) !> Error {
 }
 
 proc (^Parser).parse_expression(self) !> Error {
+    self.parse_additive_expression()
+    return
+}
+
+proc (^Parser).parse_additive_expression(self) !> Error {
+    self.parse_multiplicative_expression()
+    while self.matches(first: Space(), second: "+") or self.matches(first: Space(), second: "-") {
+        self.consume_space(1)
+        if self.matches(first: "+") {
+            self.consume("+")
+        } else {
+            self.consume("-")
+        }
+        self.consume_space(1)
+        self.parse_multiplicative_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_multiplicative_expression(self) !> Error {
+    self.parse_access_expression()
+    while self.matches(first: Space(), second: "*") or self.matches(first: Space(), second: "%") or (self.matches(first: Space(), second: "/") and not self.matches(first: Space(), second: Comment())) {
+        self.consume_space(1)
+        if self.matches(first: "*") {
+            self.consume("*")
+        } else if self.matches(first: "%") {
+            self.consume("%")
+        } else {
+            self.consume("/")
+        }
+        self.consume_space(1)
+        self.parse_access_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_access_expression(self) !> Error {
     self.parse_primary_expression()
     loop {
         if self.matches(first: "(") {
