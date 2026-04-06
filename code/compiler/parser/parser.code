@@ -302,7 +302,23 @@ proc (^Parser).parse_multiplicative_expression(self) !> Error {
 }
 
 proc (^Parser).parse_unary_expression(self) !> Error {
-    if self.matches(first: "^") {
+    if self.matches(first: "type_size") {
+        self.consume("type_size")
+        self.consume_space(0)
+        self.consume("(")
+        self.consume_space(0)
+        self.parse_type()
+        self.consume_space(0)
+        self.consume(")")
+    } else if self.matches(first: "type_alignment") {
+        self.consume("type_alignment")
+        self.consume_space(0)
+        self.consume("(")
+        self.consume_space(0)
+        self.parse_type()
+        self.consume_space(0)
+        self.consume(")")
+    } else if self.matches(first: "^") {
         self.consume("^")
         self.consume_space(0)
         self.parse_unary_expression()
