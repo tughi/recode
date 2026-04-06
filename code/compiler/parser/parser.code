@@ -95,6 +95,12 @@ proc (^Parser).parse_statement(self) !> Error {
         self.parse_return_statement()
     } else {
         self.parse_expression()
+        if self.matches(first: Space(), second: "=") and not self.matches(first: Space(), second: "==") {
+            self.consume_space(1)
+            self.consume("=")
+            self.consume_space(1)
+            self.parse_expression()
+        }
     }
     return
 }
