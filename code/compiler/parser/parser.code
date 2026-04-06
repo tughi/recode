@@ -329,6 +329,14 @@ proc (^Parser).parse_access_expression(self) !> Error {
             self.consume_space(0)
             if self.matches(first: "^") {
                 self.consume("^")
+            } else if self.matches(first: "as") {
+                self.consume("as")
+                self.consume_space(0)
+                self.consume("(")
+                self.consume_space(0)
+                self.parse_type()
+                self.consume_space(0)
+                self.consume(")")
             } else {
                 self.consume_identifier()
             }
