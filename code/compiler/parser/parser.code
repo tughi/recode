@@ -288,7 +288,11 @@ proc (^Parser).parse_multiplicative_expression(self) !> Error {
 }
 
 proc (^Parser).parse_unary_expression(self) !> Error {
-    if self.matches(first: "not") {
+    if self.matches(first: "-") {
+        self.consume("-")
+        self.consume_space(0)
+        self.parse_unary_expression()
+    } else if self.matches(first: "not") {
         self.consume("not")
         self.consume_space(1)
         self.parse_unary_expression()
