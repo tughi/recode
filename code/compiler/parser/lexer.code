@@ -98,6 +98,9 @@ proc (^Parser).consume_integer_literal(parser) -> Integer_Literal !> Error {
         value: value
     )
     parser.source_position = source_position
+    if parser.matches(first: Integer_Type_Suffix()) {
+        parser.consume_identifier()
+    }
     return integer_literal
 }
 

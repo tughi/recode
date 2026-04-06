@@ -3,6 +3,7 @@ type Match = variant {
     End_Of_File
     End_Of_Line
     Identifier_Match
+    Integer_Type_Suffix
     Space
     str
 }
@@ -20,6 +21,10 @@ type End_Of_File = struct {
 }
 
 type Identifier_Match = struct {
+    _: bool // TODO: Add support for empty structs
+}
+
+type Integer_Type_Suffix = struct {
     _: bool // TODO: Add support for empty structs
 }
 
@@ -98,6 +103,28 @@ proc (^Parser).matches(self, anon match: Match, from start_index: usize) -> usiz
                 index = index + 1
             }
             return index
+        }
+        is Integer_Type_Suffix {
+            let first_char = self.source.content.char_at(start_index)
+            if first_char != 'i' and first_char != 'u' {
+                raise No_Match()
+            }
+            let index = start_index + 1
+            if self.source.content.starts_with("size", from: index) and not self.source.content.char_at(index + 4).is_identifier_char() {
+                return index + 4
+            }
+            let bit_width = 0
+            while self.source.content.char_at(index).is_digit() {
+                bit_width = bit_width * 10 + (self.source.content.char_at(index) - '0').as(i32)
+                index = index + 1
+            }
+            if self.source.content.char_at(index).is_identifier_char() {
+                raise No_Match()
+            }
+            if bit_width == 8 or bit_width == 16 or bit_width == 32 or bit_width == 64 {
+                return index
+            }
+            raise No_Match()
         }
         is Comment {
             if not self.source.content.starts_with("//", from: start_index) {
