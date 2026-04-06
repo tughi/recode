@@ -105,6 +105,18 @@ proc (u8).is_digit(self) -> bool {
     return self >= '0' and self <= '9'
 }
 
+proc (^Parser).consume_string_literal(parser) !> Error {
+    parser.consume("\"")
+    while parser.source.content.char_at(parser.source_position) != '"' {
+        if parser.source.content.char_at(parser.source_position) == '\\' {
+            parser.source_position = parser.source_position + 1
+        }
+        parser.source_position = parser.source_position + 1
+    }
+    parser.consume("\"")
+    return
+}
+
 proc (^Parser).consume_space(parser, anon count: i32) {
     let consumed = 0
     let source_position = parser.source_position

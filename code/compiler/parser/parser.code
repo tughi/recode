@@ -18,6 +18,9 @@ proc parse(anon source: source.Source) !> Error {
             break
         } else if parser.matches(first: Space(), second: Comment()) or parser.matches(first: Space(), second: End_Of_Line()) {
             parser.consume_empty_line()
+        } else if parser.matches(first: "type") {
+            parser.parse_type_statement()
+            parser.consume_end_of_line()
         } else if parser.matches(first: "let") {
             parser.parse_variable_declaration_statement()
             parser.consume_end_of_line()
@@ -177,7 +180,15 @@ proc (^Parser).parse_variable_declaration_statement(self) !> Error {
         self.consume_space(1)
         self.consume("=")
         self.consume_space(1)
-        self.parse_expression()
+        if self.matches(first: "external") {
+            self.consume("external")
+            self.consume_space(0)
+            if self.source.content.char_at(self.source_position) == '"' {
+                self.consume_string_literal()
+            }
+        } else {
+            self.parse_expression()
+        }
     }
     return
 }
@@ -401,8 +412,29 @@ type Parsed_Type = struct {
 }
 
 proc (^Parser).parse_type(self) -> Parsed_Type !> Error {
+    if self.matches(first: "^") {
+        self.consume("^")
+        self.consume_space(0)
+        return self.parse_type()
+    }
     let type_name = self.consume_identifier()
     return Parsed_Type(name: type_name)
+}
+
+proc (^Parser).parse_type_specifier(self) !> Error {
+    self.consume("external")
+    return
+}
+
+proc (^Parser).parse_type_statement(self) !> Error {
+    self.consume("type")
+    self.consume_space(1)
+    self.consume_identifier()
+    self.consume_space(1)
+    self.consume("=")
+    self.consume_space(1)
+    self.parse_type_specifier()
+    return
 }
 
 proc (^Parser).increase_alignment(self) {
