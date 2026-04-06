@@ -18,6 +18,9 @@ proc parse(anon source: source.Source) !> Error {
             break
         } else if parser.matches(first: Space(), second: Comment()) or parser.matches(first: Space(), second: End_Of_Line()) {
             parser.consume_empty_line()
+        } else if parser.matches(first: "let") {
+            parser.parse_variable_declaration_statement()
+            parser.consume_end_of_line()
         } else {
             parser.parse_procedure_statement()
             parser.consume_end_of_line()
