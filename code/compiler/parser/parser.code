@@ -13,7 +13,16 @@ proc parse(anon source: source.Source) !> Error {
         source_position: 0
     )
 
-    parser.parse_procedure_statement()
+    loop {
+        if parser.matches(first: End_Of_File()) {
+            break
+        } else if parser.matches(first: Space(), second: "//") or parser.matches(first: Space(), second: End_Of_Line()) {
+            parser.consume_empty_line()
+        } else {
+            parser.parse_procedure_statement()
+            parser.consume_end_of_line()
+        }
+    }
 
     return
 }
@@ -36,14 +45,42 @@ proc (^Parser).parse_procedure_statement(self) !> Error {
     self.consume("proc")
     self.consume_space(1)
     let procedure_name = self.consume_identifier()
+    self.consume_space(0)
     self.consume("(")
+    self.parse_procedure_parameters()
     self.consume(")")
     self.consume_space(1)
-    self.consume("->")
-    self.consume_space(1)
-    let procedure_return_type = self.parse_type()
-    self.consume_space(1)
+    if self.matches(first: "->") {
+        self.consume("->")
+        self.consume_space(1)
+        let procedure_return_type = self.parse_type()
+        self.consume_space(1)
+    }
     self.parse_block_statement()
+    return
+}
+
+proc (^Parser).parse_procedure_parameters(self) !> Error {
+    if not self.matches(first: Space(), second: ")") {
+        self.consume_space(0)
+        loop {
+            if self.matches(first: Identifier_Match(), second: Space(), third: Identifier_Match()) {
+                let parameter_label = self.consume_identifier()
+                self.consume_space(1)
+            }
+            let parameter_name = self.consume_identifier()
+            self.consume_space(0)
+            self.consume(":")
+            self.consume_space(1)
+            self.parse_type()
+            self.consume_space(0)
+            if self.matches(first: ")") {
+                break
+            }
+            self.consume(",")
+            self.consume_space(1)
+        }
+    }
     return
 }
 
@@ -68,7 +105,43 @@ proc (^Parser).parse_return_statement(self) !> Error {
 }
 
 proc (^Parser).parse_expression(self) !> Error {
-    self.consume_integer_literal()
+    self.parse_primary_expression()
+    loop {
+        if self.matches(first: "(") {
+            self.parse_call_arguments()
+        } else {
+            break
+        }
+    }
+    return
+}
+
+proc (^Parser).parse_primary_expression(self) !> Error {
+    if self.matches(first: Identifier_Match()) {
+        self.consume_identifier()
+    } else {
+        self.consume_integer_literal()
+    }
+    return
+}
+
+proc (^Parser).parse_call_arguments(self) !> Error {
+    self.consume("(")
+    while not self.matches(first: Space(), second: ")") {
+        self.parse_call_argument()
+    }
+    self.consume(")")
+    return
+}
+
+proc (^Parser).parse_call_argument(self) !> Error {
+    if self.matches(first: Identifier_Match(), second: Space(), third: ":") {
+        let argument_name = self.consume_identifier()
+        self.consume_space(0)
+        self.consume(":")
+        self.consume_space(1)
+    }
+    self.parse_expression()
     return
 }
 

@@ -10,6 +10,31 @@ proc (^Parser).consume(parser, anon expected: str) !> Error {
     return
 }
 
+proc (^Parser).consume_comment(parser) !> Error {
+    parser.consume("//")
+    while not parser.matches(first: End_Of_Line()) {
+        parser.source_position = parser.source_position + 1
+    }
+    return
+}
+
+proc (^Parser).consume_empty_line(parser) !> Error {
+    parser.consume_space(parser.alignment)
+    if parser.matches(first: "//") {
+        parser.consume_comment()
+    }
+    parser.consume_end_of_line()
+    return
+}
+
+proc (^Parser).consume_end_of_line(parser) !> Error {
+    parser.consume_space(0)
+    if not parser.matches(first: End_Of_File()) {
+        parser.consume("\n")
+    }
+    return
+}
+
 type Identifier = struct {
     lexeme: str
     source_position: usize
@@ -86,9 +111,4 @@ proc (^Parser).consume_space(parser, anon count: i32) {
         // TODO: Warn about space count deviation
     }
     parser.source_position = source_position
-}
-
-proc (^Parser).consume_end_of_line(parser) !> Error {
-    parser.consume("\n")
-    return
 }
