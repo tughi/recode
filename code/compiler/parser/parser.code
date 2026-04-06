@@ -37,6 +37,7 @@ proc (^Parser).parse_block_statement(self) !> Error {
         self.consume_end_of_line()
     }
     self.decrease_alignment()
+    self.consume_space(self.alignment)
     self.consume("}")
     return
 }
@@ -89,7 +90,9 @@ proc (^Parser).parse_statement(self) !> Error {
         return
     }
     let peek = self.source.content.slice(self.source_position, peek_end)
-    if peek.equals("let") {
+    if peek.equals("if") {
+        self.parse_if_statement()
+    } else if peek.equals("let") {
         self.parse_variable_declaration_statement()
     } else if peek.equals("return") {
         self.parse_return_statement()
@@ -100,6 +103,25 @@ proc (^Parser).parse_statement(self) !> Error {
             self.consume("=")
             self.consume_space(1)
             self.parse_expression()
+        }
+    }
+    return
+}
+
+proc (^Parser).parse_if_statement(self) !> Error {
+    self.consume("if")
+    self.consume_space(1)
+    self.parse_expression()
+    self.consume_space(1)
+    self.parse_block_statement()
+    if self.matches(first: Space(), second: "else", third: Space()) {
+        self.consume_space(1)
+        self.consume("else")
+        self.consume_space(1)
+        if self.matches(first: "if") {
+            self.parse_if_statement()
+        } else {
+            self.parse_block_statement()
         }
     }
     return
@@ -132,7 +154,29 @@ proc (^Parser).parse_return_statement(self) !> Error {
 }
 
 proc (^Parser).parse_expression(self) !> Error {
+    self.parse_logic_or_expression()
+    return
+}
+
+proc (^Parser).parse_logic_or_expression(self) !> Error {
+    self.parse_logic_and_expression()
+    while self.matches(first: Space(), second: "or") {
+        self.consume_space(1)
+        self.consume("or")
+        self.consume_space(1)
+        self.parse_logic_and_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_logic_and_expression(self) !> Error {
     self.parse_additive_expression()
+    while self.matches(first: Space(), second: "and") {
+        self.consume_space(1)
+        self.consume("and")
+        self.consume_space(1)
+        self.parse_additive_expression()
+    }
     return
 }
 
@@ -152,7 +196,7 @@ proc (^Parser).parse_additive_expression(self) !> Error {
 }
 
 proc (^Parser).parse_multiplicative_expression(self) !> Error {
-    self.parse_access_expression()
+    self.parse_unary_expression()
     while self.matches(first: Space(), second: "*") or self.matches(first: Space(), second: "%") or (self.matches(first: Space(), second: "/") and not self.matches(first: Space(), second: Comment())) {
         self.consume_space(1)
         if self.matches(first: "*") {
@@ -163,6 +207,17 @@ proc (^Parser).parse_multiplicative_expression(self) !> Error {
             self.consume("/")
         }
         self.consume_space(1)
+        self.parse_unary_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_unary_expression(self) !> Error {
+    if self.matches(first: "not") {
+        self.consume("not")
+        self.consume_space(1)
+        self.parse_unary_expression()
+    } else {
         self.parse_access_expression()
     }
     return
@@ -183,6 +238,12 @@ proc (^Parser).parse_access_expression(self) !> Error {
 proc (^Parser).parse_primary_expression(self) !> Error {
     if self.matches(first: Identifier_Match()) {
         self.consume_identifier()
+    } else if self.matches(first: "(") {
+        self.consume("(")
+        self.consume_space(0)
+        self.parse_expression()
+        self.consume_space(0)
+        self.consume(")")
     } else {
         self.consume_integer_literal()
     }
