@@ -430,6 +430,26 @@ proc (^Parser).parse_type(self) -> Parsed_Type !> Error {
         self.consume_space(0)
         return self.parse_type()
     }
+    if self.matches(first: "proc") {
+        self.consume("proc")
+        self.consume_space(1)
+        self.consume("(")
+        self.parse_procedure_parameters()
+        self.consume(")")
+        if self.matches(first: Space(), second: "->") {
+            self.consume_space(1)
+            self.consume("->")
+            self.consume_space(1)
+            self.parse_type()
+        }
+        if self.matches(first: Space(), second: "!>") {
+            self.consume_space(1)
+            self.consume("!>")
+            self.consume_space(1)
+            self.parse_type()
+        }
+        return Parsed_Type(name: Identifier(lexeme: "proc", source_position: self.source_position))
+    }
     let type_name = self.consume_identifier()
     return Parsed_Type(name: type_name)
 }
