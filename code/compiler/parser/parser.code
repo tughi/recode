@@ -16,7 +16,7 @@ proc parse(anon source: source.Source) !> Error {
     loop {
         if parser.matches(first: End_Of_File()) {
             break
-        } else if parser.matches(first: Space(), second: "//") or parser.matches(first: Space(), second: End_Of_Line()) {
+        } else if parser.matches(first: Space(), second: Comment()) or parser.matches(first: Space(), second: End_Of_Line()) {
             parser.consume_empty_line()
         } else {
             parser.parse_procedure_statement()
@@ -92,7 +92,7 @@ proc (^Parser).parse_statement(self) !> Error {
     if peek.equals("return") {
         self.parse_return_statement()
     } else {
-        raise self.error("Unsupported statement")
+        self.parse_expression()
     }
     return
 }
@@ -127,9 +127,53 @@ proc (^Parser).parse_primary_expression(self) !> Error {
 
 proc (^Parser).parse_call_arguments(self) !> Error {
     self.consume("(")
-    while not self.matches(first: Space(), second: ")") {
-        self.parse_call_argument()
+
+    let multiline = false
+
+    if self.matches(first: End_Of_Line()) {
+        self.consume_end_of_line()
+        multiline = true
+        self.increase_alignment()
+        while self.matches(first: Space(), second: Comment()) or self.matches(first: Space(), second: End_Of_Line()) {
+            self.consume_empty_line()
+        }
     }
+
+    while not self.matches(first: Space(), second: ")") {
+        let space_before_argument = 0
+        if multiline {
+            space_before_argument = self.alignment
+        }
+        self.consume_space(space_before_argument)
+
+        self.parse_call_argument()
+
+        while self.matches(first: Space(), second: ",") {
+            self.consume_space(0)
+            self.consume(",")
+            self.consume_space(1)
+            self.parse_call_argument()
+        }
+
+        if self.matches(first: Space(), second: Comment()) or self.matches(first: Space(), second: End_Of_Line()) {
+            self.consume_end_of_line()
+            if not multiline {
+                multiline = true
+                self.increase_alignment()
+            }
+            while self.matches(first: Space(), second: Comment()) or self.matches(first: Space(), second: End_Of_Line()) {
+                self.consume_empty_line()
+            }
+        }
+    }
+
+    if multiline {
+        self.decrease_alignment()
+        self.consume_space(self.alignment)
+    } else {
+        self.consume_space(0)
+    }
+
     self.consume(")")
     return
 }

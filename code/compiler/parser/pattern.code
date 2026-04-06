@@ -1,9 +1,14 @@
 type Match = variant {
+    Comment
     End_Of_File
     End_Of_Line
     Identifier_Match
     Space
     str
+}
+
+type Comment = struct {
+    _: bool // TODO: Add support for empty structs
 }
 
 type End_Of_Line = struct {
@@ -84,6 +89,16 @@ proc (^Parser).matches(self, anon match: Match, from start_index: usize) -> usiz
             }
             index = index + 1
             while self.source.content.char_at(index).is_identifier_char() {
+                index = index + 1
+            }
+            return index
+        }
+        is Comment {
+            if not self.source.content.starts_with("//", from: start_index) {
+                raise No_Match()
+            }
+            let index = start_index + 2
+            while index < self.source.content.length and self.source.content.char_at(index) != '\n' {
                 index = index + 1
             }
             return index

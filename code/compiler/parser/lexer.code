@@ -20,7 +20,7 @@ proc (^Parser).consume_comment(parser) !> Error {
 
 proc (^Parser).consume_empty_line(parser) !> Error {
     parser.consume_space(parser.alignment)
-    if parser.matches(first: "//") {
+    if parser.matches(first: Comment()) {
         parser.consume_comment()
     }
     parser.consume_end_of_line()
@@ -28,7 +28,12 @@ proc (^Parser).consume_empty_line(parser) !> Error {
 }
 
 proc (^Parser).consume_end_of_line(parser) !> Error {
-    parser.consume_space(0)
+    if parser.matches(first: Space(), second: Comment()) {
+        parser.consume_space(1)
+        parser.consume_comment()
+    } else {
+        parser.consume_space(0)
+    }
     if not parser.matches(first: End_Of_File()) {
         parser.consume("\n")
     }
