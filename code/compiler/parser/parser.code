@@ -89,9 +89,30 @@ proc (^Parser).parse_statement(self) !> Error {
         return
     }
     let peek = self.source.content.slice(self.source_position, peek_end)
-    if peek.equals("return") {
+    if peek.equals("let") {
+        self.parse_variable_declaration_statement()
+    } else if peek.equals("return") {
         self.parse_return_statement()
     } else {
+        self.parse_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_variable_declaration_statement(self) !> Error {
+    self.consume("let")
+    self.consume_space(1)
+    self.consume_identifier()
+    if self.matches(first: Space(), second: ":") {
+        self.consume_space(0)
+        self.consume(":")
+        self.consume_space(1)
+        self.parse_type()
+    }
+    if self.matches(first: Space(), second: "=") {
+        self.consume_space(1)
+        self.consume("=")
+        self.consume_space(1)
         self.parse_expression()
     }
     return
