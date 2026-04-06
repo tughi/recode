@@ -96,7 +96,13 @@ proc (^Parser).parse_statement(self) !> Error {
         return
     }
     let peek = self.source.content.slice(self.source_position, peek_end)
-    if peek.equals("if") {
+    if peek.equals("break") {
+        self.parse_break_statement()
+    } else if peek.equals("loop") {
+        self.parse_loop_statement()
+    } else if peek.equals("while") {
+        self.parse_while_statement()
+    } else if peek.equals("if") {
         self.parse_if_statement()
     } else if peek.equals("let") {
         self.parse_variable_declaration_statement()
@@ -111,6 +117,27 @@ proc (^Parser).parse_statement(self) !> Error {
             self.parse_expression()
         }
     }
+    return
+}
+
+proc (^Parser).parse_loop_statement(self) !> Error {
+    self.consume("loop")
+    self.consume_space(1)
+    self.parse_block_statement()
+    return
+}
+
+proc (^Parser).parse_break_statement(self) !> Error {
+    self.consume("break")
+    return
+}
+
+proc (^Parser).parse_while_statement(self) !> Error {
+    self.consume("while")
+    self.consume_space(1)
+    self.parse_expression()
+    self.consume_space(1)
+    self.parse_block_statement()
     return
 }
 
