@@ -170,10 +170,52 @@ proc (^Parser).parse_logic_or_expression(self) !> Error {
 }
 
 proc (^Parser).parse_logic_and_expression(self) !> Error {
-    self.parse_additive_expression()
+    self.parse_equality_expression()
     while self.matches(first: Space(), second: "and") {
         self.consume_space(1)
         self.consume("and")
+        self.consume_space(1)
+        self.parse_equality_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_equality_expression(self) !> Error {
+    self.parse_comparison_expression()
+    if self.matches(first: Space(), second: "==") {
+        self.consume_space(1)
+        self.consume("==")
+        self.consume_space(1)
+        self.parse_comparison_expression()
+    } else if self.matches(first: Space(), second: "!=") {
+        self.consume_space(1)
+        self.consume("!=")
+        self.consume_space(1)
+        self.parse_comparison_expression()
+    }
+    return
+}
+
+proc (^Parser).parse_comparison_expression(self) !> Error {
+    self.parse_additive_expression()
+    if self.matches(first: Space(), second: "<=") {
+        self.consume_space(1)
+        self.consume("<=")
+        self.consume_space(1)
+        self.parse_additive_expression()
+    } else if self.matches(first: Space(), second: "<") {
+        self.consume_space(1)
+        self.consume("<")
+        self.consume_space(1)
+        self.parse_additive_expression()
+    } else if self.matches(first: Space(), second: ">=") {
+        self.consume_space(1)
+        self.consume(">=")
+        self.consume_space(1)
+        self.parse_additive_expression()
+    } else if self.matches(first: Space(), second: ">") {
+        self.consume_space(1)
+        self.consume(">")
         self.consume_space(1)
         self.parse_additive_expression()
     }

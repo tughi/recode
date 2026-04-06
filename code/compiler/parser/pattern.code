@@ -70,7 +70,13 @@ proc (^Parser).matches(self, anon match: Match, from start_index: usize) -> usiz
             if not self.source.content.starts_with(lexeme, from: start_index) {
                 raise No_Match()
             }
-            return start_index + lexeme.length
+            let end_index = start_index + lexeme.length
+            if lexeme.length > 0 and lexeme.char_at(0).is_identifier_start() {
+                if self.source.content.char_at(end_index).is_identifier_char() {
+                    raise No_Match()
+                }
+            }
+            return end_index
         }
         is Space as space {
             let index = start_index
