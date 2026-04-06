@@ -81,13 +81,34 @@ type Integer_Literal = struct {
 proc (^Parser).consume_integer_literal(parser) -> Integer_Literal !> Error {
     let source_position = parser.source_position
     let value = 0u64
-    loop {
-        let digit = parser.source.content.char_at(source_position)
-        if not digit.is_digit() {
-            break
+    if parser.source.content.char_at(source_position) == '0' and parser.source.content.char_at(source_position + 1) == 'x' {
+        source_position = source_position + 2
+        loop {
+            let hex_char = parser.source.content.char_at(source_position)
+            if hex_char.is_digit() {
+                value = value * 16 + (hex_char - '0').as(u64)
+                source_position = source_position + 1
+            } else if hex_char >= 'a' and hex_char <= 'f' {
+                value = value * 16 + (hex_char - 'a' + 10).as(u64)
+                source_position = source_position + 1
+            } else if hex_char >= 'A' and hex_char <= 'F' {
+                value = value * 16 + (hex_char - 'A' + 10).as(u64)
+                source_position = source_position + 1
+            } else if hex_char == '_' {
+                source_position = source_position + 1
+            } else {
+                break
+            }
         }
-        value = value * 10 + (digit - '0').as(u64)
-        source_position = source_position + 1
+    } else {
+        loop {
+            let digit = parser.source.content.char_at(source_position)
+            if not digit.is_digit() {
+                break
+            }
+            value = value * 10 + (digit - '0').as(u64)
+            source_position = source_position + 1
+        }
     }
     if source_position == parser.source_position {
         raise parser.error("Expected integer literal")
