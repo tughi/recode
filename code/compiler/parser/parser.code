@@ -57,7 +57,13 @@ proc (^Parser).parse_procedure_statement(self) !> Error {
         let procedure_return_type = self.parse_type()
         self.consume_space(1)
     }
-    self.parse_block_statement()
+    if self.matches(first: "=") {
+        self.consume("=")
+        self.consume_space(1)
+        self.consume("external")
+    } else {
+        self.parse_block_statement()
+    }
     return
 }
 
