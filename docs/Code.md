@@ -478,6 +478,29 @@ proc (^Writer).end_line(self) -> ^Writer {
 out.write("Hello, World!").end_line()
 ```
 
+### Inherited Methods
+
+Methods defined on a base struct type are callable directly on any derived type:
+
+```code
+type Token_Base = struct {
+    lexeme: str
+    source_position: usize
+}
+
+proc (^Token_Base).end_position(self) -> usize {
+    return self.source_position + self.lexeme.length
+}
+
+type Integer = struct {
+    super: Token_Base
+    value: u64
+}
+
+let token = Integer(super: Token_Base(lexeme: "42", source_position: 5), value: 42)
+token.end_position()   // resolves to Token_Base.end_position — returns 7
+```
+
 ---
 
 ## Trait Types
