@@ -1,0 +1,7 @@
+import compiler.source
+
+type Error = struct {
+    message: str
+    source: source.Source
+    source_position: usize
+}

@@ -1,0 +1,196 @@
+import compiler.lexer
+
+type Match = variant {
+    Character
+    Comment
+    End_Of_File
+    End_Of_Line
+    Identifier
+    Integer
+    Integer_Type
+    Keyword
+    Other
+    Space
+    String
+}
+
+type Character = struct {
+    _empty_struct: u8
+}
+
+type Comment = struct {
+    _empty_struct: u8
+}
+
+let comment = Comment()
+
+type End_Of_File = struct {
+    _empty_struct: u8
+}
+
+let end_of_file = End_Of_File()
+
+type End_Of_Line = struct {
+    _empty_struct: u8
+}
+
+let end_of_line = End_Of_Line()
+
+type Identifier = struct {
+    _empty_struct: u8
+}
+
+let identifier = Identifier()
+
+type Integer = struct {
+    _empty_struct: u8
+}
+
+type Integer_Type = struct {
+    _empty_struct: u8
+}
+
+type Keyword = struct {
+    lexeme: str
+}
+
+proc keyword(anon lexeme: str) -> Keyword {
+    return Keyword(lexeme: lexeme)
+}
+
+type Other = struct {
+    lexeme: u8
+}
+
+proc other(anon lexeme: u8) -> Other {
+    return Other(lexeme: lexeme)
+}
+
+type Space = struct {
+    required: bool
+}
+
+let space = Space(required: false)
+
+type String = struct {
+    _empty_struct: u8
+}
+
+type No_Match = struct {
+    _empty_struct: u8
+}
+
+proc (^Match).check(self, lexer: ^lexer.Lexer, at index: usize) -> bool !> No_Match {
+    let token = lexer.peek_token(offset: index)
+    switch self {
+        is Character {
+            if token is lexer.Character {
+                return true
+            }
+        }
+        is Comment {
+            if token is lexer.Comment {
+                return true
+            }
+        }
+        is End_Of_File {
+            if token is lexer.End_Of_File {
+                return true
+            }
+        }
+        is End_Of_Line {
+            if token is lexer.End_Of_Line or token is lexer.End_Of_File {
+                return true
+            }
+        }
+        is Identifier {
+            if token is lexer.Identifier {
+                return true
+            }
+        }
+        is Integer {
+            if token is lexer.Integer {
+                return true
+            }
+        }
+        is Integer_Type {
+            if token is lexer.Identifier as identifier {
+                let lexeme = identifier.lexeme
+                if lexeme.char_at(0) == 'i' and (lexeme.equals("i8") or lexeme.equals("i16") or lexeme.equals("i32") or lexeme.equals("i64") or lexeme.equals("isize")) {
+                    return true
+                }
+                if lexeme.char_at(0) == 'u' and (lexeme.equals("u8") or lexeme.equals("u16") or lexeme.equals("u32") or lexeme.equals("u64") or lexeme.equals("usize")) {
+                    return true
+                }
+            }
+        }
+        is Keyword as match {
+            if token is lexer.Identifier as identifier {
+                if identifier.lexeme.equals(match.lexeme) {
+                    return true
+                }
+            }
+        }
+        is Other as other {
+            if token is lexer.Other as token_other {
+                if token_other.lexeme.char_at(0) == other.lexeme {
+                    return true
+                }
+            }
+        }
+        is Space as match {
+            if not match.required {
+                return token is lexer.Space
+            } else if token is lexer.Space {
+                return true
+            }
+        }
+        is String {
+            if token is lexer.String {
+                return true
+            }
+        }
+        is nil {
+        }
+    }
+    raise No_Match()
+}
+
+proc (^lexer.Lexer).matches(self, anon first: Match) -> bool {
+    let result = try first.check(lexer: self, at: 0) else {
+        return false
+    }
+    return result
+}
+
+proc (^lexer.Lexer).matches(self, anon first: Match, anon second: Match) -> bool {
+    let index = 0usize
+    let first_result = try first.check(lexer: self, at: index) else {
+        return false
+    }
+    if first_result {
+        index = index + 1
+    }
+    return try second.check(lexer: self, at: index) else {
+        return false
+    }
+}
+
+proc (^lexer.Lexer).matches(self, anon first: Match, anon second: Match, anon third: Match) -> bool {
+    let index = 0usize
+    let first_result = try first.check(lexer: self, at: index) else {
+        return false
+    }
+    if first_result {
+        index = index + 1
+    }
+    let second_result = try second.check(lexer: self, at: index) else {
+        return false
+    }
+    if second_result {
+        index = index + 1
+    }
+    return try third.check(lexer: self, at: index) else {
+        return false
+    }
+}

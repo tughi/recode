@@ -1,23 +1,8 @@
-import compiler.source
+import compiler.error
 import libc
-import string
 
-type Error = struct {
-    message: str
-    source: source.Source
-    source_position: usize
-}
-
-proc (^Parser).error(parser, anon message: str) -> Error {
-    return Error(
-        message: message
-        source: parser.source
-        source_position: parser.source_position
-    )
-}
-
-proc (^libc.FILE).write(file, parser_error: Error) -> ^libc.FILE {
-    file.write(parser_error.source.path).write_char(':')
+proc (^libc.FILE).write(file, parser_error: error.Error) -> ^libc.FILE {
+    file.write(parser_error.source.path).write(":")
 
     let line = 1i64
     let column = 1i64
@@ -37,5 +22,5 @@ proc (^libc.FILE).write(file, parser_error: Error) -> ^libc.FILE {
         index = index + 1
     }
 
-    return file.write_integer(line).write_char(':').write_integer(column)
+    return file.write(i64: line).write(":").write(i64: column)
 }

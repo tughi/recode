@@ -1,0 +1,411 @@
+import compiler.error
+import compiler.lexer.match
+import compiler.lexer.utils
+import compiler.source
+import string
+
+type Lexer = struct {
+    source: source.Source
+    source_position: usize
+    token_cache: Token_Cache
+}
+
+proc create(anon source: source.Source) -> Lexer {
+    return Lexer(
+        source: source
+        source_position: 0
+    )
+}
+
+proc (^Lexer).error(self, anon message: str) -> error.Error {
+    return error.Error(
+        message: message
+        source: self.source
+        source_position: self.source_position
+    )
+}
+
+proc (^Lexer).peek_token(self) -> Token {
+    return self.peek_token(offset: 0)
+}
+
+proc (^Lexer).peek_token(self, offset: usize) -> Token {
+    while self.token_cache.size <= offset {
+        let source_position = self.source_position
+        if self.token_cache.size > 0 {
+            source_position = self.token_cache.at(index: self.token_cache.size - 1).end_position()
+        }
+        self.token_cache.append(self.scan_token(from: source_position))
+    }
+    return self.token_cache.at(index: offset).^
+}
+
+
+proc (^Lexer).scan_token(self, from source_position: usize) -> Token {
+    let next_char = self.source.content.char_at(source_position)
+    if next_char.is_identifier_start() {
+        return self.scan_identifier(from: source_position)
+    }
+    if next_char.is_digit() {
+        return self.scan_integer(from: source_position)
+    }
+    if next_char == ' ' {
+        return self.scan_space(from: source_position)
+    }
+    if next_char == '\'' {
+        return try self.scan_character(from: source_position) else {
+            return error
+        }
+    }
+    if next_char == '"' {
+        return self.scan_string(from: source_position)
+    }
+    if next_char == '/' {
+        return try self.scan_comment(from: source_position) else {
+            return error
+        }
+    }
+    if next_char == '\n' {
+        return End_Of_Line(
+            super: Token_Base(
+                lexeme: self.source.content.slice(source_position, source_position + 1)
+                source_position: source_position
+            )
+        )
+    }
+    if source_position >= self.source.content.length {
+        return End_Of_File(
+            super: Token_Base(
+                source_position: source_position
+            )
+        )
+    }
+    return Other(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, source_position + 1)
+            source_position: source_position
+        )
+    )
+}
+
+proc (^Lexer).scan_character(self, from source_position: usize) -> Character !> Error {
+    let position = source_position + 1
+    let body_char = self.source.content.char_at(position)
+    if body_char == '\n' or body_char == '\t' or body_char == '\'' {
+        raise Error(
+            super: Token_Base(
+                lexeme: self.source.content.slice(source_position, position)
+                source_position: source_position
+            )
+        )
+    }
+    position = position + 1
+    let char_value = body_char
+    if body_char == '\\' {
+        let escape_char = self.source.content.char_at(position)
+        if escape_char == '\n' or escape_char == '\t' {
+            raise Error(
+                super: Token_Base(
+                    lexeme: self.source.content.slice(source_position, position)
+                    source_position: source_position
+                )
+            )
+        }
+        position = position + 1
+        if escape_char == 'n' {
+            char_value = '\n'
+        } else if escape_char == 't' {
+            char_value = '\t'
+        } else if escape_char == '0' {
+            char_value = '\0'
+        } else {
+            char_value = escape_char
+        }
+    }
+    if self.source.content.char_at(position) != '\'' {
+        raise Error(
+            super: Token_Base(
+                lexeme: self.source.content.slice(source_position, position)
+                source_position: source_position
+            )
+        )
+    }
+    position = position + 1
+    return Character(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+        value: char_value
+    )
+}
+
+proc (^Lexer).scan_comment(self, from source_position: usize) -> Comment !> Other {
+    let position = source_position + 1
+    if self.source.content.char_at(position) == '/' {
+        position = position + 1
+        while position < self.source.content.length and self.source.content.char_at(position) != '\n' {
+            position = position + 1
+        }
+        return Comment(
+            super: Token_Base(
+                lexeme: self.source.content.slice(source_position, position)
+                source_position: source_position
+            )
+        )
+    }
+    raise Other(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+    )
+}
+
+proc (^Lexer).scan_identifier(self, from source_position: usize) -> Identifier {
+    let position = source_position + 1
+    while self.source.content.char_at(position).is_identifier_char() {
+        position = position + 1
+    }
+    return Identifier(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+    )
+}
+
+proc (^Lexer).scan_integer(self, from source_position: usize) -> Integer {
+    let value = 0u64
+    let base = 10
+    let position = source_position
+    if self.source.content.char_at(position) == '0' {
+        position = position + 1
+        if self.source.content.char_at(position) == 'x' {
+            base = 16
+            position = position + 1
+            loop {
+                let hex_char = self.source.content.char_at(position)
+                if hex_char.is_digit() {
+                    value = value * 16 + (hex_char - '0').as(u64)
+                    position = position + 1
+                } else if hex_char >= 'a' and hex_char <= 'f' {
+                    value = value * 16 + (hex_char - 'a' + 10).as(u64)
+                    position = position + 1
+                } else if hex_char >= 'A' and hex_char <= 'F' {
+                    value = value * 16 + (hex_char - 'A' + 10).as(u64)
+                    position = position + 1
+                } else if hex_char == '_' {
+                    position = position + 1
+                } else {
+                    break
+                }
+            }
+        }
+    } else {
+        loop {
+            let digit = self.source.content.char_at(position)
+            if not digit.is_digit() {
+                break
+            }
+            value = value * 10 + (digit - '0').as(u64)
+            position = position + 1
+        }
+    }
+    return Integer(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+        value: value
+        base: base
+    )
+}
+
+proc (^Lexer).scan_space(self, from source_position: usize) -> Space {
+    let count = 0
+    let position = source_position
+    while self.source.content.char_at(position) == ' ' {
+        position = position + 1
+        count = count + 1
+    }
+    return Space(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+        count: count
+    )
+}
+
+proc (^Lexer).scan_string(self, from source_position: usize) -> String {
+    let position = source_position + 1
+    let value_start = position
+    while self.source.content.char_at(position) != '"' {
+        if self.source.content.char_at(position) == '\\' {
+            position = position + 1
+        }
+        position = position + 1
+    }
+    let string_value = self.source.content.slice(value_start, position)
+    position = position + 1
+    return String(
+        super: Token_Base(
+            lexeme: self.source.content.slice(source_position, position)
+            source_position: source_position
+        )
+        value: string_value
+    )
+}
+
+proc (^Lexer).consume_token(self) {
+    self.source_position = self.token_cache.at(index: 0).end_position()
+    self.token_cache.remove_first()
+}
+
+proc (^Lexer).consume_other(self, anon expected: u8) -> Other !> error.Error {
+    let token = self.peek_token()
+    if token is Other as other {
+        if other.lexeme.char_at(0) == expected {
+            self.consume_token()
+            return other
+        }
+    }
+    let error_message = string.new_builder()
+    error_message.append("Expected '").append_char(expected).append("'")
+    raise self.error(error_message.build())
+}
+
+proc (^Lexer).consume_other(self, anon first: u8, anon second: u8) -> Other !> error.Error {
+    let first_token = self.peek_token()
+    if first_token is Other as first_other {
+        if first_other.lexeme.char_at(0) == first {
+            let second_token = self.peek_token(offset: 1)
+            if second_token is Other as second_other {
+                if second_other.lexeme.char_at(0) == second {
+                    self.consume_token() // first
+                    self.consume_token() // second
+                    return self.merge(other: first_other, with: second_other)
+                }
+            }
+        }
+    }
+    let error_message = string.new_builder()
+    error_message.append("Expected '").append_char(first).append_char(second).append("'")
+    raise self.error(error_message.build())
+}
+
+proc (^Lexer).consume_comment(self) -> Comment !> error.Error {
+    let token = self.peek_token()
+    if token is Comment as comment {
+        self.consume_token()
+        return comment
+    }
+    raise self.error("Expected comment")
+}
+
+proc (^Lexer).consume_empty_line(self, anon alignment: i32) !> error.Error {
+    self.consume_space(alignment)
+    if self.matches(match.comment) {
+        self.consume_comment()
+    }
+    self.consume_end_of_line()
+    return
+}
+
+proc (^Lexer).consume_end_of_line(self) -> End_Of_Line !> error.Error {
+    if self.matches(match.space, match.comment) {
+        self.consume_space(1)
+        self.consume_comment()
+    } else {
+        self.consume_space(0)
+    }
+    let token = self.peek_token()
+    if token is End_Of_File {
+        return End_Of_Line(
+            super: Token_Base(
+                lexeme: ""
+                source_position: self.source_position
+            )
+        )
+    }
+    if token is End_Of_Line as end_of_line {
+        self.consume_token()
+        return end_of_line
+    }
+    raise self.error("Expected end of line")
+}
+
+proc (^Lexer).consume_identifier(self) -> Identifier !> error.Error {
+    let token = self.peek_token()
+    if token is Identifier as identifier {
+        self.consume_token()
+        return identifier
+    }
+    raise self.error("Expected identifier")
+}
+
+proc (^Lexer).consume_keyword(self, anon lexeme: str) -> Identifier !> error.Error {
+    let token = self.peek_token()
+    if token is Identifier as identifier {
+        if identifier.lexeme.equals(lexeme) {
+            self.consume_token()
+            return identifier
+        }
+    }
+    let error_message = string.new_builder()
+    error_message.append("Expected \"").append(lexeme).append("\"")
+    raise self.error(error_message.build())
+}
+
+proc (u8).is_identifier_start(self) -> bool {
+    return (self >= 'a' and self <= 'z') or (self >= 'A' and self <= 'Z') or (self == '_')
+}
+
+proc (u8).is_identifier_char(self) -> bool {
+    return self.is_identifier_start() or self.is_digit()
+}
+
+proc (^Lexer).consume_integer(self) -> Integer !> error.Error {
+    let token = self.peek_token()
+    if token is Integer as integer {
+        self.consume_token()
+        if self.matches(match.Integer_Type()) {
+            self.consume_identifier()
+        }
+        return integer
+    }
+    raise self.error("Expected integer literal")
+}
+
+proc (u8).is_digit(self) -> bool {
+    return self >= '0' and self <= '9'
+}
+
+proc (^Lexer).consume_string(self) -> String !> error.Error {
+    let token = self.peek_token()
+    if token is String as string_token {
+        self.consume_token()
+        return string_token
+    }
+    raise self.error("Expected string literal")
+}
+
+proc (^Lexer).consume_space(self, anon count: i32) -> Space {
+    let space: Space
+    let token = self.peek_token()
+    if token is Space as space_token {
+        self.consume_token()
+        space = space_token
+    } else {
+        space = Space(
+            super: Token_Base(
+                source_position: self.source_position
+            )
+        )
+    }
+    if space.count != count {
+        // TODO: Warn about space count deviation
+    }
+    return space
+}

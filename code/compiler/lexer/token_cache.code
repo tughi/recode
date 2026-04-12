@@ -1,0 +1,30 @@
+type Token_Cache = struct {
+    _0: Token
+    _1: Token
+    _3: Token
+    size: usize
+    start: usize
+}
+
+proc (^Token_Cache).at(self, index: usize) -> ^Token {
+    if self.size <= index {
+        return null
+    }
+    let tokens = self.as([^]Token)
+    let tokens_index = (self.start + index) % 3
+    return ^tokens[tokens_index]
+}
+
+proc (^Token_Cache).remove_first(self) {
+    if self.size > 0 {
+        self.size = self.size - 1
+        self.start = (self.start + 1) % 3
+    }
+}
+
+proc (^Token_Cache).append(self, anon token: Token) {
+    let tokens = self.as([^]Token)
+    let tokens_index = (self.start + self.size) % 3
+    tokens[tokens_index] = token
+    self.size = self.size + 1
+}

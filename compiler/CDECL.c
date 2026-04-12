@@ -255,7 +255,7 @@ void CDECL_Variable_Name__write(CDECL_Variable_Name *self, Writer *writer) {
             return;
         }
     } else if (self->variable_symbol->super.is_global) {
-        pWriter__write__string(writer, self->variable_symbol->super.package->name);
+        pWriter__write__package_name(writer, self->variable_symbol->super.package);
         pWriter__write__cstring(writer, "__");
     }
     pWriter__write__string(writer, self->variable_symbol->super.name);

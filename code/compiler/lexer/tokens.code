@@ -1,0 +1,105 @@
+type Token = variant {
+    Character
+    Comment
+    End_Of_File
+    End_Of_Line
+    Error
+    Identifier
+    Integer
+    Other
+    Space
+    String
+}
+
+proc (^Token).end_position(self) -> usize {
+    switch self {
+        is Character as token {
+            return token.end_position()
+        }
+        is Comment as token {
+            return token.end_position()
+        }
+        is End_Of_File as token {
+            return token.end_position()
+        }
+        is End_Of_Line as token {
+            return token.end_position()
+        }
+        is Error as token {
+            return token.end_position()
+        }
+        is Identifier as token {
+            return token.end_position()
+        }
+        is Integer as token {
+            return token.end_position()
+        }
+        is Other as token {
+            return token.end_position()
+        }
+        is Space as token {
+            return token.end_position()
+        }
+        is String as token {
+            return token.end_position()
+        }
+        is nil {
+            return 0
+        }
+    }
+    return 0
+}
+
+type Token_Base = struct {
+    lexeme: str
+    source_position: usize
+}
+
+proc (^Token_Base).end_position(self) -> usize {
+    return self.source_position + self.lexeme.length
+}
+
+type Character = struct {
+    super: Token_Base
+    value: u8
+}
+
+type Comment = struct {
+    super: Token_Base
+}
+
+type End_Of_File = struct {
+    super: Token_Base
+}
+
+type End_Of_Line = struct {
+    super: Token_Base
+}
+
+type Error = struct {
+    super: Token_Base
+}
+
+type Identifier = struct {
+    super: Token_Base
+}
+
+type Integer = struct {
+    super: Token_Base
+    value: u64
+    base: i32
+}
+
+type Other = struct {
+    super: Token_Base
+}
+
+type Space = struct {
+    super: Token_Base
+    count: i32
+}
+
+type String = struct {
+    super: Token_Base
+    value: str
+}

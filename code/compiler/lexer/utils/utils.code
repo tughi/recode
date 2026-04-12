@@ -1,0 +1,23 @@
+import compiler.error
+import compiler.lexer
+import string
+
+proc (^lexer.Lexer).merge(self, other: lexer.Other, with another: lexer.Other) -> lexer.Other !> error.Error {
+    // Make sure another follows other
+    let other_pointer = string.Pointer_Wrapper(value: other.lexeme.data().as(^Any))
+    let other_offset = (^other_pointer).as(^string.Address_Wrapper)
+    let another_pointer = string.Pointer_Wrapper(value: another.lexeme.data().as(^Any))
+    let another_offset = (^another_pointer).as(^string.Address_Wrapper)
+    if other_offset.value + other.lexeme.length != another_offset.value {
+        raise self.error("Cannot merge other with another")
+    }
+
+    // Merge
+    let lexeme_string = String(
+        data: other_pointer.value.as([^]u8)
+        length: other.lexeme.length + another.lexeme.length
+    )
+    let result = other
+    result.lexeme = (^lexeme_string).as(^str).^
+    return result
+}

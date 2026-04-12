@@ -1284,6 +1284,28 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
             Checked_Package *package = ((Checked_Import_Symbol *)symbol_expression->symbol)->other_package;
             Checked_Symbol *pakcage_symbol = Checked_Symbols__find_symbol(self->global_symbols, package, member_name->lexeme);
             if (pakcage_symbol == NULL) {
+                // Find a procedure by its procedure_name when the mangled symbol isn't found
+                Checked_Symbol *candidate_symbol = self->global_symbols->first_symbol;
+                Checked_Procedure_Symbol *matching_procedure_symbol = NULL;
+                while (candidate_symbol != NULL) {
+                    if (candidate_symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && candidate_symbol->package == package) {
+                        Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)candidate_symbol;
+                        if (String__equals_string(procedure_symbol->procedure_name, member_name->lexeme)) {
+                            if (matching_procedure_symbol == NULL) {
+                                matching_procedure_symbol = procedure_symbol;
+                            } else {
+                                matching_procedure_symbol = NULL; // more than one candidate
+                                break;
+                            }
+                        }
+                    }
+                    candidate_symbol = candidate_symbol->next_symbol;
+                }
+                if (matching_procedure_symbol != NULL) {
+                    pakcage_symbol = (Checked_Symbol *)matching_procedure_symbol;
+                }
+            }
+            if (pakcage_symbol == NULL) {
                 pWriter__begin_location_message(stderr_writer, expression_location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Module ");
                 pWriter__write__string(stderr_writer, package->name);
