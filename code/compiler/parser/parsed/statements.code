@@ -1,0 +1,94 @@
+import collections
+import compiler.lexer
+
+type Statement_Base = struct {
+    source_position: usize
+}
+
+type Statement = variant {
+    Assignment_Statement
+    Block_Statement
+    Break_Statement
+    Expression_Statement
+    If_Statement
+    Loop_Statement
+    Procedure_Statement
+    Return_Statement
+    Type_Statement
+    Variable_Statement
+    While_Statement
+}
+
+type Block_Statement = struct {
+    super: Statement_Base
+    statements: collections.List<^Statement>
+}
+
+type Break_Statement = struct {
+    super: Statement_Base
+}
+
+type Loop_Statement = struct {
+    super: Statement_Base
+    body: ^Statement
+}
+
+type While_Statement = struct {
+    super: Statement_Base
+    condition: ^Expression
+    body: ^Statement
+}
+
+type If_Statement = struct {
+    super: Statement_Base
+    condition: ^Expression
+    true_block: ^Statement
+    false_statement: ^Statement
+}
+
+type Variable_Statement = struct {
+    super: Statement_Base
+    name: lexer.Identifier
+    variable_type: ^Parsed_Type
+    is_external: bool
+    expression: ^Expression
+    external_name: ^lexer.String
+}
+
+type Return_Statement = struct {
+    super: Statement_Base
+    expression: ^Expression
+}
+
+type Expression_Statement = struct {
+    super: Statement_Base
+    expression: ^Expression
+}
+
+type Assignment_Statement = struct {
+    super: Statement_Base
+    object: ^Expression
+    value: ^Expression
+}
+
+type Procedure_Statement = struct {
+    super: Statement_Base
+    name: lexer.Identifier
+    return_type: ^Parsed_Type
+    is_external: bool
+    body: ^Statement
+}
+
+type Type_Statement = struct {
+    super: Statement_Base
+    name: lexer.Identifier
+    specifier: ^Type_Specifier
+}
+
+type Type_Specifier = variant {
+    External_Type_Specifier
+}
+
+type External_Type_Specifier = struct {
+    source_position: usize
+}

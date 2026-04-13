@@ -1,0 +1,23 @@
+import compiler.lexer
+
+type Parsed_Type = variant {
+    Named_Type
+    Pointer_Type
+    Procedure_Type
+}
+
+type Named_Type = struct {
+    source_position: usize
+    name: lexer.Identifier
+}
+
+type Pointer_Type = struct {
+    source_position: usize
+    pointee: ^Parsed_Type
+}
+
+type Procedure_Type = struct {
+    source_position: usize
+    return_type: ^Parsed_Type
+    raise_type: ^Parsed_Type
+}

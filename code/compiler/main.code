@@ -1,8 +1,14 @@
+import allocator
 import compiler.parser
 import compiler.source
 import libc
 
 proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
+    try allocator.default_allocator.reserve(size: 64 * 1024 * 1024) else {
+        libc.stderr.write("Error: ").write(error.message).end_line()
+        return 1
+    }
+
     if argc < 2 {
         libc.stderr.write("Usage: ReCode <source.code>").end_line()
         return 1
