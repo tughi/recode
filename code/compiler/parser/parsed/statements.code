@@ -49,10 +49,10 @@ type If_Statement = struct {
 type Variable_Statement = struct {
     super: Statement_Base
     name: lexer.Identifier
-    variable_type: ^Parsed_Type
+    variable_type: ^Type
     is_external: bool
     expression: ^Expression
-    external_name: ^lexer.String
+    external_name: lexer.Optional_String
 }
 
 type Return_Statement = struct {
@@ -74,7 +74,7 @@ type Assignment_Statement = struct {
 type Procedure_Statement = struct {
     super: Statement_Base
     name: lexer.Identifier
-    return_type: ^Parsed_Type
+    return_type: ^Type
     is_external: bool
     body: ^Statement
 }

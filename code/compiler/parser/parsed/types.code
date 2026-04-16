@@ -1,6 +1,6 @@
 import compiler.lexer
 
-type Parsed_Type = variant {
+type Type = variant {
     Named_Type
     Pointer_Type
     Procedure_Type
@@ -13,11 +13,11 @@ type Named_Type = struct {
 
 type Pointer_Type = struct {
     source_position: usize
-    pointee: ^Parsed_Type
+    pointee: ^Type
 }
 
 type Procedure_Type = struct {
     source_position: usize
-    return_type: ^Parsed_Type
-    raise_type: ^Parsed_Type
+    return_type: ^Type
+    raise_type: ^Type
 }

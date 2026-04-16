@@ -103,3 +103,7 @@ type String = struct {
     super: Token_Base
     value: str
 }
+
+type Optional_String = variant {
+    String
+}

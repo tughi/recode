@@ -36,6 +36,24 @@ proc parse(anon source: source.Source) !> error.Error {
     return
 }
 
+proc (^Parser).alloc(self, statement: parsed.Statement) -> ^parsed.Statement !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
+    result.^ = statement
+    return result
+}
+
+proc (^Parser).alloc(self, type: parsed.Type) -> ^parsed.Type !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Type), alignment: type_alignment(parsed.Type)).as(^parsed.Type)
+    result.^ = type
+    return result
+}
+
+proc (^Parser).alloc(self, type_specifier: parsed.Type_Specifier) -> ^parsed.Type_Specifier !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Type_Specifier), alignment: type_alignment(parsed.Type_Specifier)).as(^parsed.Type_Specifier)
+    result.^ = type_specifier
+    return result
+}
+
 proc (^Parser).parse_block_statement(self) -> ^parsed.Statement !> error.Error {
     let source_position = self.lexer.source_position
     self.lexer.consume_other('{')
@@ -51,12 +69,10 @@ proc (^Parser).parse_block_statement(self) -> ^parsed.Statement !> error.Error {
     self.decrease_alignment()
     self.lexer.consume_space(self.alignment)
     self.lexer.consume_other('}')
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Block_Statement(
+    return self.alloc(statement: parsed.Block_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         statements: statements
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Error {
@@ -69,7 +85,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     self.parse_procedure_parameters()
     self.lexer.consume_other(')')
     self.lexer.consume_space(1)
-    let return_type: ^parsed.Parsed_Type = null
+    let return_type: ^parsed.Type = null
     if self.lexer.matches(match.other('-'), match.other('>')) {
         self.lexer.consume_other('-', '>')
         self.lexer.consume_space(1)
@@ -86,15 +102,13 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     } else {
         body = self.parse_block_statement()
     }
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Procedure_Statement(
+    return self.alloc(statement: parsed.Procedure_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         name: procedure_name
         return_type: return_type
         is_external: is_external
         body: body
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_procedure_parameters(self) !> error.Error {
@@ -142,31 +156,25 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
             self.lexer.consume_other('=')
             self.lexer.consume_space(1)
             let value = self.parse_expression()
-            let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-            result.^ = parsed.Assignment_Statement(
+            return self.alloc(statement: parsed.Assignment_Statement(
                 super: parsed.Statement_Base(source_position: source_position)
                 object: expression
                 value: value
-            )
-            return result
+            ))
         }
-        let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-        result.^ = parsed.Expression_Statement(
+        return self.alloc(statement: parsed.Expression_Statement(
             super: parsed.Statement_Base(source_position: source_position)
             expression: expression
-        )
-        return result
+        ))
     }
 }
 
 proc (^Parser).parse_break_statement(self) -> ^parsed.Statement !> error.Error {
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("break")
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Break_Statement(
+    return self.alloc(statement: parsed.Break_Statement(
         super: parsed.Statement_Base(source_position: source_position)
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_loop_statement(self) -> ^parsed.Statement !> error.Error {
@@ -174,12 +182,10 @@ proc (^Parser).parse_loop_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_keyword("loop")
     self.lexer.consume_space(1)
     let body = self.parse_block_statement()
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Loop_Statement(
+    return self.alloc(statement: parsed.Loop_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         body: body
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_while_statement(self) -> ^parsed.Statement !> error.Error {
@@ -189,13 +195,11 @@ proc (^Parser).parse_while_statement(self) -> ^parsed.Statement !> error.Error {
     let condition = self.parse_expression()
     self.lexer.consume_space(1)
     let body = self.parse_block_statement()
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.While_Statement(
+    return self.alloc(statement: parsed.While_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         condition: condition
         body: body
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_if_statement(self) -> ^parsed.Statement !> error.Error {
@@ -216,14 +220,12 @@ proc (^Parser).parse_if_statement(self) -> ^parsed.Statement !> error.Error {
             false_statement = self.parse_block_statement()
         }
     }
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.If_Statement(
+    return self.alloc(statement: parsed.If_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         condition: condition
         true_block: true_block
         false_statement: false_statement
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !> error.Error {
@@ -231,7 +233,7 @@ proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !
     self.lexer.consume_keyword("let")
     self.lexer.consume_space(1)
     let name = self.lexer.consume_identifier()
-    let variable_type: ^parsed.Parsed_Type = null
+    let variable_type: ^parsed.Type = null
     if self.lexer.matches(match.space, match.other(':')) {
         self.lexer.consume_space(0)
         self.lexer.consume_other(':')
@@ -240,7 +242,7 @@ proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !
     }
     let is_external = false
     let expression: ^parsed.Expression = null
-    let external_name: ^lexer.String = null
+    let external_name: lexer.Optional_String = nil
     if self.lexer.matches(match.space, match.other('=')) {
         self.lexer.consume_space(1)
         self.lexer.consume_other('=')
@@ -248,27 +250,22 @@ proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !
         if self.lexer.matches(match.keyword("external")) {
             self.lexer.consume_keyword("external")
             is_external = true
-            self.lexer.consume_space(0)
-            if self.lexer.matches(match.String()) {
-                let string_token = self.lexer.consume_string()
-                let name_pointer = self.allocate(size: type_size(lexer.String), alignment: type_alignment(lexer.String)).as(^lexer.String)
-                name_pointer.^ = string_token
-                external_name = name_pointer
+            if self.lexer.matches(match.space, match.String()) {
+                self.lexer.consume_space(1)
+                external_name = self.lexer.consume_string()
             }
         } else {
             expression = self.parse_expression()
         }
     }
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Variable_Statement(
+    return self.alloc(statement: parsed.Variable_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         name: name
         variable_type: variable_type
         is_external: is_external
         expression: expression
         external_name: external_name
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_return_statement(self) -> ^parsed.Statement !> error.Error {
@@ -276,12 +273,10 @@ proc (^Parser).parse_return_statement(self) -> ^parsed.Statement !> error.Error 
     self.lexer.consume_keyword("return")
     self.lexer.consume_space(1)
     let expression = self.parse_expression()
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Return_Statement(
+    return self.alloc(statement: parsed.Return_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         expression: expression
-    )
-    return result
+    ))
 }
 
 proc (^Parser).parse_expression(self) -> ^parsed.Expression !> error.Error {
@@ -538,15 +533,13 @@ proc (^Parser).parse_call_argument(self) !> error.Error {
     return
 }
 
-proc (^Parser).parse_type(self) -> ^parsed.Parsed_Type !> error.Error {
+proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
     let source_position = self.lexer.source_position
     if self.lexer.matches(match.other('^')) {
         self.lexer.consume_other('^')
         self.lexer.consume_space(0)
         let pointee = self.parse_type()
-        let result = self.allocate(size: type_size(parsed.Parsed_Type), alignment: type_alignment(parsed.Parsed_Type)).as(^parsed.Parsed_Type)
-        result.^ = parsed.Pointer_Type(source_position: source_position, pointee: pointee)
-        return result
+        return self.alloc(type: parsed.Pointer_Type(source_position: source_position, pointee: pointee))
     }
     if self.lexer.matches(match.keyword("proc")) {
         self.lexer.consume_keyword("proc")
@@ -554,40 +547,34 @@ proc (^Parser).parse_type(self) -> ^parsed.Parsed_Type !> error.Error {
         self.lexer.consume_other('(')
         self.parse_procedure_parameters()
         self.lexer.consume_other(')')
-        let return_type: ^parsed.Parsed_Type = null
+        let return_type: ^parsed.Type = null
         if self.lexer.matches(match.space, match.other('-'), match.other('>')) {
             self.lexer.consume_space(1)
             self.lexer.consume_other('-', '>')
             self.lexer.consume_space(1)
             return_type = self.parse_type()
         }
-        let raise_type: ^parsed.Parsed_Type = null
+        let raise_type: ^parsed.Type = null
         if self.lexer.matches(match.space, match.other('!'), match.other('>')) {
             self.lexer.consume_space(1)
             self.lexer.consume_other('!', '>')
             self.lexer.consume_space(1)
             raise_type = self.parse_type()
         }
-        let result = self.allocate(size: type_size(parsed.Parsed_Type), alignment: type_alignment(parsed.Parsed_Type)).as(^parsed.Parsed_Type)
-        result.^ = parsed.Procedure_Type(
+        return self.alloc(type: parsed.Procedure_Type(
             source_position: source_position
             return_type: return_type
             raise_type: raise_type
-        )
-        return result
+        ))
     }
     let name_token = self.lexer.consume_identifier()
-    let result = self.allocate(size: type_size(parsed.Parsed_Type), alignment: type_alignment(parsed.Parsed_Type)).as(^parsed.Parsed_Type)
-    result.^ = parsed.Named_Type(source_position: name_token.super.source_position, name: name_token)
-    return result
+    return self.alloc(type: parsed.Named_Type(source_position: name_token.super.source_position, name: name_token))
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("external")
-    let result = self.allocate(size: type_size(parsed.Type_Specifier), alignment: type_alignment(parsed.Type_Specifier)).as(^parsed.Type_Specifier)
-    result.^ = parsed.External_Type_Specifier(source_position: source_position)
-    return result
+    return self.alloc(type_specifier: parsed.External_Type_Specifier(source_position: source_position))
 }
 
 proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
@@ -599,13 +586,11 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_other('=')
     self.lexer.consume_space(1)
     let specifier = self.parse_type_specifier()
-    let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
-    result.^ = parsed.Type_Statement(
+    return self.alloc(statement: parsed.Type_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         name: name
         specifier: specifier
-    )
-    return result
+    ))
 }
 
 proc (^Parser).allocate(self, size: usize, alignment: usize) -> ^Any !> error.Error {

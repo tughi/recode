@@ -2673,15 +2673,15 @@ Checked_Named_Type *Checker__create_variant_type(Checker *self, Checker_Context 
             /* Type checked already */
             return other_type;
         }
-        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Type redeclaration");
-        pWriter__end_location_message(stderr_writer);
         if (other_type->super.location.source != NULL) {
+            pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Type redeclaration");
+            pWriter__end_location_message(stderr_writer);
             pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
             pWriter__write__cstring(stderr_writer, "Previous declaration here");
             pWriter__end_location_message(stderr_writer);
+            panic();
         }
-        panic();
     }
 
     Checked_Variant_Type *variant_type = Checked_Variant_Type__create(type_name->location, type_name->lexeme, context->checked_package, parsed_variant_type_specifier);
