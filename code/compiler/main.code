@@ -1,5 +1,6 @@
 import allocator
 import compiler.parser
+import compiler.parser.dump
 import compiler.source
 import libc
 
@@ -19,10 +20,12 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
         return 1
     }
 
-    try parser.parse(source) else {
+    let statements = try parser.parse(source) else {
         libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
         return 1
     }
+
+    statements.dump()
 
     return 0
 }

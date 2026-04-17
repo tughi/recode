@@ -71,9 +71,16 @@ type Assignment_Statement = struct {
     value: ^Expression
 }
 
+type Procedure_Parameter = struct {
+    label: lexer.Optional_Identifier
+    name: lexer.Identifier
+    parameter_type: ^Type
+}
+
 type Procedure_Statement = struct {
     super: Statement_Base
     name: lexer.Identifier
+    parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
     is_external: bool
     body: ^Statement

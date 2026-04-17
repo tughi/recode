@@ -1,3 +1,4 @@
+import collections
 import compiler.lexer
 
 type Type = variant {
@@ -18,6 +19,7 @@ type Pointer_Type = struct {
 
 type Procedure_Type = struct {
     source_position: usize
+    parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
     raise_type: ^Type
 }

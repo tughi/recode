@@ -1,0 +1,453 @@
+import collections
+import compiler.lexer
+import compiler.parser.parsed
+import libc
+
+proc (^collections.List<^parsed.Statement>).dump(self) {
+    let item = self.first
+    while item != null {
+        item.value.dump(depth: 0)
+        libc.stdout.end_line()
+        item = item.next
+        if item != null {
+            libc.stdout.end_line()
+        }
+    }
+}
+
+proc (^libc.FILE).indent(stream, anon depth: i32) -> ^libc.FILE {
+    let i = 0
+    while i < depth {
+        stream.write("    ")
+        i = i + 1
+    }
+    return stream
+}
+
+proc (^parsed.Statement).dump(self, depth: i32) {
+    if self == null {
+        return
+    }
+    switch self {
+        is parsed.Assignment_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Block_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Break_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Expression_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.If_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Loop_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Procedure_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Return_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Type_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Variable_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.While_Statement as s {
+            s.dump(depth: depth)
+        }
+        is nil {
+        }
+    }
+}
+
+proc (^parsed.Assignment_Statement).dump(self, depth: i32) {
+    self.object.dump()
+    libc.stdout.write(" = ")
+    self.value.dump()
+}
+
+proc (^parsed.Block_Statement).dump(self, depth: i32) {
+    libc.stdout.write("{").end_line()
+    let item = self.statements.first
+    while item != null {
+        libc.stdout.indent(depth + 1)
+        item.value.dump(depth: depth + 1)
+        libc.stdout.end_line()
+        item = item.next
+    }
+    libc.stdout.indent(depth).write("}")
+}
+
+proc (^parsed.Break_Statement).dump(self, depth: i32) {
+    libc.stdout.write("break")
+}
+
+proc (^parsed.Expression_Statement).dump(self, depth: i32) {
+    self.expression.dump()
+}
+
+proc (^parsed.If_Statement).dump(self, depth: i32) {
+    libc.stdout.write("if ")
+    self.condition.dump()
+    libc.stdout.write(" ")
+    self.true_block.dump(depth: depth)
+    if self.false_statement != null {
+        libc.stdout.write(" else ")
+        self.false_statement.dump(depth: depth)
+    }
+}
+
+proc (^parsed.Loop_Statement).dump(self, depth: i32) {
+    libc.stdout.write("loop ")
+    self.body.dump(depth: depth)
+}
+
+proc (^parsed.Procedure_Statement).dump(self, depth: i32) {
+    libc.stdout.write("proc ").write(self.name.lexeme).write("(")
+    let item = self.parameters.first
+    while item != null {
+        switch item.value.label {
+            is lexer.Identifier as label {
+                libc.stdout.write(label.lexeme).write(" ")
+            }
+            is nil {
+            }
+        }
+        libc.stdout.write(item.value.name.lexeme).write(": ")
+        item.value.parameter_type.dump()
+        item = item.next
+        if item != null {
+            libc.stdout.write(", ")
+        }
+    }
+    libc.stdout.write(")")
+    if self.return_type != null {
+        libc.stdout.write(" -> ")
+        self.return_type.dump()
+    }
+    if self.is_external {
+        libc.stdout.write(" = external")
+    } else {
+        libc.stdout.write(" ")
+        self.body.dump(depth: depth)
+    }
+}
+
+proc (^parsed.Return_Statement).dump(self, depth: i32) {
+    libc.stdout.write("return")
+    if self.expression != null {
+        libc.stdout.write(" ")
+        self.expression.dump()
+    }
+}
+
+proc (^parsed.Type_Statement).dump(self, depth: i32) {
+    libc.stdout.write("type ").write(self.name.lexeme).write(" = ")
+    self.specifier.dump()
+}
+
+proc (^parsed.Variable_Statement).dump(self, depth: i32) {
+    libc.stdout.write("let ").write(self.name.lexeme)
+    if self.variable_type != null {
+        libc.stdout.write(": ")
+        self.variable_type.dump()
+    }
+    if self.is_external {
+        libc.stdout.write(" = external")
+        switch self.external_name {
+            is lexer.String as external_name {
+                libc.stdout.write(" \"").write(external_name.value).write("\"")
+            }
+            is nil {
+            }
+        }
+    } else if self.expression != null {
+        libc.stdout.write(" = ")
+        self.expression.dump()
+    }
+}
+
+proc (^parsed.While_Statement).dump(self, depth: i32) {
+    libc.stdout.write("while ")
+    self.condition.dump()
+    libc.stdout.write(" ")
+    self.body.dump(depth: depth)
+}
+
+proc (^parsed.Expression).dump(self) {
+    if self == null {
+        return
+    }
+    switch self {
+        is parsed.Add_Expression as e {
+            e.dump()
+        }
+        is parsed.Address_Of_Expression as e {
+            e.dump()
+        }
+        is parsed.Call_Expression as e {
+            e.dump()
+        }
+        is parsed.Dereference_Expression as e {
+            e.dump()
+        }
+        is parsed.Divide_Expression as e {
+            e.dump()
+        }
+        is parsed.Equals_Expression as e {
+            e.dump()
+        }
+        is parsed.Greater_Expression as e {
+            e.dump()
+        }
+        is parsed.Greater_Or_Equals_Expression as e {
+            e.dump()
+        }
+        is parsed.Identifier_Expression as e {
+            e.dump()
+        }
+        is parsed.Integer_Expression as e {
+            e.dump()
+        }
+        is parsed.Less_Expression as e {
+            e.dump()
+        }
+        is parsed.Less_Or_Equals_Expression as e {
+            e.dump()
+        }
+        is parsed.Logic_And_Expression as e {
+            e.dump()
+        }
+        is parsed.Logic_Or_Expression as e {
+            e.dump()
+        }
+        is parsed.Modulo_Expression as e {
+            e.dump()
+        }
+        is parsed.Multiply_Expression as e {
+            e.dump()
+        }
+        is parsed.Negate_Expression as e {
+            e.dump()
+        }
+        is parsed.Not_Expression as e {
+            e.dump()
+        }
+        is parsed.Not_Equals_Expression as e {
+            e.dump()
+        }
+        is parsed.Subtract_Expression as e {
+            e.dump()
+        }
+        is nil {
+        }
+    }
+}
+
+proc (^parsed.Add_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" + ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Address_Of_Expression).dump(self) {
+    libc.stdout.write("^")
+    self.super.expression.dump()
+}
+
+proc (^parsed.Dereference_Expression).dump(self) {
+    self.super.expression.dump()
+    libc.stdout.write(".^")
+}
+
+proc (^parsed.Negate_Expression).dump(self) {
+    libc.stdout.write("-")
+    self.super.expression.dump()
+}
+
+proc (^parsed.Not_Expression).dump(self) {
+    libc.stdout.write("not ")
+    self.super.expression.dump()
+}
+
+proc (^parsed.Divide_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" / ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Equals_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" == ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Greater_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" > ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Greater_Or_Equals_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" >= ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Less_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" < ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Less_Or_Equals_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" <= ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Logic_And_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" and ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Logic_Or_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" or ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Modulo_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" % ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Multiply_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" * ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Not_Equals_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" != ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Subtract_Expression).dump(self) {
+    self.super.left.dump()
+    libc.stdout.write(" - ")
+    self.super.right.dump()
+}
+
+proc (^parsed.Call_Expression).dump(self) {
+    self.expression.dump()
+    libc.stdout.write("(")
+    let item = self.arguments.first
+    while item != null {
+        switch item.value.label {
+            is lexer.Identifier as label {
+                libc.stdout.write(label.lexeme).write(": ")
+            }
+            is nil {
+            }
+        }
+        item.value.expression.dump()
+        item = item.next
+        if item != null {
+            libc.stdout.write(", ")
+        }
+    }
+    libc.stdout.write(")")
+}
+
+proc (^parsed.Identifier_Expression).dump(self) {
+    libc.stdout.write(self.name.lexeme)
+}
+
+proc (^parsed.Integer_Expression).dump(self) {
+    libc.stdout.write(u64: self.token.value)
+}
+
+proc (^parsed.Type).dump(self) {
+    if self == null {
+        return
+    }
+    switch self {
+        is parsed.Named_Type as t {
+            t.dump()
+        }
+        is parsed.Pointer_Type as t {
+            t.dump()
+        }
+        is parsed.Procedure_Type as t {
+            t.dump()
+        }
+        is nil {
+        }
+    }
+}
+
+proc (^parsed.Named_Type).dump(self) {
+    libc.stdout.write(self.name.lexeme)
+}
+
+proc (^parsed.Pointer_Type).dump(self) {
+    libc.stdout.write("^")
+    self.pointee.dump()
+}
+
+proc (^parsed.Procedure_Type).dump(self) {
+    libc.stdout.write("proc (")
+    let item = self.parameters.first
+    while item != null {
+        switch item.value.label {
+            is lexer.Identifier as label {
+                libc.stdout.write(label.lexeme).write(" ")
+            }
+            is nil {
+            }
+        }
+        libc.stdout.write(item.value.name.lexeme).write(": ")
+        item.value.parameter_type.dump()
+        item = item.next
+        if item != null {
+            libc.stdout.write(", ")
+        }
+    }
+    libc.stdout.write(")")
+    if self.return_type != null {
+        libc.stdout.write(" -> ")
+        self.return_type.dump()
+    }
+    if self.raise_type != null {
+        libc.stdout.write(" !> ")
+        self.raise_type.dump()
+    }
+}
+
+proc (^parsed.Type_Specifier).dump(self) {
+    if self == null {
+        return
+    }
+    switch self {
+        is parsed.External_Type_Specifier as s {
+            s.dump()
+        }
+        is nil {
+        }
+    }
+}
+
+proc (^parsed.External_Type_Specifier).dump(self) {
+    libc.stdout.write("external")
+}

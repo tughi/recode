@@ -84,6 +84,10 @@ type Identifier = struct {
     super: Token_Base
 }
 
+type Optional_Identifier = variant {
+    Identifier
+}
+
 type Integer = struct {
     super: Token_Base
     value: u64

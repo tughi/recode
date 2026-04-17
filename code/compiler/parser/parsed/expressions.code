@@ -1,7 +1,122 @@
+import collections
 import compiler.lexer
 
 type Expression = variant {
+    Add_Expression
+    Address_Of_Expression
+    Call_Expression
+    Dereference_Expression
+    Divide_Expression
+    Equals_Expression
+    Greater_Expression
+    Greater_Or_Equals_Expression
+    Identifier_Expression
     Integer_Expression
+    Less_Expression
+    Less_Or_Equals_Expression
+    Logic_And_Expression
+    Logic_Or_Expression
+    Modulo_Expression
+    Multiply_Expression
+    Negate_Expression
+    Not_Expression
+    Not_Equals_Expression
+    Subtract_Expression
+}
+
+type Binary_Expression = struct {
+    source_position: usize
+    left: ^Expression
+    right: ^Expression
+}
+
+type Add_Expression = struct {
+    super: Binary_Expression
+}
+
+type Divide_Expression = struct {
+    super: Binary_Expression
+}
+
+type Equals_Expression = struct {
+    super: Binary_Expression
+}
+
+type Greater_Expression = struct {
+    super: Binary_Expression
+}
+
+type Greater_Or_Equals_Expression = struct {
+    super: Binary_Expression
+}
+
+type Less_Expression = struct {
+    super: Binary_Expression
+}
+
+type Less_Or_Equals_Expression = struct {
+    super: Binary_Expression
+}
+
+type Logic_And_Expression = struct {
+    super: Binary_Expression
+}
+
+type Logic_Or_Expression = struct {
+    super: Binary_Expression
+}
+
+type Modulo_Expression = struct {
+    super: Binary_Expression
+}
+
+type Multiply_Expression = struct {
+    super: Binary_Expression
+}
+
+type Not_Equals_Expression = struct {
+    super: Binary_Expression
+}
+
+type Subtract_Expression = struct {
+    super: Binary_Expression
+}
+
+type Unary_Expression_Base = struct {
+    source_position: usize
+    expression: ^Expression
+}
+
+type Address_Of_Expression = struct {
+    super: Unary_Expression_Base
+}
+
+type Dereference_Expression = struct {
+    super: Unary_Expression_Base
+}
+
+type Negate_Expression = struct {
+    super: Unary_Expression_Base
+}
+
+type Not_Expression = struct {
+    super: Unary_Expression_Base
+}
+
+type Call_Argument = struct {
+    label: lexer.Optional_Identifier
+    expression: ^Expression
+}
+
+type Call_Expression = struct {
+    source_position: usize
+    expression: ^Expression
+    arguments: collections.List<Call_Argument>
+}
+
+type Identifier_Expression = struct {
+    source_position: usize
+    name: lexer.Identifier
 }
 
 type Integer_Expression = struct {

@@ -11,10 +11,11 @@ type Parser = struct {
     alignment: i32
 }
 
-proc parse(anon source: source.Source) !> error.Error {
+proc parse(anon source: source.Source) -> collections.List<^parsed.Statement> !> error.Error {
     let parser = Parser(
         lexer: lexer.create(source)
     )
+    let statements = collections.List<^parsed.Statement>()
 
     loop {
         if parser.lexer.matches(match.end_of_file) {
@@ -22,18 +23,24 @@ proc parse(anon source: source.Source) !> error.Error {
         } else if parser.lexer.matches(match.space, match.comment) or parser.lexer.matches(match.space, match.end_of_line) {
             parser.lexer.consume_empty_line(parser.alignment)
         } else if parser.lexer.matches(match.keyword("type")) {
-            parser.parse_type_statement()
+            statements.append(value: parser.parse_type_statement())
             parser.lexer.consume_end_of_line()
         } else if parser.lexer.matches(match.keyword("let")) {
-            parser.parse_variable_declaration_statement()
+            statements.append(value: parser.parse_variable_declaration_statement())
             parser.lexer.consume_end_of_line()
         } else {
-            parser.parse_procedure_statement()
+            statements.append(value: parser.parse_procedure_statement())
             parser.lexer.consume_end_of_line()
         }
     }
 
-    return
+    return statements
+}
+
+proc (^Parser).alloc(self, expression: parsed.Expression) -> ^parsed.Expression !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Expression), alignment: type_alignment(parsed.Expression)).as(^parsed.Expression)
+    result.^ = expression
+    return result
 }
 
 proc (^Parser).alloc(self, statement: parsed.Statement) -> ^parsed.Statement !> error.Error {
@@ -60,7 +67,13 @@ proc (^Parser).parse_block_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_end_of_line()
     self.increase_alignment()
     let statements = collections.List<^parsed.Statement>()
-    while not self.lexer.matches(match.space, match.other('}')) {
+    loop {
+        while self.lexer.matches(match.space, match.end_of_line) or self.lexer.matches(match.space, match.comment) {
+            self.lexer.consume_empty_line(0)
+        }
+        if self.lexer.matches(match.space, match.other('}')) {
+            break
+        }
         self.lexer.consume_space(self.alignment)
         let statement = self.parse_statement()
         self.lexer.consume_end_of_line()
@@ -82,7 +95,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     let procedure_name = self.lexer.consume_identifier()
     self.lexer.consume_space(0)
     self.lexer.consume_other('(')
-    self.parse_procedure_parameters()
+    let parameters = self.parse_procedure_parameters()
     self.lexer.consume_other(')')
     self.lexer.consume_space(1)
     let return_type: ^parsed.Type = null
@@ -105,25 +118,29 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     return self.alloc(statement: parsed.Procedure_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         name: procedure_name
+        parameters: parameters
         return_type: return_type
         is_external: is_external
         body: body
     ))
 }
 
-proc (^Parser).parse_procedure_parameters(self) !> error.Error {
+proc (^Parser).parse_procedure_parameters(self) -> collections.List<parsed.Procedure_Parameter> !> error.Error {
+    let parameters = collections.List<parsed.Procedure_Parameter>()
     if not self.lexer.matches(match.space, match.other(')')) {
         self.lexer.consume_space(0)
         loop {
+            let label: lexer.Optional_Identifier = nil
             if self.lexer.matches(match.identifier, match.space, match.identifier) {
-                self.lexer.consume_identifier()
+                label = lexer.Optional_Identifier(self.lexer.consume_identifier())
                 self.lexer.consume_space(1)
             }
-            self.lexer.consume_identifier()
+            let name = self.lexer.consume_identifier()
             self.lexer.consume_space(0)
             self.lexer.consume_other(':')
             self.lexer.consume_space(1)
-            self.parse_type()
+            let parameter_type = self.parse_type()
+            parameters.append(value: parsed.Procedure_Parameter(label: label, name: name, parameter_type: parameter_type))
             self.lexer.consume_space(0)
             if self.lexer.matches(match.other(')')) {
                 break
@@ -132,7 +149,7 @@ proc (^Parser).parse_procedure_parameters(self) !> error.Error {
             self.lexer.consume_space(1)
         }
     }
-    return
+    return parameters
 }
 
 proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
@@ -286,10 +303,14 @@ proc (^Parser).parse_expression(self) -> ^parsed.Expression !> error.Error {
 proc (^Parser).parse_logic_or_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_logic_and_expression()
     while self.lexer.matches(match.space, match.keyword("or")) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_keyword("or")
         self.lexer.consume_space(1)
-        self.parse_logic_and_expression()
+        let right = self.parse_logic_and_expression()
+        expression = self.alloc(expression: parsed.Logic_Or_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     }
     return expression
 }
@@ -297,10 +318,14 @@ proc (^Parser).parse_logic_or_expression(self) -> ^parsed.Expression !> error.Er
 proc (^Parser).parse_logic_and_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_equality_expression()
     while self.lexer.matches(match.space, match.keyword("and")) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_keyword("and")
         self.lexer.consume_space(1)
-        self.parse_equality_expression()
+        let right = self.parse_equality_expression()
+        expression = self.alloc(expression: parsed.Logic_And_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     }
     return expression
 }
@@ -308,15 +333,23 @@ proc (^Parser).parse_logic_and_expression(self) -> ^parsed.Expression !> error.E
 proc (^Parser).parse_equality_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_comparison_expression()
     if self.lexer.matches(match.space, match.other('='), match.other('=')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('=', '=')
         self.lexer.consume_space(1)
-        self.parse_comparison_expression()
+        let right = self.parse_comparison_expression()
+        expression = self.alloc(expression: parsed.Equals_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     } else if self.lexer.matches(match.space, match.other('!'), match.other('=')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('!', '=')
         self.lexer.consume_space(1)
-        self.parse_comparison_expression()
+        let right = self.parse_comparison_expression()
+        expression = self.alloc(expression: parsed.Not_Equals_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     }
     return expression
 }
@@ -324,25 +357,41 @@ proc (^Parser).parse_equality_expression(self) -> ^parsed.Expression !> error.Er
 proc (^Parser).parse_comparison_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_additive_expression()
     if self.lexer.matches(match.space, match.other('<'), match.other('=')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('<', '=')
         self.lexer.consume_space(1)
-        self.parse_additive_expression()
+        let right = self.parse_additive_expression()
+        expression = self.alloc(expression: parsed.Less_Or_Equals_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     } else if self.lexer.matches(match.space, match.other('<')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('<')
         self.lexer.consume_space(1)
-        self.parse_additive_expression()
+        let right = self.parse_additive_expression()
+        expression = self.alloc(expression: parsed.Less_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     } else if self.lexer.matches(match.space, match.other('>'), match.other('=')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('>', '=')
         self.lexer.consume_space(1)
-        self.parse_additive_expression()
+        let right = self.parse_additive_expression()
+        expression = self.alloc(expression: parsed.Greater_Or_Equals_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     } else if self.lexer.matches(match.space, match.other('>')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         self.lexer.consume_other('>')
         self.lexer.consume_space(1)
-        self.parse_additive_expression()
+        let right = self.parse_additive_expression()
+        expression = self.alloc(expression: parsed.Greater_Expression(
+            super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
     }
     return expression
 }
@@ -350,14 +399,23 @@ proc (^Parser).parse_comparison_expression(self) -> ^parsed.Expression !> error.
 proc (^Parser).parse_additive_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_multiplicative_expression()
     while self.lexer.matches(match.space, match.other('+')) or self.lexer.matches(match.space, match.other('-')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         if self.lexer.matches(match.other('+')) {
             self.lexer.consume_other('+')
+            self.lexer.consume_space(1)
+            let right = self.parse_multiplicative_expression()
+            expression = self.alloc(expression: parsed.Add_Expression(
+                super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+            ))
         } else {
             self.lexer.consume_other('-')
+            self.lexer.consume_space(1)
+            let right = self.parse_multiplicative_expression()
+            expression = self.alloc(expression: parsed.Subtract_Expression(
+                super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+            ))
         }
-        self.lexer.consume_space(1)
-        self.parse_multiplicative_expression()
     }
     return expression
 }
@@ -365,16 +423,30 @@ proc (^Parser).parse_additive_expression(self) -> ^parsed.Expression !> error.Er
 proc (^Parser).parse_multiplicative_expression(self) -> ^parsed.Expression !> error.Error {
     let expression = self.parse_unary_expression()
     while self.lexer.matches(match.space, match.other('*')) or self.lexer.matches(match.space, match.other('%')) or self.lexer.matches(match.space, match.other('/')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_space(1)
         if self.lexer.matches(match.other('*')) {
             self.lexer.consume_other('*')
+            self.lexer.consume_space(1)
+            let right = self.parse_unary_expression()
+            expression = self.alloc(expression: parsed.Multiply_Expression(
+                super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+            ))
         } else if self.lexer.matches(match.other('%')) {
             self.lexer.consume_other('%')
+            self.lexer.consume_space(1)
+            let right = self.parse_unary_expression()
+            expression = self.alloc(expression: parsed.Modulo_Expression(
+                super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+            ))
         } else {
             self.lexer.consume_other('/')
+            self.lexer.consume_space(1)
+            let right = self.parse_unary_expression()
+            expression = self.alloc(expression: parsed.Divide_Expression(
+                super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+            ))
         }
-        self.lexer.consume_space(1)
-        self.parse_unary_expression()
     }
     return expression
 }
@@ -399,20 +471,29 @@ proc (^Parser).parse_unary_expression(self) -> ^parsed.Expression !> error.Error
         self.lexer.consume_other(')')
         return null
     } else if self.lexer.matches(match.other('^')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_other('^')
         self.lexer.consume_space(0)
-        self.parse_unary_expression()
-        return null
+        let expression = self.parse_unary_expression()
+        return self.alloc(expression: parsed.Address_Of_Expression(
+            super: parsed.Unary_Expression_Base(source_position: source_position, expression: expression)
+        ))
     } else if self.lexer.matches(match.other('-')) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_other('-')
         self.lexer.consume_space(0)
-        self.parse_unary_expression()
-        return null
+        let expression = self.parse_unary_expression()
+        return self.alloc(expression: parsed.Negate_Expression(
+            super: parsed.Unary_Expression_Base(source_position: source_position, expression: expression)
+        ))
     } else if self.lexer.matches(match.keyword("not")) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_keyword("not")
         self.lexer.consume_space(1)
-        self.parse_unary_expression()
-        return null
+        let expression = self.parse_unary_expression()
+        return self.alloc(expression: parsed.Not_Expression(
+            super: parsed.Unary_Expression_Base(source_position: source_position, expression: expression)
+        ))
     } else {
         return self.parse_access_expression()
     }
@@ -422,11 +503,15 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
     let expression = self.parse_primary_expression()
     loop {
         if self.lexer.matches(match.space, match.other('.')) {
+            let source_position = self.lexer.source_position
             self.lexer.consume_space(0)
             self.lexer.consume_other('.')
             self.lexer.consume_space(0)
             if self.lexer.matches(match.other('^')) {
                 self.lexer.consume_other('^')
+                expression = self.alloc(expression: parsed.Dereference_Expression(
+                    super: parsed.Unary_Expression_Base(source_position: source_position, expression: expression)
+                ))
             } else if self.lexer.matches(match.keyword("as")) {
                 self.lexer.consume_keyword("as")
                 self.lexer.consume_space(0)
@@ -439,7 +524,13 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
                 self.lexer.consume_identifier()
             }
         } else if self.lexer.matches(match.other('(')) {
-            self.parse_call_arguments()
+            let source_position = self.lexer.source_position
+            let arguments = self.parse_call_arguments()
+            expression = self.alloc(expression: parsed.Call_Expression(
+                source_position: source_position
+                expression: expression
+                arguments: arguments
+            ))
         } else {
             break
         }
@@ -449,8 +540,11 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
 
 proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression !> error.Error {
     if self.lexer.matches(match.identifier) {
-        self.lexer.consume_identifier()
-        return null
+        let name_token = self.lexer.consume_identifier()
+        return self.alloc(expression: parsed.Identifier_Expression(
+            source_position: name_token.source_position
+            name: name_token
+        ))
     } else if self.lexer.matches(match.other('(')) {
         self.lexer.consume_other('(')
         self.lexer.consume_space(0)
@@ -460,18 +554,17 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression !> error.Err
         return expression
     } else {
         let integer_token = self.lexer.consume_integer()
-        let result = self.allocate(size: type_size(parsed.Expression), alignment: type_alignment(parsed.Expression)).as(^parsed.Expression)
-        result.^ = parsed.Integer_Expression(
-            source_position: integer_token.super.source_position
+        return self.alloc(expression: parsed.Integer_Expression(
+            source_position: integer_token.source_position
             token: integer_token
-        )
-        return result
+        ))
     }
 }
 
-proc (^Parser).parse_call_arguments(self) !> error.Error {
+proc (^Parser).parse_call_arguments(self) -> collections.List<parsed.Call_Argument> !> error.Error {
     self.lexer.consume_other('(')
 
+    let arguments = collections.List<parsed.Call_Argument>()
     let multiline = false
 
     if self.lexer.matches(match.end_of_line) {
@@ -490,13 +583,13 @@ proc (^Parser).parse_call_arguments(self) !> error.Error {
         }
         self.lexer.consume_space(space_before_argument)
 
-        self.parse_call_argument()
+        arguments.append(value: self.parse_call_argument())
 
         while self.lexer.matches(match.space, match.other(',')) {
             self.lexer.consume_space(0)
             self.lexer.consume_other(',')
             self.lexer.consume_space(1)
-            self.parse_call_argument()
+            arguments.append(value: self.parse_call_argument())
         }
 
         if self.lexer.matches(match.space, match.comment) or self.lexer.matches(match.space, match.end_of_line) {
@@ -519,18 +612,19 @@ proc (^Parser).parse_call_arguments(self) !> error.Error {
     }
 
     self.lexer.consume_other(')')
-    return
+    return arguments
 }
 
-proc (^Parser).parse_call_argument(self) !> error.Error {
+proc (^Parser).parse_call_argument(self) -> parsed.Call_Argument !> error.Error {
+    let label: lexer.Optional_Identifier = nil
     if self.lexer.matches(match.identifier, match.space, match.other(':')) {
-        self.lexer.consume_identifier()
+        label = self.lexer.consume_identifier()
         self.lexer.consume_space(0)
         self.lexer.consume_other(':')
         self.lexer.consume_space(1)
     }
-    self.parse_expression()
-    return
+    let expression = self.parse_expression()
+    return parsed.Call_Argument(label: label, expression: expression)
 }
 
 proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
@@ -545,7 +639,7 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         self.lexer.consume_keyword("proc")
         self.lexer.consume_space(1)
         self.lexer.consume_other('(')
-        self.parse_procedure_parameters()
+        let parameters = self.parse_procedure_parameters()
         self.lexer.consume_other(')')
         let return_type: ^parsed.Type = null
         if self.lexer.matches(match.space, match.other('-'), match.other('>')) {
@@ -563,12 +657,13 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         }
         return self.alloc(type: parsed.Procedure_Type(
             source_position: source_position
+            parameters: parameters
             return_type: return_type
             raise_type: raise_type
         ))
     }
     let name_token = self.lexer.consume_identifier()
-    return self.alloc(type: parsed.Named_Type(source_position: name_token.super.source_position, name: name_token))
+    return self.alloc(type: parsed.Named_Type(source_position: name_token.source_position, name: name_token))
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
