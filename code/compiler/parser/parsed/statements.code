@@ -94,8 +94,19 @@ type Type_Statement = struct {
 
 type Type_Specifier = variant {
     External_Type_Specifier
+    Struct_Type_Specifier
 }
 
 type External_Type_Specifier = struct {
     source_position: usize
+}
+
+type Struct_Member = struct {
+    name: lexer.Identifier
+    member_type: ^Type
+}
+
+type Struct_Type_Specifier = struct {
+    source_position: usize
+    members: collections.List<Struct_Member>
 }

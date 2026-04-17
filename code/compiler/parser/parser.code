@@ -523,7 +523,12 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
                 self.lexer.consume_space(0)
                 self.lexer.consume_other(')')
             } else {
-                self.lexer.consume_identifier()
+                let member = self.lexer.consume_identifier()
+                expression = self.alloc(expression: parsed.Member_Access_Expression(
+                    source_position: source_position
+                    expression: expression
+                    member: member
+                ))
             }
         } else if self.lexer.matches(match.other('(')) {
             let source_position = self.lexer.source_position
@@ -695,9 +700,46 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
+    if self.lexer.matches(match.keyword("external")) {
+        return self.parse_external_type_specifier()
+    }
+    return self.parse_struct_type_specifier()
+}
+
+proc (^Parser).parse_external_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("external")
     return self.alloc(type_specifier: parsed.External_Type_Specifier(source_position: source_position))
+}
+
+proc (^Parser).parse_struct_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("struct")
+    self.lexer.consume_space(1)
+    self.lexer.consume_other('{')
+    self.lexer.consume_end_of_line()
+    self.increase_alignment()
+    let members = collections.List<parsed.Struct_Member>()
+    loop {
+        while self.lexer.matches(match.space, match.end_of_line) or self.lexer.matches(match.space, match.comment) {
+            self.lexer.consume_empty_line(0)
+        }
+        if self.lexer.matches(match.space, match.other('}')) {
+            break
+        }
+        self.lexer.consume_space(self.alignment)
+        let name = self.lexer.consume_identifier()
+        self.lexer.consume_space(0)
+        self.lexer.consume_other(':')
+        self.lexer.consume_space(1)
+        let member_type = self.parse_type()
+        self.lexer.consume_end_of_line()
+        members.append(value: parsed.Struct_Member(name: name, member_type: member_type))
+    }
+    self.decrease_alignment()
+    self.lexer.consume_space(self.alignment)
+    self.lexer.consume_other('}')
+    return self.alloc(type_specifier: parsed.Struct_Type_Specifier(source_position: source_position, members: members))
 }
 
 proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
