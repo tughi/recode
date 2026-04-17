@@ -192,7 +192,13 @@ proc (^parsed.Expression).dump(self) {
         is parsed.Address_Of_Expression as e {
             e.dump()
         }
+        is parsed.Array_Access_Expression as e {
+            e.dump()
+        }
         is parsed.Call_Expression as e {
+            e.dump()
+        }
+        is parsed.Character_Expression as e {
             e.dump()
         }
         is parsed.Dereference_Expression as e {
@@ -246,6 +252,12 @@ proc (^parsed.Expression).dump(self) {
         is parsed.Subtract_Expression as e {
             e.dump()
         }
+        is parsed.Type_Alignment_Expression as e {
+            e.dump()
+        }
+        is parsed.Type_Size_Expression as e {
+            e.dump()
+        }
         is nil {
         }
     }
@@ -255,6 +267,17 @@ proc (^parsed.Add_Expression).dump(self) {
     self.super.left.dump()
     libc.stdout.write(" + ")
     self.super.right.dump()
+}
+
+proc (^parsed.Array_Access_Expression).dump(self) {
+    self.expression.dump()
+    libc.stdout.write("[")
+    self.index.dump()
+    libc.stdout.write("]")
+}
+
+proc (^parsed.Character_Expression).dump(self) {
+    libc.stdout.write(self.token.lexeme)
 }
 
 proc (^parsed.Address_Of_Expression).dump(self) {
@@ -343,6 +366,18 @@ proc (^parsed.Not_Equals_Expression).dump(self) {
     self.super.right.dump()
 }
 
+proc (^parsed.Type_Alignment_Expression).dump(self) {
+    libc.stdout.write("type_alignment(")
+    self.type.dump()
+    libc.stdout.write(")")
+}
+
+proc (^parsed.Type_Size_Expression).dump(self) {
+    libc.stdout.write("type_size(")
+    self.type.dump()
+    libc.stdout.write(")")
+}
+
 proc (^parsed.Subtract_Expression).dump(self) {
     self.super.left.dump()
     libc.stdout.write(" - ")
@@ -383,6 +418,9 @@ proc (^parsed.Type).dump(self) {
         return
     }
     switch self {
+        is parsed.Multi_Pointer_Type as t {
+            t.dump()
+        }
         is parsed.Named_Type as t {
             t.dump()
         }
@@ -395,6 +433,11 @@ proc (^parsed.Type).dump(self) {
         is nil {
         }
     }
+}
+
+proc (^parsed.Multi_Pointer_Type).dump(self) {
+    libc.stdout.write("[^]")
+    self.pointee.dump()
 }
 
 proc (^parsed.Named_Type).dump(self) {

@@ -4,7 +4,9 @@ import compiler.lexer
 type Expression = variant {
     Add_Expression
     Address_Of_Expression
+    Array_Access_Expression
     Call_Expression
+    Character_Expression
     Dereference_Expression
     Divide_Expression
     Equals_Expression
@@ -22,6 +24,8 @@ type Expression = variant {
     Not_Expression
     Not_Equals_Expression
     Subtract_Expression
+    Type_Alignment_Expression
+    Type_Size_Expression
 }
 
 type Binary_Expression = struct {
@@ -80,6 +84,27 @@ type Not_Equals_Expression = struct {
 
 type Subtract_Expression = struct {
     super: Binary_Expression
+}
+
+type Array_Access_Expression = struct {
+    source_position: usize
+    expression: ^Expression
+    index: ^Expression
+}
+
+type Character_Expression = struct {
+    source_position: usize
+    token: lexer.Character
+}
+
+type Type_Alignment_Expression = struct {
+    source_position: usize
+    type: ^Type
+}
+
+type Type_Size_Expression = struct {
+    source_position: usize
+    type: ^Type
 }
 
 type Unary_Expression_Base = struct {

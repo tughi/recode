@@ -453,23 +453,25 @@ proc (^Parser).parse_multiplicative_expression(self) -> ^parsed.Expression !> er
 
 proc (^Parser).parse_unary_expression(self) -> ^parsed.Expression !> error.Error {
     if self.lexer.matches(match.keyword("type_size")) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_keyword("type_size")
         self.lexer.consume_space(0)
         self.lexer.consume_other('(')
         self.lexer.consume_space(0)
-        self.parse_type()
+        let type = self.parse_type()
         self.lexer.consume_space(0)
         self.lexer.consume_other(')')
-        return null
+        return self.alloc(expression: parsed.Type_Size_Expression(source_position: source_position, type: type))
     } else if self.lexer.matches(match.keyword("type_alignment")) {
+        let source_position = self.lexer.source_position
         self.lexer.consume_keyword("type_alignment")
         self.lexer.consume_space(0)
         self.lexer.consume_other('(')
         self.lexer.consume_space(0)
-        self.parse_type()
+        let type = self.parse_type()
         self.lexer.consume_space(0)
         self.lexer.consume_other(')')
-        return null
+        return self.alloc(expression: parsed.Type_Alignment_Expression(source_position: source_position, type: type))
     } else if self.lexer.matches(match.other('^')) {
         let source_position = self.lexer.source_position
         self.lexer.consume_other('^')
@@ -531,6 +533,18 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
                 expression: expression
                 arguments: arguments
             ))
+        } else if self.lexer.matches(match.other('[')) {
+            let source_position = self.lexer.source_position
+            self.lexer.consume_other('[')
+            self.lexer.consume_space(0)
+            let index = self.parse_expression()
+            self.lexer.consume_space(0)
+            self.lexer.consume_other(']')
+            expression = self.alloc(expression: parsed.Array_Access_Expression(
+                source_position: source_position
+                expression: expression
+                index: index
+            ))
         } else {
             break
         }
@@ -552,6 +566,12 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression !> error.Err
         self.lexer.consume_space(0)
         self.lexer.consume_other(')')
         return expression
+    } else if self.lexer.matches(match.Character()) {
+        let character_token = self.lexer.consume_character()
+        return self.alloc(expression: parsed.Character_Expression(
+            source_position: character_token.source_position
+            token: character_token
+        ))
     } else {
         let integer_token = self.lexer.consume_integer()
         return self.alloc(expression: parsed.Integer_Expression(
@@ -629,6 +649,14 @@ proc (^Parser).parse_call_argument(self) -> parsed.Call_Argument !> error.Error 
 
 proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
     let source_position = self.lexer.source_position
+    if self.lexer.matches(match.other('['), match.other('^'), match.other(']')) {
+        self.lexer.consume_other('[')
+        self.lexer.consume_other('^')
+        self.lexer.consume_other(']')
+        self.lexer.consume_space(0)
+        let pointee = self.parse_type()
+        return self.alloc(type: parsed.Multi_Pointer_Type(source_position: source_position, pointee: pointee))
+    }
     if self.lexer.matches(match.other('^')) {
         self.lexer.consume_other('^')
         self.lexer.consume_space(0)

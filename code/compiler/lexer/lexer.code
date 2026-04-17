@@ -295,6 +295,15 @@ proc (^Lexer).consume_other(self, anon first: u8, anon second: u8) -> Other !> e
     raise self.error(error_message.build())
 }
 
+proc (^Lexer).consume_character(self) -> Character !> error.Error {
+    let token = self.peek_token()
+    if token is Character as character {
+        self.consume_token()
+        return character
+    }
+    raise self.error("Expected character literal")
+}
+
 proc (^Lexer).consume_comment(self) -> Comment !> error.Error {
     let token = self.peek_token()
     if token is Comment as comment {

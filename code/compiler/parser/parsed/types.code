@@ -2,9 +2,15 @@ import collections
 import compiler.lexer
 
 type Type = variant {
+    Multi_Pointer_Type
     Named_Type
     Pointer_Type
     Procedure_Type
+}
+
+type Multi_Pointer_Type = struct {
+    source_position: usize
+    pointee: ^Type
 }
 
 type Named_Type = struct {
