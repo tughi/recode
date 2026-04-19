@@ -568,6 +568,13 @@ proc (^parsed.Multi_Pointer_Type).dump(self) {
 }
 
 proc (^parsed.Named_Type).dump(self) {
+    switch self.module {
+        is lexer.Identifier as module {
+            libc.stdout.write(module.lexeme).write(".")
+        }
+        is nil {
+        }
+    }
     libc.stdout.write(self.name.lexeme)
 }
 

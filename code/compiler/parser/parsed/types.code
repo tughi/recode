@@ -16,6 +16,7 @@ type Multi_Pointer_Type = struct {
 
 type Named_Type = struct {
     source_position: usize
+    module: lexer.Optional_Identifier
     name: lexer.Identifier
 }
 

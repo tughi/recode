@@ -829,8 +829,17 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
             raise_type: raise_type
         ))
     }
-    let name_token = self.lexer.consume_identifier()
-    return self.alloc(type: parsed.Named_Type(source_position: name_token.source_position, name: name_token))
+    let first_token = self.lexer.consume_identifier()
+    let module: lexer.Optional_Identifier = nil
+    let name_token = first_token
+    if self.lexer.matches(match.Space(), match.other('.')) {
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('.')
+        self.lexer.consume_space(0)
+        module = first_token
+        name_token = self.lexer.consume_identifier()
+    }
+    return self.alloc(type: parsed.Named_Type(source_position: first_token.source_position, module: module, name: name_token))
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
