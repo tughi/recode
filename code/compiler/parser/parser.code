@@ -605,6 +605,12 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression !> error.Err
             source_position: character_token.source_position
             token: character_token
         ))
+    } else if self.lexer.matches(match.String()) {
+        let string_token = self.lexer.consume_string()
+        return self.alloc(expression: parsed.String_Expression(
+            source_position: string_token.source_position
+            token: string_token
+        ))
     } else {
         let integer_token = self.lexer.consume_integer()
         return self.alloc(expression: parsed.Integer_Expression(
@@ -732,6 +738,8 @@ proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Err
         return self.parse_external_type_specifier()
     } else if self.lexer.matches(match.keyword("trait")) {
         return self.parse_trait_type_specifier()
+    } else if self.lexer.matches(match.keyword("variant")) {
+        return self.parse_variant_type_specifier()
     }
     return self.parse_struct_type_specifier()
 }
@@ -794,6 +802,32 @@ proc (^Parser).parse_trait_type_specifier(self) -> ^parsed.Type_Specifier !> err
     self.lexer.consume_space(self.alignment)
     self.lexer.consume_other('}')
     return self.alloc(type_specifier: parsed.Trait_Type_Specifier(source_position: source_position, methods: methods))
+}
+
+proc (^Parser).parse_variant_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("variant")
+    self.lexer.consume_space(1)
+    self.lexer.consume_other('{')
+    self.lexer.consume_end_of_line()
+    self.increase_alignment()
+    let cases = collections.List<parsed.Variant_Case>()
+    loop {
+        while self.lexer.matches(match.space, match.end_of_line) or self.lexer.matches(match.space, match.comment) {
+            self.lexer.consume_empty_line(0)
+        }
+        if self.lexer.matches(match.space, match.other('}')) {
+            break
+        }
+        self.lexer.consume_space(self.alignment)
+        let variant_type = self.parse_type()
+        self.lexer.consume_end_of_line()
+        cases.append(value: parsed.Variant_Case(variant_type: variant_type))
+    }
+    self.decrease_alignment()
+    self.lexer.consume_space(self.alignment)
+    self.lexer.consume_other('}')
+    return self.alloc(type_specifier: parsed.Variant_Type_Specifier(source_position: source_position, cases: cases))
 }
 
 proc (^Parser).parse_struct_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {

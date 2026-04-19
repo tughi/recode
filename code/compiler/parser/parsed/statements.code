@@ -97,6 +97,7 @@ type Type_Specifier = variant {
     External_Type_Specifier
     Struct_Type_Specifier
     Trait_Type_Specifier
+    Variant_Type_Specifier
 }
 
 type External_Type_Specifier = struct {
@@ -124,4 +125,13 @@ type Trait_Method = struct {
 type Trait_Type_Specifier = struct {
     source_position: usize
     methods: collections.List<Trait_Method>
+}
+
+type Variant_Case = struct {
+    variant_type: ^Type
+}
+
+type Variant_Type_Specifier = struct {
+    source_position: usize
+    cases: collections.List<Variant_Case>
 }

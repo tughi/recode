@@ -271,6 +271,9 @@ proc (^parsed.Expression).dump(self) {
         is parsed.Subtract_Expression as e {
             e.dump()
         }
+        is parsed.String_Expression as e {
+            e.dump()
+        }
         is parsed.Type_Alignment_Expression as e {
             e.dump()
         }
@@ -442,6 +445,10 @@ proc (^parsed.Integer_Expression).dump(self) {
     libc.stdout.write(u64: self.token.value)
 }
 
+proc (^parsed.String_Expression).dump(self) {
+    libc.stdout.write(self.token.lexeme)
+}
+
 proc (^parsed.Type).dump(self) {
     if self == null {
         return
@@ -527,6 +534,9 @@ proc (^parsed.Type_Specifier).dump(self, depth: i32) {
         is parsed.Trait_Type_Specifier as s {
             s.dump(depth: depth)
         }
+        is parsed.Variant_Type_Specifier as s {
+            s.dump(depth: depth)
+        }
         is nil {
         }
     }
@@ -570,6 +580,18 @@ proc (^parsed.Trait_Type_Specifier).dump(self, depth: i32) {
             libc.stdout.write(" !> ")
             method.raise_type.dump()
         }
+        libc.stdout.end_line()
+        item = item.next
+    }
+    libc.stdout.indent(depth).write("}")
+}
+
+proc (^parsed.Variant_Type_Specifier).dump(self, depth: i32) {
+    libc.stdout.write("variant {").end_line()
+    let item = self.cases.first
+    while item != null {
+        libc.stdout.indent(depth + 1)
+        item.value.variant_type.dump()
         libc.stdout.end_line()
         item = item.next
     }

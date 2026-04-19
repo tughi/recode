@@ -26,6 +26,7 @@ type Expression = variant {
     Not_Expression
     Not_Equals_Expression
     Subtract_Expression
+    String_Expression
     Type_Alignment_Expression
     Type_Size_Expression
 }
@@ -159,4 +160,9 @@ type Identifier_Expression = struct {
 type Integer_Expression = struct {
     source_position: usize
     token: lexer.Integer
+}
+
+type String_Expression = struct {
+    source_position: usize
+    token: lexer.String
 }
