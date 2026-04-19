@@ -92,10 +92,19 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("proc")
     self.lexer.consume_space(1)
+    let receiver: ^parsed.Type = null
+    if self.lexer.matches(match.other('(')) {
+        self.lexer.consume_other('(')
+        self.lexer.consume_space(0)
+        receiver = self.parse_type()
+        self.lexer.consume_space(0)
+        self.lexer.consume_other(')')
+        self.lexer.consume_other('.')
+    }
     let procedure_name = self.lexer.consume_identifier()
     self.lexer.consume_space(0)
     self.lexer.consume_other('(')
-    let parameters = self.parse_procedure_parameters()
+    let parameters = self.parse_procedure_parameters(receiver: receiver)
     self.lexer.consume_other(')')
     self.lexer.consume_space(1)
     let return_type: ^parsed.Type = null
@@ -117,6 +126,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     }
     return self.alloc(statement: parsed.Procedure_Statement(
         super: parsed.Statement_Base(source_position: source_position)
+        receiver: receiver
         name: procedure_name
         parameters: parameters
         return_type: return_type
@@ -125,10 +135,20 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
     ))
 }
 
-proc (^Parser).parse_procedure_parameters(self) -> collections.List<parsed.Procedure_Parameter> !> error.Error {
+proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> collections.List<parsed.Procedure_Parameter> !> error.Error {
     let parameters = collections.List<parsed.Procedure_Parameter>()
     if not self.lexer.matches(match.space, match.other(')')) {
         self.lexer.consume_space(0)
+        if receiver != null {
+            let name = self.lexer.consume_identifier()
+            parameters.append(value: parsed.Procedure_Parameter(label: nil, name: name, parameter_type: receiver))
+            self.lexer.consume_space(0)
+            if self.lexer.matches(match.other(')')) {
+                return parameters
+            }
+            self.lexer.consume_other(',')
+            self.lexer.consume_space(1)
+        }
         loop {
             let label: lexer.Optional_Identifier = nil
             if self.lexer.matches(match.identifier, match.space, match.identifier) {
@@ -452,7 +472,15 @@ proc (^Parser).parse_multiplicative_expression(self) -> ^parsed.Expression !> er
 }
 
 proc (^Parser).parse_unary_expression(self) -> ^parsed.Expression !> error.Error {
-    if self.lexer.matches(match.keyword("type_size")) {
+    if self.lexer.matches(match.keyword("alloc")) {
+        let source_position = self.lexer.source_position
+        self.lexer.consume_keyword("alloc")
+        self.lexer.consume_space(1)
+        let expression = self.parse_expression()
+        return self.alloc(expression: parsed.Alloc_Expression(
+            super: parsed.Unary_Expression_Base(source_position: source_position, expression: expression)
+        ))
+    } else if self.lexer.matches(match.keyword("type_size")) {
         let source_position = self.lexer.source_position
         self.lexer.consume_keyword("type_size")
         self.lexer.consume_space(0)
@@ -672,7 +700,7 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         self.lexer.consume_keyword("proc")
         self.lexer.consume_space(1)
         self.lexer.consume_other('(')
-        let parameters = self.parse_procedure_parameters()
+        let parameters = self.parse_procedure_parameters(receiver: null)
         self.lexer.consume_other(')')
         let return_type: ^parsed.Type = null
         if self.lexer.matches(match.space, match.other('-'), match.other('>')) {

@@ -4,6 +4,7 @@ import compiler.lexer
 type Expression = variant {
     Add_Expression
     Address_Of_Expression
+    Alloc_Expression
     Array_Access_Expression
     Call_Expression
     Character_Expression
@@ -117,6 +118,10 @@ type Member_Access_Expression = struct {
 type Unary_Expression_Base = struct {
     source_position: usize
     expression: ^Expression
+}
+
+type Alloc_Expression = struct {
+    super: Unary_Expression_Base
 }
 
 type Address_Of_Expression = struct {

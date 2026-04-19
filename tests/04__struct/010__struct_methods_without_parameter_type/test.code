@@ -1,0 +1,11 @@
+type Number = struct {
+    value: i32
+}
+
+proc (^Number).get_value(self) -> i32 {
+    return self.value
+}
+
+proc (^Number).set_value(self, value) {
+    self.value = value
+}

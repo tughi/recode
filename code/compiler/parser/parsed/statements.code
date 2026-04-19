@@ -79,6 +79,7 @@ type Procedure_Parameter = struct {
 
 type Procedure_Statement = struct {
     super: Statement_Base
+    receiver: ^Type
     name: lexer.Identifier
     parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
