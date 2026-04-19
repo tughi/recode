@@ -459,9 +459,15 @@ proc (^parsed.Type).dump(self) {
         is parsed.Procedure_Type as t {
             t.dump()
         }
+        is parsed.Receiver_Type as t {
+            t.dump()
+        }
         is nil {
         }
     }
+}
+
+proc (^parsed.Receiver_Type).dump(self) {
 }
 
 proc (^parsed.Multi_Pointer_Type).dump(self) {
@@ -518,6 +524,9 @@ proc (^parsed.Type_Specifier).dump(self, depth: i32) {
         is parsed.Struct_Type_Specifier as s {
             s.dump(depth: depth)
         }
+        is parsed.Trait_Type_Specifier as s {
+            s.dump(depth: depth)
+        }
         is nil {
         }
     }
@@ -525,6 +534,46 @@ proc (^parsed.Type_Specifier).dump(self, depth: i32) {
 
 proc (^parsed.External_Type_Specifier).dump(self) {
     libc.stdout.write("external")
+}
+
+proc (^parsed.Trait_Type_Specifier).dump(self, depth: i32) {
+    libc.stdout.write("trait {").end_line()
+    let item = self.methods.first
+    while item != null {
+        libc.stdout.indent(depth + 1).write("proc ")
+        let method = item.value
+        libc.stdout.write(method.name.lexeme).write("(")
+        let param = method.parameters.first
+        if param != null {
+            libc.stdout.write(param.value.name.lexeme)
+            param = param.next
+        }
+        while param != null {
+            libc.stdout.write(", ")
+            switch param.value.label {
+                is lexer.Identifier as label {
+                    libc.stdout.write(label.lexeme).write(" ")
+                }
+                is nil {
+                }
+            }
+            libc.stdout.write(param.value.name.lexeme).write(": ")
+            param.value.parameter_type.dump()
+            param = param.next
+        }
+        libc.stdout.write(")")
+        if method.return_type != null {
+            libc.stdout.write(" -> ")
+            method.return_type.dump()
+        }
+        if method.raise_type != null {
+            libc.stdout.write(" !> ")
+            method.raise_type.dump()
+        }
+        libc.stdout.end_line()
+        item = item.next
+    }
+    libc.stdout.indent(depth).write("}")
 }
 
 proc (^parsed.Struct_Type_Specifier).dump(self, depth: i32) {

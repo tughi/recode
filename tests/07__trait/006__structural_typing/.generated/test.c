@@ -11,11 +11,11 @@ int32_t test__main() {
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writer *__001__ = &out;
 #line 7 "tests/07__trait/006__structural_typing/test.code"
-        struct String __002__ = (struct String){.data = "Hello, World!", .length = 13};
+        struct test_Number __002__ = (struct test_Number){.value = 42};
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         void *__003__ = &__002__;
 #line 7 "tests/07__trait/006__structural_typing/test.code"
-        void (*__004__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) pstr__write_to__anon);
+        void (*__004__)(void *self, struct test_Writer *writer) = ((void (*)(void *self, struct test_Writer *writer)) ptest_Number__write_to__anon);
 #line 7 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writable __005__ = (struct test_Writable){.self = __003__, .write_to = __004__};
 #line 7 "tests/07__trait/006__structural_typing/test.code"
@@ -53,83 +53,73 @@ int32_t test__main() {
 #line 15 "tests/07__trait/006__structural_typing/test.code"
 }
 
-#line 17 "tests/07__trait/006__structural_typing/test.code"
-void pi32__write_to__anon(int32_t *self, struct test_Writer *writer) {
-#line 18 "tests/07__trait/006__structural_typing/test.code"
-    int32_t number = *self;
-#line 19 "tests/07__trait/006__structural_typing/test.code"
-    if (number < 0) {
-#line 20 "tests/07__trait/006__structural_typing/test.code"
-        writer->write_char(writer->self, '-');
 #line 21 "tests/07__trait/006__structural_typing/test.code"
-        number = -number;
+void ptest_Number__write_to__anon(struct test_Number *self, struct test_Writer *writer) {
 #line 22 "tests/07__trait/006__structural_typing/test.code"
-    }
+    pi32__write_to__anon(&self->value, writer);
 #line 23 "tests/07__trait/006__structural_typing/test.code"
-    if (number >= 10) {
-#line 24 "tests/07__trait/006__structural_typing/test.code"
-        int32_t factor = number / 10;
+}
+
 #line 25 "tests/07__trait/006__structural_typing/test.code"
-        pi32__write_to__anon(&factor, writer);
+void pi32__write_to__anon(int32_t *self, struct test_Writer *writer) {
 #line 26 "tests/07__trait/006__structural_typing/test.code"
-    }
+    int32_t number = *self;
 #line 27 "tests/07__trait/006__structural_typing/test.code"
-    writer->write_char(writer->self, ((uint8_t) (number % 10)) + '0');
+    if (number < 0) {
 #line 28 "tests/07__trait/006__structural_typing/test.code"
-}
-
+        writer->write_char(writer->self, '-');
+#line 29 "tests/07__trait/006__structural_typing/test.code"
+        number = -number;
 #line 30 "tests/07__trait/006__structural_typing/test.code"
-void pstr__write_to__anon(struct String *self, struct test_Writer *writer) {
+    }
 #line 31 "tests/07__trait/006__structural_typing/test.code"
-    struct String *string = ((struct String *) self);
+    if (number >= 10) {
 #line 32 "tests/07__trait/006__structural_typing/test.code"
-    uintmax_t index = 0u;
+        int32_t factor = number / 10;
 #line 33 "tests/07__trait/006__structural_typing/test.code"
-    while (index < string->length) {
+        pi32__write_to__anon(&factor, writer);
 #line 34 "tests/07__trait/006__structural_typing/test.code"
-        writer->write_char(writer->self, string->data[index]);
+    }
 #line 35 "tests/07__trait/006__structural_typing/test.code"
-        index = index + 1u;
+    writer->write_char(writer->self, ((uint8_t) (number % 10)) + '0');
 #line 36 "tests/07__trait/006__structural_typing/test.code"
-    }
-#line 37 "tests/07__trait/006__structural_typing/test.code"
 }
 
-#line 45 "tests/07__trait/006__structural_typing/test.code"
+#line 44 "tests/07__trait/006__structural_typing/test.code"
 struct test_Writer *ptest_Writer__end_line(struct test_Writer *self) {
-#line 46 "tests/07__trait/006__structural_typing/test.code"
+#line 45 "tests/07__trait/006__structural_typing/test.code"
     self->write_char(self->self, '\n');
-#line 47 "tests/07__trait/006__structural_typing/test.code"
+#line 46 "tests/07__trait/006__structural_typing/test.code"
     {
-#line 47 "tests/07__trait/006__structural_typing/test.code"
+#line 46 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writer *__001__ = self;
-#line 47 "tests/07__trait/006__structural_typing/test.code"
+#line 46 "tests/07__trait/006__structural_typing/test.code"
         return __001__;
-#line 47 "tests/07__trait/006__structural_typing/test.code"
+#line 46 "tests/07__trait/006__structural_typing/test.code"
     }
-#line 48 "tests/07__trait/006__structural_typing/test.code"
+#line 47 "tests/07__trait/006__structural_typing/test.code"
 }
 
-#line 56 "tests/07__trait/006__structural_typing/test.code"
+#line 55 "tests/07__trait/006__structural_typing/test.code"
 struct test_Writer *ptest_Writer__write__anon(struct test_Writer *self, struct test_Writable writable) {
-#line 57 "tests/07__trait/006__structural_typing/test.code"
+#line 56 "tests/07__trait/006__structural_typing/test.code"
     writable.write_to(writable.self, self);
-#line 58 "tests/07__trait/006__structural_typing/test.code"
+#line 57 "tests/07__trait/006__structural_typing/test.code"
     {
-#line 58 "tests/07__trait/006__structural_typing/test.code"
+#line 57 "tests/07__trait/006__structural_typing/test.code"
         struct test_Writer *__001__ = self;
-#line 58 "tests/07__trait/006__structural_typing/test.code"
+#line 57 "tests/07__trait/006__structural_typing/test.code"
         return __001__;
-#line 58 "tests/07__trait/006__structural_typing/test.code"
+#line 57 "tests/07__trait/006__structural_typing/test.code"
     }
-#line 59 "tests/07__trait/006__structural_typing/test.code"
+#line 58 "tests/07__trait/006__structural_typing/test.code"
 }
 
-#line 69 "tests/07__trait/006__structural_typing/test.code"
+#line 68 "tests/07__trait/006__structural_typing/test.code"
 void ptest_FILE__write_char__anon(struct test_FILE *self, uint8_t c) {
-#line 70 "tests/07__trait/006__structural_typing/test.code"
+#line 69 "tests/07__trait/006__structural_typing/test.code"
     fputc(((int32_t) c), self);
-#line 71 "tests/07__trait/006__structural_typing/test.code"
+#line 70 "tests/07__trait/006__structural_typing/test.code"
 }
 
 int32_t main(int argc, const char **argv) {

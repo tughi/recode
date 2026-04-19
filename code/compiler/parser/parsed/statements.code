@@ -96,6 +96,7 @@ type Type_Statement = struct {
 type Type_Specifier = variant {
     External_Type_Specifier
     Struct_Type_Specifier
+    Trait_Type_Specifier
 }
 
 type External_Type_Specifier = struct {
@@ -110,4 +111,17 @@ type Struct_Member = struct {
 type Struct_Type_Specifier = struct {
     source_position: usize
     members: collections.List<Struct_Member>
+}
+
+type Trait_Method = struct {
+    source_position: usize
+    name: lexer.Identifier
+    parameters: collections.List<Procedure_Parameter>
+    return_type: ^Type
+    raise_type: ^Type
+}
+
+type Trait_Type_Specifier = struct {
+    source_position: usize
+    methods: collections.List<Trait_Method>
 }

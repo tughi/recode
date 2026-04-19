@@ -1,10 +1,10 @@
 proc main() -> i32 {
     let out: Writer = stdout
 
-    // let message = "Hello, World!"
-    // let writable_message = Writable(^message)
-    // out.write(writable_message).end_line()
-    out.write("Hello, World!").end_line() // This should do the same as the commented code
+    // let number = Number(value: 42)
+    // let writable_number = Writable(^number)
+    // out.write(writable_number).end_line()
+    out.write(Number(value: 42)).end_line() // This should do the same as the commented code
 
     // let number = 42
     // let writable_number = Writable(^number)
@@ -12,6 +12,14 @@ proc main() -> i32 {
     out.write(42).end_line() // This should write the number 42 directly
 
     return 0
+}
+
+type Number = struct {
+    value: i32
+}
+
+proc (^Number).write_to(self, anon writer: ^Writer) {
+    self.value.write_to(writer)
 }
 
 proc (^i32).write_to(self, anon writer: ^Writer) {
@@ -25,15 +33,6 @@ proc (^i32).write_to(self, anon writer: ^Writer) {
         factor.write_to(writer)
     }
     writer.write_char((number % 10).as(u8) + '0')
-}
-
-proc (^str).write_to(self, anon writer: ^Writer) {
-    let string = self.as(^String)
-    let index = 0usize
-    while index < string.length {
-        writer.write_char(string.data[index])
-        index = index + 1
-    }
 }
 
 // Writer

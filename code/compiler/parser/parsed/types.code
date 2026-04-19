@@ -6,6 +6,7 @@ type Type = variant {
     Named_Type
     Pointer_Type
     Procedure_Type
+    Receiver_Type
 }
 
 type Multi_Pointer_Type = struct {
@@ -28,4 +29,9 @@ type Procedure_Type = struct {
     parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
     raise_type: ^Type
+}
+
+// TODO: Determine if this type is exclusively used for trait method receivers and rename accordingly
+type Receiver_Type = struct {
+    source_position: usize
 }

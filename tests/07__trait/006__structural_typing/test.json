@@ -1,7 +1,7 @@
 {
     "execute": {
         "stdout": [
-            "Hello, World!",
+            "42",
             "42"
         ]
     }

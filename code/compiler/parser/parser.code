@@ -730,6 +730,8 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
     if self.lexer.matches(match.keyword("external")) {
         return self.parse_external_type_specifier()
+    } else if self.lexer.matches(match.keyword("trait")) {
+        return self.parse_trait_type_specifier()
     }
     return self.parse_struct_type_specifier()
 }
@@ -738,6 +740,60 @@ proc (^Parser).parse_external_type_specifier(self) -> ^parsed.Type_Specifier !> 
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("external")
     return self.alloc(type_specifier: parsed.External_Type_Specifier(source_position: source_position))
+}
+
+proc (^Parser).parse_trait_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("trait")
+    self.lexer.consume_space(1)
+    self.lexer.consume_other('{')
+    self.lexer.consume_end_of_line()
+    self.increase_alignment()
+    let methods = collections.List<parsed.Trait_Method>()
+    loop {
+        while self.lexer.matches(match.space, match.end_of_line) or self.lexer.matches(match.space, match.comment) {
+            self.lexer.consume_empty_line(0)
+        }
+        if self.lexer.matches(match.space, match.other('}')) {
+            break
+        }
+        self.lexer.consume_space(self.alignment)
+        let method_source_position = self.lexer.source_position
+        self.lexer.consume_keyword("proc")
+        self.lexer.consume_space(1)
+        let method_name = self.lexer.consume_identifier()
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('(')
+        let receiver_type = self.alloc(type: parsed.Receiver_Type(source_position: method_source_position))
+        let parameters = self.parse_procedure_parameters(receiver: receiver_type)
+        self.lexer.consume_other(')')
+        let return_type: ^parsed.Type = null
+        if self.lexer.matches(match.space, match.other('-'), match.other('>')) {
+            self.lexer.consume_space(1)
+            self.lexer.consume_other('-', '>')
+            self.lexer.consume_space(1)
+            return_type = self.parse_type()
+        }
+        let raise_type: ^parsed.Type = null
+        if self.lexer.matches(match.space, match.other('!'), match.other('>')) {
+            self.lexer.consume_space(1)
+            self.lexer.consume_other('!', '>')
+            self.lexer.consume_space(1)
+            raise_type = self.parse_type()
+        }
+        self.lexer.consume_end_of_line()
+        methods.append(value: parsed.Trait_Method(
+            source_position: method_source_position
+            name: method_name
+            parameters: parameters
+            return_type: return_type
+            raise_type: raise_type
+        ))
+    }
+    self.decrease_alignment()
+    self.lexer.consume_space(self.alignment)
+    self.lexer.consume_other('}')
+    return self.alloc(type_specifier: parsed.Trait_Type_Specifier(source_position: source_position, methods: methods))
 }
 
 proc (^Parser).parse_struct_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {

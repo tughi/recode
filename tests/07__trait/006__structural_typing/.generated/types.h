@@ -10,6 +10,10 @@ struct String {
     uintmax_t length;
 };
 
+struct test_Number {
+    int32_t value;
+};
+
 struct test_Writer {
     void *self;
     void (*write_char)(void *self, uint8_t c);
