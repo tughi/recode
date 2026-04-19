@@ -22,6 +22,9 @@ proc parse(anon source: source.Source) -> collections.List<^parsed.Statement> !>
             break
         } else if parser.lexer.matches(match.space, match.comment) or parser.lexer.matches(match.space, match.end_of_line) {
             parser.lexer.consume_empty_line(parser.alignment)
+        } else if parser.lexer.matches(match.keyword("import")) {
+            statements.append(value: parser.parse_import_statement())
+            parser.lexer.consume_end_of_line()
         } else if parser.lexer.matches(match.keyword("type")) {
             statements.append(value: parser.parse_type_statement())
             parser.lexer.consume_end_of_line()
@@ -955,6 +958,32 @@ proc (^Parser).parse_struct_type_specifier(self) -> ^parsed.Type_Specifier !> er
     self.lexer.consume_space(self.alignment)
     self.lexer.consume_other('}')
     return self.alloc(type_specifier: parsed.Struct_Type_Specifier(source_position: source_position, members: members))
+}
+
+proc (^Parser).parse_import_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("import")
+    self.lexer.consume_space(1)
+    let path = collections.List<lexer.Identifier>()
+    path.append(value: self.lexer.consume_identifier())
+    while self.lexer.matches(match.Space(), match.other('.')) {
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('.')
+        self.lexer.consume_space(0)
+        path.append(value: self.lexer.consume_identifier())
+    }
+    let alias: lexer.Optional_Identifier = nil
+    if self.lexer.matches(match.space, match.keyword("as")) {
+        self.lexer.consume_space(1)
+        self.lexer.consume_keyword("as")
+        self.lexer.consume_space(1)
+        alias = self.lexer.consume_identifier()
+    }
+    return self.alloc(statement: parsed.Import_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        path: path
+        alias: alias
+    ))
 }
 
 proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {

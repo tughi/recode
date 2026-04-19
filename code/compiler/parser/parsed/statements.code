@@ -11,6 +11,7 @@ type Statement = variant {
     Break_Statement
     Expression_Statement
     If_Statement
+    Import_Statement
     Loop_Statement
     Procedure_Statement
     Return_Statement
@@ -23,6 +24,12 @@ type Statement = variant {
 type Block_Statement = struct {
     super: Statement_Base
     statements: collections.List<^Statement>
+}
+
+type Import_Statement = struct {
+    super: Statement_Base
+    path: collections.List<lexer.Identifier>
+    alias: lexer.Optional_Identifier
 }
 
 type Break_Statement = struct {

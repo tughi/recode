@@ -44,6 +44,9 @@ proc (^parsed.Statement).dump(self, depth: i32) {
         is parsed.If_Statement as s {
             s.dump(depth: depth)
         }
+        is parsed.Import_Statement as s {
+            s.dump(depth: depth)
+        }
         is parsed.Loop_Statement as s {
             s.dump(depth: depth)
         }
@@ -94,6 +97,25 @@ proc (^parsed.Break_Statement).dump(self, depth: i32) {
 
 proc (^parsed.Expression_Statement).dump(self, depth: i32) {
     self.expression.dump()
+}
+
+proc (^parsed.Import_Statement).dump(self, depth: i32) {
+    libc.stdout.write("import ")
+    let item = self.path.first
+    while item != null {
+        libc.stdout.write(item.value.lexeme)
+        item = item.next
+        if item != null {
+            libc.stdout.write(".")
+        }
+    }
+    switch self.alias {
+        is lexer.Identifier as alias {
+            libc.stdout.write(" as ").write(alias.lexeme)
+        }
+        is nil {
+        }
+    }
 }
 
 proc (^parsed.If_Statement).dump(self, depth: i32) {
