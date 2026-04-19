@@ -1,0 +1,12 @@
+proc main() -> i32 {
+    let has_value: ?i32 = 42
+    let no_value: ?i32 = nil
+
+    if has_value is i32 as value {
+        if no_value is nil {
+            return value - 42
+        }
+    }
+
+    return 1
+}

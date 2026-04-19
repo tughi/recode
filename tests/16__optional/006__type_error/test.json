@@ -1,0 +1,6 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": ["tests/16__optional/006__type_error/test.code:2:23-30: Variant type ?i32 does not have str case"]
+    }
+}

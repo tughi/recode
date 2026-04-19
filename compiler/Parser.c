@@ -904,12 +904,19 @@ Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location
 
 /*
 type
+    | "?" type
     | "^" type
     | "[" ( expression | "^" ) "]" type
     | IDENTIFIER ( "." IDENTIFIER )? type_arguments?
     | proc "(" procedure_parameters? ")" ( "->" type )? ( "!>" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
+    if (Parser__matches_one(self, Token__is_question_mark)) {
+        Token *first_token = Parser__consume_token(self, Token__is_question_mark);
+        Parser__consume_space(self, 0);
+        Parsed_Type *inner_type = Parser__parse_type(self);
+        return (Parsed_Type *)Parsed_Optional_Type__create(Source_Location__merge(first_token->location, inner_type->location), inner_type);
+    }
     if (Parser__matches_one(self, Token__is_caret)) {
         Token *first_token = Parser__consume_token(self, Token__is_caret);
         Parser__consume_space(self, 0);

@@ -29,7 +29,7 @@ type Block_Statement = struct {
 type Import_Statement = struct {
     super: Statement_Base
     path: collections.List<lexer.Identifier>
-    alias: lexer.Optional_Identifier
+    alias: ?lexer.Identifier
 }
 
 type Break_Statement = struct {
@@ -50,7 +50,7 @@ type While_Statement = struct {
 type If_Statement = struct {
     super: Statement_Base
     condition: ^Expression
-    alias: lexer.Optional_Identifier
+    alias: ?lexer.Identifier
     true_block: ^Statement
     false_statement: ^Statement
 }
@@ -61,7 +61,7 @@ type Variable_Statement = struct {
     variable_type: ^Type
     is_external: bool
     expression: ^Expression
-    external_name: lexer.Optional_String
+    external_name: ?lexer.String
 }
 
 type Return_Statement = struct {
@@ -100,7 +100,7 @@ type Switch_Expression = struct {
 type Switch_Variant = struct {
     source_position: usize
     variant_type: ^Type
-    alias: lexer.Optional_Identifier
+    alias: ?lexer.Identifier
     body: ^Statement
 }
 
@@ -111,7 +111,7 @@ type Switch_Statement = struct {
 }
 
 type Procedure_Parameter = struct {
-    label: lexer.Optional_Identifier
+    label: ?lexer.Identifier
     name: lexer.Identifier
     parameter_type: ^Type
 }

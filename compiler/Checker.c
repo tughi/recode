@@ -278,6 +278,8 @@ Checked_Named_Type *Checker__check_type_statement(Checker *self, Checker_Context
 
 Checked_Named_Type *Checker__specialize_type(Checker *self, Checker_Context *context, Checked_Generic_Type *generic_type, Parsed_Named_Type *parsed_type);
 
+void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, Source_Location location, Checker *checker);
+
 Checked_Type *Checker__resolve_result_type(Checker *self, Checker_Context *context, Source_Location location, Checked_Type *return_type, Checked_Type *raise_type) {
     Checked_Result_Type *result_type = Checker__find_result_type(self, context, return_type, raise_type);
     if (result_type == NULL) {
@@ -285,6 +287,68 @@ Checked_Type *Checker__resolve_result_type(Checker *self, Checker_Context *conte
         result_type->super.super.symbol = Checker__create_type_symbol(self, context->checked_package, result_type->super.name, (Checked_Named_Type *)result_type);
     }
     return (Checked_Type *)result_type;
+}
+
+Checked_Optional_Type *Checker__find_optional_type(Checker *self, Checker_Context *context, Checked_Type *inner_type) {
+    Checked_Symbol *symbol = self->global_symbols->last_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+            Checked_Type_Symbol *type_symbol = (Checked_Type_Symbol *)symbol;
+            if (type_symbol->named_type->super.kind == CHECKED_TYPE_KIND__OPTIONAL) {
+                Checked_Optional_Type *optional_type = (Checked_Optional_Type *)type_symbol->named_type;
+                if (Checked_Type__equals(optional_type->super.first_variant_case->next_variant->type, inner_type)) {
+                    return optional_type;
+                }
+            }
+        }
+        symbol = symbol->prev_symbol;
+    }
+    return NULL;
+}
+
+Checked_Type *Checker__resolve_optional_type(Checker *self, Checker_Context *context, Source_Location location, Checked_Type *inner_type) {
+    Checked_Optional_Type *optional_type = Checker__find_optional_type(self, context, inner_type);
+    if (optional_type == NULL) {
+        Checked_Package *optional_package = NULL;
+        String *name = String__create();
+        switch (inner_type->kind) {
+        case CHECKED_TYPE_KIND__EXTERNAL:
+        case CHECKED_TYPE_KIND__GENERIC:
+        case CHECKED_TYPE_KIND__OPTIONAL:
+        case CHECKED_TYPE_KIND__RESULT:
+        case CHECKED_TYPE_KIND__STRUCT:
+        case CHECKED_TYPE_KIND__TRAIT:
+        case CHECKED_TYPE_KIND__VARIANT: {
+            Checked_Named_Type *inner_named_type = (Checked_Named_Type *)inner_type;
+            optional_package = inner_named_type->package;
+            if (inner_named_type->generic_type != NULL) {
+                String__append_string(name, inner_named_type->generic_type->super.name);
+                Checked_Type_Argument *type_argument = inner_named_type->first_type_argument;
+                while (type_argument != NULL) {
+                    String__append_cstring(name, "__");
+                    String__append_mangled_type_name(name, type_argument->type);
+                    type_argument = type_argument->next_type_argument;
+                }
+            } else {
+                String__append_string(name, inner_named_type->name);
+            }
+            break;
+        }
+        default:
+            String__append_mangled_type_name(name, inner_type);
+            break;
+        }
+        String__append_cstring(name, "__opt");
+        optional_type = Checked_Optional_Type__create(location, optional_package, name);
+        Checked_Variant_Case *nil_case = Checked_Variant_Case__create(location, (Checked_Type *)self->builtin_types->nil_type, 0);
+        Checked_Variant_Case *value_case = Checked_Variant_Case__create(location, inner_type, 1);
+        nil_case->next_variant = value_case;
+        optional_type->super.first_variant_case = nil_case;
+        optional_type->super.variant_count = 2;
+        optional_type->super.super.super.symbol = Checker__create_type_symbol(self, optional_package, optional_type->super.super.name, (Checked_Named_Type *)optional_type);
+        Checked_Type__append_dependencies((Checked_Type *)optional_type, inner_type, location, self);
+    }
+    return (Checked_Type *)optional_type;
 }
 
 Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Parsed_Type *parsed_type) {
@@ -388,6 +452,11 @@ Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Par
         pWriter__write__string(stderr_writer, parsed_named_type->name);
         pWriter__end_location_message(stderr_writer);
         panic();
+    }
+    case PARSED_TYPE_KIND__OPTIONAL: {
+        Parsed_Optional_Type *parsed_optional_type = (Parsed_Optional_Type *)parsed_type;
+        Checked_Type *inner_type = Checker__resolve_type(self, context, parsed_optional_type->inner_type);
+        return Checker__resolve_optional_type(self, context, parsed_type->location, inner_type);
     }
     case PARSED_TYPE_KIND__POINTER:
         return (Checked_Type *)Checked_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, context, ((Parsed_Pointer_Type *)parsed_type)->other_type));
@@ -1173,6 +1242,7 @@ Checked_Expression *Checker__check_init_expression(Checker *self, Checker_Contex
         return Checker__check_init_struct_expression(self, context, (Checked_Struct_Type *)type, first_parsed_argument, location);
     case CHECKED_TYPE_KIND__TRAIT:
         return Checker__check_init_trait_expression(self, context, (Checked_Trait_Type *)type, first_parsed_argument, location);
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT:
         return Checker__check_init_variant_expression(self, context, (Checked_Variant_Type *)type, first_parsed_argument, location);
     default:
@@ -1205,6 +1275,7 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
     Checked_Type *value_type = value_expression->type;
     Checked_Type *runtime_type = Checker__resolve_type(self, context, parsed_expression->runtime_type);
     switch (value_type->kind) {
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Variant_Type *variant_type = (Checked_Variant_Type *)value_type;
         Checked_Variant_Case *variant_case = variant_type->first_variant_case;
@@ -1214,7 +1285,7 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
             }
         }
         pWriter__begin_location_message(stderr_writer, parsed_expression->value_expression->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Variant type ");
+        pWriter__write__cstring(stderr_writer, value_type->kind == CHECKED_TYPE_KIND__OPTIONAL ? "Optional type " : "Variant type ");
         pWriter__write__checked_type(stderr_writer, value_type);
         pWriter__write__cstring(stderr_writer, " doesn't have ");
         pWriter__write__checked_type(stderr_writer, runtime_type);
@@ -1726,6 +1797,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
                 expression = Checker__make_trait_expression(self, context, parsed_expression->location, (Checked_Trait_Type *)expected_type, expression);
             }
             break;
+        case CHECKED_TYPE_KIND__OPTIONAL:
         case CHECKED_TYPE_KIND__VARIANT:
             if (expression->type != expected_type) {
                 expression = (Checked_Expression *)Checker__make_variant_expression(self, parsed_expression->location, (Checked_Variant_Type *)expected_type, expression);
@@ -2436,6 +2508,7 @@ void Checked_Type__append_weak_dependencies(Checked_Type *self, Checked_Type *ot
         Checked_Type__append_weak_dependencies(self, procedure_pointer_type->procedure_type->return_type, location, checker, true);
         return;
     }
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
     case CHECKED_TYPE_KIND__VARIANT:
@@ -2962,12 +3035,12 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
 
 Checked_Statement *Checker__check_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement) {
     Checked_Expression *expression = Checker__check_expression(self, context, parsed_statement->expression, NULL);
-    if (expression->type->kind == CHECKED_TYPE_KIND__VARIANT) {
+    if (expression->type->kind == CHECKED_TYPE_KIND__OPTIONAL || expression->type->kind == CHECKED_TYPE_KIND__VARIANT) {
         return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)expression->type);
     }
     if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
         Checked_Type *pointed_type = ((Checked_Pointer_Type *)expression->type)->other_type;
-        if (pointed_type->kind == CHECKED_TYPE_KIND__VARIANT) {
+        if (pointed_type->kind == CHECKED_TYPE_KIND__OPTIONAL || pointed_type->kind == CHECKED_TYPE_KIND__VARIANT) {
             return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)pointed_type);
         }
     }

@@ -48,6 +48,7 @@ typedef struct Parsed_Expression {
 
 typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__ARRAY,
+    PARSED_TYPE_KIND__OPTIONAL,
     PARSED_TYPE_KIND__PROCEDURE,
     PARSED_TYPE_KIND__MULTI_POINTER,
     PARSED_TYPE_KIND__NAMED,
@@ -110,6 +111,13 @@ typedef struct Parsed_Named_Type {
 } Parsed_Named_Type;
 
 Parsed_Named_Type *Parsed_Named_Type__create(Token *package, Token *name);
+
+typedef struct Parsed_Optional_Type {
+    Parsed_Type super;
+    Parsed_Type *inner_type;
+} Parsed_Optional_Type;
+
+Parsed_Optional_Type *Parsed_Optional_Type__create(Source_Location location, Parsed_Type *inner_type);
 
 typedef struct Parsed_Pointer_Type {
     Parsed_Type super;

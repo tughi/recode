@@ -1,0 +1,26 @@
+proc main() -> i32 {
+    let value: ?i32 = 42
+
+    switch value {
+        is i32 as number {
+            if number != 42 {
+                return 1
+            }
+        }
+        is nil {
+            return 2
+        }
+    }
+
+    let empty: ?i32 = nil
+
+    switch empty {
+        is i32 {
+            return 3
+        }
+        is nil {
+        }
+    }
+
+    return 0
+}

@@ -1,0 +1,24 @@
+proc main() -> i32 {
+    let value: ?i32 = 99
+
+    if value is i32 as number {
+        if number != 99 {
+            return 1
+        }
+    } else {
+        return 2
+    }
+
+    let empty: ?i32 = nil
+
+    if empty is i32 {
+        return 3
+    }
+
+    if empty is nil {
+    } else {
+        return 4
+    }
+
+    return 0
+}

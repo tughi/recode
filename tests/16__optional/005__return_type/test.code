@@ -1,0 +1,26 @@
+proc find(anon value: i32, anon target: i32) -> ?i32 {
+    if value == target {
+        return value
+    }
+    return nil
+}
+
+proc main() -> i32 {
+    let found = find(42, 42)
+    let not_found = find(1, 2)
+
+    if found is i32 as value {
+        if value != 42 {
+            return 1
+        }
+    } else {
+        return 2
+    }
+
+    if not_found is nil {
+    } else {
+        return 3
+    }
+
+    return 0
+}

@@ -53,6 +53,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__I64:
     case CHECKED_TYPE_KIND__I8:
     case CHECKED_TYPE_KIND__ISIZE:
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__STR:
     case CHECKED_TYPE_KIND__STRUCT:
     case CHECKED_TYPE_KIND__TRAIT:
@@ -228,6 +229,18 @@ bool Checked_Result_Type__equals(Checked_Result_Type *self, Checked_Result_Type 
            Checked_Type__equals(self->raise_type, other->raise_type);
 }
 
+Checked_Optional_Type *Checked_Optional_Type__create(Source_Location location, Checked_Package *package, String *name) {
+    Checked_Optional_Type *type = (Checked_Optional_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__OPTIONAL, sizeof(Checked_Optional_Type), location, name, package);
+    type->super.parsed_variant_type_specifier = NULL;
+    type->super.first_variant_case = NULL;
+    type->super.variant_count = 0;
+    return type;
+}
+
+bool Checked_Optional_Type__equals(Checked_Optional_Type *self, Checked_Optional_Type *other) {
+    return Checked_Type__equals(self->super.first_variant_case->next_variant->type, other->super.first_variant_case->next_variant->type);
+}
+
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, Checked_Struct_Type *struct_type, String *name, Checked_Type *type) {
     Checked_Struct_Member *member = (Checked_Struct_Member *)malloc(sizeof(Checked_Struct_Member));
     member->location = location;
@@ -316,6 +329,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__OPTIONAL:
+        return Checked_Optional_Type__equals((Checked_Optional_Type *)self, (Checked_Optional_Type *)other);
     case CHECKED_TYPE_KIND__RESULT:
         return Checked_Result_Type__equals((Checked_Result_Type *)self, (Checked_Result_Type *)other);
     case CHECKED_TYPE_KIND__EXTERNAL:
@@ -407,6 +422,12 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
         pWriter__write__char(self, '^');
         pWriter__write__checked_type(self, pointer_type->other_type);
+        break;
+    }
+    case CHECKED_TYPE_KIND__OPTIONAL: {
+        Checked_Optional_Type *optional_type = (Checked_Optional_Type *)type;
+        pWriter__write__char(self, '?');
+        pWriter__write__checked_type(self, optional_type->super.first_variant_case->next_variant->type);
         break;
     }
     case CHECKED_TYPE_KIND__RESULT: {

@@ -646,6 +646,67 @@ if value is not bool as other {
 
 ---
 
+## Optional Types
+
+An optional type `?T` represents a value that is either present (holds a `T`) or absent (`nil`). It is a built-in alternative to declaring a two-case variant by hand.
+
+```code
+let x: ?i32 = 42      // has a value
+let y: ?i32 = nil     // no value
+```
+
+Optional types work with any type: primitives, structs, pointers, etc.
+
+### Construction
+
+```code
+let a: ?str = "hello"   // implicit wrap — value present
+let b: ?str = nil        // absent
+```
+
+### Pattern Matching — `switch`
+
+```code
+switch x {
+    is i32 as value {
+        // value has type i32
+    }
+    is nil {
+        // no value
+    }
+}
+```
+
+### Pattern Matching — `if is`
+
+```code
+if x is i32 as value {
+    // value has type i32
+}
+
+if x is nil {
+    // no value
+}
+```
+
+### As a Struct Field or Return Type
+
+```code
+type Person = struct {
+    name: str
+    age: ?i32
+}
+
+proc find(anon target: i32) -> ?i32 {
+    if target > 0 {
+        return target
+    }
+    return nil
+}
+```
+
+---
+
 ## Error Handling
 
 ### Fallible Return Type

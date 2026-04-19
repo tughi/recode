@@ -1,0 +1,14 @@
+import source
+
+proc main() -> i32 {
+    let has_item: ?source.Item = source.Item(value: 42)
+    let no_item: ?source.Item = nil
+
+    if has_item is source.Item as item {
+        if no_item is nil {
+            return item.value - 42
+        }
+    }
+
+    return 1
+}

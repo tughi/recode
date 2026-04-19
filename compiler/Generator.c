@@ -484,6 +484,7 @@ int Checked_Type__get_alignment(Checked_Type *self) {
     }
     case CHECKED_TYPE_KIND__TRAIT:
         return Checked_Type__get_alignment((Checked_Type *)((Checked_Trait_Type *)self)->struct_type);
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Variant_Type *variant_type = (Checked_Variant_Type *)self;
         int alignment = 4; // alignment of variant discriminator
@@ -1070,6 +1071,22 @@ void Generator__generate_variant(Generator *self, Checked_Variant_Type *variant_
     pWriter__write__cstring(self->writer, "};\n\n");
 }
 
+void Generator__declare_optional(Generator *self, Checked_Optional_Type *optional_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)optional_type);
+    pWriter__write__cstring(self->writer, ";\n");
+}
+
+void Generator__generate_optional(Generator *self, Checked_Optional_Type *optional_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)optional_type);
+    pWriter__write__cstring(self->writer, " {\n");
+    pWriter__write__cstring(self->writer, "    int32_t variant;\n");
+    pWriter__write__cstring(self->writer, "    ");
+    CDECL_Variant_Case_Name value_name = CDECL_Variant_Case_Name__create(1);
+    pWriter__write__cdecl(self->writer, (CDECL_Name *)&value_name, optional_type->super.first_variant_case->next_variant->type);
+    pWriter__write__cstring(self->writer, ";\n");
+    pWriter__write__cstring(self->writer, "};\n\n");
+}
+
 void Generator__declare_type(Generator *self, Checked_Type *type) {
     if (type->has_generated_declaration || type->has_generated_definition) {
         return; // Already declared
@@ -1077,6 +1094,9 @@ void Generator__declare_type(Generator *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__EXTERNAL:
         Generator__declare_external_type(self, (Checked_External_Type *)type);
+        break;
+    case CHECKED_TYPE_KIND__OPTIONAL:
+        Generator__declare_optional(self, (Checked_Optional_Type *)type);
         break;
     case CHECKED_TYPE_KIND__STRUCT:
         Generator__declare_struct(self, (Checked_Struct_Type *)type);
@@ -1108,6 +1128,9 @@ void Generator__define_type(Generator *self, Checked_Type *type) {
         dependency = dependency->next_dependency;
     }
     switch (type->kind) {
+    case CHECKED_TYPE_KIND__OPTIONAL:
+        Generator__generate_optional(self, (Checked_Optional_Type *)type);
+        break;
     case CHECKED_TYPE_KIND__RESULT:
         Generator__generate_result_type(self, (Checked_Result_Type *)type);
         break;

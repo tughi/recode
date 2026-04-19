@@ -52,6 +52,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__TRAIT,
     CHECKED_TYPE_KIND__VARIANT,
     /* Dynamic */
+    CHECKED_TYPE_KIND__OPTIONAL,
     CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__MULTI_POINTER,
     CHECKED_TYPE_KIND__POINTER,
@@ -291,6 +292,14 @@ typedef struct Checked_Variant_Type {
 } Checked_Variant_Type;
 
 Checked_Variant_Type *Checked_Variant_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier);
+
+typedef struct Checked_Optional_Type {
+    Checked_Variant_Type super;
+} Checked_Optional_Type;
+
+Checked_Optional_Type *Checked_Optional_Type__create(Source_Location location, Checked_Package *package, String *name);
+
+bool Checked_Optional_Type__equals(Checked_Optional_Type *self, Checked_Optional_Type *other);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 

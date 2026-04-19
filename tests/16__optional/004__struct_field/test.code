@@ -1,0 +1,26 @@
+type Person = struct {
+    name: str
+    age: ?i32
+}
+
+proc main() -> i32 {
+    let p = Person(name: "Alice", age: 30)
+    let q = Person(name: "Bob", age: nil)
+
+    let p_age = p.age
+    if p_age is i32 as age {
+        if age != 30 {
+            return 1
+        }
+    } else {
+        return 2
+    }
+
+    let q_age = q.age
+    if q_age is nil {
+    } else {
+        return 3
+    }
+
+    return 0
+}

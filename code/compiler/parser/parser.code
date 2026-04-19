@@ -153,9 +153,9 @@ proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> colle
             self.lexer.consume_space(1)
         }
         loop {
-            let label: lexer.Optional_Identifier = nil
+            let label: ?lexer.Identifier = nil
             if self.lexer.matches(match.identifier, match.space, match.identifier) {
-                label = lexer.Optional_Identifier(self.lexer.consume_identifier())
+                label = self.lexer.consume_identifier()
                 self.lexer.consume_space(1)
             }
             let name = self.lexer.consume_identifier()
@@ -250,7 +250,7 @@ proc (^Parser).parse_if_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_space(1)
     let condition = self.parse_expression()
     self.lexer.consume_space(1)
-    let alias: lexer.Optional_Identifier = nil
+    let alias: ?lexer.Identifier = nil
     if self.lexer.matches(match.keyword("as")) {
         self.lexer.consume_keyword("as")
         self.lexer.consume_space(1)
@@ -292,7 +292,7 @@ proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !
     }
     let is_external = false
     let expression: ^parsed.Expression = null
-    let external_name: lexer.Optional_String = nil
+    let external_name: ?lexer.String = nil
     if self.lexer.matches(match.space, match.other('=')) {
         self.lexer.consume_space(1)
         self.lexer.consume_other('=')
@@ -363,7 +363,7 @@ proc (^Parser).parse_switch_statement(self) -> ^parsed.Statement !> error.Error 
             self.lexer.consume_space(1)
             let variant_type = self.parse_type()
             self.lexer.consume_space(0)
-            let alias: lexer.Optional_Identifier = nil
+            let alias: ?lexer.Identifier = nil
             if self.lexer.matches(match.keyword("as")) {
                 self.lexer.consume_space(1)
                 self.lexer.consume_keyword("as")
@@ -775,7 +775,7 @@ proc (^Parser).parse_call_arguments(self) -> collections.List<parsed.Call_Argume
 }
 
 proc (^Parser).parse_call_argument(self) -> parsed.Call_Argument !> error.Error {
-    let label: lexer.Optional_Identifier = nil
+    let label: ?lexer.Identifier = nil
     if self.lexer.matches(match.identifier, match.space, match.other(':')) {
         label = self.lexer.consume_identifier()
         self.lexer.consume_space(0)
@@ -830,7 +830,7 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         ))
     }
     let first_token = self.lexer.consume_identifier()
-    let module: lexer.Optional_Identifier = nil
+    let module: ?lexer.Identifier = nil
     let name_token = first_token
     if self.lexer.matches(match.Space(), match.other('.')) {
         self.lexer.consume_space(0)
@@ -981,7 +981,7 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement !> error.Error 
         self.lexer.consume_space(0)
         path.append(value: self.lexer.consume_identifier())
     }
-    let alias: lexer.Optional_Identifier = nil
+    let alias: ?lexer.Identifier = nil
     if self.lexer.matches(match.space, match.keyword("as")) {
         self.lexer.consume_space(1)
         self.lexer.consume_keyword("as")

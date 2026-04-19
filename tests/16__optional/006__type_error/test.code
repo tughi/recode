@@ -1,0 +1,4 @@
+proc main() -> i32 {
+    let value: ?i32 = "hello"
+    return 0
+}

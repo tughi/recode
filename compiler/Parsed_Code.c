@@ -56,6 +56,12 @@ Parsed_Named_Type *Parsed_Named_Type__create(Token *package, Token *name) {
     return type;
 }
 
+Parsed_Optional_Type *Parsed_Optional_Type__create(Source_Location location, Parsed_Type *inner_type) {
+    Parsed_Optional_Type *type = (Parsed_Optional_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__OPTIONAL, sizeof(Parsed_Optional_Type), location);
+    type->inner_type = inner_type;
+    return type;
+}
+
 Parsed_Type *Parsed_Pointer_Type__create(Source_Location location, Parsed_Type *other_type) {
     Parsed_Pointer_Type *type = (Parsed_Pointer_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__POINTER, sizeof(Parsed_Pointer_Type), location);
     type->other_type = other_type;
