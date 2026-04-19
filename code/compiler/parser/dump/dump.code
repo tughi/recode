@@ -99,6 +99,13 @@ proc (^parsed.Expression_Statement).dump(self, depth: i32) {
 proc (^parsed.If_Statement).dump(self, depth: i32) {
     libc.stdout.write("if ")
     self.condition.dump()
+    switch self.alias {
+        is lexer.Identifier as alias {
+            libc.stdout.write(" as ").write(alias.lexeme)
+        }
+        is nil {
+        }
+    }
     libc.stdout.write(" ")
     self.true_block.dump(depth: depth)
     if self.false_statement != null {
@@ -279,6 +286,9 @@ proc (^parsed.Expression).dump(self) {
             e.dump()
         }
         is parsed.Integer_Expression as e {
+            e.dump()
+        }
+        is parsed.Is_Expression as e {
             e.dump()
         }
         is parsed.Less_Expression as e {
@@ -486,6 +496,16 @@ proc (^parsed.Identifier_Expression).dump(self) {
 
 proc (^parsed.Integer_Expression).dump(self) {
     libc.stdout.write(u64: self.token.value)
+}
+
+proc (^parsed.Is_Expression).dump(self) {
+    self.expression.dump()
+    if self.is_not {
+        libc.stdout.write(" is not ")
+    } else {
+        libc.stdout.write(" is ")
+    }
+    self.type.dump()
 }
 
 proc (^parsed.String_Expression).dump(self) {

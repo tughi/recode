@@ -43,6 +43,7 @@ type While_Statement = struct {
 type If_Statement = struct {
     super: Statement_Base
     condition: ^Expression
+    alias: lexer.Optional_Identifier
     true_block: ^Statement
     false_statement: ^Statement
 }

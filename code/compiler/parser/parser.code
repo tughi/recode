@@ -247,6 +247,13 @@ proc (^Parser).parse_if_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_space(1)
     let condition = self.parse_expression()
     self.lexer.consume_space(1)
+    let alias: lexer.Optional_Identifier = nil
+    if self.lexer.matches(match.keyword("as")) {
+        self.lexer.consume_keyword("as")
+        self.lexer.consume_space(1)
+        alias = self.lexer.consume_identifier()
+        self.lexer.consume_space(1)
+    }
     let true_block = self.parse_block_statement()
     let false_statement: ^parsed.Statement = null
     if self.lexer.matches(match.space, match.keyword("else")) {
@@ -262,6 +269,7 @@ proc (^Parser).parse_if_statement(self) -> ^parsed.Statement !> error.Error {
     return self.alloc(statement: parsed.If_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         condition: condition
+        alias: alias
         true_block: true_block
         false_statement: false_statement
     ))
@@ -482,6 +490,24 @@ proc (^Parser).parse_comparison_expression(self) -> ^parsed.Expression !> error.
         let right = self.parse_additive_expression()
         expression = self.alloc(expression: parsed.Greater_Expression(
             super: parsed.Binary_Expression(source_position: source_position, left: expression, right: right)
+        ))
+    } else if self.lexer.matches(match.space, match.keyword("is")) {
+        let source_position = self.lexer.source_position
+        self.lexer.consume_space(1)
+        self.lexer.consume_keyword("is")
+        self.lexer.consume_space(1)
+        let is_not = false
+        if self.lexer.matches(match.keyword("not")) {
+            self.lexer.consume_keyword("not")
+            self.lexer.consume_space(1)
+            is_not = true
+        }
+        let variant_type = self.parse_type()
+        expression = self.alloc(expression: parsed.Is_Expression(
+            source_position: source_position
+            expression: expression
+            is_not: is_not
+            type: variant_type
         ))
     }
     return expression
