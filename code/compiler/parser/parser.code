@@ -185,6 +185,8 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
         return self.parse_variable_declaration_statement()
     } else if self.lexer.matches(match.keyword("return")) {
         return self.parse_return_statement()
+    } else if self.lexer.matches(match.keyword("switch")) {
+        return self.parse_switch_statement()
     } else {
         let source_position = self.lexer.source_position
         let expression = self.parse_expression()
@@ -313,6 +315,75 @@ proc (^Parser).parse_return_statement(self) -> ^parsed.Statement !> error.Error 
     return self.alloc(statement: parsed.Return_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         expression: expression
+    ))
+}
+
+proc (^Parser).parse_switch_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("switch")
+    self.lexer.consume_space(1)
+    let expression = self.parse_expression()
+    self.lexer.consume_space(1)
+    self.lexer.consume_other('{')
+    self.increase_alignment()
+    let cases = collections.List<parsed.Switch_Case>()
+    loop {
+        while self.lexer.matches(match.space, match.end_of_line) or self.lexer.matches(match.space, match.comment) {
+            self.lexer.consume_empty_line(0)
+        }
+        if self.lexer.matches(match.space, match.other('}')) {
+            break
+        }
+        self.lexer.consume_space(self.alignment)
+        let case_source_position = self.lexer.source_position
+        if self.lexer.matches(match.keyword("case")) {
+            self.lexer.consume_keyword("case")
+            self.lexer.consume_space(1)
+            let case_expression = self.parse_expression()
+            self.lexer.consume_space(1)
+            let body = self.parse_block_statement()
+            cases.append(value: parsed.Switch_Expression(
+                source_position: case_source_position
+                expression: case_expression
+                body: body
+            ))
+        } else if self.lexer.matches(match.keyword("is")) {
+            self.lexer.consume_keyword("is")
+            self.lexer.consume_space(1)
+            let variant_type = self.parse_type()
+            self.lexer.consume_space(0)
+            let alias: lexer.Optional_Identifier = nil
+            if self.lexer.matches(match.keyword("as")) {
+                self.lexer.consume_space(1)
+                self.lexer.consume_keyword("as")
+                self.lexer.consume_space(1)
+                alias = self.lexer.consume_identifier()
+                self.lexer.consume_space(0)
+            }
+            let body = self.parse_block_statement()
+            cases.append(value: parsed.Switch_Variant(
+                source_position: case_source_position
+                variant_type: variant_type
+                alias: alias
+                body: body
+            ))
+        } else {
+            self.lexer.consume_keyword("else")
+            self.lexer.consume_space(1)
+            let body = self.parse_block_statement()
+            cases.append(value: parsed.Switch_Else(
+                source_position: case_source_position
+                body: body
+            ))
+        }
+    }
+    self.decrease_alignment()
+    self.lexer.consume_space(self.alignment)
+    self.lexer.consume_other('}')
+    return self.alloc(statement: parsed.Switch_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        expression: expression
+        cases: cases
     ))
 }
 

@@ -53,6 +53,9 @@ proc (^parsed.Statement).dump(self, depth: i32) {
         is parsed.Return_Statement as s {
             s.dump(depth: depth)
         }
+        is parsed.Switch_Statement as s {
+            s.dump(depth: depth)
+        }
         is parsed.Type_Statement as s {
             s.dump(depth: depth)
         }
@@ -192,6 +195,46 @@ proc (^parsed.While_Statement).dump(self, depth: i32) {
     self.condition.dump()
     libc.stdout.write(" ")
     self.body.dump(depth: depth)
+}
+
+proc (^parsed.Switch_Statement).dump(self, depth: i32) {
+    libc.stdout.write("switch ")
+    self.expression.dump()
+    libc.stdout.write(" {").end_line()
+    let item = self.cases.first
+    while item != null {
+        libc.stdout.indent(depth + 1)
+        switch item.value {
+            is parsed.Switch_Expression as c {
+                libc.stdout.write("case ")
+                c.expression.dump()
+                libc.stdout.write(" ")
+                c.body.dump(depth: depth + 1)
+            }
+            is parsed.Switch_Variant as c {
+                libc.stdout.write("is ")
+                c.variant_type.dump()
+                switch c.alias {
+                    is lexer.Identifier as alias {
+                        libc.stdout.write(" as ").write(alias.lexeme)
+                    }
+                    is nil {
+                    }
+                }
+                libc.stdout.write(" ")
+                c.body.dump(depth: depth + 1)
+            }
+            is parsed.Switch_Else as c {
+                libc.stdout.write("else ")
+                c.body.dump(depth: depth + 1)
+            }
+            is nil {
+            }
+        }
+        libc.stdout.end_line()
+        item = item.next
+    }
+    libc.stdout.indent(depth).write("}")
 }
 
 proc (^parsed.Expression).dump(self) {

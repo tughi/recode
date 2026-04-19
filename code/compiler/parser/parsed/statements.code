@@ -14,6 +14,7 @@ type Statement = variant {
     Loop_Statement
     Procedure_Statement
     Return_Statement
+    Switch_Statement
     Type_Statement
     Variable_Statement
     While_Statement
@@ -69,6 +70,36 @@ type Assignment_Statement = struct {
     super: Statement_Base
     object: ^Expression
     value: ^Expression
+}
+
+type Switch_Case = variant {
+    Switch_Else
+    Switch_Expression
+    Switch_Variant
+}
+
+type Switch_Else = struct {
+    source_position: usize
+    body: ^Statement
+}
+
+type Switch_Expression = struct {
+    source_position: usize
+    expression: ^Expression
+    body: ^Statement
+}
+
+type Switch_Variant = struct {
+    source_position: usize
+    variant_type: ^Type
+    alias: lexer.Optional_Identifier
+    body: ^Statement
+}
+
+type Switch_Statement = struct {
+    super: Statement_Base
+    expression: ^Expression
+    cases: collections.List<Switch_Case>
 }
 
 type Procedure_Parameter = struct {
