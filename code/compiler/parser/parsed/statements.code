@@ -120,15 +120,21 @@ type Procedure_Statement = struct {
     super: Statement_Base
     receiver: ^Type
     name: lexer.Identifier
+    type_parameters: collections.List<Type_Parameter>
     parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
     is_external: bool
     body: ^Statement
 }
 
+type Type_Parameter = struct {
+    name: lexer.Identifier
+}
+
 type Type_Statement = struct {
     super: Statement_Base
     name: lexer.Identifier
+    type_parameters: collections.List<Type_Parameter>
     specifier: ^Type_Specifier
 }
 

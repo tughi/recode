@@ -148,7 +148,20 @@ proc (^parsed.Procedure_Statement).dump(self, depth: i32) {
         self.receiver.dump()
         libc.stdout.write(").")
     }
-    libc.stdout.write(self.name.lexeme).write("(")
+    libc.stdout.write(self.name.lexeme)
+    if self.type_parameters.length > 0 {
+        libc.stdout.write("<")
+        let tp_item = self.type_parameters.first
+        while tp_item != null {
+            libc.stdout.write(tp_item.value.name.lexeme)
+            tp_item = tp_item.next
+            if tp_item != null {
+                libc.stdout.write(", ")
+            }
+        }
+        libc.stdout.write(">")
+    }
+    libc.stdout.write("(")
     let item = self.parameters.first
     if self.receiver != null and item != null {
         libc.stdout.write(item.value.name.lexeme)
@@ -194,7 +207,20 @@ proc (^parsed.Return_Statement).dump(self, depth: i32) {
 }
 
 proc (^parsed.Type_Statement).dump(self, depth: i32) {
-    libc.stdout.write("type ").write(self.name.lexeme).write(" = ")
+    libc.stdout.write("type ").write(self.name.lexeme)
+    if self.type_parameters.length > 0 {
+        libc.stdout.write("<")
+        let item = self.type_parameters.first
+        while item != null {
+            libc.stdout.write(item.value.name.lexeme)
+            item = item.next
+            if item != null {
+                libc.stdout.write(", ")
+            }
+        }
+        libc.stdout.write(">")
+    }
+    libc.stdout.write(" = ")
     self.specifier.dump(depth: depth)
 }
 
@@ -355,6 +381,9 @@ proc (^parsed.Expression).dump(self) {
         is parsed.Type_Size_Expression as e {
             e.dump()
         }
+        is parsed.Type_Specialization_Expression as e {
+            e.dump()
+        }
         is nil {
         }
     }
@@ -485,6 +514,20 @@ proc (^parsed.Type_Size_Expression).dump(self) {
     libc.stdout.write(")")
 }
 
+proc (^parsed.Type_Specialization_Expression).dump(self) {
+    self.expression.dump()
+    libc.stdout.write("<")
+    let item = self.type_arguments.first
+    while item != null {
+        item.value.argument_type.dump()
+        item = item.next
+        if item != null {
+            libc.stdout.write(", ")
+        }
+    }
+    libc.stdout.write(">")
+}
+
 proc (^parsed.Subtract_Expression).dump(self) {
     self.super.left.dump()
     libc.stdout.write(" - ")
@@ -576,6 +619,18 @@ proc (^parsed.Named_Type).dump(self) {
         }
     }
     libc.stdout.write(self.name.lexeme)
+    if self.type_arguments.length > 0 {
+        libc.stdout.write("<")
+        let item = self.type_arguments.first
+        while item != null {
+            item.value.argument_type.dump()
+            item = item.next
+            if item != null {
+                libc.stdout.write(", ")
+            }
+        }
+        libc.stdout.write(">")
+    }
 }
 
 proc (^parsed.Pointer_Type).dump(self) {

@@ -105,6 +105,20 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         self.lexer.consume_other('.')
     }
     let procedure_name = self.lexer.consume_identifier()
+    let type_parameters = collections.List<parsed.Type_Parameter>()
+    if self.lexer.matches(match.other('<')) {
+        self.lexer.consume_other('<')
+        self.lexer.consume_space(0)
+        type_parameters.append(value: parsed.Type_Parameter(name: self.lexer.consume_identifier()))
+        while self.lexer.matches(match.Space(), match.other(',')) {
+            self.lexer.consume_space(0)
+            self.lexer.consume_other(',')
+            self.lexer.consume_space(1)
+            type_parameters.append(value: parsed.Type_Parameter(name: self.lexer.consume_identifier()))
+        }
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('>')
+    }
     self.lexer.consume_space(0)
     self.lexer.consume_other('(')
     let parameters = self.parse_procedure_parameters(receiver: receiver)
@@ -131,6 +145,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         super: parsed.Statement_Base(source_position: source_position)
         receiver: receiver
         name: procedure_name
+        type_parameters: type_parameters
         parameters: parameters
         return_type: return_type
         is_external: is_external
@@ -678,6 +693,25 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
                 expression: expression
                 index: index
             ))
+        } else if self.lexer.matches(match.other('<')) {
+            let source_position = self.lexer.source_position
+            self.lexer.consume_other('<')
+            self.lexer.consume_space(0)
+            let type_arguments = collections.List<parsed.Type_Argument>()
+            type_arguments.append(value: parsed.Type_Argument(argument_type: self.parse_type()))
+            while self.lexer.matches(match.Space(), match.other(',')) {
+                self.lexer.consume_space(0)
+                self.lexer.consume_other(',')
+                self.lexer.consume_space(1)
+                type_arguments.append(value: parsed.Type_Argument(argument_type: self.parse_type()))
+            }
+            self.lexer.consume_space(0)
+            self.lexer.consume_other('>')
+            expression = self.alloc(expression: parsed.Type_Specialization_Expression(
+                source_position: source_position
+                expression: expression
+                type_arguments: type_arguments
+            ))
         } else {
             break
         }
@@ -839,7 +873,22 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         module = first_token
         name_token = self.lexer.consume_identifier()
     }
-    return self.alloc(type: parsed.Named_Type(source_position: first_token.source_position, module: module, name: name_token))
+    let type_arguments = collections.List<parsed.Type_Argument>()
+    if self.lexer.matches(match.Space(), match.other('<')) {
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('<')
+        self.lexer.consume_space(0)
+        type_arguments.append(value: parsed.Type_Argument(argument_type: self.parse_type()))
+        while self.lexer.matches(match.Space(), match.other(',')) {
+            self.lexer.consume_space(0)
+            self.lexer.consume_other(',')
+            self.lexer.consume_space(1)
+            type_arguments.append(value: parsed.Type_Argument(argument_type: self.parse_type()))
+        }
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('>')
+    }
+    return self.alloc(type: parsed.Named_Type(source_position: first_token.source_position, module: module, name: name_token, type_arguments: type_arguments))
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
@@ -1000,6 +1049,21 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_keyword("type")
     self.lexer.consume_space(1)
     let name = self.lexer.consume_identifier()
+    let type_parameters = collections.List<parsed.Type_Parameter>()
+    if self.lexer.matches(match.Space(), match.other('<')) {
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('<')
+        self.lexer.consume_space(0)
+        type_parameters.append(value: parsed.Type_Parameter(name: self.lexer.consume_identifier()))
+        while self.lexer.matches(match.Space(), match.other(',')) {
+            self.lexer.consume_space(0)
+            self.lexer.consume_other(',')
+            self.lexer.consume_space(1)
+            type_parameters.append(value: parsed.Type_Parameter(name: self.lexer.consume_identifier()))
+        }
+        self.lexer.consume_space(0)
+        self.lexer.consume_other('>')
+    }
     self.lexer.consume_space(1)
     self.lexer.consume_other('=')
     self.lexer.consume_space(1)
@@ -1007,6 +1071,7 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
     return self.alloc(statement: parsed.Type_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         name: name
+        type_parameters: type_parameters
         specifier: specifier
     ))
 }

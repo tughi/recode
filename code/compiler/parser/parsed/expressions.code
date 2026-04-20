@@ -30,6 +30,7 @@ type Expression = variant {
     String_Expression
     Type_Alignment_Expression
     Type_Size_Expression
+    Type_Specialization_Expression
 }
 
 type Binary_Expression = struct {
@@ -173,4 +174,10 @@ type Is_Expression = struct {
 type String_Expression = struct {
     source_position: usize
     token: lexer.String
+}
+
+type Type_Specialization_Expression = struct {
+    source_position: usize
+    expression: ^Expression
+    type_arguments: collections.List<Type_Argument>
 }

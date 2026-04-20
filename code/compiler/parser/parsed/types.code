@@ -14,10 +14,15 @@ type Multi_Pointer_Type = struct {
     pointee: ^Type
 }
 
+type Type_Argument = struct {
+    argument_type: ^Type
+}
+
 type Named_Type = struct {
     source_position: usize
     module: ?lexer.Identifier
     name: lexer.Identifier
+    type_arguments: collections.List<Type_Argument>
 }
 
 type Pointer_Type = struct {
