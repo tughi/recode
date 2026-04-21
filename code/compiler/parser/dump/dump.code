@@ -53,6 +53,9 @@ proc (^parsed.Statement).dump(self, depth: i32) {
         is parsed.Procedure_Statement as s {
             s.dump(depth: depth)
         }
+        is parsed.Raise_Statement as s {
+            s.dump(depth: depth)
+        }
         is parsed.Return_Statement as s {
             s.dump(depth: depth)
         }
@@ -66,6 +69,9 @@ proc (^parsed.Statement).dump(self, depth: i32) {
             s.dump(depth: depth)
         }
         is parsed.While_Statement as s {
+            s.dump(depth: depth)
+        }
+        is parsed.Yield_Statement as s {
             s.dump(depth: depth)
         }
         is nil {
@@ -96,7 +102,7 @@ proc (^parsed.Break_Statement).dump(self, depth: i32) {
 }
 
 proc (^parsed.Expression_Statement).dump(self, depth: i32) {
-    self.expression.dump()
+    self.expression.dump(depth: depth)
 }
 
 proc (^parsed.Import_Statement).dump(self, depth: i32) {
@@ -190,6 +196,10 @@ proc (^parsed.Procedure_Statement).dump(self, depth: i32) {
         libc.stdout.write(" -> ")
         self.return_type.dump()
     }
+    if self.raise_type != null {
+        libc.stdout.write(" !> ")
+        self.raise_type.dump()
+    }
     if self.is_external {
         libc.stdout.write(" = external")
     } else {
@@ -198,11 +208,21 @@ proc (^parsed.Procedure_Statement).dump(self, depth: i32) {
     }
 }
 
+proc (^parsed.Raise_Statement).dump(self, depth: i32) {
+    libc.stdout.write("raise ")
+    self.expression.dump(depth: depth)
+}
+
+proc (^parsed.Yield_Statement).dump(self, depth: i32) {
+    libc.stdout.write("yield ")
+    self.expression.dump(depth: depth)
+}
+
 proc (^parsed.Return_Statement).dump(self, depth: i32) {
     libc.stdout.write("return")
     if self.expression != null {
         libc.stdout.write(" ")
-        self.expression.dump()
+        self.expression.dump(depth: depth)
     }
 }
 
@@ -241,7 +261,7 @@ proc (^parsed.Variable_Statement).dump(self, depth: i32) {
         }
     } else if self.expression != null {
         libc.stdout.write(" = ")
-        self.expression.dump()
+        self.expression.dump(depth: depth)
     }
 }
 
@@ -293,6 +313,10 @@ proc (^parsed.Switch_Statement).dump(self, depth: i32) {
 }
 
 proc (^parsed.Expression).dump(self) {
+    self.dump(depth: 0)
+}
+
+proc (^parsed.Expression).dump(self, depth: i32) {
     if self == null {
         return
     }
@@ -372,8 +396,14 @@ proc (^parsed.Expression).dump(self) {
         is parsed.Subtract_Expression as e {
             e.dump()
         }
+        is parsed.Block_Expression as e {
+            e.dump(depth: depth)
+        }
         is parsed.String_Expression as e {
             e.dump()
+        }
+        is parsed.Try_Expression as e {
+            e.dump(depth: depth)
         }
         is parsed.Type_Alignment_Expression as e {
             e.dump()
@@ -506,6 +536,25 @@ proc (^parsed.Type_Alignment_Expression).dump(self) {
     libc.stdout.write("type_alignment(")
     self.type.dump()
     libc.stdout.write(")")
+}
+
+proc (^parsed.Block_Expression).dump(self) {
+    self.dump(depth: 0)
+}
+
+proc (^parsed.Block_Expression).dump(self, depth: i32) {
+    self.body.dump(depth: depth)
+}
+
+proc (^parsed.Try_Expression).dump(self) {
+    self.dump(depth: 0)
+}
+
+proc (^parsed.Try_Expression).dump(self, depth: i32) {
+    libc.stdout.write("try ")
+    self.expression.dump()
+    libc.stdout.write(" else ")
+    self.else_expression.dump(depth: depth)
 }
 
 proc (^parsed.Type_Size_Expression).dump(self) {

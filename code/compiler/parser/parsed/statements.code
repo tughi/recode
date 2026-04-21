@@ -14,11 +14,13 @@ type Statement = variant {
     Import_Statement
     Loop_Statement
     Procedure_Statement
+    Raise_Statement
     Return_Statement
     Switch_Statement
     Type_Statement
     Variable_Statement
     While_Statement
+    Yield_Statement
 }
 
 type Block_Statement = struct {
@@ -62,6 +64,16 @@ type Variable_Statement = struct {
     is_external: bool
     expression: ^Expression
     external_name: ?lexer.String
+}
+
+type Raise_Statement = struct {
+    super: Statement_Base
+    expression: ^Expression
+}
+
+type Yield_Statement = struct {
+    super: Statement_Base
+    expression: ^Expression
 }
 
 type Return_Statement = struct {
@@ -123,6 +135,7 @@ type Procedure_Statement = struct {
     type_parameters: collections.List<Type_Parameter>
     parameters: collections.List<Procedure_Parameter>
     return_type: ^Type
+    raise_type: ^Type
     is_external: bool
     body: ^Statement
 }

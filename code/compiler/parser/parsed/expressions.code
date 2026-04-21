@@ -6,6 +6,7 @@ type Expression = variant {
     Address_Of_Expression
     Alloc_Expression
     Array_Access_Expression
+    Block_Expression
     Call_Expression
     Character_Expression
     Dereference_Expression
@@ -28,6 +29,7 @@ type Expression = variant {
     Not_Equals_Expression
     Subtract_Expression
     String_Expression
+    Try_Expression
     Type_Alignment_Expression
     Type_Size_Expression
     Type_Specialization_Expression
@@ -174,6 +176,17 @@ type Is_Expression = struct {
 type String_Expression = struct {
     source_position: usize
     token: lexer.String
+}
+
+type Block_Expression = struct {
+    source_position: usize
+    body: ^Statement
+}
+
+type Try_Expression = struct {
+    source_position: usize
+    expression: ^Expression
+    else_expression: ^Expression
 }
 
 type Type_Specialization_Expression = struct {

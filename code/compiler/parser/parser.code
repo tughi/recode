@@ -131,6 +131,14 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         return_type = self.parse_type()
         self.lexer.consume_space(1)
     }
+    let raise_type: ^parsed.Type = null
+    if self.lexer.matches(match.other('!'), match.other('>')) {
+        self.lexer.consume_space(1)
+        self.lexer.consume_other('!', '>')
+        self.lexer.consume_space(1)
+        raise_type = self.parse_type()
+        self.lexer.consume_space(1)
+    }
     let is_external = false
     let body: ^parsed.Statement = null
     if self.lexer.matches(match.other('=')) {
@@ -148,6 +156,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         type_parameters: type_parameters
         parameters: parameters
         return_type: return_type
+        raise_type: raise_type
         is_external: is_external
         body: body
     ))
@@ -201,10 +210,14 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
         return self.parse_if_statement()
     } else if self.lexer.matches(match.keyword("let")) {
         return self.parse_variable_declaration_statement()
+    } else if self.lexer.matches(match.keyword("raise")) {
+        return self.parse_raise_statement()
     } else if self.lexer.matches(match.keyword("return")) {
         return self.parse_return_statement()
     } else if self.lexer.matches(match.keyword("switch")) {
         return self.parse_switch_statement()
+    } else if self.lexer.matches(match.keyword("yield")) {
+        return self.parse_yield_statement()
     } else {
         let source_position = self.lexer.source_position
         let expression = self.parse_expression()
@@ -333,11 +346,36 @@ proc (^Parser).parse_variable_declaration_statement(self) -> ^parsed.Statement !
     ))
 }
 
+proc (^Parser).parse_raise_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("raise")
+    self.lexer.consume_space(1)
+    let expression = self.parse_expression()
+    return self.alloc(statement: parsed.Raise_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        expression: expression
+    ))
+}
+
+proc (^Parser).parse_yield_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("yield")
+    self.lexer.consume_space(1)
+    let expression = self.parse_expression()
+    return self.alloc(statement: parsed.Yield_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        expression: expression
+    ))
+}
+
 proc (^Parser).parse_return_statement(self) -> ^parsed.Statement !> error.Error {
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("return")
-    self.lexer.consume_space(1)
-    let expression = self.parse_expression()
+    let expression: ^parsed.Expression = null
+    if not self.lexer.matches(match.end_of_line) {
+        self.lexer.consume_space(1)
+        expression = self.parse_expression()
+    }
     return self.alloc(statement: parsed.Return_Statement(
         super: parsed.Statement_Base(source_position: source_position)
         expression: expression
@@ -720,6 +758,27 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression !> error.Erro
 }
 
 proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression !> error.Error {
+    if self.lexer.matches(match.keyword("try")) {
+        let source_position = self.lexer.source_position
+        self.lexer.consume_keyword("try")
+        self.lexer.consume_space(1)
+        let expression = self.parse_expression()
+        self.lexer.consume_space(1)
+        self.lexer.consume_keyword("else")
+        self.lexer.consume_space(1)
+        let else_expression: ^parsed.Expression = null
+        if self.lexer.matches(match.other('{')) {
+            let body = self.parse_block_statement()
+            else_expression = self.alloc(expression: parsed.Block_Expression(source_position: source_position, body: body))
+        } else {
+            else_expression = self.parse_expression()
+        }
+        return self.alloc(expression: parsed.Try_Expression(
+            source_position: source_position
+            expression: expression
+            else_expression: else_expression
+        ))
+    }
     if self.lexer.matches(match.identifier) {
         let name_token = self.lexer.consume_identifier()
         return self.alloc(expression: parsed.Identifier_Expression(
