@@ -4,6 +4,7 @@ import compiler.lexer
 type Type = variant {
     Multi_Pointer_Type
     Named_Type
+    Optional_Type
     Pointer_Type
     Procedure_Type
     Receiver_Type
@@ -23,6 +24,11 @@ type Named_Type = struct {
     module: ?lexer.Identifier
     name: lexer.Identifier
     type_arguments: collections.List<Type_Argument>
+}
+
+type Optional_Type = struct {
+    source_position: usize
+    inner_type: ^Type
 }
 
 type Pointer_Type = struct {

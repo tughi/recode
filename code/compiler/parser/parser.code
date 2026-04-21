@@ -931,6 +931,12 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
         let pointee = self.parse_type()
         return self.alloc(type: parsed.Pointer_Type(source_position: source_position, pointee: pointee))
     }
+    if self.lexer.matches(match.other('?')) {
+        self.lexer.consume_other('?')
+        self.lexer.consume_space(0)
+        let inner_type = self.parse_type()
+        return self.alloc(type: parsed.Optional_Type(source_position: source_position, inner_type: inner_type))
+    }
     if self.lexer.matches(match.keyword("proc")) {
         self.lexer.consume_keyword("proc")
         self.lexer.consume_space(1)

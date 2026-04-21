@@ -653,6 +653,9 @@ proc (^parsed.Type).dump(self) {
         is parsed.Named_Type as t {
             t.dump()
         }
+        is parsed.Optional_Type as t {
+            t.dump()
+        }
         is parsed.Pointer_Type as t {
             t.dump()
         }
@@ -696,6 +699,11 @@ proc (^parsed.Named_Type).dump(self) {
         }
         libc.stdout.write(">")
     }
+}
+
+proc (^parsed.Optional_Type).dump(self) {
+    libc.stdout.write("?")
+    self.inner_type.dump()
 }
 
 proc (^parsed.Pointer_Type).dump(self) {
