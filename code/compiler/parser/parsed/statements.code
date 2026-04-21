@@ -9,6 +9,7 @@ type Statement = variant {
     Assignment_Statement
     Block_Statement
     Break_Statement
+    Defer_Statement
     Expression_Statement
     If_Statement
     Import_Statement
@@ -36,6 +37,11 @@ type Import_Statement = struct {
 
 type Break_Statement = struct {
     super: Statement_Base
+}
+
+type Defer_Statement = struct {
+    super: Statement_Base
+    statement: ^Statement
 }
 
 type Loop_Statement = struct {

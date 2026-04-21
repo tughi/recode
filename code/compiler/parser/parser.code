@@ -200,8 +200,12 @@ proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> colle
 }
 
 proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
-    if self.lexer.matches(match.keyword("break")) {
+    if self.lexer.matches(match.other('{')) {
+        return self.parse_block_statement()
+    } else if self.lexer.matches(match.keyword("break")) {
         return self.parse_break_statement()
+    } else if self.lexer.matches(match.keyword("defer")) {
+        return self.parse_defer_statement()
     } else if self.lexer.matches(match.keyword("loop")) {
         return self.parse_loop_statement()
     } else if self.lexer.matches(match.keyword("while")) {
@@ -244,6 +248,17 @@ proc (^Parser).parse_break_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_keyword("break")
     return self.alloc(statement: parsed.Break_Statement(
         super: parsed.Statement_Base(source_position: source_position)
+    ))
+}
+
+proc (^Parser).parse_defer_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("defer")
+    self.lexer.consume_space(1)
+    let statement = self.parse_statement()
+    return self.alloc(statement: parsed.Defer_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        statement: statement
     ))
 }
 

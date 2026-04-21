@@ -38,6 +38,9 @@ proc (^parsed.Statement).dump(self, depth: i32) {
         is parsed.Break_Statement as s {
             s.dump(depth: depth)
         }
+        is parsed.Defer_Statement as s {
+            s.dump(depth: depth)
+        }
         is parsed.Expression_Statement as s {
             s.dump(depth: depth)
         }
@@ -99,6 +102,11 @@ proc (^parsed.Block_Statement).dump(self, depth: i32) {
 
 proc (^parsed.Break_Statement).dump(self, depth: i32) {
     libc.stdout.write("break")
+}
+
+proc (^parsed.Defer_Statement).dump(self, depth: i32) {
+    libc.stdout.write("defer ")
+    self.statement.dump(depth: depth)
 }
 
 proc (^parsed.Expression_Statement).dump(self, depth: i32) {
