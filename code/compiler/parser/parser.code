@@ -28,6 +28,9 @@ proc parse(anon source: source.Source) -> collections.List<^parsed.Statement> !>
         } else if parser.lexer.matches(match.keyword("type")) {
             statements.append(value: parser.parse_type_statement())
             parser.lexer.consume_end_of_line()
+        } else if parser.lexer.matches(match.keyword("const")) {
+            statements.append(value: parser.parse_const_statement())
+            parser.lexer.consume_end_of_line()
         } else if parser.lexer.matches(match.keyword("let")) {
             statements.append(value: parser.parse_variable_declaration_statement())
             parser.lexer.consume_end_of_line()
@@ -204,6 +207,8 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement !> error.Error {
         return self.parse_block_statement()
     } else if self.lexer.matches(match.keyword("break")) {
         return self.parse_break_statement()
+    } else if self.lexer.matches(match.keyword("const")) {
+        return self.parse_const_statement()
     } else if self.lexer.matches(match.keyword("defer")) {
         return self.parse_defer_statement()
     } else if self.lexer.matches(match.keyword("loop")) {
@@ -248,6 +253,22 @@ proc (^Parser).parse_break_statement(self) -> ^parsed.Statement !> error.Error {
     self.lexer.consume_keyword("break")
     return self.alloc(statement: parsed.Break_Statement(
         super: parsed.Statement_Base(source_position: source_position)
+    ))
+}
+
+proc (^Parser).parse_const_statement(self) -> ^parsed.Statement !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("const")
+    self.lexer.consume_space(1)
+    let name = self.lexer.consume_identifier()
+    self.lexer.consume_space(1)
+    self.lexer.consume_other('=')
+    self.lexer.consume_space(1)
+    let expression = self.parse_expression()
+    return self.alloc(statement: parsed.Const_Statement(
+        super: parsed.Statement_Base(source_position: source_position)
+        name: name
+        expression: expression
     ))
 }
 
