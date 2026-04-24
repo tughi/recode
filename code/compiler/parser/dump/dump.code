@@ -122,15 +122,7 @@ proc (^parsed.Expression_Statement).dump(self, depth: i32) {
 }
 
 proc (^parsed.Import_Statement).dump(self, depth: i32) {
-    libc.stdout.write("import ")
-    let item = self.path.first
-    while item != null {
-        libc.stdout.write(item.value.lexeme)
-        item = item.next
-        if item != null {
-            libc.stdout.write(".")
-        }
-    }
+    libc.stdout.write("import ").write(self.package.name)
     switch self.alias {
         is lexer.Identifier as alias {
             libc.stdout.write(" as ").write(alias.lexeme)
@@ -662,7 +654,7 @@ proc (^parsed.Type).dump(self) {
         is parsed.Procedure_Type as t {
             t.dump()
         }
-        is parsed.Receiver_Type as t {
+        is parsed.Trait_Receiver_Type as t {
             t.dump()
         }
         is nil {
@@ -670,7 +662,7 @@ proc (^parsed.Type).dump(self) {
     }
 }
 
-proc (^parsed.Receiver_Type).dump(self) {
+proc (^parsed.Trait_Receiver_Type).dump(self) {
 }
 
 proc (^parsed.Multi_Pointer_Type).dump(self) {

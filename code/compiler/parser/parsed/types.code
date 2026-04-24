@@ -7,7 +7,7 @@ type Type = variant {
     Optional_Type
     Pointer_Type
     Procedure_Type
-    Receiver_Type
+    Trait_Receiver_Type
 }
 
 type Multi_Pointer_Type = struct {
@@ -43,7 +43,6 @@ type Procedure_Type = struct {
     raise_type: ^Type
 }
 
-// TODO: Determine if this type is exclusively used for trait method receivers and rename accordingly
-type Receiver_Type = struct {
+type Trait_Receiver_Type = struct {
     source_position: usize
 }

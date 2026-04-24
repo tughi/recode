@@ -9,6 +9,11 @@ type Address_Wrapper = struct {
     value: usize
 }
 
+proc (str).address(self) -> usize {
+    let wrapper = Pointer_Wrapper(value: self.data().as(^Any))
+    return (^wrapper).as(^Address_Wrapper).value
+}
+
 proc (str).slice(self, anon start_index: usize, anon stop_index: usize) -> str {
     let slice_pointer = Pointer_Wrapper(value: self.data().as(^Any))
     let slice_offset = (^slice_pointer).as(^Address_Wrapper)

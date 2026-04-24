@@ -1,3 +1,6 @@
+import compiler.error
+import string
+
 type Token = variant {
     Character
     Comment
@@ -102,5 +105,38 @@ type Space = struct {
 type String = struct {
     super: Token_Base
     value: str
+}
+
+proc (^Identifier).merge(self, with separator: Other, and another: Identifier) -> Identifier !> error.Error {
+    // Make sure separator follows self, and another follows separator
+    if self.lexeme.address() + self.lexeme.length != separator.lexeme.address() {
+        raise error.Error(message: "Cannot merge identifier with separator")
+    }
+    if separator.lexeme.address() + separator.lexeme.length != another.lexeme.address() {
+        raise error.Error(message: "Cannot merge separator with another")
+    }
+
+    // Merge by extending self's lexeme
+    return Identifier(
+        super: Token_Base(
+            lexeme: self.lexeme.slice(0, self.lexeme.length + separator.lexeme.length + another.lexeme.length)
+            source_position: self.source_position
+        )
+    )
+}
+
+proc (^Other).merge(self, with another: Other) -> Other !> error.Error {
+    // Make sure another follows self
+    if self.lexeme.address() + self.lexeme.length != another.lexeme.address() {
+        raise error.Error(message: "Cannot merge other with another")
+    }
+
+    // Merge by extending self's lexeme
+    return Other(
+        super: Token_Base(
+            lexeme: self.lexeme.slice(0, self.lexeme.length + another.lexeme.length)
+            source_position: self.source_position
+        )
+    )
 }
 

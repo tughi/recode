@@ -32,7 +32,7 @@ type Block_Statement = struct {
 
 type Import_Statement = struct {
     super: Statement_Base
-    path: collections.List<lexer.Identifier>
+    package: ^Package
     alias: ?lexer.Identifier
 }
 
@@ -150,6 +150,7 @@ type Procedure_Statement = struct {
     return_type: ^Type
     raise_type: ^Type
     is_external: bool
+    external_name: ?lexer.String
     body: ^Statement
 }
 

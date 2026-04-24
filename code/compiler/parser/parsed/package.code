@@ -1,0 +1,26 @@
+import collections
+import compiler.error
+import compiler.source
+
+type Package_Module = struct {
+    source: source.Source
+    statements: collections.List<^Statement>
+    next_module: ^Package_Module
+}
+
+type Package = struct {
+    name: str
+    is_root: bool
+    import_source: source.Source
+    import_source_position: usize
+    first_module: ^Package_Module
+    next_package: ^Package
+}
+
+proc (^Package).error(self, anon message: str) -> error.Error {
+    return error.Error(
+        message: message
+        source: self.import_source
+        source_position: self.import_source_position
+    )
+}

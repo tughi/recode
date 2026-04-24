@@ -1,6 +1,5 @@
 import compiler.error
 import compiler.lexer.match
-import compiler.lexer.utils
 import compiler.source
 import string
 
@@ -285,7 +284,7 @@ proc (^Lexer).consume_other(self, anon first: u8, anon second: u8) -> Other !> e
                 if second_other.lexeme.char_at(0) == second {
                     self.consume_token() // first
                     self.consume_token() // second
-                    return self.merge(other: first_other, with: second_other)
+                    return first_other.merge(with: second_other)
                 }
             }
         }

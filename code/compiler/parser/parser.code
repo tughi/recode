@@ -5,38 +5,132 @@ import compiler.lexer
 import compiler.lexer.match
 import compiler.parser.parsed
 import compiler.source
+import libc
+import string
 
 type Parser = struct {
     lexer: lexer.Lexer
     alignment: i32
+    first_package: ^parsed.Package
+    last_package: ^parsed.Package
 }
 
-proc parse(anon source: source.Source) -> collections.List<^parsed.Statement> !> error.Error {
-    let parser = Parser(
-        lexer: lexer.create(source)
-    )
+proc parse(source_dir: str, package_name: ?str, binary_name: ?str) -> ^parsed.Package !> error.Error {
+    let parser = Parser()
+
+    let package: ^parsed.Package
+    if package_name is str as name {
+        package = parser.alloc(package: parsed.Package(
+            name: name
+            is_root: false
+        ))
+    } else if binary_name is str as name {
+        package = parser.alloc(package: parsed.Package(
+            name: name
+            is_root: true
+        ))
+    } else {
+        raise error.Error(message: "Either package_name or binary_name must be provided")
+    }
+
+    parser.first_package = package
+    parser.last_package = package
+
+    while package != null {
+        parser.parse_package(source_dir: source_dir, package: package)
+        package = package.next_package
+    }
+
+    return parser.first_package
+}
+
+proc (^Parser).parse_package(self, source_dir: str, package: ^parsed.Package) !> error.Error {
+    let package_path_builder = string.new_builder()
+    package_path_builder.append(source_dir)
+    if not package.is_root {
+        package_path_builder.append_char('/')
+        let package_name_data = package.name.data()
+        let package_name_index = 0usize
+        while package_name_index < package.name.length {
+            let package_name_char = package_name_data[package_name_index]
+            if package_name_char == '.' {
+                package_name_char = '/'
+            }
+            package_path_builder.append_char(package_name_char)
+            package_name_index = package_name_index + 1
+        }
+    }
+    let package_path = package_path_builder.build()
+
+    let package_dir = libc.open_dir(package_path.data())
+    if package_dir == null {
+        raise package.error("Package does not exist")
+    }
+    // TODO: defer libc.close_dir(package_dir)
+
+    let last_module: ^parsed.Package_Module = null
+
+    loop {
+        let package_dir_entry = libc.read_dir(package_dir)
+        if package_dir_entry == null {
+            break
+        }
+
+        let package_dir_entry_name = libc.get_dir_entry_name(package_dir_entry).to_str()
+        if package_dir_entry_name.length > 5 and package_dir_entry_name.starts_with(".code", from: package_dir_entry_name.length - 5) {
+            let module_path_builder = string.new_builder()
+            let module_path = module_path_builder.append(package_path).append_char('/').append(package_dir_entry_name).build()
+
+            let module_source = try source.load(module_path) else {
+                raise package.error(error)
+            }
+
+            let module_statements = self.parse_module(module_source)
+
+            let module = self.alloc(module: parsed.Package_Module(
+                source: module_source
+                statements: module_statements
+                next_module: null
+            ))
+
+            if last_module == null {
+                package.first_module = module
+            } else {
+                last_module.next_module = module
+            }
+            last_module = module
+        }
+    }
+
+    libc.close_dir(package_dir) // TODO: Remove this line once defer has been fixed
+    return
+}
+
+proc (^Parser).parse_module(self, anon module_source: source.Source) -> collections.List<^parsed.Statement> !> error.Error {
+    self.lexer = lexer.create(module_source)
+    self.alignment = 0
     let statements = collections.List<^parsed.Statement>()
 
     loop {
-        if parser.lexer.matches(match.end_of_file) {
+        if self.lexer.matches(match.end_of_file) {
             break
-        } else if parser.lexer.matches(match.space, match.comment) or parser.lexer.matches(match.space, match.end_of_line) {
-            parser.lexer.consume_empty_line(parser.alignment)
-        } else if parser.lexer.matches(match.keyword("import")) {
-            statements.append(value: parser.parse_import_statement())
-            parser.lexer.consume_end_of_line()
-        } else if parser.lexer.matches(match.keyword("type")) {
-            statements.append(value: parser.parse_type_statement())
-            parser.lexer.consume_end_of_line()
-        } else if parser.lexer.matches(match.keyword("const")) {
-            statements.append(value: parser.parse_const_statement())
-            parser.lexer.consume_end_of_line()
-        } else if parser.lexer.matches(match.keyword("let")) {
-            statements.append(value: parser.parse_variable_declaration_statement())
-            parser.lexer.consume_end_of_line()
+        } else if self.lexer.matches(match.space, match.comment) or self.lexer.matches(match.space, match.end_of_line) {
+            self.lexer.consume_empty_line(self.alignment)
+        } else if self.lexer.matches(match.keyword("import")) {
+            statements.append(value: self.parse_import_statement())
+            self.lexer.consume_end_of_line()
+        } else if self.lexer.matches(match.keyword("type")) {
+            statements.append(value: self.parse_type_statement())
+            self.lexer.consume_end_of_line()
+        } else if self.lexer.matches(match.keyword("const")) {
+            statements.append(value: self.parse_const_statement())
+            self.lexer.consume_end_of_line()
+        } else if self.lexer.matches(match.keyword("let")) {
+            statements.append(value: self.parse_variable_declaration_statement())
+            self.lexer.consume_end_of_line()
         } else {
-            statements.append(value: parser.parse_procedure_statement())
-            parser.lexer.consume_end_of_line()
+            statements.append(value: self.parse_procedure_statement())
+            self.lexer.consume_end_of_line()
         }
     }
 
@@ -64,6 +158,18 @@ proc (^Parser).alloc(self, type: parsed.Type) -> ^parsed.Type !> error.Error {
 proc (^Parser).alloc(self, type_specifier: parsed.Type_Specifier) -> ^parsed.Type_Specifier !> error.Error {
     let result = self.allocate(size: type_size(parsed.Type_Specifier), alignment: type_alignment(parsed.Type_Specifier)).as(^parsed.Type_Specifier)
     result.^ = type_specifier
+    return result
+}
+
+proc (^Parser).alloc(self, module: parsed.Package_Module) -> ^parsed.Package_Module !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Package_Module), alignment: type_alignment(parsed.Package_Module)).as(^parsed.Package_Module)
+    result.^ = module
+    return result
+}
+
+proc (^Parser).alloc(self, package: parsed.Package) -> ^parsed.Package !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Package), alignment: type_alignment(parsed.Package)).as(^parsed.Package)
+    result.^ = package
     return result
 }
 
@@ -143,12 +249,17 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         self.lexer.consume_space(1)
     }
     let is_external = false
+    let external_name: ?lexer.String = nil
     let body: ^parsed.Statement = null
     if self.lexer.matches(match.other('=')) {
         self.lexer.consume_other('=')
         self.lexer.consume_space(1)
         self.lexer.consume_keyword("external")
         is_external = true
+        if self.lexer.matches(match.space, match.String()) {
+            self.lexer.consume_space(1)
+            external_name = self.lexer.consume_string()
+        }
     } else {
         body = self.parse_block_statement()
     }
@@ -161,6 +272,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement !> error.Err
         return_type: return_type
         raise_type: raise_type
         is_external: is_external
+        external_name: external_name
         body: body
     ))
 }
@@ -1031,7 +1143,7 @@ proc (^Parser).parse_trait_type_specifier(self) -> ^parsed.Type_Specifier !> err
         let method_name = self.lexer.consume_identifier()
         self.lexer.consume_space(0)
         self.lexer.consume_other('(')
-        let receiver_type = self.alloc(type: parsed.Receiver_Type(source_position: method_source_position))
+        let receiver_type = self.alloc(type: parsed.Trait_Receiver_Type(source_position: method_source_position))
         let parameters = self.parse_procedure_parameters(receiver: receiver_type)
         self.lexer.consume_other(')')
         let return_type: ^parsed.Type = null
@@ -1123,13 +1235,12 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement !> error.Error 
     let source_position = self.lexer.source_position
     self.lexer.consume_keyword("import")
     self.lexer.consume_space(1)
-    let path = collections.List<lexer.Identifier>()
-    path.append(value: self.lexer.consume_identifier())
+    let package_name = self.lexer.consume_identifier()
     while self.lexer.matches(match.Space(), match.other('.')) {
         self.lexer.consume_space(0)
-        self.lexer.consume_other('.')
+        let dot = self.lexer.consume_other('.')
         self.lexer.consume_space(0)
-        path.append(value: self.lexer.consume_identifier())
+        package_name = package_name.merge(with: dot, and: self.lexer.consume_identifier())
     }
     let alias: ?lexer.Identifier = nil
     if self.lexer.matches(match.space, match.keyword("as")) {
@@ -1138,9 +1249,29 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement !> error.Error 
         self.lexer.consume_space(1)
         alias = self.lexer.consume_identifier()
     }
+
+    // Find or enqueue the package
+    let package = self.first_package
+    while package != null {
+        if package.name.equals(package_name.lexeme) {
+            break
+        }
+        package = package.next_package
+    }
+    if package == null {
+        package = self.alloc(package: parsed.Package(
+            name: package_name.lexeme
+            is_root: false
+            import_source: self.lexer.source
+            import_source_position: source_position
+        ))
+        self.last_package.next_package = package
+        self.last_package = package
+    }
+
     return self.alloc(statement: parsed.Import_Statement(
         super: parsed.Statement_Base(source_position: source_position)
-        path: path
+        package: package
         alias: alias
     ))
 }
