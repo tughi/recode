@@ -1,0 +1,20 @@
+import collections
+
+type Type = variant {
+    Builtin_Type
+    Procedure_Type
+}
+
+type Builtin_Type = struct {
+    name: str
+}
+
+type Procedure_Parameter = struct {
+    name: str
+    parameter_type: ^Type
+}
+
+type Procedure_Type = struct {
+    parameters: collections.List<Procedure_Parameter>
+    return_type: ^Type
+}

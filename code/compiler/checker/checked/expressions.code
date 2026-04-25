@@ -1,0 +1,8 @@
+type Expression = variant {
+    Integer_Expression
+}
+
+type Integer_Expression = struct {
+    value: u64
+    type: ^Type
+}

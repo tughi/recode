@@ -1,0 +1,604 @@
+import allocator
+import collections
+import compiler.checker.checked
+import compiler.error
+import compiler.lexer
+import compiler.parser.parsed
+import compiler.source
+import libc
+
+type Checker = struct {
+    builtin_symbols: ^checked.Symbols
+    global_symbols: ^checked.Symbols
+    return_type: ^checked.Type
+    current_source: source.Source
+    current_source_position: usize
+}
+
+proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package !> error.Error {
+    let checker = Checker(
+        builtin_symbols: alloc checked.Symbols(parent: null, first: null, last: null)
+        global_symbols: null
+        return_type: null
+        current_source: builtin_package.first_module.source
+        current_source_position: 0
+    )
+
+    checker.check_builtin_package(builtin_package)
+
+    return checker.check_package(main_package)
+}
+
+proc (^Checker).check_builtin_package(self, anon parsed_package: ^parsed.Package) !> error.Error {
+    let module = parsed_package.first_module
+    while module != null {
+        self.current_source = module.source
+        let item = module.statements.first
+        while item != null {
+            let statement = item.value
+            switch statement {
+                is parsed.Type_Statement as type_statement {
+                    self.check_builtin_type_statement(type_statement)
+                }
+                is parsed.Assignment_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Assignment_Statement")
+                }
+                is parsed.Block_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Block_Statement")
+                }
+                is parsed.Break_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Break_Statement")
+                }
+                is parsed.Const_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Const_Statement")
+                }
+                is parsed.Defer_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Defer_Statement")
+                }
+                is parsed.Expression_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Expression_Statement")
+                }
+                is parsed.If_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.If_Statement")
+                }
+                is parsed.Import_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Import_Statement")
+                }
+                is parsed.Loop_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Loop_Statement")
+                }
+                is parsed.Procedure_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Procedure_Statement")
+                }
+                is parsed.Raise_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Raise_Statement")
+                }
+                is parsed.Return_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Return_Statement")
+                }
+                is parsed.Switch_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Switch_Statement")
+                }
+                is parsed.Variable_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Variable_Statement")
+                }
+                is parsed.While_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.While_Statement")
+                }
+                is parsed.Yield_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Yield_Statement")
+                }
+                is nil {
+                }
+            }
+            item = item.next
+        }
+        module = module.next_module
+    }
+    return
+}
+
+proc (^Checker).check_builtin_type_statement(self, anon type_statement: parsed.Type_Statement) !> error.Error {
+    self.current_source_position = type_statement.super.source_position
+    let specifier = type_statement.specifier
+    let is_builtin = false
+    switch specifier {
+        is parsed.Builtin_Type_Specifier as _ignored {
+            is_builtin = true
+        }
+        is parsed.External_Type_Specifier as _ignored {
+        }
+        is parsed.Struct_Type_Specifier as _ignored {
+        }
+        is parsed.Trait_Type_Specifier as _ignored {
+        }
+        is parsed.Variant_Type_Specifier as _ignored {
+        }
+        is nil {
+        }
+    }
+    if not is_builtin {
+        return
+    }
+    let name = type_statement.name.super.lexeme
+    let type = self.alloc_type(checked.Builtin_Type(name: name))
+    let symbol = self.alloc_symbol(checked.Type_Symbol(name: name, type: type))
+    self.builtin_symbols.append(name: name, symbol: symbol)
+    return
+}
+
+proc (^Checker).check_package(self, anon parsed_package: ^parsed.Package) -> ^checked.Package !> error.Error {
+    let global_symbols = alloc checked.Symbols(parent: null, first: null, last: null)
+    self.global_symbols = global_symbols
+
+    let checked_package = alloc checked.Package(
+        name: parsed_package.name
+        symbols: global_symbols
+        first_module: null
+        next_package: null
+    )
+
+    let module = parsed_package.first_module
+    let last_checked_module: ^checked.Module = null
+    while module != null {
+        self.current_source = module.source
+        let checked_module = alloc checked.Module(source: module.source, next_module: null)
+        if last_checked_module == null {
+            checked_package.first_module = checked_module
+        } else {
+            last_checked_module.next_module = checked_module
+        }
+        last_checked_module = checked_module
+
+        let item = module.statements.first
+        while item != null {
+            let statement = item.value
+            switch statement {
+                is parsed.Procedure_Statement as procedure_statement {
+                    self.check_procedure_statement(procedure_statement)
+                }
+                is parsed.Assignment_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Assignment_Statement")
+                }
+                is parsed.Block_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Block_Statement")
+                }
+                is parsed.Break_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Break_Statement")
+                }
+                is parsed.Const_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Const_Statement")
+                }
+                is parsed.Defer_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Defer_Statement")
+                }
+                is parsed.Expression_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Expression_Statement")
+                }
+                is parsed.If_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.If_Statement")
+                }
+                is parsed.Import_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Import_Statement")
+                }
+                is parsed.Loop_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Loop_Statement")
+                }
+                is parsed.Raise_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Raise_Statement")
+                }
+                is parsed.Return_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Return_Statement")
+                }
+                is parsed.Switch_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Switch_Statement")
+                }
+                is parsed.Type_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Type_Statement")
+                }
+                is parsed.Variable_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Variable_Statement")
+                }
+                is parsed.While_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.While_Statement")
+                }
+                is parsed.Yield_Statement as _ignored {
+                    self.panic("Not supported yet: parsed.Yield_Statement")
+                }
+                is nil {
+                }
+            }
+            item = item.next
+        }
+        module = module.next_module
+    }
+
+    return checked_package
+}
+
+proc (^Checker).check_procedure_statement(self, anon procedure_statement: parsed.Procedure_Statement) !> error.Error {
+    self.current_source_position = procedure_statement.super.source_position
+    let name = procedure_statement.name.super.lexeme
+
+    let return_type: ^checked.Type = null
+    if procedure_statement.return_type != null {
+        return_type = self.resolve_type(procedure_statement.return_type)
+    }
+
+    let parameters = collections.List<checked.Procedure_Parameter>()
+    let procedure_type = alloc checked.Procedure_Type(
+        parameters: parameters
+        return_type: return_type
+    )
+
+    let body: ^checked.Statement = null
+    if not procedure_statement.is_external and procedure_statement.body != null {
+        self.return_type = return_type
+        switch procedure_statement.body {
+            is parsed.Block_Statement as block_statement {
+                body = self.check_block_statement(block_statement)
+            }
+            is parsed.Assignment_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Assignment_Statement")
+            }
+            is parsed.Break_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Break_Statement")
+            }
+            is parsed.Const_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Const_Statement")
+            }
+            is parsed.Defer_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Defer_Statement")
+            }
+            is parsed.Expression_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Expression_Statement")
+            }
+            is parsed.If_Statement as _ignored {
+                self.panic("Not supported yet: parsed.If_Statement")
+            }
+            is parsed.Import_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Import_Statement")
+            }
+            is parsed.Loop_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Loop_Statement")
+            }
+            is parsed.Procedure_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Procedure_Statement")
+            }
+            is parsed.Raise_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Raise_Statement")
+            }
+            is parsed.Return_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Return_Statement")
+            }
+            is parsed.Switch_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Switch_Statement")
+            }
+            is parsed.Type_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Type_Statement")
+            }
+            is parsed.Variable_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Variable_Statement")
+            }
+            is parsed.While_Statement as _ignored {
+                self.panic("Not supported yet: parsed.While_Statement")
+            }
+            is parsed.Yield_Statement as _ignored {
+                self.panic("Not supported yet: parsed.Yield_Statement")
+            }
+            is nil {
+            }
+        }
+    }
+
+    let symbol = self.alloc_symbol(checked.Procedure_Symbol(
+        name: name
+        procedure_type: procedure_type
+        body: body
+    ))
+    self.global_symbols.append(name: name, symbol: symbol)
+    return
+}
+
+proc (^Checker).check_block_statement(self, anon parsed_block: parsed.Block_Statement) -> ^checked.Statement !> error.Error {
+    let statements = collections.List<^checked.Statement>()
+    let item = parsed_block.statements.first
+    while item != null {
+        let checked_statement = self.check_statement(item.value)
+        if checked_statement != null {
+            statements.append(value: checked_statement)
+        }
+        item = item.next
+    }
+    return self.alloc_statement(checked.Block_Statement(statements: statements))
+}
+
+proc (^Checker).check_statement(self, anon parsed_statement: ^parsed.Statement) -> ^checked.Statement !> error.Error {
+    switch parsed_statement {
+        is parsed.Block_Statement as block_statement {
+            return self.check_block_statement(block_statement)
+        }
+        is parsed.Return_Statement as return_statement {
+            return self.check_return_statement(return_statement)
+        }
+        is parsed.Assignment_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Assignment_Statement")
+        }
+        is parsed.Break_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Break_Statement")
+        }
+        is parsed.Const_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Const_Statement")
+        }
+        is parsed.Defer_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Defer_Statement")
+        }
+        is parsed.Expression_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Expression_Statement")
+        }
+        is parsed.If_Statement as _ignored {
+            self.panic("Not supported yet: parsed.If_Statement")
+        }
+        is parsed.Import_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Import_Statement")
+        }
+        is parsed.Loop_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Loop_Statement")
+        }
+        is parsed.Procedure_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Procedure_Statement")
+        }
+        is parsed.Raise_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Raise_Statement")
+        }
+        is parsed.Switch_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Switch_Statement")
+        }
+        is parsed.Type_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Type_Statement")
+        }
+        is parsed.Variable_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Variable_Statement")
+        }
+        is parsed.While_Statement as _ignored {
+            self.panic("Not supported yet: parsed.While_Statement")
+        }
+        is parsed.Yield_Statement as _ignored {
+            self.panic("Not supported yet: parsed.Yield_Statement")
+        }
+        is nil {
+        }
+    }
+    raise self.error("Unsupported statement")
+}
+
+proc (^Checker).check_return_statement(self, anon return_statement: parsed.Return_Statement) -> ^checked.Statement !> error.Error {
+    self.current_source_position = return_statement.super.source_position
+    let expression: ^checked.Expression = null
+    if return_statement.expression != null {
+        expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
+    } else if self.return_type != null {
+        raise self.error("Missing return expression")
+    }
+    return self.alloc_statement(checked.Return_Statement(expression: expression))
+}
+
+proc (^Checker).check_expression(self, anon parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression !> error.Error {
+    switch parsed_expression {
+        is parsed.Integer_Expression as integer_expression {
+            return self.check_integer_expression(integer_expression, expected_type: expected_type)
+        }
+        is parsed.Add_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Add_Expression")
+        }
+        is parsed.Address_Of_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Address_Of_Expression")
+        }
+        is parsed.Alloc_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Alloc_Expression")
+        }
+        is parsed.Array_Access_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Array_Access_Expression")
+        }
+        is parsed.Block_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Block_Expression")
+        }
+        is parsed.Call_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Call_Expression")
+        }
+        is parsed.Character_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Character_Expression")
+        }
+        is parsed.Dereference_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Dereference_Expression")
+        }
+        is parsed.Divide_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Divide_Expression")
+        }
+        is parsed.Equals_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Equals_Expression")
+        }
+        is parsed.Greater_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Greater_Expression")
+        }
+        is parsed.Greater_Or_Equals_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Greater_Or_Equals_Expression")
+        }
+        is parsed.Identifier_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Identifier_Expression")
+        }
+        is parsed.Is_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Is_Expression")
+        }
+        is parsed.Less_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Less_Expression")
+        }
+        is parsed.Less_Or_Equals_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Less_Or_Equals_Expression")
+        }
+        is parsed.Logic_And_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Logic_And_Expression")
+        }
+        is parsed.Logic_Or_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Logic_Or_Expression")
+        }
+        is parsed.Member_Access_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Member_Access_Expression")
+        }
+        is parsed.Modulo_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Modulo_Expression")
+        }
+        is parsed.Multiply_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Multiply_Expression")
+        }
+        is parsed.Negate_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Negate_Expression")
+        }
+        is parsed.Not_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Not_Expression")
+        }
+        is parsed.Not_Equals_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Not_Equals_Expression")
+        }
+        is parsed.Subtract_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Subtract_Expression")
+        }
+        is parsed.String_Expression as _ignored {
+            self.panic("Not supported yet: parsed.String_Expression")
+        }
+        is parsed.Try_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Try_Expression")
+        }
+        is parsed.Type_Alignment_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Type_Alignment_Expression")
+        }
+        is parsed.Type_Size_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Type_Size_Expression")
+        }
+        is parsed.Type_Specialization_Expression as _ignored {
+            self.panic("Not supported yet: parsed.Type_Specialization_Expression")
+        }
+        is nil {
+        }
+    }
+    raise self.error("Unsupported expression")
+}
+
+proc (^Checker).check_integer_expression(self, anon integer_expression: parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression !> error.Error {
+    self.current_source_position = integer_expression.source_position
+    let expression_type = expected_type
+    if expression_type == null {
+        let i32_symbol = self.builtin_symbols.find("i32")
+        switch i32_symbol {
+            is checked.Type_Symbol as type_symbol {
+                expression_type = type_symbol.type
+            }
+            is checked.Procedure_Symbol as _ignored {
+                self.panic("Not supported yet: checked.Procedure_Symbol")
+            }
+            is nil {
+            }
+        }
+    }
+    if expression_type == null {
+        raise self.error("Cannot infer type of integer literal")
+    }
+    return self.alloc_expression(checked.Integer_Expression(
+        value: integer_expression.token.value
+        type: expression_type
+    ))
+}
+
+proc (^Checker).resolve_type(self, anon parsed_type: ^parsed.Type) -> ^checked.Type !> error.Error {
+    switch parsed_type {
+        is parsed.Named_Type as named_type {
+            self.current_source_position = named_type.source_position
+            let name = named_type.name.super.lexeme
+            let symbol = self.global_symbols.find(name)
+            if symbol == null {
+                symbol = self.builtin_symbols.find(name)
+            }
+            if symbol == null {
+                raise self.error("Unknown type")
+            }
+            switch symbol {
+                is checked.Type_Symbol as type_symbol {
+                    return type_symbol.type
+                }
+                is checked.Procedure_Symbol as _ignored {
+                    self.panic("Not supported yet: checked.Procedure_Symbol")
+                }
+                is nil {
+                }
+            }
+            raise self.error("Symbol is not a type")
+        }
+        is parsed.Multi_Pointer_Type as _ignored {
+            self.panic("Not supported yet: parsed.Multi_Pointer_Type")
+        }
+        is parsed.Optional_Type as _ignored {
+            self.panic("Not supported yet: parsed.Optional_Type")
+        }
+        is parsed.Pointer_Type as _ignored {
+            self.panic("Not supported yet: parsed.Pointer_Type")
+        }
+        is parsed.Procedure_Type as _ignored {
+            self.panic("Not supported yet: parsed.Procedure_Type")
+        }
+        is parsed.Trait_Receiver_Type as _ignored {
+            self.panic("Not supported yet: parsed.Trait_Receiver_Type")
+        }
+        is nil {
+        }
+    }
+    raise self.error("Unsupported type")
+}
+
+proc (^Checker).error(self, anon message: str) -> error.Error {
+    return error.Error(
+        message: message
+        source: self.current_source
+        source_position: self.current_source_position
+    )
+}
+
+proc (^Checker).panic(self, anon message: str) {
+    libc.stderr.write("compiler/checker: \e[0;91mPanic!\e[0m ").write(message).end_line()
+    libc.exit(1)
+}
+
+proc (^Checker).alloc_type(self, anon type: checked.Type) -> ^checked.Type !> error.Error {
+    let result = try allocator.alloc(size: type_size(checked.Type), alignment: type_alignment(checked.Type)) else {
+        raise self.error(error.message)
+    }
+    let typed_result = result.as(^checked.Type)
+    typed_result.^ = type
+    return typed_result
+}
+
+proc (^Checker).alloc_symbol(self, anon symbol: checked.Symbol) -> ^checked.Symbol !> error.Error {
+    let result = try allocator.alloc(size: type_size(checked.Symbol), alignment: type_alignment(checked.Symbol)) else {
+        raise self.error(error.message)
+    }
+    let typed_result = result.as(^checked.Symbol)
+    typed_result.^ = symbol
+    return typed_result
+}
+
+proc (^Checker).alloc_statement(self, anon statement: checked.Statement) -> ^checked.Statement !> error.Error {
+    let result = try allocator.alloc(size: type_size(checked.Statement), alignment: type_alignment(checked.Statement)) else {
+        raise self.error(error.message)
+    }
+    let typed_result = result.as(^checked.Statement)
+    typed_result.^ = statement
+    return typed_result
+}
+
+proc (^Checker).alloc_expression(self, anon expression: checked.Expression) -> ^checked.Expression !> error.Error {
+    let result = try allocator.alloc(size: type_size(checked.Expression), alignment: type_alignment(checked.Expression)) else {
+        raise self.error(error.message)
+    }
+    let typed_result = result.as(^checked.Expression)
+    typed_result.^ = expression
+    return typed_result
+}

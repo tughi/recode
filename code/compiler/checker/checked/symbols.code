@@ -1,0 +1,51 @@
+type Symbol = variant {
+    Procedure_Symbol
+    Type_Symbol
+}
+
+type Type_Symbol = struct {
+    name: str
+    type: ^Type
+}
+
+type Procedure_Symbol = struct {
+    name: str
+    procedure_type: ^Procedure_Type
+    body: ^Statement
+}
+
+type Symbol_Entry = struct {
+    name: str
+    symbol: ^Symbol
+    next: ^Symbol_Entry
+}
+
+type Symbols = struct {
+    parent: ^Symbols
+    first: ^Symbol_Entry
+    last: ^Symbol_Entry
+}
+
+proc (^Symbols).find(self, anon name: str) -> ^Symbol {
+    let entry = self.first
+    while entry != null {
+        if entry.name.equals(name) {
+            return entry.symbol
+        }
+        entry = entry.next
+    }
+    if self.parent != null {
+        return self.parent.find(name)
+    }
+    return null
+}
+
+proc (^Symbols).append(self, name: str, symbol: ^Symbol) {
+    let entry = alloc Symbol_Entry(name: name, symbol: symbol, next: null)
+    if self.first == null {
+        self.first = entry
+    } else {
+        self.last.next = entry
+    }
+    self.last = entry
+}

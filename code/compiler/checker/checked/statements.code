@@ -1,0 +1,14 @@
+import collections
+
+type Statement = variant {
+    Block_Statement
+    Return_Statement
+}
+
+type Block_Statement = struct {
+    statements: collections.List<^Statement>
+}
+
+type Return_Statement = struct {
+    expression: ^Expression
+}

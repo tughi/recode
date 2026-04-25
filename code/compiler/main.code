@@ -1,4 +1,5 @@
 import allocator
+import compiler.checker
 import compiler.parser
 import compiler.parser.dump
 import compiler.source
@@ -82,6 +83,11 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     }
 
     let builtin_package = try parser.parse(source_dir: "code", package_name: "builtin", binary_name: nil) else {
+        libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
+        return 1
+    }
+
+    try checker.check(builtin_package: builtin_package, main_package: main_package) else {
         libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
         return 1
     }

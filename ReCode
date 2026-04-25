@@ -502,7 +502,9 @@ def compiler(skip_tests=False):
             continue
 
         logger.info(f"Compiling: {test_dir}")
-        if run(["build/compiler/ReCode", "-o", f"build/{test_dir}/generated", "-n", "test", test_dir], check=False).returncode != 0:
+        compiler_command = ["build/compiler/ReCode", "-o", f"build/{test_dir}/generated", "-n", "test", test_dir]
+        if run(compiler_command, check=False).returncode != 0:
+            trace(*compiler_command)
             exit(1)
 
 
