@@ -1,0 +1,10 @@
+type String = struct {
+    lexeme: builtin.String
+}
+
+proc string(anon lexeme: str) -> String {
+    let lexeme_copy = lexeme
+    return String(
+        lexeme: (^lexeme_copy).as(^builtin.String).^
+    )
+}

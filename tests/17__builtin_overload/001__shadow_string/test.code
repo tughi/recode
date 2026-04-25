@@ -1,0 +1,8 @@
+type String = struct {
+    value: i32
+}
+
+proc main() -> i32 {
+    let s = String(value: 42)
+    return s.value - 42
+}

@@ -919,6 +919,30 @@ import source
 let span = source.Span(start: 0, end: 42)
 ```
 
+### The `builtin` Package
+
+All primitive types (`i32`, `str`, `String`, etc.) live in the implicit `builtin` package. Normally they are accessed without a prefix, but if a package defines a type with the same name it shadows the builtin. In that case, use the `builtin.` qualifier to refer to the original:
+
+```code
+// A user-defined String that wraps the builtin one
+type String = struct {
+    lexeme: builtin.String
+}
+
+// A user-defined i32 that wraps the builtin one
+type i32 = struct {
+    value: builtin.i32
+}
+
+// Procedure returning the builtin type explicitly
+proc main() -> builtin.i32 {
+    let wrapped = i32(value: 0)
+    return wrapped.value
+}
+```
+
+The `builtin` qualifier is also available even when there is no shadowing — it is simply redundant in that case.
+
 ### Multi-Level Packages
 
 For a dotted import path the namespace prefix is always the **last** component only:

@@ -68,7 +68,7 @@ proc (^Parser).parse_package(self, source_dir: str, package: ^parsed.Package) !>
     }
     // TODO: defer libc.close_dir(package_dir)
 
-    let last_module: ^parsed.Package_Module = null
+    let last_module: ^parsed.Module = null
 
     loop {
         let package_dir_entry = libc.read_dir(package_dir)
@@ -87,7 +87,7 @@ proc (^Parser).parse_package(self, source_dir: str, package: ^parsed.Package) !>
 
             let module_statements = self.parse_module(module_source)
 
-            let module = self.alloc(module: parsed.Package_Module(
+            let module = self.alloc(module: parsed.Module(
                 source: module_source
                 statements: module_statements
                 next_module: null
@@ -161,8 +161,8 @@ proc (^Parser).alloc(self, type_specifier: parsed.Type_Specifier) -> ^parsed.Typ
     return result
 }
 
-proc (^Parser).alloc(self, module: parsed.Package_Module) -> ^parsed.Package_Module !> error.Error {
-    let result = self.allocate(size: type_size(parsed.Package_Module), alignment: type_alignment(parsed.Package_Module)).as(^parsed.Package_Module)
+proc (^Parser).alloc(self, module: parsed.Module) -> ^parsed.Module !> error.Error {
+    let result = self.allocate(size: type_size(parsed.Module), alignment: type_alignment(parsed.Module)).as(^parsed.Module)
     result.^ = module
     return result
 }

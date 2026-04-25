@@ -1228,9 +1228,11 @@ void generate_package_header(Checked_Source *checked_source, Checked_Package *ch
     while (checked_symbol != NULL) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__IMPORT && checked_symbol->package == checked_package) {
             Checked_Package *other_package = ((Checked_Import_Symbol *)checked_symbol)->other_package;
-            pWriter__write__cstring(generator.writer, "#include \"");
-            pWriter__write__package_name(generator.writer, other_package);
-            pWriter__write__cstring(generator.writer, ".h\"\n");
+            if (other_package != checked_source->builtin_package) {
+                pWriter__write__cstring(generator.writer, "#include \"");
+                pWriter__write__package_name(generator.writer, other_package);
+                pWriter__write__cstring(generator.writer, ".h\"\n");
+            }
         }
         checked_symbol = checked_symbol->next_symbol;
     }

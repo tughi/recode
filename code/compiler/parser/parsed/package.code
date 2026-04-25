@@ -2,10 +2,10 @@ import collections
 import compiler.error
 import compiler.source
 
-type Package_Module = struct {
+type Module = struct {
     source: source.Source
     statements: collections.List<^Statement>
-    next_module: ^Package_Module
+    next_module: ^Module
 }
 
 type Package = struct {
@@ -13,7 +13,7 @@ type Package = struct {
     is_root: bool
     import_source: source.Source
     import_source_position: usize
-    first_module: ^Package_Module
+    first_module: ^Module
     next_package: ^Package
 }
 

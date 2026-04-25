@@ -965,6 +965,7 @@ Checked_Yield_Statement *Checked_Yield_Statement__create(Source_Location locatio
 
 typedef struct Checked_Source {
     Checked_Package *first_package;
+    Checked_Package *builtin_package;
     struct Checked_Symbols *symbols;
 } Checked_Source;
 

@@ -138,6 +138,10 @@ Checker_Context *Checker_Context__create(Checker *checker, Checked_Package *pack
 Checked_Package *Checker__create_package(Checker *self, Parsed_Package *parsed_package) {
     Checked_Package *package = Checked_Package__create(parsed_package);
     Checked_Packages__append(self->packages, package);
+    if (self->packages->builtin_package != NULL) {
+        Checked_Import_Symbol *builtin_import = Checked_Import_Symbol__create(package, (Source_Location){}, String__create_from("builtin"), (Checked_Type *)self->builtin_types->package_type, self->packages->builtin_package);
+        Checked_Symbols__append_symbol(self->global_symbols, (Checked_Symbol *)builtin_import);
+    }
     return package;
 }
 
@@ -169,6 +173,17 @@ Checked_Named_Type *Checker__find_type(Checker *self, Checker_Context *context, 
         return type;
     }
     return Checked_Symbols__find_type(self->global_symbols->parent, NULL, name);
+}
+
+Checked_Named_Type *Checker__find_package_type(Checker *self, Checked_Package *package, String *name) {
+    Checked_Symbol *symbol = self->global_symbols->first_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE && symbol->package == package && String__equals_string(name, symbol->name)) {
+            return ((Checked_Type_Symbol *)symbol)->named_type;
+        }
+        symbol = symbol->next_symbol;
+    }
+    return NULL;
 }
 
 Checked_Result_Type *Checker__find_result_type(Checker *self, Checker_Context *context, Checked_Type *return_type, Checked_Type *raise_type) {
@@ -2442,7 +2457,7 @@ Checked_Named_Type *Checker__check_builtin_type_statement(Checker *self, Checker
 }
 
 Checked_Named_Type *Checker__check_external_type_statement(Checker *self, Checker_Context *context, Token *type_name) {
-    Checked_Named_Type *type = Checker__find_type(self, context, type_name->lexeme);
+    Checked_Named_Type *type = Checker__find_package_type(self, context->checked_package, type_name->lexeme);
     if (type != NULL) {
         if (type->name == type_name->lexeme) {
             return type;
@@ -2542,7 +2557,8 @@ void Checked_Type__append_dependencies(Checked_Type *self, Checked_Type *other, 
 }
 
 Checked_Named_Type *Checker__create_struct_type(Checker *self, Checker_Context *context, Token *type_name, Parsed_Struct_Type_Specifier *parsed_type_specifier) {
-    Checked_Named_Type *other_type = Checked_Symbols__find_type(self->global_symbols, context->checked_package, type_name->lexeme);
+    Checked_Package *struct_lookup_package = (self->global_symbols == self->builtin_types->symbols) ? NULL : context->checked_package;
+    Checked_Named_Type *other_type = Checker__find_package_type(self, struct_lookup_package, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__STRUCT && ((Checked_Struct_Type *)other_type)->parsed_type_specifier == parsed_type_specifier) {
             /* Type checked already */
@@ -2684,7 +2700,7 @@ Checked_Procedure_Type *Checker__check_procedure_type(Checker *self, Checker_Con
 }
 
 Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Checker_Context *context, Token *type_name, Parsed_Trait_Type_Specifier *parsed_trait_type_specifier) {
-    Checked_Named_Type *other_type = Checker__find_type(self, context, type_name->lexeme);
+    Checked_Named_Type *other_type = Checker__find_package_type(self, context->checked_package, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__TRAIT && Source_Location__equals(other_type->super.location, type_name->location)) {
             /* Type checked already */
@@ -2740,7 +2756,7 @@ Checked_Named_Type *Checker__check_trait_type_statement(Checker *self, Checker_C
 }
 
 Checked_Named_Type *Checker__create_variant_type(Checker *self, Checker_Context *context, Token *type_name, Parsed_Variant_Type_Specifier *parsed_variant_type_specifier) {
-    Checked_Named_Type *other_type = Checker__find_type(self, context, type_name->lexeme);
+    Checked_Named_Type *other_type = Checker__find_package_type(self, context->checked_package, type_name->lexeme);
     if (other_type != NULL) {
         if (other_type->super.kind == CHECKED_TYPE_KIND__VARIANT && Source_Location__equals(other_type->super.location, type_name->location)) {
             /* Type checked already */
@@ -3845,6 +3861,7 @@ Checked_Source *check(Parsed_Package *parsed_builtin_package, Parsed_Package *pa
 
     Checked_Source *checked_source = (Checked_Source *)malloc(sizeof(Checked_Source));
     checked_source->first_package = checker->packages->first_package;
+    checked_source->builtin_package = checker->packages->builtin_package;
     checked_source->symbols = checker->global_symbols;
 
     return checked_source;
