@@ -567,38 +567,33 @@ proc (^Checker).panic(self, anon message: str) {
     libc.exit(1)
 }
 
-proc (^Checker).alloc_type(self, anon type: checked.Type) -> ^checked.Type !> error.Error {
-    let result = try allocator.alloc(size: type_size(checked.Type), alignment: type_alignment(checked.Type)) else {
-        raise self.error(error.message)
+proc (^Checker).allocate(self, size: usize, alignment: usize) -> ^Any {
+    return try allocator.alloc(size: size, alignment: alignment) else {
+        self.panic(error.message)
+        yield null
     }
-    let typed_result = result.as(^checked.Type)
+}
+
+proc (^Checker).alloc_type(self, anon type: checked.Type) -> ^checked.Type {
+    let typed_result = self.allocate(size: type_size(checked.Type), alignment: type_alignment(checked.Type)).as(^checked.Type)
     typed_result.^ = type
     return typed_result
 }
 
-proc (^Checker).alloc_symbol(self, anon symbol: checked.Symbol) -> ^checked.Symbol !> error.Error {
-    let result = try allocator.alloc(size: type_size(checked.Symbol), alignment: type_alignment(checked.Symbol)) else {
-        raise self.error(error.message)
-    }
-    let typed_result = result.as(^checked.Symbol)
+proc (^Checker).alloc_symbol(self, anon symbol: checked.Symbol) -> ^checked.Symbol {
+    let typed_result = self.allocate(size: type_size(checked.Symbol), alignment: type_alignment(checked.Symbol)).as(^checked.Symbol)
     typed_result.^ = symbol
     return typed_result
 }
 
-proc (^Checker).alloc_statement(self, anon statement: checked.Statement) -> ^checked.Statement !> error.Error {
-    let result = try allocator.alloc(size: type_size(checked.Statement), alignment: type_alignment(checked.Statement)) else {
-        raise self.error(error.message)
-    }
-    let typed_result = result.as(^checked.Statement)
+proc (^Checker).alloc_statement(self, anon statement: checked.Statement) -> ^checked.Statement {
+    let typed_result = self.allocate(size: type_size(checked.Statement), alignment: type_alignment(checked.Statement)).as(^checked.Statement)
     typed_result.^ = statement
     return typed_result
 }
 
-proc (^Checker).alloc_expression(self, anon expression: checked.Expression) -> ^checked.Expression !> error.Error {
-    let result = try allocator.alloc(size: type_size(checked.Expression), alignment: type_alignment(checked.Expression)) else {
-        raise self.error(error.message)
-    }
-    let typed_result = result.as(^checked.Expression)
+proc (^Checker).alloc_expression(self, anon expression: checked.Expression) -> ^checked.Expression {
+    let typed_result = self.allocate(size: type_size(checked.Expression), alignment: type_alignment(checked.Expression)).as(^checked.Expression)
     typed_result.^ = expression
     return typed_result
 }

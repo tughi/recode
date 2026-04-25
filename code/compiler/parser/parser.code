@@ -13,6 +13,8 @@ type Parser = struct {
     alignment: i32
     first_package: ^parsed.Package
     last_package: ^parsed.Package
+    current_package: ^parsed.Package
+    types: collections.Map<str, ^parsed.Statement>
 }
 
 proc parse(source_dir: str, package_name: ?str, binary_name: ?str) -> ^parsed.Package !> error.Error {
@@ -37,6 +39,7 @@ proc parse(source_dir: str, package_name: ?str, binary_name: ?str) -> ^parsed.Pa
     parser.last_package = package
 
     while package != null {
+        parser.current_package = package
         parser.parse_package(source_dir: source_dir, package: package)
         package = package.next_package
     }
@@ -119,7 +122,9 @@ proc (^Parser).parse_module(self, anon module_source: source.Source) -> collecti
             statements.append(value: self.parse_import_statement())
             self.lexer.consume_end_of_line()
         } else if self.lexer.matches(match.keyword("type")) {
-            statements.append(value: self.parse_type_statement())
+            let type_statement = self.parse_type_statement()
+            statements.append(value: type_statement)
+            self.register_type(type_statement)
             self.lexer.consume_end_of_line()
         } else if self.lexer.matches(match.keyword("const")) {
             statements.append(value: self.parse_const_statement())
@@ -136,37 +141,37 @@ proc (^Parser).parse_module(self, anon module_source: source.Source) -> collecti
     return statements
 }
 
-proc (^Parser).alloc(self, expression: parsed.Expression) -> ^parsed.Expression !> error.Error {
+proc (^Parser).alloc(self, expression: parsed.Expression) -> ^parsed.Expression {
     let result = self.allocate(size: type_size(parsed.Expression), alignment: type_alignment(parsed.Expression)).as(^parsed.Expression)
     result.^ = expression
     return result
 }
 
-proc (^Parser).alloc(self, statement: parsed.Statement) -> ^parsed.Statement !> error.Error {
+proc (^Parser).alloc(self, statement: parsed.Statement) -> ^parsed.Statement {
     let result = self.allocate(size: type_size(parsed.Statement), alignment: type_alignment(parsed.Statement)).as(^parsed.Statement)
     result.^ = statement
     return result
 }
 
-proc (^Parser).alloc(self, type: parsed.Type) -> ^parsed.Type !> error.Error {
+proc (^Parser).alloc(self, type: parsed.Type) -> ^parsed.Type {
     let result = self.allocate(size: type_size(parsed.Type), alignment: type_alignment(parsed.Type)).as(^parsed.Type)
     result.^ = type
     return result
 }
 
-proc (^Parser).alloc(self, type_specifier: parsed.Type_Specifier) -> ^parsed.Type_Specifier !> error.Error {
+proc (^Parser).alloc(self, type_specifier: parsed.Type_Specifier) -> ^parsed.Type_Specifier {
     let result = self.allocate(size: type_size(parsed.Type_Specifier), alignment: type_alignment(parsed.Type_Specifier)).as(^parsed.Type_Specifier)
     result.^ = type_specifier
     return result
 }
 
-proc (^Parser).alloc(self, module: parsed.Module) -> ^parsed.Module !> error.Error {
+proc (^Parser).alloc(self, module: parsed.Module) -> ^parsed.Module {
     let result = self.allocate(size: type_size(parsed.Module), alignment: type_alignment(parsed.Module)).as(^parsed.Module)
     result.^ = module
     return result
 }
 
-proc (^Parser).alloc(self, package: parsed.Package) -> ^parsed.Package !> error.Error {
+proc (^Parser).alloc(self, package: parsed.Package) -> ^parsed.Package {
     let result = self.allocate(size: type_size(parsed.Package), alignment: type_alignment(parsed.Package)).as(^parsed.Package)
     result.^ = package
     return result
@@ -1315,9 +1320,26 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
     ))
 }
 
-proc (^Parser).allocate(self, size: usize, alignment: usize) -> ^Any !> error.Error {
+proc (^Parser).panic(self, anon message: str) {
+    libc.stderr.write("compiler/parser: \e[0;91mPanic!\e[0m ").write(message).end_line()
+    libc.exit(1)
+}
+
+proc (^Parser).register_type(self, anon statement: ^parsed.Statement) {
+    let unwrapped = statement.^
+    if unwrapped is parsed.Type_Statement as type_statement {
+        let builder = string.new_builder()
+        let absolute_name = builder.append(self.current_package.name).append_char('.').append(type_statement.name.lexeme).build()
+        try self.types.put(key: absolute_name, value: statement) else {
+            self.panic(error.message)
+        }
+    }
+}
+
+proc (^Parser).allocate(self, size: usize, alignment: usize) -> ^Any {
     return try allocator.alloc(size: size, alignment: alignment) else {
-        raise self.lexer.error(error.message)
+        self.panic(error.message)
+        yield null
     }
 }
 

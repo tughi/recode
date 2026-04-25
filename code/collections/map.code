@@ -1,0 +1,45 @@
+import allocator
+
+type Map<K, V> = struct {
+    first: ^Map_Item<K, V>
+    last: ^Map_Item<K, V>
+    length: usize
+}
+
+type Map_Item<K, V> = struct {
+    key: K
+    value: V
+    next: ^Map_Item<K, V>
+}
+
+proc (^Map<K, V>).put<K, V>(self, key: K, value: V) !> allocator.Out_Of_Memory {
+    let item = self.first
+    while item != null {
+        if item.key.equals(key) {
+            item.value = value
+            return
+        }
+        item = item.next
+    }
+    let new_item = allocator.alloc(size: type_size(Map_Item<K, V>), alignment: type_alignment(Map_Item<K, V>)).as(^Map_Item<K, V>)
+    new_item.^ = Map_Item<K, V>(key: key, value: value, next: null)
+    if self.first == null {
+        self.first = new_item
+    } else {
+        self.last.next = new_item
+    }
+    self.last = new_item
+    self.length = self.length + 1
+    return
+}
+
+proc (^Map<K, V>).get<K, V>(self, key: K) -> ^Map_Item<K, V> {
+    let item = self.first
+    while item != null {
+        if item.key.equals(key) {
+            return item
+        }
+        item = item.next
+    }
+    return null
+}
