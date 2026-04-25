@@ -1,0 +1,14 @@
+proc main() -> i32 {
+    return try test() else error - 42
+}
+
+proc raises_42() -> i32 !> i32 {
+    raise 42
+}
+
+proc test() -> i32 !> i32 {
+    let cleanup = 0
+    defer cleanup = 1
+    let value = raises_42()
+    return value
+}

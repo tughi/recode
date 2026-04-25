@@ -886,6 +886,26 @@ void Generator__generate_statement_inlined(Generator *self, Checked_Statement *s
     }
     case CHECKED_STATEMENT_KIND__RETURN: {
         Checked_Defer_Statement *defer_statement = self->top_defer_statement;
+        if (inlined && defer_statement != NULL) {
+            // When inlined (e.g., as an if/else branch), wrap defers + return in {}
+            // to prevent them from escaping the inlined context.
+            pWriter__write__cstring(self->writer, "{\n");
+            self->indentation++;
+            while (defer_statement != NULL) {
+                Generator__generate_statement(self, defer_statement->statement);
+                defer_statement = defer_statement->prev_defer_statement;
+            }
+            // Temporarily clear the defer stack so the recursive call doesn't re-emit them.
+            Checked_Defer_Statement *saved_top_defer = self->top_defer_statement;
+            self->top_defer_statement = NULL;
+            Generator__generate_statement(self, statement);
+            self->top_defer_statement = saved_top_defer;
+            self->indentation--;
+            Generator__write_source_location(self, statement->location);
+            Generator__write_indentation(self);
+            pWriter__write__cstring(self->writer, "}");
+            return;
+        }
         while (defer_statement != NULL) {
             Generator__generate_statement_inlined(self, defer_statement->statement, inlined);
             defer_statement = defer_statement->prev_defer_statement;
