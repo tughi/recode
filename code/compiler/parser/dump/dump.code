@@ -737,6 +737,9 @@ proc (^parsed.Type_Specifier).dump(self, depth: i32) {
         return
     }
     switch self {
+        is parsed.Builtin_Type_Specifier as s {
+            s.dump()
+        }
         is parsed.External_Type_Specifier as s {
             s.dump()
         }
@@ -752,6 +755,10 @@ proc (^parsed.Type_Specifier).dump(self, depth: i32) {
         is nil {
         }
     }
+}
+
+proc (^parsed.Builtin_Type_Specifier).dump(self) {
+    libc.stdout.write("builtin")
 }
 
 proc (^parsed.External_Type_Specifier).dump(self) {

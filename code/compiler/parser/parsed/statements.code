@@ -166,10 +166,15 @@ type Type_Statement = struct {
 }
 
 type Type_Specifier = variant {
+    Builtin_Type_Specifier
     External_Type_Specifier
     Struct_Type_Specifier
     Trait_Type_Specifier
     Variant_Type_Specifier
+}
+
+type Builtin_Type_Specifier = struct {
+    source_position: usize
 }
 
 type External_Type_Specifier = struct {

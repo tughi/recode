@@ -1105,7 +1105,9 @@ proc (^Parser).parse_type(self) -> ^parsed.Type !> error.Error {
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
-    if self.lexer.matches(match.keyword("external")) {
+    if self.lexer.matches(match.keyword("builtin")) {
+        return self.parse_builtin_type_specifier()
+    } else if self.lexer.matches(match.keyword("external")) {
         return self.parse_external_type_specifier()
     } else if self.lexer.matches(match.keyword("trait")) {
         return self.parse_trait_type_specifier()
@@ -1113,6 +1115,12 @@ proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier !> error.Err
         return self.parse_variant_type_specifier()
     }
     return self.parse_struct_type_specifier()
+}
+
+proc (^Parser).parse_builtin_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {
+    let source_position = self.lexer.source_position
+    self.lexer.consume_keyword("builtin")
+    return self.alloc(type_specifier: parsed.Builtin_Type_Specifier(source_position: source_position))
 }
 
 proc (^Parser).parse_external_type_specifier(self) -> ^parsed.Type_Specifier !> error.Error {

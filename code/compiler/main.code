@@ -76,11 +76,27 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
         }
     }
 
-    let package = try parser.parse(source_dir: source_dir, package_name: package_name, binary_name: binary_name) else {
+    let main_package = try parser.parse(source_dir: source_dir, package_name: package_name, binary_name: binary_name) else {
         libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
         return 1
     }
 
+    let builtin_package = try parser.parse(source_dir: "code", package_name: "builtin", binary_name: nil) else {
+        libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
+        return 1
+    }
+
+    let package = main_package
+    while package != null {
+        let module = package.first_module
+        while module != null {
+            module.statements.dump()
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+
+    package = builtin_package
     while package != null {
         let module = package.first_module
         while module != null {
