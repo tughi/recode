@@ -1,0 +1,4 @@
+$main(): i32 {
+    %result: i32 = const 0
+    ret %result
+}
