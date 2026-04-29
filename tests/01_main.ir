@@ -1,4 +1,5 @@
 $main(): i32 {
+@1:
     %result: i32 = const 0
     ret %result
 }

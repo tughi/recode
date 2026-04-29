@@ -1,0 +1,84 @@
+#pragma once
+
+#include "String.h"
+#include <stddef.h>
+
+typedef struct IR_Type {
+    String name;
+} IR_Type;
+
+typedef struct IR_Value {
+    String name;
+    IR_Type type;
+} IR_Value;
+
+typedef struct {
+    IR_Value **items;
+    size_t size;
+    size_t capacity;
+} IR_Value_List;
+
+void ir_value_list_add(IR_Value_List *list, IR_Value *value);
+
+typedef struct IR_Const_Instruction {
+    String integer_lexeme;
+} IR_Const_Instruction;
+
+typedef enum IR_Instruction_Kind {
+    IR_INSTRUCTION__CALL,
+    IR_INSTRUCTION__CONST,
+    IR_INSTRUCTION__RET,
+} IR_Instruction_Kind;
+
+typedef struct IR_Instruction IR_Instruction;
+
+typedef struct {
+    IR_Instruction **items;
+    size_t size;
+    size_t capacity;
+} IR_Instruction_List;
+
+void ir_instruction_list_add(IR_Instruction_List *list, IR_Instruction *instruction);
+
+struct IR_Instruction {
+    IR_Value result;
+    IR_Instruction_Kind kind;
+    IR_Value_List arguments;
+    union {
+        IR_Const_Instruction const_instruction;
+    };
+};
+
+typedef struct IR_Block IR_Block;
+
+typedef struct {
+    IR_Block **items;
+    size_t size;
+    size_t capacity;
+} IR_Block_List;
+
+void ir_block_list_add(IR_Block_List *list, IR_Block *block);
+
+struct IR_Block {
+    size_t label;
+    IR_Instruction_List instructions;
+};
+
+typedef struct IR_Function {
+    String name;
+    IR_Value_List parameters;
+    IR_Type return_type;
+    IR_Block_List blocks;
+} IR_Function;
+
+typedef struct {
+    IR_Function *items;
+    size_t size;
+    size_t capacity;
+} IR_Function_List;
+
+void ir_function_list_add(IR_Function_List *list, IR_Function function);
+
+typedef struct IR_Module {
+    IR_Function_List functions;
+} IR_Module;

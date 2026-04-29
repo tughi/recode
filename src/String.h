@@ -7,11 +7,11 @@ typedef struct {
     size_t length;
 } String;
 
-static inline String string_from(const char *s) {
-    String str = {s, strlen(s)};
-    return str;
+static inline String string_from(const char *source) {
+    String string = {source, strlen(source)};
+    return string;
 }
 
-static inline int string_ends_with(String s, String suffix) {
-    return s.length >= suffix.length && memcmp(s.content + s.length - suffix.length, suffix.content, suffix.length) == 0;
+static inline int string_ends_with(String string, String suffix) {
+    return string.length >= suffix.length && memcmp(string.content + string.length - suffix.length, suffix.content, suffix.length) == 0;
 }

@@ -8,6 +8,6 @@ String file_read(FILE *file) {
     char *buffer = malloc(length + 1);
     fread(buffer, 1, length, file);
     buffer[length] = '\0';
-    String str = {buffer, length};
-    return str;
+    String result = {buffer, length};
+    return result;
 }
