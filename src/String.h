@@ -15,3 +15,12 @@ static inline String string_from(const char *source) {
 static inline int string_ends_with(String string, String suffix) {
     return string.length >= suffix.length && memcmp(string.content + string.length - suffix.length, suffix.content, suffix.length) == 0;
 }
+
+static inline int string_equals(String a, String b) {
+    return a.length == b.length && memcmp(a.content, b.content, a.length) == 0;
+}
+
+static inline int string_equals_cstr(String string, const char *literal) {
+    size_t length = strlen(literal);
+    return string.length == length && memcmp(string.content, literal, length) == 0;
+}

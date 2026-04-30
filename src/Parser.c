@@ -52,19 +52,14 @@ static String expect_identifier(Parser *parser) {
     return name;
 }
 
-static String expect_integer(Parser *parser) {
+static int64_t expect_integer(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__INTEGER) {
         fprintf(stderr, "Parser: expected integer at position %zu\n", current_position(parser));
         exit(1);
     }
-    String lexeme = parser->current.integer.lexeme;
+    int64_t value = parser->current.integer.value;
     advance(parser);
-    return lexeme;
-}
-
-static bool string_equals(String string, const char *literal) {
-    size_t length = strlen(literal);
-    return string.length == length && memcmp(string.content, literal, length) == 0;
+    return value;
 }
 
 static IR_Value *ir_value_list_lookup(IR_Value_List *list, String name) {
@@ -142,7 +137,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     instruction->result.name = result_name;
     instruction->result.type.name = result_type_name;
 
-    if (string_equals(mnemonic, "call")) {
+    if (string_equals_cstr(mnemonic, "call")) {
         skip_spaces(parser);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
 
@@ -158,11 +153,16 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
-    if (string_equals(mnemonic, "const")) {
+    if (string_equals_cstr(mnemonic, "const")) {
         skip_spaces(parser);
-        String integer = expect_integer(parser);
+        bool negative = false;
+        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
+            negative = true;
+            advance(parser);
+        }
+        int64_t value = expect_integer(parser);
         instruction->kind = IR_INSTRUCTION__CONST;
-        instruction->const_instruction.integer_lexeme = integer;
+        instruction->const_instruction.value = negative ? -value : value;
         return instruction;
     }
 
@@ -191,7 +191,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
     if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
         String mnemonic = parser->current.identifier.lexeme;
         advance(parser);
-        if (string_equals(mnemonic, "ret")) {
+        if (string_equals_cstr(mnemonic, "ret")) {
             return parse_ret_instruction(parser);
         }
         fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
@@ -263,13 +263,8 @@ static IR_Function parse_function(Parser *parser) {
         }
 
         expect_other(parser, '@');
-        String label_lexeme = expect_integer(parser);
+        size_t label = (size_t)expect_integer(parser);
         expect_other(parser, ':');
-
-        size_t label = 0;
-        for (size_t i = 0; i < label_lexeme.length; i++) {
-            label = label * 10 + (size_t)(label_lexeme.content[i] - '0');
-        }
 
         IR_Block *block = alloc_block(label);
         ir_block_list_add(&function.blocks, block);

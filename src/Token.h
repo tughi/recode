@@ -2,6 +2,7 @@
 
 #include "String.h"
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct Character_Token {
     String lexeme;
@@ -31,6 +32,7 @@ typedef struct Identifier_Token {
 typedef struct Integer_Token {
     String lexeme;
     size_t source_position;
+    int64_t value;
 } Integer_Token;
 
 typedef struct Other_Token {

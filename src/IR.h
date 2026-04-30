@@ -2,6 +2,7 @@
 
 #include "String.h"
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct IR_Type {
     String name;
@@ -21,7 +22,7 @@ typedef struct {
 void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
 typedef struct IR_Const_Instruction {
-    String integer_lexeme;
+    int64_t value;
 } IR_Const_Instruction;
 
 typedef enum IR_Instruction_Kind {

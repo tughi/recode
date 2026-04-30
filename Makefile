@@ -19,10 +19,22 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 test: $(TARGET)
-	@for f in tests/*.ir; do \
-		echo "=== $$f ==="; \
-		$(TARGET) $$f; \
-	done
+	@pass=0; fail=0; total=0; \
+	for f in tests/*.ir; do \
+		total=$$((total + 1)); \
+		expected=$$(sed -n '1s/^; exit: \([0-9][0-9]*\)$$/\1/p' $$f); \
+		: $${expected:=0}; \
+		$(TARGET) $$f >/dev/null; actual=$$?; \
+		if [ "$$actual" = "$$expected" ]; then \
+			echo "PASS $$f"; \
+			pass=$$((pass + 1)); \
+		else \
+			echo "FAIL $$f (got $$actual, expected $$expected)"; \
+			fail=$$((fail + 1)); \
+		fi; \
+	done; \
+	echo "$$pass/$$total passed"; \
+	[ $$fail -eq 0 ]
 
 clean:
 	rm -rf $(BUILD)

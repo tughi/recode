@@ -1,3 +1,5 @@
+; exit: 42
+
 $main(): i32 {
 @1:
     %x: i32 = const 42

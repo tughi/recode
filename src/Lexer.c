@@ -95,18 +95,31 @@ static int is_hex_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
+static int hex_digit_value(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+    return 10 + (c - 'A');
+}
+
 static Token scan_integer(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t length = lexer->source.length;
     size_t start = lexer->source_position;
     size_t position = start;
+    int64_t value = 0;
     if (source[position] == '0' && position + 1 < length && (source[position + 1] == 'x' || source[position + 1] == 'X')) {
         position += 2;
         while (position < length && (is_hex_digit(source[position]) || source[position] == '_')) {
+            if (source[position] != '_') {
+                value = value * 16 + hex_digit_value(source[position]);
+            }
             position++;
         }
     } else {
         while (position < length && (is_digit(source[position]) || source[position] == '_')) {
+            if (source[position] != '_') {
+                value = value * 10 + (source[position] - '0');
+            }
             position++;
         }
     }
@@ -115,6 +128,7 @@ static Token scan_integer(Lexer *lexer) {
     token.kind = TOKEN_KIND__INTEGER;
     token.integer.lexeme = (String){.content = source + start, .length = position - start};
     token.integer.source_position = start;
+    token.integer.value = value;
     return token;
 }
 
@@ -153,32 +167,41 @@ static Token scan_other(Lexer *lexer) {
 Token lexer_next(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t length = lexer->source.length;
-    size_t position = lexer->source_position;
 
-    if (position >= length) {
-        Token token;
-        token.kind = TOKEN_KIND__END_OF_FILE;
-        token.end_of_file.lexeme = (String){.content = source + position, .length = 0};
-        token.end_of_file.source_position = position;
-        return token;
-    }
+    for (;;) {
+        size_t position = lexer->source_position;
 
-    switch (source[position]) {
-    case ' ':
-        return scan_space(lexer);
-    case '\n':
-        return scan_end_of_line(lexer);
-    case '\'':
-        return scan_character(lexer);
-    case '"':
-        return scan_string(lexer);
-    case '0' ... '9':
-        return scan_integer(lexer);
-    case 'a' ... 'z':
-    case 'A' ... 'Z':
-    case '_':
-        return scan_identifier(lexer);
-    default:
-        return scan_other(lexer);
+        if (position >= length) {
+            Token token;
+            token.kind = TOKEN_KIND__END_OF_FILE;
+            token.end_of_file.lexeme = (String){.content = source + position, .length = 0};
+            token.end_of_file.source_position = position;
+            return token;
+        }
+
+        switch (source[position]) {
+        case ' ':
+            return scan_space(lexer);
+        case '\n':
+            return scan_end_of_line(lexer);
+        case '\'':
+            return scan_character(lexer);
+        case '"':
+            return scan_string(lexer);
+        case ';':
+            while (position < length && source[position] != '\n') {
+                position++;
+            }
+            lexer->source_position = position;
+            continue;
+        case '0' ... '9':
+            return scan_integer(lexer);
+        case 'a' ... 'z':
+        case 'A' ... 'Z':
+        case '_':
+            return scan_identifier(lexer);
+        default:
+            return scan_other(lexer);
+        }
     }
 }
