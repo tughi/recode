@@ -169,6 +169,9 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
         }
         fprintf(stderr, "Interpreter: phi '%.*s' has no entry for predecessor @%zu\n", (int)instruction->result.name.length, instruction->result.name.content, previous_label);
         exit(1);
+    case IR_INSTRUCTION__PLACEHOLDER:
+        fprintf(stderr, "Interpreter: unresolved placeholder '%.*s'\n", (int)instruction->result.name.length, instruction->result.name.content);
+        exit(1);
     case IR_INSTRUCTION__RET: {
         IR_Value *returned = instruction->arguments.items[0];
         if (!string_equals(returned->type.name, function->return_type.name)) {

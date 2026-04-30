@@ -10,6 +10,7 @@ typedef struct {
     Token current;
     IR_Value_List function_values;
     IR_Value_List global_values;
+    IR_Instruction_List forward_references;
 } Parser;
 
 static void advance(Parser *parser) {
@@ -92,6 +93,12 @@ static size_t expect_label(Parser *parser) {
     return value;
 }
 
+static IR_Instruction *alloc_instruction(void) {
+    IR_Instruction *instruction = malloc(sizeof(IR_Instruction));
+    instruction->arguments = (IR_Value_List){0};
+    return instruction;
+}
+
 static IR_Value *expect_value_reference(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__VARIABLE) {
         fprintf(stderr, "Parser: expected value reference at position %zu\n", current_position(parser));
@@ -101,11 +108,16 @@ static IR_Value *expect_value_reference(Parser *parser) {
     advance(parser);
     if (variable.prefix == '%') {
         IR_Value *value = ir_value_list_lookup(&parser->function_values, variable.lexeme);
-        if (value == NULL) {
-            fprintf(stderr, "Parser: undefined value '%.*s' at position %zu\n", (int)variable.lexeme.length, variable.lexeme.content, variable.source_position);
-            exit(1);
+        if (value != NULL) {
+            return value;
         }
-        return value;
+        IR_Instruction *placeholder = alloc_instruction();
+        placeholder->kind = IR_INSTRUCTION__PLACEHOLDER;
+        placeholder->result.name = variable.lexeme;
+        placeholder->result.type.name = (String){0};
+        ir_value_list_add(&parser->function_values, &placeholder->result);
+        ir_instruction_list_add(&parser->forward_references, placeholder);
+        return &placeholder->result;
     }
     IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
     if (value == NULL) {
@@ -124,12 +136,6 @@ static IR_Block *alloc_block(size_t label) {
     return block;
 }
 
-static IR_Instruction *alloc_instruction(void) {
-    IR_Instruction *instruction = malloc(sizeof(IR_Instruction));
-    instruction->arguments = (IR_Value_List){0};
-    return instruction;
-}
-
 static IR_Instruction *parse_value_instruction(Parser *parser) {
     String result_name = expect_variable(parser, '%').lexeme;
     expect_other(parser, ':');
@@ -140,8 +146,24 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     skip_spaces(parser);
     String mnemonic = expect_identifier(parser);
 
-    IR_Instruction *instruction = alloc_instruction();
-    instruction->result.name = result_name;
+    IR_Instruction *instruction = NULL;
+    for (size_t i = 0; i < parser->forward_references.size; i++) {
+        IR_Instruction *placeholder = parser->forward_references.items[i];
+        if (placeholder->result.name.length == result_name.length && memcmp(placeholder->result.name.content, result_name.content, result_name.length) == 0) {
+            instruction = placeholder;
+            parser->forward_references.items[i] = parser->forward_references.items[--parser->forward_references.size];
+            break;
+        }
+    }
+    if (instruction == NULL) {
+        if (ir_value_list_lookup(&parser->function_values, result_name) != NULL) {
+            fprintf(stderr, "Parser: redefinition of '%.*s'\n", (int)result_name.length, result_name.content);
+            exit(1);
+        }
+        instruction = alloc_instruction();
+        instruction->result.name = result_name;
+        ir_value_list_add(&parser->function_values, &instruction->result);
+    }
     instruction->result.type.name = result_type_name;
 
     if (string_equals_cstr(mnemonic, "add")) {
@@ -362,9 +384,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
     skip_spaces(parser);
 
     if (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
-        IR_Instruction *instruction = parse_value_instruction(parser);
-        ir_value_list_add(&parser->function_values, &instruction->result);
-        return instruction;
+        return parse_value_instruction(parser);
     }
 
     if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
@@ -403,6 +423,7 @@ static IR_Function parse_function(Parser *parser) {
     }
 
     parser->function_values.size = 0;
+    parser->forward_references.size = 0;
 
     skip_spaces(parser);
     while (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
@@ -438,6 +459,13 @@ static IR_Function parse_function(Parser *parser) {
         skip_whitespace(parser);
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '}') {
             advance(parser);
+            if (parser->forward_references.size > 0) {
+                IR_Instruction *unresolved = parser->forward_references.items[0];
+                fprintf(stderr, "Parser: undefined value '%.*s' in function '%.*s'\n",
+                        (int)unresolved->result.name.length, unresolved->result.name.content,
+                        (int)name.length, name.content);
+                exit(1);
+            }
             break;
         }
         if (parser->current.kind == TOKEN_KIND__END_OF_FILE) {
@@ -474,6 +502,7 @@ IR_Module *parse(String source) {
     Parser parser;
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
+    parser.forward_references = (IR_Instruction_List){0};
 
     lexer_init(&parser.lexer, source);
     parser.current = lexer_next(&parser.lexer);

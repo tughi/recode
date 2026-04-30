@@ -55,6 +55,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__MUL,
     IR_INSTRUCTION__NEG,
     IR_INSTRUCTION__PHI,
+    IR_INSTRUCTION__PLACEHOLDER,
     IR_INSTRUCTION__RET,
     IR_INSTRUCTION__SUB,
 } IR_Instruction_Kind;
