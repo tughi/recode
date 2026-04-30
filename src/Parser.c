@@ -155,13 +155,28 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 
     if (string_equals_cstr(mnemonic, "const")) {
         skip_spaces(parser);
+        instruction->kind = IR_INSTRUCTION__CONST;
+        if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
+            String literal = parser->current.identifier.lexeme;
+            if (string_equals_cstr(literal, "true")) {
+                instruction->const_instruction.value = 1;
+                advance(parser);
+                return instruction;
+            }
+            if (string_equals_cstr(literal, "false")) {
+                instruction->const_instruction.value = 0;
+                advance(parser);
+                return instruction;
+            }
+            fprintf(stderr, "Parser: unknown const literal '%.*s' at position %zu\n", (int)literal.length, literal.content, current_position(parser));
+            exit(1);
+        }
         bool negative = false;
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
             negative = true;
             advance(parser);
         }
         int64_t value = expect_integer(parser);
-        instruction->kind = IR_INSTRUCTION__CONST;
         instruction->const_instruction.value = negative ? -value : value;
         return instruction;
     }
@@ -190,6 +205,25 @@ static IR_Instruction *parse_jmp_instruction(Parser *parser) {
     return instruction;
 }
 
+static IR_Instruction *parse_br_instruction(Parser *parser) {
+    skip_spaces(parser);
+    IR_Value *condition = expect_value_reference(parser);
+    skip_spaces(parser);
+    expect_other(parser, '@');
+    size_t true_label = (size_t)expect_integer(parser);
+    skip_spaces(parser);
+    expect_other(parser, '@');
+    size_t false_label = (size_t)expect_integer(parser);
+
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__BR;
+    ir_value_list_add(&instruction->arguments, condition);
+    instruction->br_instruction.true_label = true_label;
+    instruction->br_instruction.false_label = false_label;
+    return instruction;
+}
+
 static IR_Instruction *parse_instruction(Parser *parser) {
     skip_spaces(parser);
 
@@ -202,11 +236,14 @@ static IR_Instruction *parse_instruction(Parser *parser) {
     if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
         String mnemonic = parser->current.identifier.lexeme;
         advance(parser);
-        if (string_equals_cstr(mnemonic, "ret")) {
-            return parse_ret_instruction(parser);
+        if (string_equals_cstr(mnemonic, "br")) {
+            return parse_br_instruction(parser);
         }
         if (string_equals_cstr(mnemonic, "jmp")) {
             return parse_jmp_instruction(parser);
+        }
+        if (string_equals_cstr(mnemonic, "ret")) {
+            return parse_ret_instruction(parser);
         }
         fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
         exit(1);

@@ -21,6 +21,11 @@ typedef struct {
 
 void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
+typedef struct IR_Br_Instruction {
+    size_t true_label;
+    size_t false_label;
+} IR_Br_Instruction;
+
 typedef struct IR_Const_Instruction {
     int64_t value;
 } IR_Const_Instruction;
@@ -30,6 +35,7 @@ typedef struct IR_Jmp_Instruction {
 } IR_Jmp_Instruction;
 
 typedef enum IR_Instruction_Kind {
+    IR_INSTRUCTION__BR,
     IR_INSTRUCTION__CALL,
     IR_INSTRUCTION__CONST,
     IR_INSTRUCTION__JMP,
@@ -51,6 +57,7 @@ struct IR_Instruction {
     IR_Instruction_Kind kind;
     IR_Value_List arguments;
     union {
+        IR_Br_Instruction br_instruction;
         IR_Const_Instruction const_instruction;
         IR_Jmp_Instruction jmp_instruction;
     };

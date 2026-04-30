@@ -61,6 +61,11 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
 
 static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame) {
     switch (instruction->kind) {
+    case IR_INSTRUCTION__BR: {
+        int64_t condition = frame_lookup(frame, instruction->arguments.items[0]);
+        size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
+        return (Step){.kind = STEP_JUMP, .jump_label = target};
+    }
     case IR_INSTRUCTION__CONST:
         frame_bind(frame, &instruction->result, instruction->const_instruction.value);
         return (Step){.kind = STEP_NEXT};
