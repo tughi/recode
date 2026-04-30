@@ -144,6 +144,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     instruction->result.name = result_name;
     instruction->result.type.name = result_type_name;
 
+    if (string_equals_cstr(mnemonic, "add")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__ADD;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "call")) {
         skip_spaces(parser);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -188,6 +197,40 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "div")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__DIV;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "mod")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__MOD;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "mul")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__MUL;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "neg")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__NEG;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "phi")) {
         instruction->kind = IR_INSTRUCTION__PHI;
         instruction->phi_instruction.labels = NULL;
@@ -209,6 +252,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
             fprintf(stderr, "Parser: phi requires at least one entry at position %zu\n", current_position(parser));
             exit(1);
         }
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "sub")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__SUB;
         return instruction;
     }
 

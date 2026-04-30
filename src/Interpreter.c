@@ -61,6 +61,12 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
 
 static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
     switch (instruction->kind) {
+    case IR_INSTRUCTION__ADD: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left + right);
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__BR: {
         int64_t condition = frame_lookup(frame, instruction->arguments.items[0]);
         size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
@@ -86,8 +92,37 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
     case IR_INSTRUCTION__CONST:
         frame_bind(frame, &instruction->result, instruction->const_instruction.value);
         return (Step){.kind = STEP_NEXT};
+    case IR_INSTRUCTION__DIV: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        if (right == 0) {
+            fprintf(stderr, "Interpreter: division by zero\n");
+            exit(1);
+        }
+        frame_bind(frame, &instruction->result, left / right);
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__JMP:
         return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
+    case IR_INSTRUCTION__MOD: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        if (right == 0) {
+            fprintf(stderr, "Interpreter: modulo by zero\n");
+            exit(1);
+        }
+        frame_bind(frame, &instruction->result, left % right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__MUL: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left * right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__NEG:
+        frame_bind(frame, &instruction->result, -frame_lookup(frame, instruction->arguments.items[0]));
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             if (instruction->phi_instruction.labels[i] == previous_label) {
@@ -100,6 +135,12 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         exit(1);
     case IR_INSTRUCTION__RET:
         return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, instruction->arguments.items[0])};
+    case IR_INSTRUCTION__SUB: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left - right);
+        return (Step){.kind = STEP_NEXT};
+    }
     }
     fprintf(stderr, "Interpreter: unknown instruction kind %d\n", instruction->kind);
     exit(1);

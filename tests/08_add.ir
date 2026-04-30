@@ -1,0 +1,9 @@
+; exit: 42
+
+$main(): i32 {
+@1:
+    %1: i32 = const 40
+    %2: i32 = const 2
+    %3: i32 = add %1 %2
+    ret %3
+}

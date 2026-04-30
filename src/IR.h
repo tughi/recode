@@ -39,12 +39,18 @@ typedef struct IR_Phi_Instruction {
 } IR_Phi_Instruction;
 
 typedef enum IR_Instruction_Kind {
+    IR_INSTRUCTION__ADD,
     IR_INSTRUCTION__BR,
     IR_INSTRUCTION__CALL,
     IR_INSTRUCTION__CONST,
+    IR_INSTRUCTION__DIV,
     IR_INSTRUCTION__JMP,
+    IR_INSTRUCTION__MOD,
+    IR_INSTRUCTION__MUL,
+    IR_INSTRUCTION__NEG,
     IR_INSTRUCTION__PHI,
     IR_INSTRUCTION__RET,
+    IR_INSTRUCTION__SUB,
 } IR_Instruction_Kind;
 
 typedef struct IR_Instruction IR_Instruction;
