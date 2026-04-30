@@ -169,6 +169,60 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "cmp_eq")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_EQ;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "cmp_ge")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_GE;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "cmp_gt")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_GT;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "cmp_le")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_LE;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "cmp_lt")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_LT;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "cmp_ne")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CMP_NE;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "const")) {
         skip_spaces(parser);
         instruction->kind = IR_INSTRUCTION__CONST;

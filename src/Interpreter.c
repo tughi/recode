@@ -59,7 +59,7 @@ typedef struct {
 
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc);
 
-static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
+static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
@@ -87,6 +87,42 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         int64_t result = run_function(module, callee, args, argc);
         free(args);
         frame_bind(frame, &instruction->result, result);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_EQ: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left == right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_GE: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left >= right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_GT: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left > right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_LE: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left <= right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_LT: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left < right);
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CMP_NE: {
+        int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
+        int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
+        frame_bind(frame, &instruction->result, left != right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CONST:
@@ -133,8 +169,18 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         }
         fprintf(stderr, "Interpreter: phi '%.*s' has no entry for predecessor @%zu\n", (int)instruction->result.name.length, instruction->result.name.content, previous_label);
         exit(1);
-    case IR_INSTRUCTION__RET:
-        return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, instruction->arguments.items[0])};
+    case IR_INSTRUCTION__RET: {
+        IR_Value *returned = instruction->arguments.items[0];
+        if (!string_equals(returned->type.name, function->return_type.name)) {
+            fprintf(stderr, "Interpreter: '%.*s' returns '%.*s' but ret yields '%.*s' of type '%.*s'\n",
+                    (int)function->name.length, function->name.content,
+                    (int)function->return_type.name.length, function->return_type.name.content,
+                    (int)returned->name.length, returned->name.content,
+                    (int)returned->type.name.length, returned->type.name.content);
+            exit(1);
+        }
+        return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, returned)};
+    }
     case IR_INSTRUCTION__SUB: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0]);
         int64_t right = frame_lookup(frame, instruction->arguments.items[1]);
@@ -175,7 +221,7 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
     while (true) {
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
-            Step step = execute_instruction(module, block->instructions.items[i], &frame, previous_label);
+            Step step = execute_instruction(module, function, block->instructions.items[i], &frame, previous_label);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -206,6 +252,10 @@ int64_t interpret(IR_Module *module) {
     IR_Function *main_fn = find_function(module, main_name);
     if (main_fn == NULL) {
         fprintf(stderr, "Interpreter: no $main function\n");
+        exit(1);
+    }
+    if (!string_equals_cstr(main_fn->return_type.name, "i32")) {
+        fprintf(stderr, "Interpreter: $main must return i32, got '%.*s'\n", (int)main_fn->return_type.name.length, main_fn->return_type.name.content);
         exit(1);
     }
     return run_function(module, main_fn, NULL, 0);
