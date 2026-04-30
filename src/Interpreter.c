@@ -43,13 +43,27 @@ static IR_Function *find_function(IR_Module *module, String name) {
     return NULL;
 }
 
+typedef enum {
+    STEP_NEXT,
+    STEP_JUMP,
+    STEP_RETURN,
+} Step_Kind;
+
+typedef struct {
+    Step_Kind kind;
+    union {
+        size_t jump_label;
+        int64_t return_value;
+    };
+} Step;
+
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc);
 
-static int64_t execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame) {
+static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__CONST:
         frame_bind(frame, &instruction->result, instruction->const_instruction.value);
-        return 0;
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__CALL: {
         IR_Value *callee_ref = instruction->arguments.items[0];
         IR_Function *callee = find_function(module, callee_ref->name);
@@ -65,25 +79,33 @@ static int64_t execute_instruction(IR_Module *module, IR_Instruction *instructio
         int64_t result = run_function(module, callee, args, argc);
         free(args);
         frame_bind(frame, &instruction->result, result);
-        return 0;
+        return (Step){.kind = STEP_NEXT};
     }
+    case IR_INSTRUCTION__JMP:
+        return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
     case IR_INSTRUCTION__RET:
-        return frame_lookup(frame, instruction->arguments.items[0]);
+        return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, instruction->arguments.items[0])};
     }
     fprintf(stderr, "Interpreter: unknown instruction kind %d\n", instruction->kind);
     exit(1);
 }
 
+static IR_Block *find_block(IR_Function *function, size_t label) {
+    for (size_t i = 0; i < function->blocks.size; i++) {
+        if (function->blocks.items[i]->label == label) {
+            return function->blocks.items[i];
+        }
+    }
+    return NULL;
+}
+
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc) {
     if (argc != function->parameters.size) {
-        fprintf(stderr, "Interpreter: '%.*s' expects %zu argument(s), got %zu\n",
-                (int)function->name.length, function->name.content,
-                function->parameters.size, argc);
+        fprintf(stderr, "Interpreter: '%.*s' expects %zu argument(s), got %zu\n", (int)function->name.length, function->name.content, function->parameters.size, argc);
         exit(1);
     }
-    if (function->blocks.size != 1) {
-        fprintf(stderr, "Interpreter: '%.*s' has %zu blocks; control flow not supported yet\n",
-                (int)function->name.length, function->name.content, function->blocks.size);
+    if (function->blocks.size == 0) {
+        fprintf(stderr, "Interpreter: '%.*s' has no blocks\n", (int)function->name.length, function->name.content);
         exit(1);
     }
 
@@ -93,26 +115,32 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
     }
 
     IR_Block *block = function->blocks.items[0];
-    int64_t result = 0;
-    bool returned = false;
-    for (size_t i = 0; i < block->instructions.size; i++) {
-        IR_Instruction *instruction = block->instructions.items[i];
-        if (instruction->kind == IR_INSTRUCTION__RET) {
-            result = execute_instruction(module, instruction, &frame);
-            returned = true;
-            break;
+    while (true) {
+        bool terminated = false;
+        for (size_t i = 0; i < block->instructions.size; i++) {
+            Step step = execute_instruction(module, block->instructions.items[i], &frame);
+            if (step.kind == STEP_NEXT) {
+                continue;
+            }
+            if (step.kind == STEP_JUMP) {
+                IR_Block *target = find_block(function, step.jump_label);
+                if (target == NULL) {
+                    fprintf(stderr, "Interpreter: '%.*s' has no block @%zu\n", (int)function->name.length, function->name.content, step.jump_label);
+                    exit(1);
+                }
+                block = target;
+                terminated = true;
+                break;
+            }
+            // STEP_RETURN
+            free(frame.items);
+            return step.return_value;
         }
-        execute_instruction(module, instruction, &frame);
+        if (!terminated) {
+            fprintf(stderr, "Interpreter: '%.*s' block @%zu fell off without a terminator\n", (int)function->name.length, function->name.content, block->label);
+            exit(1);
+        }
     }
-
-    free(frame.items);
-
-    if (!returned) {
-        fprintf(stderr, "Interpreter: '%.*s' fell off the end without ret\n",
-                (int)function->name.length, function->name.content);
-        exit(1);
-    }
-    return result;
 }
 
 int64_t interpret(IR_Module *module) {

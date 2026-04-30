@@ -179,6 +179,17 @@ static IR_Instruction *parse_ret_instruction(Parser *parser) {
     return instruction;
 }
 
+static IR_Instruction *parse_jmp_instruction(Parser *parser) {
+    skip_spaces(parser);
+    expect_other(parser, '@');
+    size_t label = (size_t)expect_integer(parser);
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__JMP;
+    instruction->jmp_instruction.label = label;
+    return instruction;
+}
+
 static IR_Instruction *parse_instruction(Parser *parser) {
     skip_spaces(parser);
 
@@ -193,6 +204,9 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         advance(parser);
         if (string_equals_cstr(mnemonic, "ret")) {
             return parse_ret_instruction(parser);
+        }
+        if (string_equals_cstr(mnemonic, "jmp")) {
+            return parse_jmp_instruction(parser);
         }
         fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
         exit(1);
