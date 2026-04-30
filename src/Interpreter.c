@@ -59,16 +59,13 @@ typedef struct {
 
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc);
 
-static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame) {
+static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__BR: {
         int64_t condition = frame_lookup(frame, instruction->arguments.items[0]);
         size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
         return (Step){.kind = STEP_JUMP, .jump_label = target};
     }
-    case IR_INSTRUCTION__CONST:
-        frame_bind(frame, &instruction->result, instruction->const_instruction.value);
-        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__CALL: {
         IR_Value *callee_ref = instruction->arguments.items[0];
         IR_Function *callee = find_function(module, callee_ref->name);
@@ -86,8 +83,21 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
     }
+    case IR_INSTRUCTION__CONST:
+        frame_bind(frame, &instruction->result, instruction->const_instruction.value);
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__JMP:
         return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
+    case IR_INSTRUCTION__PHI:
+        for (size_t i = 0; i < instruction->arguments.size; i++) {
+            if (instruction->phi_instruction.labels[i] == previous_label) {
+                int64_t value = frame_lookup(frame, instruction->arguments.items[i]);
+                frame_bind(frame, &instruction->result, value);
+                return (Step){.kind = STEP_NEXT};
+            }
+        }
+        fprintf(stderr, "Interpreter: phi '%.*s' has no entry for predecessor @%zu\n", (int)instruction->result.name.length, instruction->result.name.content, previous_label);
+        exit(1);
     case IR_INSTRUCTION__RET:
         return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, instruction->arguments.items[0])};
     }
@@ -120,10 +130,11 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
     }
 
     IR_Block *block = function->blocks.items[0];
+    size_t previous_label = SIZE_MAX;
     while (true) {
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
-            Step step = execute_instruction(module, block->instructions.items[i], &frame);
+            Step step = execute_instruction(module, block->instructions.items[i], &frame, previous_label);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -133,6 +144,7 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
                     fprintf(stderr, "Interpreter: '%.*s' has no block @%zu\n", (int)function->name.length, function->name.content, step.jump_label);
                     exit(1);
                 }
+                previous_label = block->label;
                 block = target;
                 terminated = true;
                 break;

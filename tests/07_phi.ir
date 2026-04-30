@@ -1,0 +1,16 @@
+; exit: 7
+
+$main(): i32 {
+@1:
+    %cond: bool = const true
+    br %cond @2 @3
+@2:
+    %a: i32 = const 7
+    jmp @4
+@3:
+    %b: i32 = const 13
+    jmp @4
+@4:
+    %r: i32 = phi @2 %a @3 %b
+    ret %r
+}

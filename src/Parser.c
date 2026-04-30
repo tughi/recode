@@ -181,28 +181,33 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "phi")) {
+        instruction->kind = IR_INSTRUCTION__PHI;
+        instruction->phi_instruction.labels = NULL;
+        size_t count = 0;
+        while (true) {
+            skip_spaces(parser);
+            if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '@') {
+                break;
+            }
+            advance(parser);
+            size_t label = (size_t)expect_integer(parser);
+            skip_spaces(parser);
+            IR_Value *value = expect_value_reference(parser);
+
+            instruction->phi_instruction.labels = realloc(instruction->phi_instruction.labels, (count + 1) * sizeof(size_t));
+            instruction->phi_instruction.labels[count++] = label;
+            ir_value_list_add(&instruction->arguments, value);
+        }
+        if (count == 0) {
+            fprintf(stderr, "Parser: phi requires at least one entry at position %zu\n", current_position(parser));
+            exit(1);
+        }
+        return instruction;
+    }
+
     fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
     exit(1);
-}
-
-static IR_Instruction *parse_ret_instruction(Parser *parser) {
-    skip_spaces(parser);
-    IR_Instruction *instruction = alloc_instruction();
-    instruction->result = (IR_Value){0};
-    instruction->kind = IR_INSTRUCTION__RET;
-    ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-    return instruction;
-}
-
-static IR_Instruction *parse_jmp_instruction(Parser *parser) {
-    skip_spaces(parser);
-    expect_other(parser, '@');
-    size_t label = (size_t)expect_integer(parser);
-    IR_Instruction *instruction = alloc_instruction();
-    instruction->result = (IR_Value){0};
-    instruction->kind = IR_INSTRUCTION__JMP;
-    instruction->jmp_instruction.label = label;
-    return instruction;
 }
 
 static IR_Instruction *parse_br_instruction(Parser *parser) {
@@ -221,6 +226,26 @@ static IR_Instruction *parse_br_instruction(Parser *parser) {
     ir_value_list_add(&instruction->arguments, condition);
     instruction->br_instruction.true_label = true_label;
     instruction->br_instruction.false_label = false_label;
+    return instruction;
+}
+
+static IR_Instruction *parse_jmp_instruction(Parser *parser) {
+    skip_spaces(parser);
+    expect_other(parser, '@');
+    size_t label = (size_t)expect_integer(parser);
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__JMP;
+    instruction->jmp_instruction.label = label;
+    return instruction;
+}
+
+static IR_Instruction *parse_ret_instruction(Parser *parser) {
+    skip_spaces(parser);
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__RET;
+    ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
     return instruction;
 }
 

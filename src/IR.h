@@ -34,11 +34,16 @@ typedef struct IR_Jmp_Instruction {
     size_t label;
 } IR_Jmp_Instruction;
 
+typedef struct IR_Phi_Instruction {
+    size_t *labels;
+} IR_Phi_Instruction;
+
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__BR,
     IR_INSTRUCTION__CALL,
     IR_INSTRUCTION__CONST,
     IR_INSTRUCTION__JMP,
+    IR_INSTRUCTION__PHI,
     IR_INSTRUCTION__RET,
 } IR_Instruction_Kind;
 
@@ -60,6 +65,7 @@ struct IR_Instruction {
         IR_Br_Instruction br_instruction;
         IR_Const_Instruction const_instruction;
         IR_Jmp_Instruction jmp_instruction;
+        IR_Phi_Instruction phi_instruction;
     };
 };
 
