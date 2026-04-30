@@ -136,6 +136,57 @@ static int is_identifier_char(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
+static Token scan_other(Lexer *lexer);
+
+static int is_variable_body_char(char c) {
+    return is_identifier_char(c) || c == '.';
+}
+
+static Token scan_label(Lexer *lexer) {
+    const char *source = lexer->source.content;
+    size_t length = lexer->source.length;
+    size_t start = lexer->source_position;
+    size_t body_start = start + 1;
+    size_t position = body_start;
+    size_t value = 0;
+    while (position < length && is_digit(source[position])) {
+        value = value * 10 + (size_t)(source[position] - '0');
+        position++;
+    }
+    if (position == body_start) {
+        return scan_other(lexer);
+    }
+    lexer->source_position = position;
+    Token token;
+    token.kind = TOKEN_KIND__LABEL;
+    token.label.lexeme = (String){.content = source + start, .length = position - start};
+    token.label.source_position = start;
+    token.label.value = value;
+    return token;
+}
+
+static Token scan_variable(Lexer *lexer) {
+    const char *source = lexer->source.content;
+    size_t length = lexer->source.length;
+    size_t start = lexer->source_position;
+    char prefix = source[start];
+    size_t body_start = start + 1;
+    size_t position = body_start;
+    while (position < length && is_variable_body_char(source[position])) {
+        position++;
+    }
+    if (position == body_start) {
+        return scan_other(lexer);
+    }
+    lexer->source_position = position;
+    Token token;
+    token.kind = TOKEN_KIND__VARIABLE;
+    token.variable.lexeme = (String){.content = source + start, .length = position - start};
+    token.variable.source_position = start;
+    token.variable.prefix = prefix;
+    return token;
+}
+
 static Token scan_identifier(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t length = lexer->source.length;
@@ -196,6 +247,11 @@ Token lexer_next(Lexer *lexer) {
             continue;
         case '0' ... '9':
             return scan_integer(lexer);
+        case '@':
+            return scan_label(lexer);
+        case '%':
+        case '$':
+            return scan_variable(lexer);
         case 'a' ... 'z':
         case 'A' ... 'Z':
         case '_':

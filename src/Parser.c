@@ -72,37 +72,45 @@ static IR_Value *ir_value_list_lookup(IR_Value_List *list, String name) {
     return NULL;
 }
 
-static String merge_neighbours(String first, String second) {
-    if (first.content + first.length == second.content) {
-        return (String){
-            .content = first.content,
-            .length = first.length + second.length,
-        };
+static Variable_Token expect_variable(Parser *parser, char prefix) {
+    if (parser->current.kind != TOKEN_KIND__VARIABLE || parser->current.variable.prefix != prefix) {
+        fprintf(stderr, "Parser: expected '%c' variable at position %zu\n", prefix, current_position(parser));
+        exit(1);
     }
-    fprintf(stderr, "Parser: cannot merge non-adjacent lexemes '%.*s' and '%.*s'\n", (int)first.length, first.content, (int)second.length, second.content);
-    exit(1);
+    Variable_Token variable = parser->current.variable;
+    advance(parser);
+    return variable;
+}
+
+static size_t expect_label(Parser *parser) {
+    if (parser->current.kind != TOKEN_KIND__LABEL) {
+        fprintf(stderr, "Parser: expected label at position %zu\n", current_position(parser));
+        exit(1);
+    }
+    size_t value = parser->current.label.value;
+    advance(parser);
+    return value;
 }
 
 static IR_Value *expect_value_reference(Parser *parser) {
-    size_t position = current_position(parser);
-    if (parser->current.kind != TOKEN_KIND__OTHER || (parser->current.other.value != '%' && parser->current.other.value != '$')) {
-        fprintf(stderr, "Parser: expected value reference at position %zu\n", position);
+    if (parser->current.kind != TOKEN_KIND__VARIABLE) {
+        fprintf(stderr, "Parser: expected value reference at position %zu\n", current_position(parser));
         exit(1);
     }
-    String name = expect_other(parser, parser->current.other.value);
-    name = merge_neighbours(name, expect_identifier(parser));
-    if (name.content[0] == '%') {
-        IR_Value *value = ir_value_list_lookup(&parser->function_values, name);
+    Variable_Token variable = parser->current.variable;
+    advance(parser);
+    if (variable.prefix == '%') {
+        IR_Value *value = ir_value_list_lookup(&parser->function_values, variable.lexeme);
         if (value == NULL) {
-            fprintf(stderr, "Parser: undefined value '%.*s' at position %zu\n", (int)name.length, name.content, position);
+            fprintf(stderr, "Parser: undefined value '%.*s' at position %zu\n", (int)variable.lexeme.length, variable.lexeme.content, variable.source_position);
             exit(1);
         }
         return value;
     }
-    IR_Value *value = ir_value_list_lookup(&parser->global_values, name);
+    IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
     if (value == NULL) {
         value = malloc(sizeof(IR_Value));
-        value->name = name;
+        value->name = variable.lexeme;
         value->type.name = (String){0};
         ir_value_list_add(&parser->global_values, value);
     }
@@ -123,8 +131,7 @@ static IR_Instruction *alloc_instruction(void) {
 }
 
 static IR_Instruction *parse_value_instruction(Parser *parser) {
-    String result_name = expect_other(parser, '%');
-    result_name = merge_neighbours(result_name, expect_identifier(parser));
+    String result_name = expect_variable(parser, '%').lexeme;
     expect_other(parser, ':');
     skip_spaces(parser);
     String result_type_name = expect_identifier(parser);
@@ -143,7 +150,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 
         while (true) {
             skip_spaces(parser);
-            if (parser->current.kind != TOKEN_KIND__OTHER || (parser->current.other.value != '%' && parser->current.other.value != '$')) {
+            if (parser->current.kind != TOKEN_KIND__VARIABLE) {
                 break;
             }
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -187,11 +194,10 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         size_t count = 0;
         while (true) {
             skip_spaces(parser);
-            if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '@') {
+            if (parser->current.kind != TOKEN_KIND__LABEL) {
                 break;
             }
-            advance(parser);
-            size_t label = (size_t)expect_integer(parser);
+            size_t label = expect_label(parser);
             skip_spaces(parser);
             IR_Value *value = expect_value_reference(parser);
 
@@ -214,11 +220,9 @@ static IR_Instruction *parse_br_instruction(Parser *parser) {
     skip_spaces(parser);
     IR_Value *condition = expect_value_reference(parser);
     skip_spaces(parser);
-    expect_other(parser, '@');
-    size_t true_label = (size_t)expect_integer(parser);
+    size_t true_label = expect_label(parser);
     skip_spaces(parser);
-    expect_other(parser, '@');
-    size_t false_label = (size_t)expect_integer(parser);
+    size_t false_label = expect_label(parser);
 
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
@@ -231,8 +235,7 @@ static IR_Instruction *parse_br_instruction(Parser *parser) {
 
 static IR_Instruction *parse_jmp_instruction(Parser *parser) {
     skip_spaces(parser);
-    expect_other(parser, '@');
-    size_t label = (size_t)expect_integer(parser);
+    size_t label = expect_label(parser);
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
     instruction->kind = IR_INSTRUCTION__JMP;
@@ -252,7 +255,7 @@ static IR_Instruction *parse_ret_instruction(Parser *parser) {
 static IR_Instruction *parse_instruction(Parser *parser) {
     skip_spaces(parser);
 
-    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '%') {
+    if (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
         IR_Instruction *instruction = parse_value_instruction(parser);
         ir_value_list_add(&parser->function_values, &instruction->result);
         return instruction;
@@ -279,8 +282,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
 }
 
 static IR_Function parse_function(Parser *parser) {
-    String name = expect_other(parser, '$');
-    name = merge_neighbours(name, expect_identifier(parser));
+    String name = expect_variable(parser, '$').lexeme;
     expect_other(parser, '(');
 
     IR_Function function;
@@ -297,9 +299,8 @@ static IR_Function parse_function(Parser *parser) {
     parser->function_values.size = 0;
 
     skip_spaces(parser);
-    while (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '%') {
-        String parameter_name = expect_other(parser, '%');
-        parameter_name = merge_neighbours(parameter_name, expect_identifier(parser));
+    while (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
+        String parameter_name = expect_variable(parser, '%').lexeme;
         expect_other(parser, ':');
         skip_spaces(parser);
         String parameter_type = expect_identifier(parser);
@@ -338,8 +339,7 @@ static IR_Function parse_function(Parser *parser) {
             exit(1);
         }
 
-        expect_other(parser, '@');
-        size_t label = (size_t)expect_integer(parser);
+        size_t label = expect_label(parser);
         expect_other(parser, ':');
 
         IR_Block *block = alloc_block(label);
@@ -347,7 +347,10 @@ static IR_Function parse_function(Parser *parser) {
 
         while (true) {
             skip_whitespace(parser);
-            if (parser->current.kind == TOKEN_KIND__OTHER && (parser->current.other.value == '}' || parser->current.other.value == '@')) {
+            if (parser->current.kind == TOKEN_KIND__LABEL) {
+                break;
+            }
+            if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '}') {
                 break;
             }
             if (parser->current.kind == TOKEN_KIND__END_OF_FILE) {

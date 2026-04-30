@@ -35,6 +35,12 @@ typedef struct Integer_Token {
     int64_t value;
 } Integer_Token;
 
+typedef struct Label_Token {
+    String lexeme;
+    size_t source_position;
+    size_t value;
+} Label_Token;
+
 typedef struct Other_Token {
     String lexeme;
     size_t source_position;
@@ -52,6 +58,12 @@ typedef struct String_Token {
     size_t source_position;
 } String_Token;
 
+typedef struct Variable_Token {
+    String lexeme;
+    size_t source_position;
+    char prefix;
+} Variable_Token;
+
 typedef enum Token_Kind {
     TOKEN_KIND__CHARACTER,
     TOKEN_KIND__END_OF_FILE,
@@ -59,9 +71,11 @@ typedef enum Token_Kind {
     TOKEN_KIND__ERROR,
     TOKEN_KIND__IDENTIFIER,
     TOKEN_KIND__INTEGER,
+    TOKEN_KIND__LABEL,
     TOKEN_KIND__OTHER,
     TOKEN_KIND__SPACE,
-    TOKEN_KIND__STRING
+    TOKEN_KIND__STRING,
+    TOKEN_KIND__VARIABLE
 } Token_Kind;
 
 typedef struct Token {
@@ -73,8 +87,10 @@ typedef struct Token {
         Error_Token error;
         Identifier_Token identifier;
         Integer_Token integer;
+        Label_Token label;
         Other_Token other;
         Space_Token space;
         String_Token string;
+        Variable_Token variable;
     };
 } Token;

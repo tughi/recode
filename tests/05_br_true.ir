@@ -5,9 +5,9 @@ $main(): i32 {
     %cond: bool = const true
     br %cond @2 @3
 @2:
-    %a: i32 = const 7
-    ret %a
+    %1: i32 = const 7
+    ret %1
 @3:
-    %b: i32 = const 13
-    ret %b
+    %2: i32 = const 13
+    ret %2
 }
