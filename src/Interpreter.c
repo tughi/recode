@@ -90,7 +90,7 @@ typedef struct {
 
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap);
 
-static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Instruction *instruction, Frame *frame, size_t previous_label, Heap *heap) {
+static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label, Heap *heap) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
@@ -211,9 +211,6 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
         runtime_error(module, instruction->location, "Unresolved placeholder '%.*s'", STRING(instruction->result.name));
     case IR_INSTRUCTION__RET: {
         IR_Value *returned = instruction->arguments.items[0];
-        if (!string_equals(returned->type.name, function->return_type.name)) {
-            runtime_error(module, instruction->location, "'%.*s' returns '%.*s' but ret yields '%.*s' of type '%.*s'", STRING(function->name), STRING(function->return_type.name), STRING(returned->name), STRING(returned->type.name));
-        }
         return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, returned, module, instruction->location)};
     }
     case IR_INSTRUCTION__STORE: {
@@ -263,7 +260,7 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
             IR_Instruction *instruction = block->instructions.items[i];
-            Step step = execute_instruction(module, function, instruction, &frame, previous_label, heap);
+            Step step = execute_instruction(module, instruction, &frame, previous_label, heap);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -294,8 +291,11 @@ int64_t interpret(IR_Module *module) {
         fprintf(stderr, "%.*s: No $main function\n", STRING(module->source.path));
         panic();
     }
-    if (!string_equals_cstr(main_function->return_type.name, "i32")) {
-        runtime_error(module, main_function->location, "$main must return i32, got '%.*s'", STRING(main_function->return_type.name));
+    if (main_function->return_type == NULL || main_function->return_type->kind != IR_TYPE__I32) {
+        fprintf(stderr, "%.*s:%zu:%zu: $main must return i32, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
+        ir_type_fprintf(stderr, main_function->return_type);
+        fputc('\n', stderr);
+        panic();
     }
     Heap heap = {0};
     int64_t result = run_function(module, main_function, NULL, 0, main_function->location, &heap);

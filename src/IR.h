@@ -3,16 +3,42 @@
 #include "Source.h"
 #include "Source_Location.h"
 #include "String.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
-typedef struct IR_Type {
-    String name;
-} IR_Type;
+typedef enum IR_Type_Kind {
+    IR_TYPE__BOOL,
+    IR_TYPE__I32,
+    IR_TYPE__PTR,
+} IR_Type_Kind;
+
+typedef struct IR_Type IR_Type;
+struct IR_Type {
+    IR_Type_Kind kind;
+    union {
+        IR_Type *pointee;
+    };
+};
+
+typedef struct {
+    IR_Type **items;
+    size_t size;
+    size_t capacity;
+} IR_Type_List;
+
+void ir_type_list_add(IR_Type_List *list, IR_Type *type);
+
+IR_Type *ir_type_bool(void);
+IR_Type *ir_type_i32(void);
+IR_Type *ir_type_intern_ptr(IR_Type_List *types, IR_Type *pointee);
+bool ir_type_equals(IR_Type *a, IR_Type *b);
+void ir_type_fprintf(FILE *out, IR_Type *type);
 
 typedef struct IR_Value {
     String name;
-    IR_Type type;
+    IR_Type *type;
 } IR_Value;
 
 typedef struct {
@@ -24,7 +50,7 @@ typedef struct {
 void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
 typedef struct IR_Alloc_Instruction {
-    IR_Type element_type;
+    IR_Type *element_type;
 } IR_Alloc_Instruction;
 
 typedef struct IR_Br_Instruction {
@@ -113,7 +139,7 @@ typedef struct IR_Function {
     String name;
     Source_Location location;
     IR_Value_List parameters;
-    IR_Type return_type;
+    IR_Type *return_type;
     IR_Block_List blocks;
 } IR_Function;
 
@@ -128,4 +154,5 @@ void ir_function_list_add(IR_Function_List *list, IR_Function function);
 typedef struct IR_Module {
     Source source;
     IR_Function_List functions;
+    IR_Type_List types;
 } IR_Module;

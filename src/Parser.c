@@ -11,6 +11,7 @@ typedef struct {
     Source source;
     Lexer lexer;
     Token current;
+    IR_Type_List *types;
     IR_Value_List function_values;
     IR_Value_List global_values;
     IR_Instruction_List forward_references;
@@ -74,24 +75,31 @@ static String expect_identifier(Parser *parser) {
     return name;
 }
 
-static String parse_type(Parser *parser) {
+static IR_Type *parse_type(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
         parse_error_current(parser, "Expected type");
     }
-    const char *start = parser->current.identifier.lexeme.content;
-    size_t length = parser->current.identifier.lexeme.length;
+    Identifier_Token name = parser->current.identifier;
     advance(parser);
-    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '<') {
+    if (string_equals_cstr(name.lexeme, "ptr")) {
+        if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '<') {
+            parse_error_current(parser, "Expected '<' after 'ptr'");
+        }
         advance(parser);
-        parse_type(parser);
+        IR_Type *pointee = parse_type(parser);
         if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '>') {
             parse_error_current(parser, "Expected '>'");
         }
-        const char *end = parser->current.other.lexeme.content + parser->current.other.lexeme.length;
-        length = (size_t)(end - start);
         advance(parser);
+        return ir_type_intern_ptr(parser->types, pointee);
     }
-    return (String){start, length};
+    if (string_equals_cstr(name.lexeme, "bool")) {
+        return ir_type_bool();
+    }
+    if (string_equals_cstr(name.lexeme, "i32")) {
+        return ir_type_i32();
+    }
+    parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
 }
 
 static int64_t expect_integer(Parser *parser) {
@@ -152,7 +160,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
         placeholder->kind = IR_INSTRUCTION__PLACEHOLDER;
         placeholder->location = variable.location;
         placeholder->result.name = variable.lexeme;
-        placeholder->result.type.name = (String){0};
+        placeholder->result.type = NULL;
         ir_value_list_add(&parser->function_values, &placeholder->result);
         ir_instruction_list_add(&parser->forward_references, placeholder);
         return &placeholder->result;
@@ -161,10 +169,37 @@ static IR_Value *expect_value_reference(Parser *parser) {
     if (value == NULL) {
         value = malloc(sizeof(IR_Value));
         value->name = variable.lexeme;
-        value->type.name = (String){0};
+        value->type = NULL;
         ir_value_list_add(&parser->global_values, value);
     }
     return value;
+}
+
+static void error_prefix(Parser *parser, Source_Location location) {
+    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->source.path), location.line, location.column);
+}
+
+static void expect_type(Parser *parser, Source_Location location, const char *what, IR_Type *expected, IR_Type *actual) {
+    if (!ir_type_equals(expected, actual)) {
+        error_prefix(parser, location);
+        fprintf(stderr, "%s: expected ", what);
+        ir_type_fprintf(stderr, expected);
+        fputs(", got ", stderr);
+        ir_type_fprintf(stderr, actual);
+        fputc('\n', stderr);
+        panic();
+    }
+}
+
+static IR_Type *expect_ptr(Parser *parser, Source_Location location, const char *what, IR_Type *actual) {
+    if (actual == NULL || actual->kind != IR_TYPE__PTR) {
+        error_prefix(parser, location);
+        fprintf(stderr, "%s: expected pointer, got ", what);
+        ir_type_fprintf(stderr, actual);
+        fputc('\n', stderr);
+        panic();
+    }
+    return actual->pointee;
 }
 
 static IR_Block *alloc_block(size_t label, Source_Location location) {
@@ -180,7 +215,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     String result_name = result_variable.lexeme;
     expect_other(parser, ':');
     skip_spaces(parser);
-    String result_type_name = parse_type(parser);
+    IR_Type *result_type = parse_type(parser);
     skip_spaces(parser);
     expect_other(parser, '=');
     skip_spaces(parser);
@@ -204,7 +239,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
     instruction->location = result_variable.location;
-    instruction->result.type.name = result_type_name;
+    instruction->result.type = result_type;
 
     if (string_equals_cstr(mnemonic, "add")) {
         skip_spaces(parser);
@@ -217,7 +252,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 
     if (string_equals_cstr(mnemonic, "alloc")) {
         skip_spaces(parser);
-        instruction->alloc_instruction.element_type.name = parse_type(parser);
+        instruction->alloc_instruction.element_type = parse_type(parser);
         instruction->kind = IR_INSTRUCTION__ALLOC;
         return instruction;
     }
@@ -296,25 +331,23 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser);
         instruction->kind = IR_INSTRUCTION__CONST;
         if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
-            String literal = parser->current.identifier.lexeme;
-            if (string_equals_cstr(literal, "true")) {
-                instruction->const_instruction.value = 1;
+            Identifier_Token literal = parser->current.identifier;
+            if (string_equals_cstr(literal.lexeme, "true") || string_equals_cstr(literal.lexeme, "false")) {
+                expect_type(parser, literal.location, "const bool literal", ir_type_bool(), result_type);
+                instruction->const_instruction.value = string_equals_cstr(literal.lexeme, "true") ? 1 : 0;
                 advance(parser);
                 return instruction;
             }
-            if (string_equals_cstr(literal, "false")) {
-                instruction->const_instruction.value = 0;
-                advance(parser);
-                return instruction;
-            }
-            parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal));
+            parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal.lexeme));
         }
+        Source_Location literal_location = current_location(parser);
         bool negative = false;
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
             negative = true;
             advance(parser);
         }
         int64_t value = expect_integer(parser);
+        expect_type(parser, literal_location, "const integer literal", ir_type_i32(), result_type);
         instruction->const_instruction.value = negative ? -value : value;
         return instruction;
     }
@@ -455,22 +488,98 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         Source_Location mnemonic_location = current_location(parser);
         String mnemonic = parser->current.identifier.lexeme;
         advance(parser);
+        IR_Instruction *instruction = NULL;
         if (string_equals_cstr(mnemonic, "br")) {
-            return parse_br_instruction(parser);
+            instruction = parse_br_instruction(parser);
+        } else if (string_equals_cstr(mnemonic, "jmp")) {
+            instruction = parse_jmp_instruction(parser);
+        } else if (string_equals_cstr(mnemonic, "ret")) {
+            instruction = parse_ret_instruction(parser);
+        } else if (string_equals_cstr(mnemonic, "store")) {
+            instruction = parse_store_instruction(parser);
+        } else {
+            parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
         }
-        if (string_equals_cstr(mnemonic, "jmp")) {
-            return parse_jmp_instruction(parser);
-        }
-        if (string_equals_cstr(mnemonic, "ret")) {
-            return parse_ret_instruction(parser);
-        }
-        if (string_equals_cstr(mnemonic, "store")) {
-            return parse_store_instruction(parser);
-        }
-        parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
+        instruction->location = mnemonic_location;
+        return instruction;
     }
 
     parse_error_current(parser, "Unexpected token in instruction");
+}
+
+static void check_instruction(Parser *parser, IR_Function *function, IR_Instruction *instruction) {
+    Source_Location loc = instruction->location;
+    switch (instruction->kind) {
+    case IR_INSTRUCTION__ADD:
+    case IR_INSTRUCTION__DIV:
+    case IR_INSTRUCTION__MOD:
+    case IR_INSTRUCTION__MUL:
+    case IR_INSTRUCTION__SUB:
+        expect_type(parser, loc, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
+        expect_type(parser, loc, "result", ir_type_i32(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__ALLOC: {
+        IR_Type *pointee = expect_ptr(parser, loc, "alloc result", instruction->result.type);
+        expect_type(parser, loc, "alloc pointee", instruction->alloc_instruction.element_type, pointee);
+        return;
+    }
+    case IR_INSTRUCTION__BR:
+        expect_type(parser, loc, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
+        return;
+    case IR_INSTRUCTION__CALL:
+        return;
+    case IR_INSTRUCTION__CMP_EQ:
+    case IR_INSTRUCTION__CMP_NE:
+        expect_type(parser, loc, "comparison operands", instruction->arguments.items[0]->type, instruction->arguments.items[1]->type);
+        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__CMP_GE:
+    case IR_INSTRUCTION__CMP_GT:
+    case IR_INSTRUCTION__CMP_LE:
+    case IR_INSTRUCTION__CMP_LT:
+        expect_type(parser, loc, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
+        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__CONST:
+        return;
+    case IR_INSTRUCTION__JMP:
+        return;
+    case IR_INSTRUCTION__LOAD: {
+        IR_Type *pointee = expect_ptr(parser, loc, "load pointer", instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "load result", pointee, instruction->result.type);
+        return;
+    }
+    case IR_INSTRUCTION__NEG:
+        expect_type(parser, loc, "operand", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "result", ir_type_i32(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__PHI:
+        for (size_t i = 0; i < instruction->arguments.size; i++) {
+            expect_type(parser, loc, "phi incoming", instruction->result.type, instruction->arguments.items[i]->type);
+        }
+        return;
+    case IR_INSTRUCTION__PLACEHOLDER:
+        return;
+    case IR_INSTRUCTION__RET:
+        expect_type(parser, loc, "ret value", function->return_type, instruction->arguments.items[0]->type);
+        return;
+    case IR_INSTRUCTION__STORE: {
+        IR_Type *pointee = expect_ptr(parser, loc, "store pointer", instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "store value", pointee, instruction->arguments.items[1]->type);
+        return;
+    }
+    }
+}
+
+static void check_function(Parser *parser, IR_Function *function) {
+    for (size_t b = 0; b < function->blocks.size; b++) {
+        IR_Block *block = function->blocks.items[b];
+        for (size_t i = 0; i < block->instructions.size; i++) {
+            check_instruction(parser, function, block->instructions.items[i]);
+        }
+    }
 }
 
 static IR_Function parse_function(Parser *parser) {
@@ -486,7 +595,7 @@ static IR_Function parse_function(Parser *parser) {
     if (ir_value_list_lookup(&parser->global_values, name) == NULL) {
         IR_Value *function_value = malloc(sizeof(IR_Value));
         function_value->name = name;
-        function_value->type.name = (String){0};
+        function_value->type = NULL;
         ir_value_list_add(&parser->global_values, function_value);
     }
 
@@ -498,11 +607,11 @@ static IR_Function parse_function(Parser *parser) {
         String parameter_name = expect_variable(parser, '%').lexeme;
         expect_other(parser, ':');
         skip_spaces(parser);
-        String parameter_type = parse_type(parser);
+        IR_Type *parameter_type = parse_type(parser);
 
         IR_Value *parameter = malloc(sizeof(IR_Value));
         parameter->name = parameter_name;
-        parameter->type.name = parameter_type;
+        parameter->type = parameter_type;
         ir_value_list_add(&function.parameters, parameter);
         ir_value_list_add(&parser->function_values, parameter);
 
@@ -516,11 +625,11 @@ static IR_Function parse_function(Parser *parser) {
     expect_other(parser, ')');
     expect_other(parser, ':');
     skip_spaces(parser);
-    String return_type_name = parse_type(parser);
+    IR_Type *return_type = parse_type(parser);
     skip_spaces(parser);
     expect_other(parser, '{');
 
-    function.return_type.name = return_type_name;
+    function.return_type = return_type;
     function.blocks = (IR_Block_List){0};
 
     while (true) {
@@ -560,6 +669,7 @@ static IR_Function parse_function(Parser *parser) {
         }
     }
 
+    check_function(parser, &function);
     return function;
 }
 
@@ -576,6 +686,8 @@ IR_Module *parse(Source source) {
     IR_Module *module = malloc(sizeof(IR_Module));
     module->source = source;
     module->functions = (IR_Function_List){0};
+    module->types = (IR_Type_List){0};
+    parser.types = &module->types;
 
     while (true) {
         skip_whitespace(&parser);
