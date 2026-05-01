@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Source.h"
+#include "Source_Location.h"
 #include "String.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -73,6 +75,7 @@ void ir_instruction_list_add(IR_Instruction_List *list, IR_Instruction *instruct
 struct IR_Instruction {
     IR_Value result;
     IR_Instruction_Kind kind;
+    Source_Location location;
     IR_Value_List arguments;
     union {
         IR_Br_Instruction br_instruction;
@@ -94,11 +97,13 @@ void ir_block_list_add(IR_Block_List *list, IR_Block *block);
 
 struct IR_Block {
     size_t label;
+    Source_Location location;
     IR_Instruction_List instructions;
 };
 
 typedef struct IR_Function {
     String name;
+    Source_Location location;
     IR_Value_List parameters;
     IR_Type return_type;
     IR_Block_List blocks;
@@ -113,5 +118,6 @@ typedef struct {
 void ir_function_list_add(IR_Function_List *list, IR_Function function);
 
 typedef struct IR_Module {
+    Source source;
     IR_Function_List functions;
 } IR_Module;

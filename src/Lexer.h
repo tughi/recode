@@ -4,6 +4,8 @@
 
 typedef struct Lexer {
     String source;
+    size_t source_column;
+    size_t source_line;
     size_t source_position;
 } Lexer;
 

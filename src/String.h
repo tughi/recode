@@ -7,6 +7,8 @@ typedef struct {
     size_t length;
 } String;
 
+#define STRING(s) (int)(s).length, (s).content
+
 static inline String string_from(const char *source) {
     String string = {source, strlen(source)};
     return string;

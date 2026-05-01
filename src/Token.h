@@ -1,66 +1,67 @@
 #pragma once
 
+#include "Source_Location.h"
 #include "String.h"
 #include <stddef.h>
 #include <stdint.h>
 
 typedef struct Character_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } Character_Token;
 
 typedef struct End_Of_File_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } End_Of_File_Token;
 
 typedef struct End_Of_Line_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } End_Of_Line_Token;
 
 typedef struct Error_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } Error_Token;
 
 typedef struct Identifier_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } Identifier_Token;
 
 typedef struct Integer_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
     int64_t value;
 } Integer_Token;
 
 typedef struct Label_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
     size_t value;
 } Label_Token;
 
 typedef struct Other_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
     char value;
 } Other_Token;
 
 typedef struct Space_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
     size_t count;
 } Space_Token;
 
 typedef struct String_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
 } String_Token;
 
 typedef struct Variable_Token {
     String lexeme;
-    size_t source_position;
+    Source_Location location;
     char prefix;
 } Variable_Token;
 

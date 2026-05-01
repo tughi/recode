@@ -1,11 +1,14 @@
 #include "Parser.h"
 #include "Lexer.h"
+#include "Panic.h"
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
+    Source source;
     Lexer lexer;
     Token current;
     IR_Value_List function_values;
@@ -29,14 +32,33 @@ static void skip_whitespace(Parser *parser) {
     }
 }
 
-static size_t current_position(Parser *parser) {
-    return parser->current.identifier.source_position;
+static Source_Location current_location(Parser *parser) {
+    return parser->current.identifier.location;
 }
+
+static void print_parse_error(Parser *parser, Source_Location location, const char *format, ...) {
+    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->source.path), location.line, location.column);
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fprintf(stderr, "\n");
+}
+
+#define parse_error(parser, location, ...)                \
+    do {                                                  \
+        print_parse_error(parser, location, __VA_ARGS__); \
+        panic();                                          \
+    } while (0)
+#define parse_error_current(parser, ...)                                  \
+    do {                                                                  \
+        print_parse_error(parser, current_location(parser), __VA_ARGS__); \
+        panic();                                                          \
+    } while (0)
 
 static String expect_other(Parser *parser, char c) {
     if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != c) {
-        fprintf(stderr, "Parser: expected '%c' at position %zu\n", c, current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected '%c'", c);
     }
     String lexeme = parser->current.other.lexeme;
     advance(parser);
@@ -45,8 +67,7 @@ static String expect_other(Parser *parser, char c) {
 
 static String expect_identifier(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
-        fprintf(stderr, "Parser: expected identifier at position %zu\n", current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected identifier");
     }
     String name = parser->current.identifier.lexeme;
     advance(parser);
@@ -55,8 +76,7 @@ static String expect_identifier(Parser *parser) {
 
 static int64_t expect_integer(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__INTEGER) {
-        fprintf(stderr, "Parser: expected integer at position %zu\n", current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected integer");
     }
     int64_t value = parser->current.integer.value;
     advance(parser);
@@ -75,8 +95,7 @@ static IR_Value *ir_value_list_lookup(IR_Value_List *list, String name) {
 
 static Variable_Token expect_variable(Parser *parser, char prefix) {
     if (parser->current.kind != TOKEN_KIND__VARIABLE || parser->current.variable.prefix != prefix) {
-        fprintf(stderr, "Parser: expected '%c' variable at position %zu\n", prefix, current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected '%c' variable", prefix);
     }
     Variable_Token variable = parser->current.variable;
     advance(parser);
@@ -85,8 +104,7 @@ static Variable_Token expect_variable(Parser *parser, char prefix) {
 
 static size_t expect_label(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__LABEL) {
-        fprintf(stderr, "Parser: expected label at position %zu\n", current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected label");
     }
     size_t value = parser->current.label.value;
     advance(parser);
@@ -101,8 +119,7 @@ static IR_Instruction *alloc_instruction(void) {
 
 static IR_Value *expect_value_reference(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__VARIABLE) {
-        fprintf(stderr, "Parser: expected value reference at position %zu\n", current_position(parser));
-        exit(1);
+        parse_error_current(parser, "Expected value reference");
     }
     Variable_Token variable = parser->current.variable;
     advance(parser);
@@ -113,6 +130,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
         }
         IR_Instruction *placeholder = alloc_instruction();
         placeholder->kind = IR_INSTRUCTION__PLACEHOLDER;
+        placeholder->location = variable.location;
         placeholder->result.name = variable.lexeme;
         placeholder->result.type.name = (String){0};
         ir_value_list_add(&parser->function_values, &placeholder->result);
@@ -129,15 +147,17 @@ static IR_Value *expect_value_reference(Parser *parser) {
     return value;
 }
 
-static IR_Block *alloc_block(size_t label) {
+static IR_Block *alloc_block(size_t label, Source_Location location) {
     IR_Block *block = malloc(sizeof(IR_Block));
     block->label = label;
+    block->location = location;
     block->instructions = (IR_Instruction_List){0};
     return block;
 }
 
 static IR_Instruction *parse_value_instruction(Parser *parser) {
-    String result_name = expect_variable(parser, '%').lexeme;
+    Variable_Token result_variable = expect_variable(parser, '%');
+    String result_name = result_variable.lexeme;
     expect_other(parser, ':');
     skip_spaces(parser);
     String result_type_name = expect_identifier(parser);
@@ -157,13 +177,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     }
     if (instruction == NULL) {
         if (ir_value_list_lookup(&parser->function_values, result_name) != NULL) {
-            fprintf(stderr, "Parser: redefinition of '%.*s'\n", (int)result_name.length, result_name.content);
-            exit(1);
+            parse_error(parser, result_variable.location, "Redefinition of '%.*s'", STRING(result_name));
         }
         instruction = alloc_instruction();
         instruction->result.name = result_name;
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
+    instruction->location = result_variable.location;
     instruction->result.type.name = result_type_name;
 
     if (string_equals_cstr(mnemonic, "add")) {
@@ -260,8 +280,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
                 advance(parser);
                 return instruction;
             }
-            fprintf(stderr, "Parser: unknown const literal '%.*s' at position %zu\n", (int)literal.length, literal.content, current_position(parser));
-            exit(1);
+            parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal));
         }
         bool negative = false;
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
@@ -325,8 +344,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
             ir_value_list_add(&instruction->arguments, value);
         }
         if (count == 0) {
-            fprintf(stderr, "Parser: phi requires at least one entry at position %zu\n", current_position(parser));
-            exit(1);
+            parse_error_current(parser, "Phi requires at least one entry");
         }
         return instruction;
     }
@@ -340,8 +358,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
-    fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
-    exit(1);
+    parse_error_current(parser, "Unknown mnemonic '%.*s'", STRING(mnemonic));
 }
 
 static IR_Instruction *parse_br_instruction(Parser *parser) {
@@ -388,6 +405,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
     }
 
     if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
+        Source_Location mnemonic_location = current_location(parser);
         String mnemonic = parser->current.identifier.lexeme;
         advance(parser);
         if (string_equals_cstr(mnemonic, "br")) {
@@ -399,20 +417,20 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         if (string_equals_cstr(mnemonic, "ret")) {
             return parse_ret_instruction(parser);
         }
-        fprintf(stderr, "Parser: unknown mnemonic '%.*s' at position %zu\n", (int)mnemonic.length, mnemonic.content, current_position(parser));
-        exit(1);
+        parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
     }
 
-    fprintf(stderr, "Parser: unexpected token in instruction at position %zu\n", current_position(parser));
-    exit(1);
+    parse_error_current(parser, "Unexpected token in instruction");
 }
 
 static IR_Function parse_function(Parser *parser) {
-    String name = expect_variable(parser, '$').lexeme;
+    Variable_Token name_variable = expect_variable(parser, '$');
+    String name = name_variable.lexeme;
     expect_other(parser, '(');
 
     IR_Function function;
     function.name = name;
+    function.location = name_variable.location;
     function.parameters = (IR_Value_List){0};
 
     if (ir_value_list_lookup(&parser->global_values, name) == NULL) {
@@ -461,22 +479,19 @@ static IR_Function parse_function(Parser *parser) {
             advance(parser);
             if (parser->forward_references.size > 0) {
                 IR_Instruction *unresolved = parser->forward_references.items[0];
-                fprintf(stderr, "Parser: undefined value '%.*s' in function '%.*s'\n",
-                        (int)unresolved->result.name.length, unresolved->result.name.content,
-                        (int)name.length, name.content);
-                exit(1);
+                parse_error(parser, unresolved->location, "Undefined value %.*s", STRING(unresolved->result.name));
             }
             break;
         }
         if (parser->current.kind == TOKEN_KIND__END_OF_FILE) {
-            fprintf(stderr, "Parser: unexpected end of file inside function\n");
-            exit(1);
+            parse_error_current(parser, "Unexpected end of file inside function");
         }
 
+        Source_Location label_location = current_location(parser);
         size_t label = expect_label(parser);
         expect_other(parser, ':');
 
-        IR_Block *block = alloc_block(label);
+        IR_Block *block = alloc_block(label, label_location);
         ir_block_list_add(&function.blocks, block);
 
         while (true) {
@@ -498,16 +513,18 @@ static IR_Function parse_function(Parser *parser) {
     return function;
 }
 
-IR_Module *parse(String source) {
+IR_Module *parse(Source source) {
     Parser parser;
+    parser.source = source;
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
 
-    lexer_init(&parser.lexer, source);
+    lexer_init(&parser.lexer, source.content);
     parser.current = lexer_next(&parser.lexer);
 
     IR_Module *module = malloc(sizeof(IR_Module));
+    module->source = source;
     module->functions = (IR_Function_List){0};
 
     while (true) {
