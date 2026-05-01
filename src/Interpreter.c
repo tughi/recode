@@ -198,6 +198,9 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
     case IR_INSTRUCTION__NEG:
         frame_bind(frame, &instruction->result, -frame_lookup(frame, instruction->arguments.items[0], module, instruction->location));
         return (Step){.kind = STEP_NEXT};
+    case IR_INSTRUCTION__NOT:
+        frame_bind(frame, &instruction->result, !frame_lookup(frame, instruction->arguments.items[0], module, instruction->location));
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             if (instruction->phi_instruction.labels[i] == previous_label) {

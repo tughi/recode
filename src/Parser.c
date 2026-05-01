@@ -393,6 +393,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "not")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__NOT;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "phi")) {
         instruction->kind = IR_INSTRUCTION__PHI;
         instruction->phi_instruction.labels = NULL;
@@ -554,6 +561,10 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__NEG:
         expect_type(parser, loc, "operand", ir_type_i32(), instruction->arguments.items[0]->type);
         expect_type(parser, loc, "result", ir_type_i32(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__NOT:
+        expect_type(parser, loc, "operand", ir_type_bool(), instruction->arguments.items[0]->type);
+        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
         return;
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
