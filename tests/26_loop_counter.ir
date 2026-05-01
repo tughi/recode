@@ -1,0 +1,22 @@
+; exit: 5
+
+$main(): i32 {
+@1:
+    %ctr.ptr: ptr<i32> = alloc i32
+    %0: i32 = const 0
+    store %ctr.ptr %0
+    jmp @2
+@2:
+    %ctr.0: i32 = load %ctr.ptr
+    %1: i32 = const 5
+    %2: bool = cmp_ge %ctr.0 %1
+    br %2 @4 @3
+@3:
+    %3: i32 = const 1
+    %ctr.1: i32 = add %ctr.0 %3
+    store %ctr.ptr %ctr.1
+    jmp @2
+@4:
+    %ctr: i32 = load %ctr.ptr
+    ret %ctr
+}

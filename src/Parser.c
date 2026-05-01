@@ -74,6 +74,26 @@ static String expect_identifier(Parser *parser) {
     return name;
 }
 
+static String parse_type(Parser *parser) {
+    if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+        parse_error_current(parser, "Expected type");
+    }
+    const char *start = parser->current.identifier.lexeme.content;
+    size_t length = parser->current.identifier.lexeme.length;
+    advance(parser);
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '<') {
+        advance(parser);
+        parse_type(parser);
+        if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '>') {
+            parse_error_current(parser, "Expected '>'");
+        }
+        const char *end = parser->current.other.lexeme.content + parser->current.other.lexeme.length;
+        length = (size_t)(end - start);
+        advance(parser);
+    }
+    return (String){start, length};
+}
+
 static int64_t expect_integer(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__INTEGER) {
         parse_error_current(parser, "Expected integer");
@@ -160,7 +180,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     String result_name = result_variable.lexeme;
     expect_other(parser, ':');
     skip_spaces(parser);
-    String result_type_name = expect_identifier(parser);
+    String result_type_name = parse_type(parser);
     skip_spaces(parser);
     expect_other(parser, '=');
     skip_spaces(parser);
@@ -192,6 +212,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__ADD;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "alloc")) {
+        skip_spaces(parser);
+        instruction->alloc_instruction.element_type.name = parse_type(parser);
+        instruction->kind = IR_INSTRUCTION__ALLOC;
         return instruction;
     }
 
@@ -301,6 +328,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "load")) {
+        skip_spaces(parser);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__LOAD;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "mod")) {
         skip_spaces(parser);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -397,6 +431,19 @@ static IR_Instruction *parse_ret_instruction(Parser *parser) {
     return instruction;
 }
 
+static IR_Instruction *parse_store_instruction(Parser *parser) {
+    skip_spaces(parser);
+    IR_Value *pointer = expect_value_reference(parser);
+    skip_spaces(parser);
+    IR_Value *value = expect_value_reference(parser);
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__STORE;
+    ir_value_list_add(&instruction->arguments, pointer);
+    ir_value_list_add(&instruction->arguments, value);
+    return instruction;
+}
+
 static IR_Instruction *parse_instruction(Parser *parser) {
     skip_spaces(parser);
 
@@ -416,6 +463,9 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         }
         if (string_equals_cstr(mnemonic, "ret")) {
             return parse_ret_instruction(parser);
+        }
+        if (string_equals_cstr(mnemonic, "store")) {
+            return parse_store_instruction(parser);
         }
         parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
     }
@@ -448,7 +498,7 @@ static IR_Function parse_function(Parser *parser) {
         String parameter_name = expect_variable(parser, '%').lexeme;
         expect_other(parser, ':');
         skip_spaces(parser);
-        String parameter_type = expect_identifier(parser);
+        String parameter_type = parse_type(parser);
 
         IR_Value *parameter = malloc(sizeof(IR_Value));
         parameter->name = parameter_name;
@@ -466,7 +516,7 @@ static IR_Function parse_function(Parser *parser) {
     expect_other(parser, ')');
     expect_other(parser, ':');
     skip_spaces(parser);
-    String return_type_name = expect_identifier(parser);
+    String return_type_name = parse_type(parser);
     skip_spaces(parser);
     expect_other(parser, '{');
 

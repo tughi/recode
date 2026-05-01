@@ -18,6 +18,21 @@ typedef struct {
     size_t capacity;
 } Frame;
 
+typedef struct {
+    int64_t *cells;
+    size_t size;
+    size_t capacity;
+} Heap;
+
+static int64_t heap_alloc(Heap *heap) {
+    if (heap->size == heap->capacity) {
+        heap->capacity = heap->capacity == 0 ? 16 : heap->capacity * 2;
+        heap->cells = realloc(heap->cells, heap->capacity * sizeof(int64_t));
+    }
+    heap->cells[heap->size] = 0;
+    return (int64_t)heap->size++;
+}
+
 static void print_runtime_error(IR_Module *module, Source_Location location, const char *format, ...) {
     fprintf(stderr, "%.*s:%zu:%zu: ", STRING(module->source.path), location.line, location.column);
     va_list args;
@@ -73,9 +88,9 @@ typedef struct {
     };
 } Step;
 
-static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location);
+static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap);
 
-static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
+static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Instruction *instruction, Frame *frame, size_t previous_label, Heap *heap) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
@@ -83,6 +98,9 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
         frame_bind(frame, &instruction->result, left + right);
         return (Step){.kind = STEP_NEXT};
     }
+    case IR_INSTRUCTION__ALLOC:
+        frame_bind(frame, &instruction->result, heap_alloc(heap));
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__BR: {
         int64_t condition = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
         size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
@@ -99,7 +117,7 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
         for (size_t i = 0; i < argc; i++) {
             args[i] = frame_lookup(frame, instruction->arguments.items[i + 1], module, instruction->location);
         }
-        int64_t result = run_function(module, callee, args, argc, instruction->location);
+        int64_t result = run_function(module, callee, args, argc, instruction->location, heap);
         free(args);
         frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
@@ -154,6 +172,14 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
     }
     case IR_INSTRUCTION__JMP:
         return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
+    case IR_INSTRUCTION__LOAD: {
+        int64_t address = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+        if (address < 0 || (size_t)address >= heap->size) {
+            runtime_error(module, instruction->location, "Load from invalid address %lld", (long long)address);
+        }
+        frame_bind(frame, &instruction->result, heap->cells[address]);
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__MOD: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
         int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
@@ -190,6 +216,15 @@ static Step execute_instruction(IR_Module *module, IR_Function *function, IR_Ins
         }
         return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, returned, module, instruction->location)};
     }
+    case IR_INSTRUCTION__STORE: {
+        int64_t address = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+        int64_t value = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        if (address < 0 || (size_t)address >= heap->size) {
+            runtime_error(module, instruction->location, "Store to invalid address %lld", (long long)address);
+        }
+        heap->cells[address] = value;
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__SUB: {
         int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
         int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
@@ -209,7 +244,7 @@ static IR_Block *find_block(IR_Function *function, size_t label) {
     return NULL;
 }
 
-static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location) {
+static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap) {
     if (argc != function->parameters.size) {
         runtime_error(module, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argc);
     }
@@ -228,7 +263,7 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
             IR_Instruction *instruction = block->instructions.items[i];
-            Step step = execute_instruction(module, function, instruction, &frame, previous_label);
+            Step step = execute_instruction(module, function, instruction, &frame, previous_label, heap);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -262,5 +297,8 @@ int64_t interpret(IR_Module *module) {
     if (!string_equals_cstr(main_function->return_type.name, "i32")) {
         runtime_error(module, main_function->location, "$main must return i32, got '%.*s'", STRING(main_function->return_type.name));
     }
-    return run_function(module, main_function, NULL, 0, main_function->location);
+    Heap heap = {0};
+    int64_t result = run_function(module, main_function, NULL, 0, main_function->location, &heap);
+    free(heap.cells);
+    return result;
 }

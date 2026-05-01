@@ -1,0 +1,12 @@
+; exit: 7
+
+$main(): i32 {
+@1:
+    %value.ptr: ptr<i32> = alloc i32
+    %0: i32 = const 99
+    store %value.ptr %0
+    %1: i32 = const 7
+    store %value.ptr %1
+    %value: i32 = load %value.ptr
+    ret %value
+}

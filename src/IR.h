@@ -23,6 +23,10 @@ typedef struct {
 
 void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
+typedef struct IR_Alloc_Instruction {
+    IR_Type element_type;
+} IR_Alloc_Instruction;
+
 typedef struct IR_Br_Instruction {
     size_t true_label;
     size_t false_label;
@@ -42,6 +46,7 @@ typedef struct IR_Phi_Instruction {
 
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__ADD,
+    IR_INSTRUCTION__ALLOC,
     IR_INSTRUCTION__BR,
     IR_INSTRUCTION__CALL,
     IR_INSTRUCTION__CMP_EQ,
@@ -53,12 +58,14 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__CONST,
     IR_INSTRUCTION__DIV,
     IR_INSTRUCTION__JMP,
+    IR_INSTRUCTION__LOAD,
     IR_INSTRUCTION__MOD,
     IR_INSTRUCTION__MUL,
     IR_INSTRUCTION__NEG,
     IR_INSTRUCTION__PHI,
     IR_INSTRUCTION__PLACEHOLDER,
     IR_INSTRUCTION__RET,
+    IR_INSTRUCTION__STORE,
     IR_INSTRUCTION__SUB,
 } IR_Instruction_Kind;
 
@@ -78,6 +85,7 @@ struct IR_Instruction {
     Source_Location location;
     IR_Value_List arguments;
     union {
+        IR_Alloc_Instruction alloc_instruction;
         IR_Br_Instruction br_instruction;
         IR_Const_Instruction const_instruction;
         IR_Jmp_Instruction jmp_instruction;

@@ -1,0 +1,15 @@
+; exit: 30
+
+$main(): i32 {
+@1:
+    %a.ptr: ptr<i32> = alloc i32
+    %b.ptr: ptr<i32> = alloc i32
+    %0: i32 = const 10
+    store %a.ptr %0
+    %1: i32 = const 20
+    store %b.ptr %1
+    %a: i32 = load %a.ptr
+    %b: i32 = load %b.ptr
+    %sum: i32 = add %a %b
+    ret %sum
+}
