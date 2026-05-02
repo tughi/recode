@@ -676,6 +676,18 @@ static IR_Function parse_function(Parser *parser) {
                 break;
             }
 
+            if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '[') {
+                advance(parser);
+                while (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != ']') {
+                    if (parser->current.kind == TOKEN_KIND__END_OF_FILE) {
+                        parse_error_current(parser, "Unterminated live variables annotation");
+                    }
+                    advance(parser);
+                }
+                advance(parser);
+                continue;
+            }
+
             ir_instruction_list_add(&block->instructions, parse_instruction(parser));
         }
     }
