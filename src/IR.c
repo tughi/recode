@@ -109,3 +109,11 @@ void ir_function_list_add(IR_Function_List *list, IR_Function function) {
     }
     list->items[list->size++] = function;
 }
+
+void ir_global_list_add(IR_Global_List *list, IR_Global *global) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
+        list->items = realloc(list->items, list->capacity * sizeof(IR_Global *));
+    }
+    list->items[list->size++] = global;
+}

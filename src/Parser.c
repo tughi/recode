@@ -623,6 +623,38 @@ static void check_function(Parser *parser, IR_Function *function) {
     }
 }
 
+static IR_Global *parse_global(Parser *parser) {
+    Source_Location external_location = current_location(parser);
+    advance(parser);
+    skip_spaces(parser, 1);
+    Variable_Token name_variable = expect_variable(parser, '$');
+    expect_other(parser, ':');
+    skip_spaces(parser, 1);
+    IR_Type *cell_type = parse_type(parser);
+    IR_Type *ptr_type = ir_type_intern_ptr(parser->types, cell_type);
+
+    IR_Value *value = ir_value_list_lookup(&parser->global_values, name_variable.lexeme);
+    if (value == NULL) {
+        value = malloc(sizeof(IR_Value));
+        value->name = name_variable.lexeme;
+        value->type = ptr_type;
+        ir_value_list_add(&parser->global_values, value);
+    } else {
+        if (value->type != NULL) {
+            parse_error(parser, name_variable.location, "Redefinition of '%.*s'", STRING(name_variable.lexeme));
+        }
+        value->type = ptr_type;
+    }
+
+    IR_Global *global = malloc(sizeof(IR_Global));
+    global->name = name_variable.lexeme;
+    global->location = external_location;
+    global->type = cell_type;
+    global->is_external = true;
+    global->value = value;
+    return global;
+}
+
 static IR_Function parse_function(Parser *parser) {
     Variable_Token name_variable = expect_variable(parser, '$');
     String name = name_variable.lexeme;
@@ -733,7 +765,6 @@ static IR_Function parse_function(Parser *parser) {
         }
     }
 
-    check_function(parser, &function);
     return function;
 }
 
@@ -751,6 +782,7 @@ IR_Module *parse(Source source) {
     IR_Module *module = malloc(sizeof(IR_Module));
     module->source = source;
     module->functions = (IR_Function_List){0};
+    module->globals = (IR_Global_List){0};
     module->types = (IR_Type_List){0};
     parser.types = &module->types;
 
@@ -761,7 +793,16 @@ IR_Module *parse(Source source) {
             break;
         }
 
+        if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "external")) {
+            ir_global_list_add(&module->globals, parse_global(&parser));
+            continue;
+        }
+
         ir_function_list_add(&module->functions, parse_function(&parser));
+    }
+
+    for (size_t i = 0; i < module->functions.size; i++) {
+        check_function(&parser, &module->functions.items[i]);
     }
 
     lexer_destroy(parser.lexer);

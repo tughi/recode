@@ -56,10 +56,17 @@ static void frame_bind(Frame *frame, IR_Value *key, int64_t value) {
     frame->items[frame->size++] = (Binding){.key = key, .value = value};
 }
 
-static int64_t frame_lookup(Frame *frame, IR_Value *key, IR_Module *module, Source_Location location) {
+static int64_t frame_lookup(Frame *frame, Frame *globals, IR_Value *key, IR_Module *module, Source_Location location) {
     for (size_t i = frame->size; i > 0; i--) {
         if (frame->items[i - 1].key == key) {
             return frame->items[i - 1].value;
+        }
+    }
+    if (globals != NULL) {
+        for (size_t i = globals->size; i > 0; i--) {
+            if (globals->items[i - 1].key == key) {
+                return globals->items[i - 1].value;
+            }
         }
     }
     runtime_error(module, location, "Unbound value '%.*s'", STRING(key->name));
@@ -88,13 +95,13 @@ typedef struct {
     };
 } Step;
 
-static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap);
+static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap, Frame *globals);
 
-static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label, Heap *heap) {
+static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, Frame *frame, size_t previous_label, Heap *heap, Frame *globals) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left + right);
         return (Step){.kind = STEP_NEXT};
     }
@@ -102,7 +109,7 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         frame_bind(frame, &instruction->result, heap_alloc(heap));
         return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__BR: {
-        int64_t condition = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+        int64_t condition = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
         size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
         return (Step){.kind = STEP_JUMP, .jump_label = target};
     }
@@ -115,9 +122,9 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         size_t argc = instruction->arguments.size - 1;
         int64_t *args = argc == 0 ? NULL : malloc(argc * sizeof(int64_t));
         for (size_t i = 0; i < argc; i++) {
-            args[i] = frame_lookup(frame, instruction->arguments.items[i + 1], module, instruction->location);
+            args[i] = frame_lookup(frame, globals, instruction->arguments.items[i + 1], module, instruction->location);
         }
-        int64_t result = run_function(module, callee, args, argc, instruction->location, heap);
+        int64_t result = run_function(module, callee, args, argc, instruction->location, heap, globals);
         free(args);
         if (instruction->result.type != ir_type_void()) {
             frame_bind(frame, &instruction->result, result);
@@ -125,38 +132,38 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_EQ: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left == right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_GE: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left >= right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_GT: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left > right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_LE: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left <= right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_LT: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left < right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_NE: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left != right);
         return (Step){.kind = STEP_NEXT};
     }
@@ -164,8 +171,8 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         frame_bind(frame, &instruction->result, instruction->const_instruction.value);
         return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__DIV: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         if (right == 0) {
             runtime_error(module, instruction->location, "Division by zero");
         }
@@ -175,7 +182,7 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
     case IR_INSTRUCTION__JMP:
         return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
     case IR_INSTRUCTION__LOAD: {
-        int64_t address = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+        int64_t address = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
         if (address < 0 || (size_t)address >= heap->size) {
             runtime_error(module, instruction->location, "Load from invalid address %lld", (long long)address);
         }
@@ -183,8 +190,8 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__MOD: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         if (right == 0) {
             runtime_error(module, instruction->location, "Modulo by zero");
         }
@@ -192,21 +199,21 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__MUL: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left * right);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__NEG:
-        frame_bind(frame, &instruction->result, -frame_lookup(frame, instruction->arguments.items[0], module, instruction->location));
+        frame_bind(frame, &instruction->result, -frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location));
         return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__NOT:
-        frame_bind(frame, &instruction->result, !frame_lookup(frame, instruction->arguments.items[0], module, instruction->location));
+        frame_bind(frame, &instruction->result, !frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location));
         return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             if (instruction->phi_instruction.labels[i] == previous_label) {
-                int64_t value = frame_lookup(frame, instruction->arguments.items[i], module, instruction->location);
+                int64_t value = frame_lookup(frame, globals, instruction->arguments.items[i], module, instruction->location);
                 frame_bind(frame, &instruction->result, value);
                 return (Step){.kind = STEP_NEXT};
             }
@@ -217,13 +224,13 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
     case IR_INSTRUCTION__RET: {
         int64_t return_value = 0;
         if (instruction->arguments.size > 0) {
-            return_value = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+            return_value = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
         }
         return (Step){.kind = STEP_RETURN, .return_value = return_value};
     }
     case IR_INSTRUCTION__STORE: {
-        int64_t address = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t value = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t address = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t value = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         if (address < 0 || (size_t)address >= heap->size) {
             runtime_error(module, instruction->location, "Store to invalid address %lld", (long long)address);
         }
@@ -231,8 +238,8 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__SUB: {
-        int64_t left = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
-        int64_t right = frame_lookup(frame, instruction->arguments.items[1], module, instruction->location);
+        int64_t left = frame_lookup(frame, globals, instruction->arguments.items[0], module, instruction->location);
+        int64_t right = frame_lookup(frame, globals, instruction->arguments.items[1], module, instruction->location);
         frame_bind(frame, &instruction->result, left - right);
         return (Step){.kind = STEP_NEXT};
     }
@@ -257,7 +264,7 @@ static int64_t call_external(IR_Module *module, IR_Function *function, int64_t *
     runtime_error(module, call_location, "Unknown external function '%.*s'", STRING(function->name));
 }
 
-static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap) {
+static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap, Frame *globals) {
     if (argc != function->parameters.size) {
         runtime_error(module, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argc);
     }
@@ -279,7 +286,7 @@ static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *a
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
             IR_Instruction *instruction = block->instructions.items[i];
-            Step step = execute_instruction(module, instruction, &frame, previous_label, heap);
+            Step step = execute_instruction(module, instruction, &frame, previous_label, heap, globals);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -317,7 +324,17 @@ int64_t interpret(IR_Module *module) {
         panic();
     }
     Heap heap = {0};
-    int64_t result = run_function(module, main_function, NULL, 0, main_function->location, &heap);
+    Frame globals = {0};
+    for (size_t i = 0; i < module->globals.size; i++) {
+        IR_Global *global = module->globals.items[i];
+        int64_t address = heap_alloc(&heap);
+        if (string_equals_cstr(global->name, "$optind")) {
+            heap.cells[address] = 1;
+        }
+        frame_bind(&globals, global->value, address);
+    }
+    int64_t result = run_function(module, main_function, NULL, 0, main_function->location, &heap, &globals);
+    free(globals.items);
     free(heap.cells);
     return result;
 }

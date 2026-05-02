@@ -155,8 +155,25 @@ typedef struct {
 
 void ir_function_list_add(IR_Function_List *list, IR_Function function);
 
+typedef struct IR_Global {
+    String name;
+    Source_Location location;
+    IR_Type *type;
+    bool is_external;
+    IR_Value *value;
+} IR_Global;
+
+typedef struct {
+    IR_Global **items;
+    size_t size;
+    size_t capacity;
+} IR_Global_List;
+
+void ir_global_list_add(IR_Global_List *list, IR_Global *global);
+
 typedef struct IR_Module {
     Source source;
     IR_Function_List functions;
+    IR_Global_List globals;
     IR_Type_List types;
 } IR_Module;
