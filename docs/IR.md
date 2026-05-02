@@ -12,7 +12,15 @@ $function_name(%param: type, ...): return_type {
 }
 ```
 
-Defines a procedure with typed parameters and a return type. A declaration without a body declares an external function:
+Defines a procedure with typed parameters and a return type. The return type annotation is optional — omitting it implies `void`.
+
+```
+$function_name(%param: type, ...) {
+    ...
+}
+```
+
+A declaration without a body declares an external function:
 
 ```
 $fputc(%c: u8, %file: ptr<FILE>): i32

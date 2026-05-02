@@ -99,6 +99,9 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "i32")) {
         return ir_type_i32();
     }
+    if (string_equals_cstr(name.lexeme, "void")) {
+        return ir_type_void();
+    }
     parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
 }
 
@@ -467,7 +470,9 @@ static IR_Instruction *parse_ret_instruction(Parser *parser) {
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
     instruction->kind = IR_INSTRUCTION__RET;
-    ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+    if (parser->current.kind != TOKEN_KIND__END_OF_LINE && parser->current.kind != TOKEN_KIND__END_OF_FILE) {
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+    }
     return instruction;
 }
 
@@ -498,6 +503,19 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         IR_Instruction *instruction = NULL;
         if (string_equals_cstr(mnemonic, "br")) {
             instruction = parse_br_instruction(parser);
+        } else if (string_equals_cstr(mnemonic, "call")) {
+            skip_spaces(parser);
+            instruction = alloc_instruction();
+            instruction->result = (IR_Value){.type = ir_type_void()};
+            instruction->kind = IR_INSTRUCTION__CALL;
+            ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+            while (true) {
+                skip_spaces(parser);
+                if (parser->current.kind != TOKEN_KIND__VARIABLE) {
+                    break;
+                }
+                ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+            }
         } else if (string_equals_cstr(mnemonic, "jmp")) {
             instruction = parse_jmp_instruction(parser);
         } else if (string_equals_cstr(mnemonic, "ret")) {
@@ -574,7 +592,13 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__PLACEHOLDER:
         return;
     case IR_INSTRUCTION__RET:
-        expect_type(parser, loc, "ret value", function->return_type, instruction->arguments.items[0]->type);
+        if (ir_type_equals(function->return_type, ir_type_void())) {
+            if (instruction->arguments.size != 0) {
+                parse_error(parser, loc, "void function must not return a value");
+            }
+        } else {
+            expect_type(parser, loc, "ret value", function->return_type, instruction->arguments.items[0]->type);
+        }
         return;
     case IR_INSTRUCTION__STORE: {
         IR_Type *pointee = expect_ptr(parser, loc, "store pointer", instruction->arguments.items[0]->type);
@@ -634,10 +658,14 @@ static IR_Function parse_function(Parser *parser) {
     }
 
     expect_other(parser, ')');
-    expect_other(parser, ':');
     skip_spaces(parser);
-    IR_Type *return_type = parse_type(parser);
-    skip_spaces(parser);
+    IR_Type *return_type = ir_type_void();
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') {
+        advance(parser);
+        skip_spaces(parser);
+        return_type = parse_type(parser);
+        skip_spaces(parser);
+    }
     expect_other(parser, '{');
 
     function.return_type = return_type;

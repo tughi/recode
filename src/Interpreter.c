@@ -119,7 +119,9 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
         }
         int64_t result = run_function(module, callee, args, argc, instruction->location, heap);
         free(args);
-        frame_bind(frame, &instruction->result, result);
+        if (instruction->result.type != ir_type_void()) {
+            frame_bind(frame, &instruction->result, result);
+        }
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_EQ: {
@@ -213,8 +215,11 @@ static Step execute_instruction(IR_Module *module, IR_Instruction *instruction, 
     case IR_INSTRUCTION__PLACEHOLDER:
         runtime_error(module, instruction->location, "Unresolved placeholder '%.*s'", STRING(instruction->result.name));
     case IR_INSTRUCTION__RET: {
-        IR_Value *returned = instruction->arguments.items[0];
-        return (Step){.kind = STEP_RETURN, .return_value = frame_lookup(frame, returned, module, instruction->location)};
+        int64_t return_value = 0;
+        if (instruction->arguments.size > 0) {
+            return_value = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
+        }
+        return (Step){.kind = STEP_RETURN, .return_value = return_value};
     }
     case IR_INSTRUCTION__STORE: {
         int64_t address = frame_lookup(frame, instruction->arguments.items[0], module, instruction->location);
