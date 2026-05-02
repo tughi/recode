@@ -249,9 +249,20 @@ static IR_Block *find_block(IR_Function *function, size_t label) {
     return NULL;
 }
 
+static int64_t call_external(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location) {
+    (void)argc;
+    if (string_equals_cstr(function->name, "$exit")) {
+        exit((int)args[0]);
+    }
+    runtime_error(module, call_location, "Unknown external function '%.*s'", STRING(function->name));
+}
+
 static int64_t run_function(IR_Module *module, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location, Heap *heap) {
     if (argc != function->parameters.size) {
         runtime_error(module, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argc);
+    }
+    if (function->is_external) {
+        return call_external(module, function, args, argc, call_location);
     }
     if (function->blocks.size == 0) {
         runtime_error(module, function->location, "'%.*s' has no blocks", STRING(function->name));

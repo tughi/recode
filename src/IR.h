@@ -144,6 +144,7 @@ typedef struct IR_Function {
     IR_Value_List parameters;
     IR_Type *return_type;
     IR_Block_List blocks;
+    bool is_external;
 } IR_Function;
 
 typedef struct {

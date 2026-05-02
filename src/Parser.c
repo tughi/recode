@@ -666,10 +666,16 @@ static IR_Function parse_function(Parser *parser) {
         return_type = parse_type(parser);
         skip_spaces(parser);
     }
-    expect_other(parser, '{');
 
     function.return_type = return_type;
     function.blocks = (IR_Block_List){0};
+    function.is_external = false;
+
+    if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '{') {
+        function.is_external = true;
+        return function;
+    }
+    advance(parser);
 
     while (true) {
         skip_whitespace(parser);
