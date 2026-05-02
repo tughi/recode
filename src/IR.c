@@ -3,6 +3,7 @@
 
 static IR_Type ir_type_bool_singleton = {.kind = IR_TYPE__BOOL};
 static IR_Type ir_type_i32_singleton = {.kind = IR_TYPE__I32};
+static IR_Type ir_type_u8_singleton = {.kind = IR_TYPE__U8};
 static IR_Type ir_type_void_singleton = {.kind = IR_TYPE__VOID};
 
 IR_Type *ir_type_bool(void) {
@@ -11,6 +12,10 @@ IR_Type *ir_type_bool(void) {
 
 IR_Type *ir_type_i32(void) {
     return &ir_type_i32_singleton;
+}
+
+IR_Type *ir_type_u8(void) {
+    return &ir_type_u8_singleton;
 }
 
 IR_Type *ir_type_void(void) {
@@ -95,6 +100,9 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
         fputs("ptr<", out);
         ir_type_fprintf(out, type->pointee);
         fputc('>', out);
+        return;
+    case IR_TYPE__U8:
+        fputs("u8", out);
         return;
     case IR_TYPE__VOID:
         fputs("void", out);

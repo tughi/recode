@@ -107,6 +107,9 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "i32")) {
         return ir_type_i32();
     }
+    if (string_equals_cstr(name.lexeme, "u8")) {
+        return ir_type_u8();
+    }
     if (string_equals_cstr(name.lexeme, "void")) {
         return ir_type_void();
     }
@@ -355,6 +358,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
             }
             parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal.lexeme));
         }
+        if (parser->current.kind == TOKEN_KIND__CHARACTER) {
+            Character_Token literal = parser->current.character;
+            expect_type(parser, literal.location, "const char literal", ir_type_u8(), result_type);
+            instruction->const_instruction.value = literal.value;
+            advance(parser);
+            return instruction;
+        }
         Source_Location literal_location = current_location(parser);
         bool negative = false;
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
@@ -362,7 +372,9 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
             advance(parser);
         }
         int64_t value = expect_integer(parser);
-        expect_type(parser, literal_location, "const integer literal", ir_type_i32(), result_type);
+        if (result_type != ir_type_i32() && result_type != ir_type_u8()) {
+            expect_type(parser, literal_location, "const integer literal", ir_type_i32(), result_type);
+        }
         instruction->const_instruction.value = negative ? -value : value;
         return instruction;
     }

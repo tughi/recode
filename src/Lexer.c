@@ -82,6 +82,17 @@ static Token scan_character(Lexer *lexer) {
         token.kind = TOKEN_KIND__CHARACTER;
         token.character.lexeme = (String){.content = source + start, .length = position - start};
         token.character.location = location;
+        if (source[start + 1] == '\\') {
+            switch (source[start + 2]) {
+            case '0': token.character.value = '\0'; break;
+            case 'n': token.character.value = '\n'; break;
+            case 'r': token.character.value = '\r'; break;
+            case 't': token.character.value = '\t'; break;
+            default:  token.character.value = (uint8_t)source[start + 2]; break;
+            }
+        } else {
+            token.character.value = (uint8_t)source[start + 1];
+        }
     } else {
         token.kind = TOKEN_KIND__ERROR;
         token.error.lexeme = (String){.content = source + start, .length = position - start};

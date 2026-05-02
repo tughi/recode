@@ -8,6 +8,7 @@
 typedef struct Character_Token {
     String lexeme;
     Source_Location location;
+    uint8_t value;
 } Character_Token;
 
 typedef struct End_Of_File_Token {
