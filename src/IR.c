@@ -39,6 +39,24 @@ IR_Type *ir_type_intern_ptr(IR_Type_List *types, IR_Type *pointee) {
     return type;
 }
 
+IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name) {
+    for (size_t i = 0; i < types->size; i++) {
+        IR_Type *existing = types->items[i];
+        if (existing->kind == IR_TYPE__OPAQUE && string_equals(existing->name, name)) {
+            return existing;
+        }
+    }
+    return NULL;
+}
+
+IR_Type *ir_type_new_opaque(IR_Type_List *types, String name) {
+    IR_Type *type = malloc(sizeof(IR_Type));
+    type->kind = IR_TYPE__OPAQUE;
+    type->name = name;
+    ir_type_list_add(types, type);
+    return type;
+}
+
 bool ir_type_equals(IR_Type *a, IR_Type *b) {
     if (a == b) {
         return true;
@@ -51,6 +69,9 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
     }
     if (a->kind == IR_TYPE__PTR) {
         return ir_type_equals(a->pointee, b->pointee);
+    }
+    if (a->kind == IR_TYPE__OPAQUE) {
+        return false;
     }
     return true;
 }
@@ -66,6 +87,9 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
         return;
     case IR_TYPE__I32:
         fputs("i32", out);
+        return;
+    case IR_TYPE__OPAQUE:
+        fprintf(out, "%.*s", STRING(type->name));
         return;
     case IR_TYPE__PTR:
         fputs("ptr<", out);

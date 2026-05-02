@@ -11,6 +11,7 @@
 typedef enum IR_Type_Kind {
     IR_TYPE__BOOL,
     IR_TYPE__I32,
+    IR_TYPE__OPAQUE,
     IR_TYPE__PTR,
     IR_TYPE__VOID,
 } IR_Type_Kind;
@@ -20,6 +21,7 @@ struct IR_Type {
     IR_Type_Kind kind;
     union {
         IR_Type *pointee;
+        String name;
     };
 };
 
@@ -34,6 +36,8 @@ void ir_type_list_add(IR_Type_List *list, IR_Type *type);
 IR_Type *ir_type_bool(void);
 IR_Type *ir_type_i32(void);
 IR_Type *ir_type_intern_ptr(IR_Type_List *types, IR_Type *pointee);
+IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name);
+IR_Type *ir_type_new_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 void ir_type_fprintf(FILE *out, IR_Type *type);

@@ -110,6 +110,10 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "void")) {
         return ir_type_void();
     }
+    IR_Type *opaque = ir_type_lookup_opaque(parser->types, name.lexeme);
+    if (opaque != NULL) {
+        return opaque;
+    }
     parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
 }
 
@@ -623,6 +627,25 @@ static void check_function(Parser *parser, IR_Function *function) {
     }
 }
 
+static void parse_type_declaration(Parser *parser) {
+    advance(parser);
+    skip_spaces(parser, 1);
+    Source_Location name_location = current_location(parser);
+    String name = expect_identifier(parser);
+    skip_spaces(parser, 1);
+    expect_other(parser, '=');
+    skip_spaces(parser, 1);
+    Source_Location body_location = current_location(parser);
+    String body = expect_identifier(parser);
+    if (!string_equals_cstr(body, "opaque")) {
+        parse_error(parser, body_location, "Expected 'opaque', got '%.*s'", STRING(body));
+    }
+    if (ir_type_lookup_opaque(parser->types, name) != NULL) {
+        parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
+    }
+    ir_type_new_opaque(parser->types, name);
+}
+
 static IR_Global *parse_global(Parser *parser) {
     Source_Location external_location = current_location(parser);
     advance(parser);
@@ -795,6 +818,11 @@ IR_Module *parse(Source source) {
 
         if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "external")) {
             ir_global_list_add(&module->globals, parse_global(&parser));
+            continue;
+        }
+
+        if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "type")) {
+            parse_type_declaration(&parser);
             continue;
         }
 

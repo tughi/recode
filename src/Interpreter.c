@@ -261,6 +261,9 @@ static int64_t call_external(IR_Module *module, IR_Function *function, int64_t *
     if (string_equals_cstr(function->name, "$exit")) {
         exit((int)args[0]);
     }
+    if (string_equals_cstr(function->name, "$fputc")) {
+        return (int64_t)fputc((int)args[0], (FILE *)(uintptr_t)args[1]);
+    }
     runtime_error(module, call_location, "Unknown external function '%.*s'", STRING(function->name));
 }
 
@@ -330,6 +333,12 @@ int64_t interpret(IR_Module *module) {
         int64_t address = heap_alloc(&heap);
         if (string_equals_cstr(global->name, "$optind")) {
             heap.cells[address] = 1;
+        } else if (string_equals_cstr(global->name, "$stdout")) {
+            heap.cells[address] = (int64_t)(uintptr_t)stdout;
+        } else if (string_equals_cstr(global->name, "$stderr")) {
+            heap.cells[address] = (int64_t)(uintptr_t)stderr;
+        } else if (string_equals_cstr(global->name, "$stdin")) {
+            heap.cells[address] = (int64_t)(uintptr_t)stdin;
         }
         frame_bind(&globals, global->value, address);
     }
