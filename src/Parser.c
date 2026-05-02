@@ -9,8 +9,9 @@
 
 typedef struct {
     Source source;
-    Lexer lexer;
+    Lexer *lexer;
     Token current;
+    Token next;
     IR_Type_List *types;
     IR_Value_List function_values;
     IR_Value_List global_values;
@@ -18,17 +19,24 @@ typedef struct {
 } Parser;
 
 static void advance(Parser *parser) {
-    parser->current = lexer_next(&parser->lexer);
+    parser->current = parser->next;
+    parser->next = lexer_next(parser->lexer);
 }
 
-static void skip_spaces(Parser *parser) {
-    while (parser->current.kind == TOKEN_KIND__SPACE) {
+static void skip_spaces(Parser *parser, size_t count) {
+    Source_Location location = parser->current.kind == TOKEN_KIND__SPACE ? parser->current.space.location : parser->current.identifier.location;
+    size_t actual = 0;
+    if (parser->current.kind == TOKEN_KIND__SPACE) {
+        actual = parser->current.space.count;
         advance(parser);
+    }
+    if (actual != count) {
+        fprintf(stderr, "%.*s:%zu:%zu: Expected %zu space(s), got %zu\n", STRING(parser->source.path), location.line, location.column, count, actual);
     }
 }
 
-static void skip_whitespace(Parser *parser) {
-    while (parser->current.kind == TOKEN_KIND__SPACE || parser->current.kind == TOKEN_KIND__END_OF_LINE) {
+static void skip_end_of_lines(Parser *parser) {
+    while (parser->current.kind == TOKEN_KIND__END_OF_LINE) {
         advance(parser);
     }
 }
@@ -217,11 +225,11 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     Variable_Token result_variable = expect_variable(parser, '%');
     String result_name = result_variable.lexeme;
     expect_other(parser, ':');
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     IR_Type *result_type = parse_type(parser);
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     expect_other(parser, '=');
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     String mnemonic = expect_identifier(parser);
 
     IR_Instruction *instruction = NULL;
@@ -245,27 +253,27 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     instruction->result.type = result_type;
 
     if (string_equals_cstr(mnemonic, "add")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__ADD;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "alloc")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         instruction->alloc_instruction.element_type = parse_type(parser);
         instruction->kind = IR_INSTRUCTION__ALLOC;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "call")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
 
-        while (true) {
-            skip_spaces(parser);
+        while (parser->current.kind == TOKEN_KIND__SPACE) {
+            skip_spaces(parser, 1);
             if (parser->current.kind != TOKEN_KIND__VARIABLE) {
                 break;
             }
@@ -277,61 +285,61 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     }
 
     if (string_equals_cstr(mnemonic, "cmp_eq")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_EQ;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "cmp_ge")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_GE;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "cmp_gt")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_GT;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "cmp_le")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_LE;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "cmp_lt")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_LT;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "cmp_ne")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__CMP_NE;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "const")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         instruction->kind = IR_INSTRUCTION__CONST;
         if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
             Identifier_Token literal = parser->current.identifier;
@@ -356,48 +364,48 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     }
 
     if (string_equals_cstr(mnemonic, "div")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__DIV;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "load")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__LOAD;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "mod")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__MOD;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "mul")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__MUL;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "neg")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__NEG;
         return instruction;
     }
 
     if (string_equals_cstr(mnemonic, "not")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__NOT;
         return instruction;
@@ -407,13 +415,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         instruction->kind = IR_INSTRUCTION__PHI;
         instruction->phi_instruction.labels = NULL;
         size_t count = 0;
-        while (true) {
-            skip_spaces(parser);
+        while (parser->current.kind == TOKEN_KIND__SPACE) {
+            skip_spaces(parser, 1);
             if (parser->current.kind != TOKEN_KIND__LABEL) {
                 break;
             }
             size_t label = expect_label(parser);
-            skip_spaces(parser);
+            skip_spaces(parser, 1);
             IR_Value *value = expect_value_reference(parser);
 
             instruction->phi_instruction.labels = realloc(instruction->phi_instruction.labels, (count + 1) * sizeof(size_t));
@@ -427,9 +435,9 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     }
 
     if (string_equals_cstr(mnemonic, "sub")) {
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__SUB;
         return instruction;
@@ -439,11 +447,11 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 }
 
 static IR_Instruction *parse_br_instruction(Parser *parser) {
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     IR_Value *condition = expect_value_reference(parser);
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     size_t true_label = expect_label(parser);
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     size_t false_label = expect_label(parser);
 
     IR_Instruction *instruction = alloc_instruction();
@@ -456,7 +464,7 @@ static IR_Instruction *parse_br_instruction(Parser *parser) {
 }
 
 static IR_Instruction *parse_jmp_instruction(Parser *parser) {
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     size_t label = expect_label(parser);
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
@@ -466,20 +474,20 @@ static IR_Instruction *parse_jmp_instruction(Parser *parser) {
 }
 
 static IR_Instruction *parse_ret_instruction(Parser *parser) {
-    skip_spaces(parser);
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
     instruction->kind = IR_INSTRUCTION__RET;
-    if (parser->current.kind != TOKEN_KIND__END_OF_LINE && parser->current.kind != TOKEN_KIND__END_OF_FILE) {
+    if (parser->current.kind == TOKEN_KIND__SPACE) {
+        skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
     }
     return instruction;
 }
 
 static IR_Instruction *parse_store_instruction(Parser *parser) {
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     IR_Value *pointer = expect_value_reference(parser);
-    skip_spaces(parser);
+    skip_spaces(parser, 1);
     IR_Value *value = expect_value_reference(parser);
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
@@ -490,8 +498,6 @@ static IR_Instruction *parse_store_instruction(Parser *parser) {
 }
 
 static IR_Instruction *parse_instruction(Parser *parser) {
-    skip_spaces(parser);
-
     if (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
         return parse_value_instruction(parser);
     }
@@ -504,13 +510,13 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         if (string_equals_cstr(mnemonic, "br")) {
             instruction = parse_br_instruction(parser);
         } else if (string_equals_cstr(mnemonic, "call")) {
-            skip_spaces(parser);
+            skip_spaces(parser, 1);
             instruction = alloc_instruction();
             instruction->result = (IR_Value){.type = ir_type_void()};
             instruction->kind = IR_INSTRUCTION__CALL;
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-            while (true) {
-                skip_spaces(parser);
+            while (parser->current.kind == TOKEN_KIND__SPACE) {
+                skip_spaces(parser, 1);
                 if (parser->current.kind != TOKEN_KIND__VARIABLE) {
                     break;
                 }
@@ -637,11 +643,10 @@ static IR_Function parse_function(Parser *parser) {
     parser->function_values.size = 0;
     parser->forward_references.size = 0;
 
-    skip_spaces(parser);
     while (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
         String parameter_name = expect_variable(parser, '%').lexeme;
         expect_other(parser, ':');
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         IR_Type *parameter_type = parse_type(parser);
 
         IR_Value *parameter = malloc(sizeof(IR_Value));
@@ -650,35 +655,38 @@ static IR_Function parse_function(Parser *parser) {
         ir_value_list_add(&function.parameters, parameter);
         ir_value_list_add(&parser->function_values, parameter);
 
-        skip_spaces(parser);
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ',') {
             advance(parser);
-            skip_spaces(parser);
+            skip_spaces(parser, 1);
         }
     }
 
     expect_other(parser, ')');
-    skip_spaces(parser);
     IR_Type *return_type = ir_type_void();
     if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') {
         advance(parser);
-        skip_spaces(parser);
+        skip_spaces(parser, 1);
         return_type = parse_type(parser);
-        skip_spaces(parser);
     }
 
     function.return_type = return_type;
     function.blocks = (IR_Block_List){0};
-    function.is_external = false;
 
+    if (parser->current.kind != TOKEN_KIND__SPACE) {
+        function.is_external = true;
+        return function;
+    }
+    skip_spaces(parser, 1);
     if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '{') {
         function.is_external = true;
         return function;
     }
+    function.is_external = false;
     advance(parser);
 
     while (true) {
-        skip_whitespace(parser);
+        skip_end_of_lines(parser);
+        skip_spaces(parser, 0);
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '}') {
             advance(parser);
             if (parser->forward_references.size > 0) {
@@ -699,16 +707,15 @@ static IR_Function parse_function(Parser *parser) {
         ir_block_list_add(&function.blocks, block);
 
         while (true) {
-            skip_whitespace(parser);
-            if (parser->current.kind == TOKEN_KIND__LABEL) {
+            skip_end_of_lines(parser);
+            if (parser->current.kind != TOKEN_KIND__SPACE) {
                 break;
             }
-            if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '}') {
-                break;
+            if (parser->next.kind == TOKEN_KIND__END_OF_LINE || parser->next.kind == TOKEN_KIND__END_OF_FILE) {
+                advance(parser);
+                continue;
             }
-            if (parser->current.kind == TOKEN_KIND__END_OF_FILE) {
-                break;
-            }
+            skip_spaces(parser, 2);
 
             if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '[') {
                 advance(parser);
@@ -737,8 +744,9 @@ IR_Module *parse(Source source) {
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
 
-    lexer_init(&parser.lexer, source.content);
-    parser.current = lexer_next(&parser.lexer);
+    parser.lexer = lexer_create(source.content);
+    parser.current = lexer_next(parser.lexer);
+    parser.next = lexer_next(parser.lexer);
 
     IR_Module *module = malloc(sizeof(IR_Module));
     module->source = source;
@@ -747,7 +755,8 @@ IR_Module *parse(Source source) {
     parser.types = &module->types;
 
     while (true) {
-        skip_whitespace(&parser);
+        skip_end_of_lines(&parser);
+        skip_spaces(&parser, 0);
         if (parser.current.kind == TOKEN_KIND__END_OF_FILE) {
             break;
         }
@@ -755,5 +764,6 @@ IR_Module *parse(Source source) {
         ir_function_list_add(&module->functions, parse_function(&parser));
     }
 
+    lexer_destroy(parser.lexer);
     return module;
 }

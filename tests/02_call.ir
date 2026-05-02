@@ -2,12 +2,12 @@
 
 $main(): i32 {
 @1:
-    %1: i32 = const 42
-    %2: i32 = call $identity %1
-    ret %2
+  %1: i32 = const 42
+  %2: i32 = call $identity %1
+  ret %2
 }
 
 $identity(%param: i32): i32 {
 @1:
-    ret %param
+  ret %param
 }

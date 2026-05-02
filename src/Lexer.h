@@ -1,13 +1,10 @@
 #pragma once
 
+#include "String.h"
 #include "Token.h"
 
-typedef struct Lexer {
-    String source;
-    size_t source_column;
-    size_t source_line;
-    size_t source_position;
-} Lexer;
+typedef struct Lexer Lexer;
 
-void lexer_init(Lexer *lexer, String source);
+Lexer *lexer_create(String source);
+void lexer_destroy(Lexer *lexer);
 Token lexer_next(Lexer *lexer);

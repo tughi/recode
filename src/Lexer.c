@@ -1,10 +1,24 @@
 #include "Lexer.h"
+#include <stdlib.h>
 
-void lexer_init(Lexer *lexer, String source) {
+struct Lexer {
+    String source;
+    size_t source_column;
+    size_t source_line;
+    size_t source_position;
+};
+
+Lexer *lexer_create(String source) {
+    Lexer *lexer = malloc(sizeof(Lexer));
     lexer->source = source;
     lexer->source_column = 1;
     lexer->source_line = 1;
     lexer->source_position = 0;
+    return lexer;
+}
+
+void lexer_destroy(Lexer *lexer) {
+    free(lexer);
 }
 
 static void lexer_advance(Lexer *lexer, size_t from, size_t to) {

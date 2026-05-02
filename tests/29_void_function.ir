@@ -2,12 +2,12 @@
 
 $noop() {
 @1:
-    ret
+  ret
 }
 
 $main(): i32 {
 @1:
-    call $noop
-    %0: i32 = const 42
-    ret %0
+  call $noop
+  %0: i32 = const 42
+  ret %0
 }

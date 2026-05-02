@@ -2,8 +2,8 @@
 
 $main(): i32 {
 @1:
-    %1: i32 = const 142
-    %2: i32 = const 100
-    %3: i32 = mod %1 %2
-    ret %3
+  %1: i32 = const 142
+  %2: i32 = const 100
+  %3: i32 = mod %1 %2
+  ret %3
 }

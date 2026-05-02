@@ -2,11 +2,11 @@
 
 $main(): i32 {
 @1:
-    jmp @3
+  jmp @3
 @2:
-    %bad: i32 = const 13
-    ret %bad
+  %bad: i32 = const 13
+  ret %bad
 @3:
-    %good: i32 = const 7
-    ret %good
+  %good: i32 = const 7
+  ret %good
 }
