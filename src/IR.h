@@ -48,6 +48,7 @@ typedef enum {
     IR_VALUE__FUNCTION,
     IR_VALUE__GLOBAL_VARIABLE,
     IR_VALUE__INSTRUCTION_RESULT,
+    IR_VALUE__UNRESOLVED,
 } IR_Value_Kind;
 
 typedef struct IR_Value {

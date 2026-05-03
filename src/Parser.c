@@ -18,6 +18,12 @@ typedef struct {
     IR_Instruction_List forward_references;
 } Parser;
 
+typedef union {
+    IR_Function function;
+    IR_Global_Variable global_variable;
+    IR_Value value;
+} IR_Global;
+
 static void advance(Parser *parser) {
     parser->current = parser->next;
     parser->next = lexer_next(parser->lexer);
@@ -186,10 +192,10 @@ static IR_Value *expect_value_reference(Parser *parser) {
     }
     IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
     if (value == NULL) {
-        IR_Global_Variable *global = malloc(sizeof(IR_Global_Variable));
-        *global = (IR_Global_Variable){
+        IR_Global *global = malloc(sizeof(IR_Global));
+        *global = (IR_Global){
             .value = (IR_Value){
-                .kind = IR_VALUE__GLOBAL_VARIABLE,
+                .kind = IR_VALUE__UNRESOLVED,
                 .name = variable.lexeme,
             },
         };
@@ -692,6 +698,7 @@ static IR_Global_Variable *parse_global(Parser *parser) {
         if (variable->type != NULL) {
             parse_error(parser, variable_name.location, "Redefinition of '%.*s'", STRING(variable_name.lexeme));
         }
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
         variable->value.type = variable_value_type;
     }
     variable->name = variable_name.lexeme;
@@ -705,19 +712,21 @@ static IR_Function *parse_function(Parser *parser) {
     Variable_Token function_name = expect_variable(parser, '$');
     expect_other(parser, '(');
 
-    IR_Function *function = malloc(sizeof(IR_Function));
-    *function = (IR_Function){
-        .value = (IR_Value){
-            .kind = IR_VALUE__FUNCTION,
-            .name = function_name.lexeme,
-        },
-        .name = function_name.lexeme,
-        .location = function_name.location,
-    };
-
-    if (ir_value_list_lookup(&parser->global_values, function_name.lexeme) == NULL) {
+    IR_Value *function_value = ir_value_list_lookup(&parser->global_values, function_name.lexeme);
+    IR_Function *function;
+    if (function_value != NULL) {
+        if (function_value->type != NULL) {
+            parse_error(parser, function_name.location, "Redefinition of '%.*s'", STRING(function_name.lexeme));
+        }
+        function = (IR_Function *)function_value;
+    } else {
+        function = calloc(1, sizeof(IR_Global));
         ir_value_list_add(&parser->global_values, &function->value);
     }
+    function->value.kind = IR_VALUE__FUNCTION;
+    function->value.name = function_name.lexeme;
+    function->name = function_name.lexeme;
+    function->location = function_name.location;
 
     parser->function_values.size = 0;
     parser->forward_references.size = 0;
