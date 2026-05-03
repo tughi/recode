@@ -78,8 +78,8 @@ static int64_t frame_lookup(Interpreter *interpreter, Frame *frame, IR_Value *ke
 
 static IR_Function *find_function(Interpreter *interpreter, String name) {
     for (size_t i = 0; i < interpreter->module->functions.size; i++) {
-        if (string_equals(interpreter->module->functions.items[i].name, name)) {
-            return &interpreter->module->functions.items[i];
+        if (string_equals(interpreter->module->functions.items[i]->name, name)) {
+            return interpreter->module->functions.items[i];
         }
     }
     return NULL;
@@ -331,19 +331,19 @@ int64_t interpret(IR_Module *module) {
         fputc('\n', stderr);
         panic();
     }
-    for (size_t i = 0; i < module->globals.size; i++) {
-        IR_Global *global = module->globals.items[i];
+    for (size_t i = 0; i < module->global_variables.size; i++) {
+        IR_Global_Variable *global_variable = module->global_variables.items[i];
         int64_t address = heap_alloc(&interpreter.heap);
-        if (string_equals_cstr(global->name, "$optind")) {
+        if (string_equals_cstr(global_variable->name, "$optind")) {
             interpreter.heap.cells[address] = 1;
-        } else if (string_equals_cstr(global->name, "$stdout")) {
+        } else if (string_equals_cstr(global_variable->name, "$stdout")) {
             interpreter.heap.cells[address] = (int64_t)(uintptr_t)stdout;
-        } else if (string_equals_cstr(global->name, "$stderr")) {
+        } else if (string_equals_cstr(global_variable->name, "$stderr")) {
             interpreter.heap.cells[address] = (int64_t)(uintptr_t)stderr;
-        } else if (string_equals_cstr(global->name, "$stdin")) {
+        } else if (string_equals_cstr(global_variable->name, "$stdin")) {
             interpreter.heap.cells[address] = (int64_t)(uintptr_t)stdin;
         }
-        frame_bind(&interpreter.globals, global->value, address);
+        frame_bind(&interpreter.globals, &global_variable->value, address);
     }
     int64_t result = run_function(&interpreter, main_function, NULL, 0, main_function->location);
     free(interpreter.globals.items);

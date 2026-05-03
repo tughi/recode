@@ -30,7 +30,7 @@ void ir_type_list_add(IR_Type_List *list, IR_Type *type) {
     list->items[list->size++] = type;
 }
 
-IR_Type *ir_type_intern_ptr(IR_Type_List *types, IR_Type *pointee) {
+IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee) {
     for (size_t i = 0; i < types->size; i++) {
         IR_Type *existing = types->items[i];
         if (existing->kind == IR_TYPE__PTR && existing->pointee == pointee) {
@@ -134,18 +134,18 @@ void ir_block_list_add(IR_Block_List *list, IR_Block *block) {
     list->items[list->size++] = block;
 }
 
-void ir_function_list_add(IR_Function_List *list, IR_Function function) {
+void ir_function_list_add(IR_Function_List *list, IR_Function *function) {
     if (list->size == list->capacity) {
         list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
-        list->items = realloc(list->items, list->capacity * sizeof(IR_Function));
+        list->items = realloc(list->items, list->capacity * sizeof(IR_Function *));
     }
     list->items[list->size++] = function;
 }
 
-void ir_global_list_add(IR_Global_List *list, IR_Global *global) {
+void ir_global_variable_list_add(IR_Global_Variable_List *list, IR_Global_Variable *global) {
     if (list->size == list->capacity) {
         list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
-        list->items = realloc(list->items, list->capacity * sizeof(IR_Global *));
+        list->items = realloc(list->items, list->capacity * sizeof(IR_Global_Variable *));
     }
     list->items[list->size++] = global;
 }

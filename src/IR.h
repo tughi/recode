@@ -36,7 +36,7 @@ void ir_type_list_add(IR_Type_List *list, IR_Type *type);
 
 IR_Type *ir_type_bool(void);
 IR_Type *ir_type_i32(void);
-IR_Type *ir_type_intern_ptr(IR_Type_List *types, IR_Type *pointee);
+IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_u8(void);
 IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_new_opaque(IR_Type_List *types, String name);
@@ -44,7 +44,14 @@ IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 void ir_type_fprintf(FILE *out, IR_Type *type);
 
+typedef enum {
+    IR_VALUE__FUNCTION,
+    IR_VALUE__GLOBAL_VARIABLE,
+    IR_VALUE__INSTRUCTION_RESULT,
+} IR_Value_Kind;
+
 typedef struct IR_Value {
+    IR_Value_Kind kind;
     String name;
     IR_Type *type;
 } IR_Value;
@@ -145,6 +152,7 @@ struct IR_Block {
 };
 
 typedef struct IR_Function {
+    IR_Value value;
     String name;
     Source_Location location;
     IR_Value_List parameters;
@@ -154,32 +162,32 @@ typedef struct IR_Function {
 } IR_Function;
 
 typedef struct {
-    IR_Function *items;
+    IR_Function **items;
     size_t size;
     size_t capacity;
 } IR_Function_List;
 
-void ir_function_list_add(IR_Function_List *list, IR_Function function);
+void ir_function_list_add(IR_Function_List *list, IR_Function *function);
 
-typedef struct IR_Global {
+typedef struct IR_Global_Variable {
+    IR_Value value;
     String name;
     Source_Location location;
     IR_Type *type;
     bool is_external;
-    IR_Value *value;
-} IR_Global;
+} IR_Global_Variable;
 
 typedef struct {
-    IR_Global **items;
+    IR_Global_Variable **items;
     size_t size;
     size_t capacity;
-} IR_Global_List;
+} IR_Global_Variable_List;
 
-void ir_global_list_add(IR_Global_List *list, IR_Global *global);
+void ir_global_variable_list_add(IR_Global_Variable_List *list, IR_Global_Variable *global);
 
 typedef struct IR_Module {
     Source source;
     IR_Function_List functions;
-    IR_Global_List globals;
+    IR_Global_Variable_List global_variables;
     IR_Type_List types;
 } IR_Module;

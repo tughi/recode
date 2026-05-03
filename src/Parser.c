@@ -99,7 +99,7 @@ static IR_Type *parse_type(Parser *parser) {
             parse_error_current(parser, "Expected '>'");
         }
         advance(parser);
-        return ir_type_intern_ptr(parser->types, pointee);
+        return ir_type_pointer(parser->types, pointee);
     }
     if (string_equals_cstr(name.lexeme, "bool")) {
         return ir_type_bool();
@@ -177,6 +177,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
         IR_Instruction *placeholder = alloc_instruction();
         placeholder->kind = IR_INSTRUCTION__PLACEHOLDER;
         placeholder->location = variable.location;
+        placeholder->result.kind = IR_VALUE__INSTRUCTION_RESULT;
         placeholder->result.name = variable.lexeme;
         placeholder->result.type = NULL;
         ir_value_list_add(&parser->function_values, &placeholder->result);
@@ -185,10 +186,15 @@ static IR_Value *expect_value_reference(Parser *parser) {
     }
     IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
     if (value == NULL) {
-        value = malloc(sizeof(IR_Value));
-        value->name = variable.lexeme;
-        value->type = NULL;
-        ir_value_list_add(&parser->global_values, value);
+        IR_Global_Variable *global = malloc(sizeof(IR_Global_Variable));
+        *global = (IR_Global_Variable){
+            .value = (IR_Value){
+                .kind = IR_VALUE__GLOBAL_VARIABLE,
+                .name = variable.lexeme,
+            },
+        };
+        ir_value_list_add(&parser->global_values, &global->value);
+        value = &global->value;
     }
     return value;
 }
@@ -257,6 +263,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
     instruction->location = result_variable.location;
+    instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
     instruction->result.type = result_type;
 
     if (string_equals_cstr(mnemonic, "add")) {
@@ -658,53 +665,58 @@ static void parse_type_declaration(Parser *parser) {
     ir_type_new_opaque(parser->types, name);
 }
 
-static IR_Global *parse_global(Parser *parser) {
+static IR_Global_Variable *parse_global(Parser *parser) {
     Source_Location external_location = current_location(parser);
     advance(parser);
     skip_spaces(parser, 1);
-    Variable_Token name_variable = expect_variable(parser, '$');
+    Variable_Token variable_name = expect_variable(parser, '$');
     expect_other(parser, ':');
     skip_spaces(parser, 1);
-    IR_Type *cell_type = parse_type(parser);
-    IR_Type *ptr_type = ir_type_intern_ptr(parser->types, cell_type);
+    IR_Type *variable_type = parse_type(parser);
+    IR_Type *variable_value_type = ir_type_pointer(parser->types, variable_type);
 
-    IR_Value *value = ir_value_list_lookup(&parser->global_values, name_variable.lexeme);
-    if (value == NULL) {
-        value = malloc(sizeof(IR_Value));
-        value->name = name_variable.lexeme;
-        value->type = ptr_type;
-        ir_value_list_add(&parser->global_values, value);
+    IR_Value *variable_value = ir_value_list_lookup(&parser->global_values, variable_name.lexeme);
+    IR_Global_Variable *variable;
+    if (variable_value == NULL) {
+        variable = malloc(sizeof(IR_Global_Variable));
+        *variable = (IR_Global_Variable){
+            .value = (IR_Value){
+                .kind = IR_VALUE__GLOBAL_VARIABLE,
+                .name = variable_name.lexeme,
+                .type = variable_value_type,
+            },
+        };
+        ir_value_list_add(&parser->global_values, &variable->value);
     } else {
-        if (value->type != NULL) {
-            parse_error(parser, name_variable.location, "Redefinition of '%.*s'", STRING(name_variable.lexeme));
+        variable = (IR_Global_Variable *)variable_value;
+        if (variable->type != NULL) {
+            parse_error(parser, variable_name.location, "Redefinition of '%.*s'", STRING(variable_name.lexeme));
         }
-        value->type = ptr_type;
+        variable->value.type = variable_value_type;
     }
-
-    IR_Global *global = malloc(sizeof(IR_Global));
-    global->name = name_variable.lexeme;
-    global->location = external_location;
-    global->type = cell_type;
-    global->is_external = true;
-    global->value = value;
-    return global;
+    variable->name = variable_name.lexeme;
+    variable->location = external_location;
+    variable->type = variable_type;
+    variable->is_external = true;
+    return variable;
 }
 
-static IR_Function parse_function(Parser *parser) {
-    Variable_Token name_variable = expect_variable(parser, '$');
-    String name = name_variable.lexeme;
+static IR_Function *parse_function(Parser *parser) {
+    Variable_Token function_name = expect_variable(parser, '$');
     expect_other(parser, '(');
 
-    IR_Function function;
-    function.name = name;
-    function.location = name_variable.location;
-    function.parameters = (IR_Value_List){0};
+    IR_Function *function = malloc(sizeof(IR_Function));
+    *function = (IR_Function){
+        .value = (IR_Value){
+            .kind = IR_VALUE__FUNCTION,
+            .name = function_name.lexeme,
+        },
+        .name = function_name.lexeme,
+        .location = function_name.location,
+    };
 
-    if (ir_value_list_lookup(&parser->global_values, name) == NULL) {
-        IR_Value *function_value = malloc(sizeof(IR_Value));
-        function_value->name = name;
-        function_value->type = NULL;
-        ir_value_list_add(&parser->global_values, function_value);
+    if (ir_value_list_lookup(&parser->global_values, function_name.lexeme) == NULL) {
+        ir_value_list_add(&parser->global_values, &function->value);
     }
 
     parser->function_values.size = 0;
@@ -717,9 +729,10 @@ static IR_Function parse_function(Parser *parser) {
         IR_Type *parameter_type = parse_type(parser);
 
         IR_Value *parameter = malloc(sizeof(IR_Value));
+        parameter->kind = IR_VALUE__INSTRUCTION_RESULT;
         parameter->name = parameter_name;
         parameter->type = parameter_type;
-        ir_value_list_add(&function.parameters, parameter);
+        ir_value_list_add(&function->parameters, parameter);
         ir_value_list_add(&parser->function_values, parameter);
 
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ',') {
@@ -736,19 +749,17 @@ static IR_Function parse_function(Parser *parser) {
         return_type = parse_type(parser);
     }
 
-    function.return_type = return_type;
-    function.blocks = (IR_Block_List){0};
+    function->return_type = return_type;
 
     if (parser->current.kind != TOKEN_KIND__SPACE) {
-        function.is_external = true;
+        function->is_external = true;
         return function;
     }
     skip_spaces(parser, 1);
     if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '{') {
-        function.is_external = true;
+        function->is_external = true;
         return function;
     }
-    function.is_external = false;
     advance(parser);
 
     while (true) {
@@ -771,7 +782,7 @@ static IR_Function parse_function(Parser *parser) {
         expect_other(parser, ':');
 
         IR_Block *block = alloc_block(label, label_location);
-        ir_block_list_add(&function.blocks, block);
+        ir_block_list_add(&function->blocks, block);
 
         while (true) {
             skip_end_of_lines(parser);
@@ -817,7 +828,7 @@ IR_Module *parse(Source source) {
     IR_Module *module = malloc(sizeof(IR_Module));
     module->source = source;
     module->functions = (IR_Function_List){0};
-    module->globals = (IR_Global_List){0};
+    module->global_variables = (IR_Global_Variable_List){0};
     module->types = (IR_Type_List){0};
     parser.types = &module->types;
 
@@ -829,7 +840,7 @@ IR_Module *parse(Source source) {
         }
 
         if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "external")) {
-            ir_global_list_add(&module->globals, parse_global(&parser));
+            ir_global_variable_list_add(&module->global_variables, parse_global(&parser));
             continue;
         }
 
@@ -842,7 +853,7 @@ IR_Module *parse(Source source) {
     }
 
     for (size_t i = 0; i < module->functions.size; i++) {
-        check_function(&parser, &module->functions.items[i]);
+        check_function(&parser, module->functions.items[i]);
     }
 
     lexer_destroy(parser.lexer);
