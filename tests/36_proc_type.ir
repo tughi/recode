@@ -1,0 +1,14 @@
+; exit: 42
+
+$main(): i32 {
+@1:
+  %1: ptr<proc (param: i32) -> i32> = address $identity
+  %2: i32 = const 42
+  %3: i32 = call %1 %2
+  ret %3
+}
+
+$identity(%param: i32): i32 {
+@1:
+  ret %param
+}

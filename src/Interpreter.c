@@ -112,7 +112,12 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     case IR_INSTRUCTION__ADDRESS: {
         IR_Value *target = instruction->arguments.items[0];
         if (target->kind == IR_VALUE__FUNCTION) {
-            runtime_error(interpreter, instruction->location, "Function pointers not yet supported");
+            IR_Function *function = find_function(interpreter, target->name);
+            if (function == NULL) {
+                runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(target->name));
+            }
+            frame_bind(frame, &instruction->result, (int64_t)(uintptr_t)function);
+            return (Step){.kind = STEP_NEXT};
         }
         frame_bind(frame, &instruction->result, frame_lookup(interpreter, frame, target, instruction->location));
         return (Step){.kind = STEP_NEXT};
@@ -126,18 +131,24 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         return (Step){.kind = STEP_JUMP, .jump_label = target};
     }
     case IR_INSTRUCTION__CALL: {
-        IR_Value *callee_ref = instruction->arguments.items[0];
-        IR_Function *callee = find_function(interpreter, callee_ref->name);
-        if (callee == NULL) {
-            runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(callee_ref->name));
+        IR_Value *callee_value = instruction->arguments.items[0];
+        IR_Function *callee;
+        if (callee_value->kind == IR_VALUE__FUNCTION) {
+            callee = find_function(interpreter, callee_value->name);
+            if (callee == NULL) {
+                runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(callee_value->name));
+            }
+        } else {
+            int64_t function_pointer = frame_lookup(interpreter, frame, callee_value, instruction->location);
+            callee = (IR_Function *)(uintptr_t)function_pointer;
         }
-        size_t argc = instruction->arguments.size - 1;
-        int64_t *args = argc == 0 ? NULL : malloc(argc * sizeof(int64_t));
-        for (size_t i = 0; i < argc; i++) {
-            args[i] = frame_lookup(interpreter, frame, instruction->arguments.items[i + 1], instruction->location);
+        size_t call_arguments_count = instruction->arguments.size - 1;
+        int64_t *call_arguments = call_arguments_count == 0 ? NULL : malloc(call_arguments_count * sizeof(int64_t));
+        for (size_t i = 0; i < call_arguments_count; i++) {
+            call_arguments[i] = frame_lookup(interpreter, frame, instruction->arguments.items[i + 1], instruction->location);
         }
-        int64_t result = run_function(interpreter, callee, args, argc, instruction->location);
-        free(args);
+        int64_t result = run_function(interpreter, callee, call_arguments, call_arguments_count, instruction->location);
+        free(call_arguments);
         if (instruction->result.type != ir_type_void()) {
             frame_bind(frame, &instruction->result, result);
         }

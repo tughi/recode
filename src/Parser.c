@@ -3,6 +3,7 @@
 #include "Panic.h"
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,6 +96,44 @@ static IR_Type *parse_type(Parser *parser) {
     }
     Identifier_Token name = parser->current.identifier;
     advance(parser);
+    if (string_equals_cstr(name.lexeme, "proc")) {
+        skip_spaces(parser, 1);
+        expect_other(parser, '(');
+
+        IR_Type **param_types = NULL;
+        size_t param_count = 0;
+        if (!(parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ')') && !(parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == ')')) {
+            skip_spaces(parser, 0);
+            for (;;) {
+                expect_identifier(parser);
+                skip_spaces(parser, 0);
+                expect_other(parser, ':');
+                skip_spaces(parser, 1);
+                IR_Type *param_type = parse_type(parser);
+                param_types = realloc(param_types, (param_count + 1) * sizeof(IR_Type *));
+                param_types[param_count++] = param_type;
+                skip_spaces(parser, 0);
+                if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ',') {
+                    advance(parser);
+                    skip_spaces(parser, 1);
+                } else {
+                    break;
+                }
+            }
+        }
+        skip_spaces(parser, 0);
+        expect_other(parser, ')');
+
+        skip_spaces(parser, 1);
+        expect_other(parser, '-');
+        expect_other(parser, '>');
+        skip_spaces(parser, 1);
+        IR_Type *return_type = parse_type(parser);
+
+        IR_Type *proc_type = ir_type_proc(parser->types, param_types, param_count, return_type);
+        free(param_types);
+        return proc_type;
+    }
     if (string_equals_cstr(name.lexeme, "ptr")) {
         if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '<') {
             parse_error_current(parser, "Expected '<' after 'ptr'");
@@ -586,9 +625,16 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
         expect_type(parser, location, "result", ir_type_i32(), instruction->result.type);
         return;
-    case IR_INSTRUCTION__ADDRESS:
-        expect_pointer_type(parser, location, "address result", instruction->result.type);
+    case IR_INSTRUCTION__ADDRESS: {
+        IR_Value *argument = instruction->arguments.items[0];
+        if (argument->kind == IR_VALUE__FUNCTION && argument->type != NULL) {
+            IR_Type *pointee = expect_pointer_type(parser, location, "address result", instruction->result.type);
+            expect_type(parser, location, "address target", argument->type, pointee);
+        } else {
+            expect_pointer_type(parser, location, "address result", instruction->result.type);
+        }
         return;
+    }
     case IR_INSTRUCTION__ALLOC: {
         IR_Type *pointee = expect_pointer_type(parser, location, "alloc result", instruction->result.type);
         expect_type(parser, location, "alloc pointee", instruction->alloc_instruction.element_type, pointee);
@@ -769,6 +815,13 @@ static IR_Function *parse_function(Parser *parser) {
     }
 
     function->return_type = return_type;
+
+    IR_Type **param_types = function->parameters.size > 0 ? malloc(function->parameters.size * sizeof(IR_Type *)) : NULL;
+    for (size_t i = 0; i < function->parameters.size; i++) {
+        param_types[i] = function->parameters.items[i]->type;
+    }
+    function->value.type = ir_type_proc(parser->types, param_types, function->parameters.size, return_type);
+    free(param_types);
 
     if (parser->current.kind != TOKEN_KIND__SPACE) {
         function->is_external = true;

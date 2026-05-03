@@ -1,5 +1,6 @@
 #include "IR.h"
 #include <stdlib.h>
+#include <string.h>
 
 static IR_Type ir_type_bool_singleton = {.kind = IR_TYPE__BOOL};
 static IR_Type ir_type_i32_singleton = {.kind = IR_TYPE__I32};
@@ -44,6 +45,37 @@ IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee) {
     return type;
 }
 
+IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_count, IR_Type *return_type) {
+    for (size_t i = 0; i < types->size; i++) {
+        IR_Type *type = types->items[i];
+        if (type->kind != IR_TYPE__PROC || type->proc.param_count != param_count || !ir_type_equals(type->proc.return_type, return_type)) {
+            continue;
+        }
+        bool match = true;
+        for (size_t p = 0; p < param_count; p++) {
+            if (!ir_type_equals(type->proc.param_types[p], param_types[p])) {
+                match = false;
+                break;
+            }
+        }
+        if (match) {
+            return type;
+        }
+    }
+    IR_Type *type = malloc(sizeof(IR_Type));
+    type->kind = IR_TYPE__PROC;
+    type->proc.param_count = param_count;
+    type->proc.return_type = return_type;
+    if (param_count > 0) {
+        type->proc.param_types = malloc(param_count * sizeof(IR_Type *));
+        memcpy(type->proc.param_types, param_types, param_count * sizeof(IR_Type *));
+    } else {
+        type->proc.param_types = NULL;
+    }
+    ir_type_list_add(types, type);
+    return type;
+}
+
 IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name) {
     for (size_t i = 0; i < types->size; i++) {
         IR_Type *existing = types->items[i];
@@ -72,6 +104,17 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
     if (a->kind != b->kind) {
         return false;
     }
+    if (a->kind == IR_TYPE__PROC) {
+        if (a->proc.param_count != b->proc.param_count || !ir_type_equals(a->proc.return_type, b->proc.return_type)) {
+            return false;
+        }
+        for (size_t i = 0; i < a->proc.param_count; i++) {
+            if (!ir_type_equals(a->proc.param_types[i], b->proc.param_types[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
     if (a->kind == IR_TYPE__PTR) {
         return ir_type_equals(a->pointee, b->pointee);
     }
@@ -95,6 +138,17 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
         return;
     case IR_TYPE__OPAQUE:
         fprintf(out, "%.*s", STRING(type->name));
+        return;
+    case IR_TYPE__PROC:
+        fputs("proc(", out);
+        for (size_t i = 0; i < type->proc.param_count; i++) {
+            if (i > 0) {
+                fputs(", ", out);
+            }
+            ir_type_fprintf(out, type->proc.param_types[i]);
+        }
+        fputs(") -> ", out);
+        ir_type_fprintf(out, type->proc.return_type);
         return;
     case IR_TYPE__PTR:
         fputs("ptr<", out);
