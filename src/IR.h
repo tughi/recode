@@ -88,6 +88,7 @@ typedef struct IR_Phi_Instruction {
 
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__ADD,
+    IR_INSTRUCTION__ADDRESS,
     IR_INSTRUCTION__ALLOC,
     IR_INSTRUCTION__BR,
     IR_INSTRUCTION__CALL,

@@ -221,7 +221,7 @@ static void expect_type(Parser *parser, Source_Location location, const char *wh
     }
 }
 
-static IR_Type *expect_ptr(Parser *parser, Source_Location location, const char *what, IR_Type *actual) {
+static IR_Type *expect_pointer_type(Parser *parser, Source_Location location, const char *what, IR_Type *actual) {
     if (actual == NULL || actual->kind != IR_TYPE__PTR) {
         error_prefix(parser, location);
         fprintf(stderr, "%s: expected pointer, got ", what);
@@ -278,6 +278,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__ADD;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "address")) {
+        skip_spaces(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__ADDRESS;
         return instruction;
     }
 
@@ -568,60 +575,63 @@ static IR_Instruction *parse_instruction(Parser *parser) {
 }
 
 static void check_instruction(Parser *parser, IR_Function *function, IR_Instruction *instruction) {
-    Source_Location loc = instruction->location;
+    Source_Location location = instruction->location;
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
     case IR_INSTRUCTION__DIV:
     case IR_INSTRUCTION__MOD:
     case IR_INSTRUCTION__MUL:
     case IR_INSTRUCTION__SUB:
-        expect_type(parser, loc, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
-        expect_type(parser, loc, "result", ir_type_i32(), instruction->result.type);
+        expect_type(parser, location, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, location, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
+        expect_type(parser, location, "result", ir_type_i32(), instruction->result.type);
+        return;
+    case IR_INSTRUCTION__ADDRESS:
+        expect_pointer_type(parser, location, "address result", instruction->result.type);
         return;
     case IR_INSTRUCTION__ALLOC: {
-        IR_Type *pointee = expect_ptr(parser, loc, "alloc result", instruction->result.type);
-        expect_type(parser, loc, "alloc pointee", instruction->alloc_instruction.element_type, pointee);
+        IR_Type *pointee = expect_pointer_type(parser, location, "alloc result", instruction->result.type);
+        expect_type(parser, location, "alloc pointee", instruction->alloc_instruction.element_type, pointee);
         return;
     }
     case IR_INSTRUCTION__BR:
-        expect_type(parser, loc, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
+        expect_type(parser, location, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
         return;
     case IR_INSTRUCTION__CALL:
         return;
     case IR_INSTRUCTION__CMP_EQ:
     case IR_INSTRUCTION__CMP_NE:
-        expect_type(parser, loc, "comparison operands", instruction->arguments.items[0]->type, instruction->arguments.items[1]->type);
-        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
+        expect_type(parser, location, "comparison operands", instruction->arguments.items[0]->type, instruction->arguments.items[1]->type);
+        expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
     case IR_INSTRUCTION__CMP_GE:
     case IR_INSTRUCTION__CMP_GT:
     case IR_INSTRUCTION__CMP_LE:
     case IR_INSTRUCTION__CMP_LT:
-        expect_type(parser, loc, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
-        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
+        expect_type(parser, location, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, location, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
+        expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
     case IR_INSTRUCTION__CONST:
         return;
     case IR_INSTRUCTION__JMP:
         return;
     case IR_INSTRUCTION__LOAD: {
-        IR_Type *pointee = expect_ptr(parser, loc, "load pointer", instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "load result", pointee, instruction->result.type);
+        IR_Type *pointee = expect_pointer_type(parser, location, "load pointer", instruction->arguments.items[0]->type);
+        expect_type(parser, location, "load result", pointee, instruction->result.type);
         return;
     }
     case IR_INSTRUCTION__NEG:
-        expect_type(parser, loc, "operand", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "result", ir_type_i32(), instruction->result.type);
+        expect_type(parser, location, "operand", ir_type_i32(), instruction->arguments.items[0]->type);
+        expect_type(parser, location, "result", ir_type_i32(), instruction->result.type);
         return;
     case IR_INSTRUCTION__NOT:
-        expect_type(parser, loc, "operand", ir_type_bool(), instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "result", ir_type_bool(), instruction->result.type);
+        expect_type(parser, location, "operand", ir_type_bool(), instruction->arguments.items[0]->type);
+        expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
-            expect_type(parser, loc, "phi incoming", instruction->result.type, instruction->arguments.items[i]->type);
+            expect_type(parser, location, "phi incoming", instruction->result.type, instruction->arguments.items[i]->type);
         }
         return;
     case IR_INSTRUCTION__PLACEHOLDER:
@@ -629,15 +639,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__RET:
         if (ir_type_equals(function->return_type, ir_type_void())) {
             if (instruction->arguments.size != 0) {
-                parse_error(parser, loc, "void function must not return a value");
+                parse_error(parser, location, "void function must not return a value");
             }
         } else {
-            expect_type(parser, loc, "ret value", function->return_type, instruction->arguments.items[0]->type);
+            expect_type(parser, location, "ret value", function->return_type, instruction->arguments.items[0]->type);
         }
         return;
     case IR_INSTRUCTION__STORE: {
-        IR_Type *pointee = expect_ptr(parser, loc, "store pointer", instruction->arguments.items[0]->type);
-        expect_type(parser, loc, "store value", pointee, instruction->arguments.items[1]->type);
+        IR_Type *pointee = expect_pointer_type(parser, location, "store pointer", instruction->arguments.items[0]->type);
+        expect_type(parser, location, "store value", pointee, instruction->arguments.items[1]->type);
         return;
     }
     }

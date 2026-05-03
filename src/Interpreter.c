@@ -109,6 +109,14 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         frame_bind(frame, &instruction->result, left + right);
         return (Step){.kind = STEP_NEXT};
     }
+    case IR_INSTRUCTION__ADDRESS: {
+        IR_Value *target = instruction->arguments.items[0];
+        if (target->kind == IR_VALUE__FUNCTION) {
+            runtime_error(interpreter, instruction->location, "Function pointers not yet supported");
+        }
+        frame_bind(frame, &instruction->result, frame_lookup(interpreter, frame, target, instruction->location));
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__ALLOC:
         frame_bind(frame, &instruction->result, heap_alloc(&interpreter->heap));
         return (Step){.kind = STEP_NEXT};
