@@ -325,8 +325,8 @@ int64_t interpret(IR_Module *module) {
         fprintf(stderr, "%.*s: No $main function\n", STRING(module->source.path));
         panic();
     }
-    if (main_function->return_type == NULL || main_function->return_type->kind != IR_TYPE__I32) {
-        fprintf(stderr, "%.*s:%zu:%zu: $main must return i32, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
+    if (main_function->return_type->kind != IR_TYPE__I32 && main_function->return_type->kind != IR_TYPE__VOID) {
+        fprintf(stderr, "%.*s:%zu:%zu: Unsupported return type", STRING(module->source.path), main_function->location.line, main_function->location.column);
         ir_type_fprintf(stderr, main_function->return_type);
         fputc('\n', stderr);
         panic();
@@ -348,5 +348,5 @@ int64_t interpret(IR_Module *module) {
     int64_t result = run_function(&interpreter, main_function, NULL, 0, main_function->location);
     free(interpreter.globals.items);
     free(interpreter.heap.cells);
-    return result;
+    return main_function->return_type->kind == IR_TYPE__I32 ? result : 0;
 }
