@@ -439,6 +439,13 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "cast")) {
+        skip_spaces(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__CAST;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "cmp_eq")) {
         skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -742,6 +749,17 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         return;
     case IR_INSTRUCTION__CALL:
         return;
+    case IR_INSTRUCTION__CAST: {
+        IR_Type *from_type = instruction->arguments.items[0]->type;
+        IR_Type *to_type = instruction->result.type;
+        if (!is_integer_type(from_type)) {
+            parse_error(parser, location, "cast source must be an integer type");
+        }
+        if (!is_integer_type(to_type)) {
+            parse_error(parser, location, "cast result must be an integer type");
+        }
+        return;
+    }
     case IR_INSTRUCTION__CMP_EQ:
     case IR_INSTRUCTION__CMP_NE:
         expect_type(parser, location, "comparison operands", instruction->arguments.items[0]->type, instruction->arguments.items[1]->type);

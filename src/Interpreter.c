@@ -107,6 +107,8 @@ static int64_t mask_to_type(int64_t value, IR_Type *type) {
         return (int8_t)value;
     case IR_TYPE__I16:
         return (int16_t)value;
+    case IR_TYPE__I32:
+        return (int32_t)value;
     case IR_TYPE__U8:
         return (uint8_t)value;
     case IR_TYPE__U16:
@@ -185,6 +187,11 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         if (instruction->result.type != ir_type_void()) {
             frame_bind(frame, &instruction->result, result);
         }
+        return (Step){.kind = STEP_NEXT};
+    }
+    case IR_INSTRUCTION__CAST: {
+        int64_t value = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
+        frame_bind(frame, &instruction->result, mask_to_type(value, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_EQ: {
