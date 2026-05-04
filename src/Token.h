@@ -2,6 +2,7 @@
 
 #include "Source_Location.h"
 #include "String.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -34,7 +35,8 @@ typedef struct Identifier_Token {
 typedef struct Integer_Token {
     String lexeme;
     Source_Location location;
-    int64_t value;
+    uint64_t value;
+    bool overflow;
 } Integer_Token;
 
 typedef struct Label_Token {

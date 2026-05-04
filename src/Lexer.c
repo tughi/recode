@@ -84,11 +84,21 @@ static Token scan_character(Lexer *lexer) {
         token.character.location = location;
         if (source[start + 1] == '\\') {
             switch (source[start + 2]) {
-            case '0': token.character.value = '\0'; break;
-            case 'n': token.character.value = '\n'; break;
-            case 'r': token.character.value = '\r'; break;
-            case 't': token.character.value = '\t'; break;
-            default:  token.character.value = (uint8_t)source[start + 2]; break;
+            case '0':
+                token.character.value = '\0';
+                break;
+            case 'n':
+                token.character.value = '\n';
+                break;
+            case 'r':
+                token.character.value = '\r';
+                break;
+            case 't':
+                token.character.value = '\t';
+                break;
+            default:
+                token.character.value = (uint8_t)source[start + 2];
+                break;
             }
         } else {
             token.character.value = (uint8_t)source[start + 1];
@@ -140,8 +150,12 @@ static int is_hex_digit(char c) {
 }
 
 static int hex_digit_value(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
     return 10 + (c - 'A');
 }
 
@@ -150,19 +164,28 @@ static Token scan_integer(Lexer *lexer) {
     size_t length = lexer->source.length;
     size_t start = lexer->source_position;
     size_t position = start;
-    int64_t value = 0;
+    uint64_t value = 0;
+    bool overflow = false;
     if (source[position] == '0' && position + 1 < length && (source[position + 1] == 'x' || source[position + 1] == 'X')) {
         position += 2;
         while (position < length && (is_hex_digit(source[position]) || source[position] == '_')) {
             if (source[position] != '_') {
+                uint64_t prev = value;
                 value = value * 16 + hex_digit_value(source[position]);
+                if (value < prev) {
+                    overflow = true;
+                }
             }
             position++;
         }
     } else {
         while (position < length && (is_digit(source[position]) || source[position] == '_')) {
             if (source[position] != '_') {
+                uint64_t prev = value;
                 value = value * 10 + (source[position] - '0');
+                if (value < prev) {
+                    overflow = true;
+                }
             }
             position++;
         }
@@ -174,6 +197,7 @@ static Token scan_integer(Lexer *lexer) {
     token.integer.lexeme = (String){.content = source + start, .length = position - start};
     token.integer.location = location;
     token.integer.value = value;
+    token.integer.overflow = overflow;
     return token;
 }
 

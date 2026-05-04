@@ -2,26 +2,93 @@
 #include <stdlib.h>
 #include <string.h>
 
-static IR_Type ir_type_bool_singleton = {.kind = IR_TYPE__BOOL};
-static IR_Type ir_type_i32_singleton = {.kind = IR_TYPE__I32};
-static IR_Type ir_type_u8_singleton = {.kind = IR_TYPE__U8};
-static IR_Type ir_type_void_singleton = {.kind = IR_TYPE__VOID};
+static IR_Type ir_type_bool_singleton = {
+    .kind = IR_TYPE__BOOL,
+};
 
 IR_Type *ir_type_bool(void) {
     return &ir_type_bool_singleton;
 }
 
+static IR_Type ir_type_i8_singleton = {
+    .kind = IR_TYPE__I8,
+};
+
+IR_Type *ir_type_i8(void) {
+    return &ir_type_i8_singleton;
+}
+
+static IR_Type ir_type_i16_singleton = {
+    .kind = IR_TYPE__I16,
+};
+
+IR_Type *ir_type_i16(void) {
+    return &ir_type_i16_singleton;
+}
+
+static IR_Type ir_type_i32_singleton = {
+    .kind = IR_TYPE__I32,
+};
+
 IR_Type *ir_type_i32(void) {
     return &ir_type_i32_singleton;
 }
+
+static IR_Type ir_type_i64_singleton = {
+    .kind = IR_TYPE__I64,
+};
+
+IR_Type *ir_type_i64(void) {
+    return &ir_type_i64_singleton;
+}
+
+static IR_Type ir_type_isize_singleton = {
+    .kind = IR_TYPE__ISIZE,
+};
+
+IR_Type *ir_type_isize(void) {
+    return &ir_type_isize_singleton;
+}
+
+static IR_Type ir_type_u8_singleton = {
+    .kind = IR_TYPE__U8,
+};
 
 IR_Type *ir_type_u8(void) {
     return &ir_type_u8_singleton;
 }
 
-IR_Type *ir_type_void(void) {
-    return &ir_type_void_singleton;
+static IR_Type ir_type_u16_singleton = {
+    .kind = IR_TYPE__U16,
+};
+
+IR_Type *ir_type_u16(void) {
+    return &ir_type_u16_singleton;
 }
+
+static IR_Type ir_type_u32_singleton = {
+    .kind = IR_TYPE__U32,
+};
+
+IR_Type *ir_type_u32(void) { return &ir_type_u32_singleton; }
+
+static IR_Type ir_type_u64_singleton = {
+    .kind = IR_TYPE__U64,
+};
+
+IR_Type *ir_type_u64(void) { return &ir_type_u64_singleton; }
+
+static IR_Type ir_type_usize_singleton = {
+    .kind = IR_TYPE__USIZE,
+};
+
+IR_Type *ir_type_usize(void) { return &ir_type_usize_singleton; }
+
+static IR_Type ir_type_void_singleton = {
+    .kind = IR_TYPE__VOID,
+};
+
+IR_Type *ir_type_void(void) { return &ir_type_void_singleton; }
 
 void ir_type_list_add(IR_Type_List *list, IR_Type *type) {
     if (list->size == list->capacity) {
@@ -133,8 +200,20 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
     case IR_TYPE__BOOL:
         fputs("bool", out);
         return;
+    case IR_TYPE__I8:
+        fputs("i8", out);
+        return;
+    case IR_TYPE__I16:
+        fputs("i16", out);
+        return;
     case IR_TYPE__I32:
         fputs("i32", out);
+        return;
+    case IR_TYPE__I64:
+        fputs("i64", out);
+        return;
+    case IR_TYPE__ISIZE:
+        fputs("isize", out);
         return;
     case IR_TYPE__OPAQUE:
         fprintf(out, "%.*s", STRING(type->name));
@@ -157,6 +236,18 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
         return;
     case IR_TYPE__U8:
         fputs("u8", out);
+        return;
+    case IR_TYPE__U16:
+        fputs("u16", out);
+        return;
+    case IR_TYPE__U32:
+        fputs("u32", out);
+        return;
+    case IR_TYPE__U64:
+        fputs("u64", out);
+        return;
+    case IR_TYPE__USIZE:
+        fputs("usize", out);
         return;
     case IR_TYPE__VOID:
         fputs("void", out);

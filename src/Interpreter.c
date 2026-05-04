@@ -101,12 +101,45 @@ typedef struct {
 
 static int64_t run_function(Interpreter *interpreter, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location);
 
+static int64_t mask_to_type(int64_t value, IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE__I8:
+        return (int8_t)value;
+    case IR_TYPE__I16:
+        return (int16_t)value;
+    case IR_TYPE__U8:
+        return (uint8_t)value;
+    case IR_TYPE__U16:
+        return (uint16_t)value;
+    case IR_TYPE__U32:
+        return (uint32_t)value;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        return (int64_t)(uint64_t)value;
+    default:
+        return value;
+    }
+}
+
+static bool is_unsigned_type(IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE__U8:
+    case IR_TYPE__U16:
+    case IR_TYPE__U32:
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left + right);
+        frame_bind(frame, &instruction->result, mask_to_type(left + right, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__ADDRESS: {
@@ -163,25 +196,29 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     case IR_INSTRUCTION__CMP_GE: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left >= right);
+        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left >= (uint64_t)right : left >= right;
+        frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_GT: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left > right);
+        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left > (uint64_t)right : left > right;
+        frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_LE: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left <= right);
+        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left <= (uint64_t)right : left <= right;
+        frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_LT: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left < right);
+        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left < (uint64_t)right : left < right;
+        frame_bind(frame, &instruction->result, result);
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__CMP_NE: {
@@ -199,7 +236,8 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         if (right == 0) {
             runtime_error(interpreter, instruction->location, "Division by zero");
         }
-        frame_bind(frame, &instruction->result, left / right);
+        int64_t div_result = is_unsigned_type(instruction->result.type) ? (int64_t)((uint64_t)left / (uint64_t)right) : left / right;
+        frame_bind(frame, &instruction->result, mask_to_type(div_result, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__JMP:
@@ -218,17 +256,18 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         if (right == 0) {
             runtime_error(interpreter, instruction->location, "Modulo by zero");
         }
-        frame_bind(frame, &instruction->result, left % right);
+        int64_t mod_result = is_unsigned_type(instruction->result.type) ? (int64_t)((uint64_t)left % (uint64_t)right) : left % right;
+        frame_bind(frame, &instruction->result, mask_to_type(mod_result, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__MUL: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left * right);
+        frame_bind(frame, &instruction->result, mask_to_type(left * right, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     case IR_INSTRUCTION__NEG:
-        frame_bind(frame, &instruction->result, -frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location));
+        frame_bind(frame, &instruction->result, mask_to_type(-frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location), instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__NOT:
         frame_bind(frame, &instruction->result, !frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location));
@@ -263,7 +302,7 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     case IR_INSTRUCTION__SUB: {
         int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left - right);
+        frame_bind(frame, &instruction->result, mask_to_type(left - right, instruction->result.type));
         return (Step){.kind = STEP_NEXT};
     }
     }

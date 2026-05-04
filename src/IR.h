@@ -10,11 +10,19 @@
 
 typedef enum IR_Type_Kind {
     IR_TYPE__BOOL,
+    IR_TYPE__I8,
+    IR_TYPE__I16,
     IR_TYPE__I32,
+    IR_TYPE__I64,
+    IR_TYPE__ISIZE,
     IR_TYPE__OPAQUE,
     IR_TYPE__PROC,
     IR_TYPE__PTR,
     IR_TYPE__U8,
+    IR_TYPE__U16,
+    IR_TYPE__U32,
+    IR_TYPE__U64,
+    IR_TYPE__USIZE,
     IR_TYPE__VOID,
 } IR_Type_Kind;
 
@@ -44,12 +52,20 @@ typedef struct {
 void ir_type_list_add(IR_Type_List *list, IR_Type *type);
 
 IR_Type *ir_type_bool(void);
+IR_Type *ir_type_i8(void);
+IR_Type *ir_type_i16(void);
 IR_Type *ir_type_i32(void);
+IR_Type *ir_type_i64(void);
+IR_Type *ir_type_isize(void);
 IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_new_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_count, IR_Type *return_type);
 IR_Type *ir_type_u8(void);
+IR_Type *ir_type_u16(void);
+IR_Type *ir_type_u32(void);
+IR_Type *ir_type_u64(void);
+IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 void ir_type_fprintf(FILE *out, IR_Type *type);

@@ -149,11 +149,35 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "bool")) {
         return ir_type_bool();
     }
+    if (string_equals_cstr(name.lexeme, "i8")) {
+        return ir_type_i8();
+    }
+    if (string_equals_cstr(name.lexeme, "i16")) {
+        return ir_type_i16();
+    }
     if (string_equals_cstr(name.lexeme, "i32")) {
         return ir_type_i32();
     }
+    if (string_equals_cstr(name.lexeme, "i64")) {
+        return ir_type_i64();
+    }
+    if (string_equals_cstr(name.lexeme, "isize")) {
+        return ir_type_isize();
+    }
     if (string_equals_cstr(name.lexeme, "u8")) {
         return ir_type_u8();
+    }
+    if (string_equals_cstr(name.lexeme, "u16")) {
+        return ir_type_u16();
+    }
+    if (string_equals_cstr(name.lexeme, "u32")) {
+        return ir_type_u32();
+    }
+    if (string_equals_cstr(name.lexeme, "u64")) {
+        return ir_type_u64();
+    }
+    if (string_equals_cstr(name.lexeme, "usize")) {
+        return ir_type_usize();
     }
     if (string_equals_cstr(name.lexeme, "void")) {
         return ir_type_void();
@@ -165,11 +189,58 @@ static IR_Type *parse_type(Parser *parser) {
     parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
 }
 
-static int64_t expect_integer(Parser *parser) {
+static bool is_integer_value_in_range(IR_Type *type, uint64_t value, bool negative) {
+    if (negative) {
+        switch (type->kind) {
+        case IR_TYPE__I8:
+            return value <= 128;
+        case IR_TYPE__I16:
+            return value <= 32768;
+        case IR_TYPE__I32:
+            return value <= 2147483648ULL;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+            return value <= 9223372036854775808ULL;
+        default:
+            return false;
+        }
+    } else {
+        switch (type->kind) {
+        case IR_TYPE__I8:
+            return value <= 127;
+        case IR_TYPE__I16:
+            return value <= 32767;
+        case IR_TYPE__I32:
+            return value <= 2147483647;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+            return value <= 9223372036854775807ULL;
+        case IR_TYPE__U8:
+            return value <= 255;
+        case IR_TYPE__U16:
+            return value <= 65535;
+        case IR_TYPE__U32:
+            return value <= 4294967295ULL;
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return true;
+        default:
+            return true;
+        }
+    }
+}
+
+static uint64_t expect_integer(Parser *parser, IR_Type *type, bool negative) {
     if (parser->current.kind != TOKEN_KIND__INTEGER) {
         parse_error_current(parser, "Expected integer");
     }
-    int64_t value = parser->current.integer.value;
+    if (parser->current.integer.overflow) {
+        parse_error_current(parser, "Integer literal is too large");
+    }
+    uint64_t value = parser->current.integer.value;
+    if (!is_integer_value_in_range(type, value, negative)) {
+        parse_error_current(parser, "Value out of range for %.*s type", STRING(type->name));
+    }
     advance(parser);
     return value;
 }
@@ -277,6 +348,24 @@ static IR_Block *alloc_block(size_t label, Source_Location location) {
     block->location = location;
     block->instructions = (IR_Instruction_List){0};
     return block;
+}
+
+static bool is_integer_type(IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE__I8:
+    case IR_TYPE__I16:
+    case IR_TYPE__I32:
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+    case IR_TYPE__U8:
+    case IR_TYPE__U16:
+    case IR_TYPE__U32:
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        return true;
+    default:
+        return false;
+    }
 }
 
 static IR_Instruction *parse_value_instruction(Parser *parser) {
@@ -429,12 +518,16 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
             negative = true;
             advance(parser);
+            skip_spaces(parser, 0);
         }
-        int64_t value = expect_integer(parser);
-        if (result_type != ir_type_i32() && result_type != ir_type_u8()) {
-            expect_type(parser, literal_location, "const integer literal", ir_type_i32(), result_type);
+        uint64_t value = expect_integer(parser, result_type, negative);
+        if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
+            IR_Type *literal_type = parse_type(parser);
+            if (literal_type != result_type) {
+                parse_error(parser, literal_location, "Unexpected literal type");
+            }
         }
-        instruction->const_instruction.value = negative ? -value : value;
+        instruction->const_instruction.value = (int64_t)(negative ? -value : value);
         return instruction;
     }
 
@@ -620,11 +713,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__DIV:
     case IR_INSTRUCTION__MOD:
     case IR_INSTRUCTION__MUL:
-    case IR_INSTRUCTION__SUB:
-        expect_type(parser, location, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, location, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
-        expect_type(parser, location, "result", ir_type_i32(), instruction->result.type);
+    case IR_INSTRUCTION__SUB: {
+        IR_Type *type = instruction->result.type;
+        if (!is_integer_type(type)) {
+            parse_error(parser, location, "arithmetic result must be an integer type");
+        }
+        expect_type(parser, location, "operand 1", type, instruction->arguments.items[0]->type);
+        expect_type(parser, location, "operand 2", type, instruction->arguments.items[1]->type);
         return;
+    }
     case IR_INSTRUCTION__ADDRESS: {
         IR_Value *argument = instruction->arguments.items[0];
         if (argument->kind == IR_VALUE__FUNCTION && argument->type != NULL) {
@@ -653,11 +750,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__CMP_GE:
     case IR_INSTRUCTION__CMP_GT:
     case IR_INSTRUCTION__CMP_LE:
-    case IR_INSTRUCTION__CMP_LT:
-        expect_type(parser, location, "operand 1", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, location, "operand 2", ir_type_i32(), instruction->arguments.items[1]->type);
+    case IR_INSTRUCTION__CMP_LT: {
+        IR_Type *type = instruction->arguments.items[0]->type;
+        if (!is_integer_type(type)) {
+            parse_error(parser, location, "ordered comparison operands must be an integer type");
+        }
+        expect_type(parser, location, "operand 2", type, instruction->arguments.items[1]->type);
         expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
+    }
     case IR_INSTRUCTION__CONST:
         return;
     case IR_INSTRUCTION__JMP:
@@ -667,10 +768,14 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "load result", pointee, instruction->result.type);
         return;
     }
-    case IR_INSTRUCTION__NEG:
-        expect_type(parser, location, "operand", ir_type_i32(), instruction->arguments.items[0]->type);
-        expect_type(parser, location, "result", ir_type_i32(), instruction->result.type);
+    case IR_INSTRUCTION__NEG: {
+        IR_Type *type = instruction->result.type;
+        if (!is_integer_type(type)) {
+            parse_error(parser, location, "neg result must be an integer type");
+        }
+        expect_type(parser, location, "operand", type, instruction->arguments.items[0]->type);
         return;
+    }
     case IR_INSTRUCTION__NOT:
         expect_type(parser, location, "operand", ir_type_bool(), instruction->arguments.items[0]->type);
         expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
