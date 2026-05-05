@@ -17,6 +17,8 @@ typedef struct {
     IR_Value_List function_values;
     IR_Value_List global_values;
     IR_Instruction_List forward_references;
+    uint32_t function_frame_size;
+    uint32_t globals_frame_size;
 } Parser;
 
 typedef union {
@@ -274,9 +276,27 @@ static size_t expect_label(Parser *parser) {
 }
 
 static IR_Instruction *alloc_instruction(void) {
-    IR_Instruction *instruction = malloc(sizeof(IR_Instruction));
-    instruction->arguments = (IR_Value_List){0};
+    IR_Instruction *instruction = calloc(1, sizeof(IR_Instruction));
     return instruction;
+}
+
+static uint32_t slot_alignment(IR_Type *type) {
+    size_t size = ir_type_byte_size(type);
+    if (size == 0) {
+        return 1;
+    }
+    if (size >= 8) {
+        return 8;
+    }
+    return (uint32_t)size;
+}
+
+static Frame_Slot reserve_frame_slot(uint32_t *frame_size, IR_Type *type) {
+    uint32_t size = (uint32_t)ir_type_byte_size(type);
+    uint32_t alignment = slot_alignment(type);
+    uint32_t offset = (*frame_size + alignment - 1) & ~(alignment - 1);
+    *frame_size = offset + size;
+    return (Frame_Slot){.offset = offset, .size = size};
 }
 
 static IR_Value *expect_value_reference(Parser *parser) {
@@ -302,13 +322,9 @@ static IR_Value *expect_value_reference(Parser *parser) {
     }
     IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
     if (value == NULL) {
-        IR_Global *global = malloc(sizeof(IR_Global));
-        *global = (IR_Global){
-            .value = (IR_Value){
-                .kind = IR_VALUE__UNRESOLVED,
-                .name = variable.lexeme,
-            },
-        };
+        IR_Global *global = calloc(1, sizeof(IR_Global));
+        global->value.kind = IR_VALUE__UNRESOLVED;
+        global->value.name = variable.lexeme;
         ir_value_list_add(&parser->global_values, &global->value);
         value = &global->value;
     }
@@ -399,6 +415,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     instruction->location = result_variable.location;
     instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
     instruction->result.type = result_type;
+    instruction->result.slot = reserve_frame_slot(&parser->function_frame_size, result_type);
 
     if (string_equals_cstr(mnemonic, "add")) {
         skip_spaces(parser, 1);
@@ -418,7 +435,9 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 
     if (string_equals_cstr(mnemonic, "alloc")) {
         skip_spaces(parser, 1);
-        instruction->alloc_instruction.element_type = parse_type(parser);
+        IR_Type *element_type = parse_type(parser);
+        instruction->alloc_instruction.element_type = element_type;
+        instruction->alloc_instruction.payload_slot = reserve_frame_slot(&parser->function_frame_size, element_type);
         instruction->kind = IR_INSTRUCTION__ALLOC;
         return instruction;
     }
@@ -958,14 +977,10 @@ static IR_Global_Variable *parse_global(Parser *parser) {
     IR_Value *variable_value = ir_value_list_lookup(&parser->global_values, variable_name.lexeme);
     IR_Global_Variable *variable;
     if (variable_value == NULL) {
-        variable = malloc(sizeof(IR_Global_Variable));
-        *variable = (IR_Global_Variable){
-            .value = (IR_Value){
-                .kind = IR_VALUE__GLOBAL_VARIABLE,
-                .name = variable_name.lexeme,
-                .type = variable_value_type,
-            },
-        };
+        variable = calloc(1, sizeof(IR_Global_Variable));
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
+        variable->value.name = variable_name.lexeme;
+        variable->value.type = variable_value_type;
         ir_value_list_add(&parser->global_values, &variable->value);
     } else {
         variable = (IR_Global_Variable *)variable_value;
@@ -979,6 +994,8 @@ static IR_Global_Variable *parse_global(Parser *parser) {
     variable->location = external_location;
     variable->type = variable_type;
     variable->is_external = true;
+    variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, variable_type);
+    variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, variable_value_type);
     return variable;
 }
 
@@ -1004,6 +1021,7 @@ static IR_Function *parse_function(Parser *parser) {
 
     parser->function_values.size = 0;
     parser->forward_references.size = 0;
+    parser->function_frame_size = 0;
 
     while (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
         String parameter_name = expect_variable(parser, '%').lexeme;
@@ -1011,10 +1029,11 @@ static IR_Function *parse_function(Parser *parser) {
         skip_spaces(parser, 1);
         IR_Type *parameter_type = parse_type(parser);
 
-        IR_Value *parameter = malloc(sizeof(IR_Value));
+        IR_Value *parameter = calloc(1, sizeof(IR_Value));
         parameter->kind = IR_VALUE__INSTRUCTION_RESULT;
         parameter->name = parameter_name;
         parameter->type = parameter_type;
+        parameter->slot = reserve_frame_slot(&parser->function_frame_size, parameter_type);
         ir_value_list_add(&function->parameters, parameter);
         ir_value_list_add(&parser->function_values, parameter);
 
@@ -1043,11 +1062,13 @@ static IR_Function *parse_function(Parser *parser) {
 
     if (parser->current.kind != TOKEN_KIND__SPACE) {
         function->is_external = true;
+        function->frame_size = parser->function_frame_size;
         return function;
     }
     skip_spaces(parser, 1);
     if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '{') {
         function->is_external = true;
+        function->frame_size = parser->function_frame_size;
         return function;
     }
     advance(parser);
@@ -1101,6 +1122,7 @@ static IR_Function *parse_function(Parser *parser) {
         }
     }
 
+    function->frame_size = parser->function_frame_size;
     return function;
 }
 
@@ -1110,16 +1132,15 @@ IR_Module *parse(Source source) {
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
+    parser.function_frame_size = 0;
+    parser.globals_frame_size = 0;
 
     parser.lexer = lexer_create(source.content);
     parser.current = lexer_next(parser.lexer);
     parser.next = lexer_next(parser.lexer);
 
-    IR_Module *module = malloc(sizeof(IR_Module));
+    IR_Module *module = calloc(1, sizeof(IR_Module));
     module->source = source;
-    module->functions = (IR_Function_List){0};
-    module->global_variables = (IR_Global_Variable_List){0};
-    module->types = (IR_Type_List){0};
     parser.types = &module->types;
 
     while (true) {
@@ -1146,6 +1167,7 @@ IR_Module *parse(Source source) {
         check_function(&parser, module->functions.items[i]);
     }
 
+    module->globals_size = parser.globals_frame_size;
     lexer_destroy(parser.lexer);
     return module;
 }

@@ -82,6 +82,7 @@ IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 void ir_type_fprintf(FILE *out, IR_Type *type);
+size_t ir_type_byte_size(IR_Type *type);
 size_t ir_type_size(IR_Type *type);
 
 typedef enum {
@@ -91,10 +92,16 @@ typedef enum {
     IR_VALUE__UNRESOLVED,
 } IR_Value_Kind;
 
+typedef struct {
+    uint32_t offset;
+    uint32_t size;
+} Frame_Slot;
+
 typedef struct IR_Value {
     IR_Value_Kind kind;
     String name;
     IR_Type *type;
+    Frame_Slot slot;
 } IR_Value;
 
 typedef struct {
@@ -107,6 +114,7 @@ void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
 typedef struct IR_Alloc_Instruction {
     IR_Type *element_type;
+    Frame_Slot payload_slot;
 } IR_Alloc_Instruction;
 
 typedef struct IR_Br_Instruction {
@@ -208,6 +216,7 @@ typedef struct IR_Function {
     IR_Type *return_type;
     IR_Block_List blocks;
     bool is_external;
+    uint32_t frame_size;
 } IR_Function;
 
 typedef struct {
@@ -224,6 +233,7 @@ typedef struct IR_Global_Variable {
     Source_Location location;
     IR_Type *type;
     bool is_external;
+    Frame_Slot payload_slot;
 } IR_Global_Variable;
 
 typedef struct {
@@ -239,4 +249,5 @@ typedef struct IR_Module {
     IR_Function_List functions;
     IR_Global_Variable_List global_variables;
     IR_Type_List types;
+    uint32_t globals_size;
 } IR_Module;

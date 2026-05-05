@@ -175,6 +175,39 @@ size_t ir_type_size(IR_Type *type) {
     return 1;
 }
 
+size_t ir_type_byte_size(IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE__BOOL:
+    case IR_TYPE__I8:
+    case IR_TYPE__U8:
+        return 1;
+    case IR_TYPE__I16:
+    case IR_TYPE__U16:
+        return 2;
+    case IR_TYPE__I32:
+    case IR_TYPE__U32:
+        return 4;
+    case IR_TYPE__I64:
+    case IR_TYPE__U64:
+    case IR_TYPE__ISIZE:
+    case IR_TYPE__USIZE:
+    case IR_TYPE__PTR:
+    case IR_TYPE__PROC:
+        return 8;
+    case IR_TYPE__STRUCT: {
+        size_t total = 0;
+        for (size_t i = 0; i < type->strukt.field_count; i++) {
+            total += ir_type_byte_size(type->strukt.fields[i]->type);
+        }
+        return total;
+    }
+    case IR_TYPE__OPAQUE:
+    case IR_TYPE__VOID:
+        return 0;
+    }
+    return 0;
+}
+
 bool ir_type_equals(IR_Type *a, IR_Type *b) {
     if (a == b) {
         return true;

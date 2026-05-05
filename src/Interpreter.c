@@ -8,35 +8,8 @@
 #include <string.h>
 
 typedef struct {
-    IR_Value *key;
-    int64_t value;
-} Binding;
-
-typedef struct {
-    Binding *items;
-    size_t size;
-    size_t capacity;
-} Frame;
-
-typedef struct {
-    int64_t *cells;
-    size_t size;
-    size_t capacity;
-} Heap;
-
-static int64_t heap_alloc(Heap *heap) {
-    if (heap->size == heap->capacity) {
-        heap->capacity = heap->capacity == 0 ? 16 : heap->capacity * 2;
-        heap->cells = realloc(heap->cells, heap->capacity * sizeof(int64_t));
-    }
-    heap->cells[heap->size] = 0;
-    return (int64_t)heap->size++;
-}
-
-typedef struct {
     IR_Module *module;
-    Heap heap;
-    Frame globals;
+    uint8_t *globals_data;
 } Interpreter;
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -54,26 +27,9 @@ static void print_runtime_error(Interpreter *interpreter, Source_Location locati
         panic();                                                 \
     } while (0)
 
-static void frame_bind(Frame *frame, IR_Value *key, int64_t value) {
-    if (frame->size == frame->capacity) {
-        frame->capacity = frame->capacity == 0 ? 4 : frame->capacity * 2;
-        frame->items = realloc(frame->items, frame->capacity * sizeof(Binding));
-    }
-    frame->items[frame->size++] = (Binding){.key = key, .value = value};
-}
-
-static int64_t frame_lookup(Interpreter *interpreter, Frame *frame, IR_Value *key, Source_Location location) {
-    for (size_t i = frame->size; i > 0; i--) {
-        if (frame->items[i - 1].key == key) {
-            return frame->items[i - 1].value;
-        }
-    }
-    for (size_t i = interpreter->globals.size; i > 0; i--) {
-        if (interpreter->globals.items[i - 1].key == key) {
-            return interpreter->globals.items[i - 1].value;
-        }
-    }
-    runtime_error(interpreter, location, "Unbound value '%.*s'", STRING(key->name));
+static uint8_t *value_address(Interpreter *interpreter, uint8_t *frame_data, IR_Value *value) {
+    uint8_t *base = value->name.content[0] == '$' ? interpreter->globals_data : frame_data;
+    return base + value->slot.offset;
 }
 
 static IR_Function *find_function(Interpreter *interpreter, String name) {
@@ -93,246 +49,745 @@ typedef enum {
 
 typedef struct {
     Step_Kind kind;
-    union {
-        size_t jump_label;
-        int64_t return_value;
-    };
+    size_t jump_label;
 } Step;
 
-static int64_t run_function(Interpreter *interpreter, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location);
+static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location);
 
-static int64_t mask_to_type(int64_t value, IR_Type *type) {
-    switch (type->kind) {
+static Step execute_add_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    switch (instruction->result.type->kind) {
     case IR_TYPE__I8:
-        return (int8_t)value;
+        *(int8_t *)result_address = *(int8_t *)left_address + *(int8_t *)right_address;
+        break;
     case IR_TYPE__I16:
-        return (int16_t)value;
+        *(int16_t *)result_address = *(int16_t *)left_address + *(int16_t *)right_address;
+        break;
     case IR_TYPE__I32:
-        return (int32_t)value;
+        *(int32_t *)result_address = *(int32_t *)left_address + *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = *(int64_t *)left_address + *(int64_t *)right_address;
+        break;
     case IR_TYPE__U8:
-        return (uint8_t)value;
+        *(uint8_t *)result_address = *(uint8_t *)left_address + *(uint8_t *)right_address;
+        break;
     case IR_TYPE__U16:
-        return (uint16_t)value;
+        *(uint16_t *)result_address = *(uint16_t *)left_address + *(uint16_t *)right_address;
+        break;
     case IR_TYPE__U32:
-        return (uint32_t)value;
+        *(uint32_t *)result_address = *(uint32_t *)left_address + *(uint32_t *)right_address;
+        break;
     case IR_TYPE__U64:
     case IR_TYPE__USIZE:
-        return (int64_t)(uint64_t)value;
+        *(uint64_t *)result_address = *(uint64_t *)left_address + *(uint64_t *)right_address;
+        break;
     default:
-        return value;
+        break;
     }
+    return (Step){.kind = STEP_NEXT};
 }
 
-static bool is_unsigned_type(IR_Type *type) {
-    switch (type->kind) {
-    case IR_TYPE__U8:
-    case IR_TYPE__U16:
-    case IR_TYPE__U32:
-    case IR_TYPE__U64:
-    case IR_TYPE__USIZE:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instruction, Frame *frame, size_t previous_label) {
-    switch (instruction->kind) {
-    case IR_INSTRUCTION__ADD: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, mask_to_type(left + right, instruction->result.type));
+static Step execute_address_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    IR_Value *target_value = instruction->arguments.items[0];
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (target_value->kind == IR_VALUE__FUNCTION) {
+        IR_Function *function = find_function(interpreter, target_value->name);
+        if (function == NULL) {
+            runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(target_value->name));
+        }
+        *(uint8_t **)result_address = (uint8_t *)function;
         return (Step){.kind = STEP_NEXT};
     }
-    case IR_INSTRUCTION__ADDRESS: {
-        IR_Value *target = instruction->arguments.items[0];
-        if (target->kind == IR_VALUE__FUNCTION) {
-            IR_Function *function = find_function(interpreter, target->name);
-            if (function == NULL) {
-                runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(target->name));
-            }
-            frame_bind(frame, &instruction->result, (int64_t)(uintptr_t)function);
+    memcpy(result_address, value_address(interpreter, frame_data, target_value), instruction->result.slot.size);
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_alloc_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *payload_address = frame_data + instruction->alloc_instruction.payload_slot.offset;
+    memset(payload_address, 0, instruction->alloc_instruction.payload_slot.size);
+    *(uint8_t **)value_address(interpreter, frame_data, &instruction->result) = payload_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_br_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    bool condition = *(bool *)value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    size_t target = condition ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
+    return (Step){.kind = STEP_JUMP, .jump_label = target};
+}
+
+static Step execute_call_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    IR_Value *callee_value = instruction->arguments.items[0];
+    IR_Function *callee;
+    if (callee_value->kind == IR_VALUE__FUNCTION) {
+        callee = find_function(interpreter, callee_value->name);
+        if (callee == NULL) {
+            runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(callee_value->name));
+        }
+    } else {
+        callee = (IR_Function *)*(uint8_t **)value_address(interpreter, frame_data, callee_value);
+    }
+    size_t argument_count = instruction->arguments.size - 1;
+    uint8_t **argument_addresses = argument_count == 0 ? NULL : malloc(argument_count * sizeof(uint8_t *));
+    for (size_t i = 0; i < argument_count; i++) {
+        argument_addresses[i] = value_address(interpreter, frame_data, instruction->arguments.items[i + 1]);
+    }
+    uint8_t *return_address = NULL;
+    if (instruction->result.type != NULL && instruction->result.type != ir_type_void()) {
+        return_address = value_address(interpreter, frame_data, &instruction->result);
+    }
+    run_function(interpreter, callee, argument_addresses, argument_count, return_address, instruction->location);
+    free(argument_addresses);
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cast_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    IR_Value *source_value = instruction->arguments.items[0];
+    uint8_t *source_address = value_address(interpreter, frame_data, source_value);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    int64_t widened_data = 0;
+    switch (source_value->type->kind) {
+    case IR_TYPE__I8:
+        widened_data = (int64_t)*(int8_t *)source_address;
+        break;
+    case IR_TYPE__I16:
+        widened_data = (int64_t)*(int16_t *)source_address;
+        break;
+    case IR_TYPE__I32:
+        widened_data = (int64_t)*(int32_t *)source_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        widened_data = *(int64_t *)source_address;
+        break;
+    case IR_TYPE__U8:
+        widened_data = (int64_t)*(uint8_t *)source_address;
+        break;
+    case IR_TYPE__U16:
+        widened_data = (int64_t)*(uint16_t *)source_address;
+        break;
+    case IR_TYPE__U32:
+        widened_data = (int64_t)*(uint32_t *)source_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        widened_data = (int64_t)*(uint64_t *)source_address;
+        break;
+    default:
+        break;
+    }
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = (int8_t)widened_data;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = (int16_t)widened_data;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = (int32_t)widened_data;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = widened_data;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = (uint8_t)widened_data;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = (uint16_t)widened_data;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = (uint32_t)widened_data;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = (uint64_t)widened_data;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_eq_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address == *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address == *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address == *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address == *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+    case IR_TYPE__PTR:
+    case IR_TYPE__PROC:
+        result = *(uint64_t *)left_address == *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_ge_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address >= *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+        result = *(int8_t *)left_address >= *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        result = *(int16_t *)left_address >= *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        result = *(int32_t *)left_address >= *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        result = *(int64_t *)left_address >= *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address >= *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address >= *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address >= *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        result = *(uint64_t *)left_address >= *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_gt_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address > *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+        result = *(int8_t *)left_address > *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        result = *(int16_t *)left_address > *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        result = *(int32_t *)left_address > *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        result = *(int64_t *)left_address > *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address > *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address > *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address > *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        result = *(uint64_t *)left_address > *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_le_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address <= *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+        result = *(int8_t *)left_address <= *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        result = *(int16_t *)left_address <= *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        result = *(int32_t *)left_address <= *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        result = *(int64_t *)left_address <= *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address <= *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address <= *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address <= *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        result = *(uint64_t *)left_address <= *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_lt_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address < *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+        result = *(int8_t *)left_address < *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        result = *(int16_t *)left_address < *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        result = *(int32_t *)left_address < *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        result = *(int64_t *)left_address < *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address < *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address < *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address < *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        result = *(uint64_t *)left_address < *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_cmp_ne_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = false;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__BOOL:
+        result = *(bool *)left_address != *(bool *)right_address;
+        break;
+    case IR_TYPE__I8:
+    case IR_TYPE__U8:
+        result = *(uint8_t *)left_address != *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+    case IR_TYPE__U16:
+        result = *(uint16_t *)left_address != *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+    case IR_TYPE__U32:
+        result = *(uint32_t *)left_address != *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+    case IR_TYPE__PTR:
+    case IR_TYPE__PROC:
+        result = *(uint64_t *)left_address != *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    *(bool *)result_address = result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_const_instruction(IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *result_address = frame_data + instruction->result.slot.offset;
+    int64_t result = instruction->const_instruction.value;
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__BOOL:
+        *(bool *)result_address = result != 0;
+        break;
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = (int8_t)result;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = (int16_t)result;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = (int32_t)result;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = result;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = (uint8_t)result;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = (uint16_t)result;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = (uint32_t)result;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = (uint64_t)result;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_div_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(int64_t *)right_address == 0) {
+        runtime_error(interpreter, instruction->location, "Division by zero");
+    }
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = *(int8_t *)left_address / *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = *(int16_t *)left_address / *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = *(int32_t *)left_address / *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = *(int64_t *)left_address / *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = *(uint8_t *)left_address / *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = *(uint16_t *)left_address / *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = *(uint32_t *)left_address / *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = *(uint64_t *)left_address / *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_jmp_instruction(IR_Instruction *instruction) {
+    return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
+}
+
+static Step execute_load_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *address = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    memcpy(result_address, address, instruction->result.slot.size);
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_mod_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(int64_t *)right_address == 0) {
+        runtime_error(interpreter, instruction->location, "Modulo by zero");
+    }
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = *(int8_t *)left_address % *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = *(int16_t *)left_address % *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = *(int32_t *)left_address % *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = *(int64_t *)left_address % *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = *(uint8_t *)left_address % *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = *(uint16_t *)left_address % *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = *(uint32_t *)left_address % *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = *(uint64_t *)left_address % *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_mul_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = *(int8_t *)left_address * *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = *(int16_t *)left_address * *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = *(int32_t *)left_address * *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = *(int64_t *)left_address * *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = *(uint8_t *)left_address * *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = *(uint16_t *)left_address * *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = *(uint32_t *)left_address * *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = *(uint64_t *)left_address * *(uint64_t *)right_address;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_neg_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *source_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = -*(int8_t *)source_address;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = -*(int16_t *)source_address;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = -*(int32_t *)source_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = -*(int64_t *)source_address;
+        break;
+    default:
+        break;
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_not_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *source_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    bool result = *(bool *)source_address;
+    *(bool *)result_address = !result;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *base = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
+    String field_name = instruction->offset_instruction.struct_field->name;
+    size_t field_offset = 0;
+    for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
+        if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
+            break;
+        }
+        field_offset += ir_type_byte_size(struct_type->strukt.fields[i]->type);
+    }
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint8_t **)result_address = base + field_offset;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_phi_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, size_t previous_label) {
+    for (size_t i = 0; i < instruction->arguments.size; i++) {
+        if (instruction->phi_instruction.labels[i] == previous_label) {
+            uint8_t *source_address = value_address(interpreter, frame_data, instruction->arguments.items[i]);
+            uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+            memcpy(result_address, source_address, instruction->result.slot.size);
             return (Step){.kind = STEP_NEXT};
         }
-        frame_bind(frame, &instruction->result, frame_lookup(interpreter, frame, target, instruction->location));
-        return (Step){.kind = STEP_NEXT};
     }
-    case IR_INSTRUCTION__ALLOC: {
-        IR_Type *element_type = instruction->alloc_instruction.element_type;
-        int64_t base = heap_alloc(&interpreter->heap);
-        size_t total = ir_type_size(element_type);
-        for (size_t i = 1; i < total; i++) {
-            heap_alloc(&interpreter->heap);
-        }
-        frame_bind(frame, &instruction->result, base);
-        return (Step){.kind = STEP_NEXT};
+    runtime_error(interpreter, instruction->location, "Phi '%.*s' has no entry for predecessor @%zu", STRING(instruction->result.name), previous_label);
+}
+
+static Step execute_placeholder_instruction(Interpreter *interpreter, IR_Instruction *instruction) {
+    runtime_error(interpreter, instruction->location, "Unresolved placeholder '%.*s'", STRING(instruction->result.name));
+}
+
+static Step execute_ret_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address) {
+    if (instruction->arguments.size > 0 && return_address != NULL) {
+        IR_Value *source_value = instruction->arguments.items[0];
+        memcpy(return_address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
     }
-    case IR_INSTRUCTION__BR: {
-        int64_t condition = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
-        return (Step){.kind = STEP_JUMP, .jump_label = target};
+    return (Step){.kind = STEP_RETURN};
+}
+
+static Step execute_store_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *address = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    IR_Value *source_value = instruction->arguments.items[1];
+    memcpy(address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_sub_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    switch (instruction->result.type->kind) {
+    case IR_TYPE__I8:
+        *(int8_t *)result_address = *(int8_t *)left_address - *(int8_t *)right_address;
+        break;
+    case IR_TYPE__I16:
+        *(int16_t *)result_address = *(int16_t *)left_address - *(int16_t *)right_address;
+        break;
+    case IR_TYPE__I32:
+        *(int32_t *)result_address = *(int32_t *)left_address - *(int32_t *)right_address;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        *(int64_t *)result_address = *(int64_t *)left_address - *(int64_t *)right_address;
+        break;
+    case IR_TYPE__U8:
+        *(uint8_t *)result_address = *(uint8_t *)left_address - *(uint8_t *)right_address;
+        break;
+    case IR_TYPE__U16:
+        *(uint16_t *)result_address = *(uint16_t *)left_address - *(uint16_t *)right_address;
+        break;
+    case IR_TYPE__U32:
+        *(uint32_t *)result_address = *(uint32_t *)left_address - *(uint32_t *)right_address;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        *(uint64_t *)result_address = *(uint64_t *)left_address - *(uint64_t *)right_address;
+        break;
+    default:
+        break;
     }
-    case IR_INSTRUCTION__CALL: {
-        IR_Value *callee_value = instruction->arguments.items[0];
-        IR_Function *callee;
-        if (callee_value->kind == IR_VALUE__FUNCTION) {
-            callee = find_function(interpreter, callee_value->name);
-            if (callee == NULL) {
-                runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(callee_value->name));
-            }
-        } else {
-            int64_t function_pointer = frame_lookup(interpreter, frame, callee_value, instruction->location);
-            callee = (IR_Function *)(uintptr_t)function_pointer;
-        }
-        size_t call_arguments_count = instruction->arguments.size - 1;
-        int64_t *call_arguments = call_arguments_count == 0 ? NULL : malloc(call_arguments_count * sizeof(int64_t));
-        for (size_t i = 0; i < call_arguments_count; i++) {
-            call_arguments[i] = frame_lookup(interpreter, frame, instruction->arguments.items[i + 1], instruction->location);
-        }
-        int64_t result = run_function(interpreter, callee, call_arguments, call_arguments_count, instruction->location);
-        free(call_arguments);
-        if (instruction->result.type != ir_type_void()) {
-            frame_bind(frame, &instruction->result, result);
-        }
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CAST: {
-        int64_t value = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        frame_bind(frame, &instruction->result, mask_to_type(value, instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_EQ: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left == right);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_GE: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left >= (uint64_t)right : left >= right;
-        frame_bind(frame, &instruction->result, result);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_GT: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left > (uint64_t)right : left > right;
-        frame_bind(frame, &instruction->result, result);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_LE: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left <= (uint64_t)right : left <= right;
-        frame_bind(frame, &instruction->result, result);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_LT: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        bool result = is_unsigned_type(instruction->arguments.items[0]->type) ? (uint64_t)left < (uint64_t)right : left < right;
-        frame_bind(frame, &instruction->result, result);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__CMP_NE: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, left != right);
-        return (Step){.kind = STEP_NEXT};
-    }
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, size_t previous_label) {
+    switch (instruction->kind) {
+    case IR_INSTRUCTION__ADD:
+        return execute_add_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__ADDRESS:
+        return execute_address_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__ALLOC:
+        return execute_alloc_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__BR:
+        return execute_br_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CALL:
+        return execute_call_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CAST:
+        return execute_cast_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_EQ:
+        return execute_cmp_eq_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_GE:
+        return execute_cmp_ge_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_GT:
+        return execute_cmp_gt_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_LE:
+        return execute_cmp_le_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_LT:
+        return execute_cmp_lt_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__CMP_NE:
+        return execute_cmp_ne_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__CONST:
-        frame_bind(frame, &instruction->result, instruction->const_instruction.value);
-        return (Step){.kind = STEP_NEXT};
-    case IR_INSTRUCTION__DIV: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        if (right == 0) {
-            runtime_error(interpreter, instruction->location, "Division by zero");
-        }
-        int64_t div_result = is_unsigned_type(instruction->result.type) ? (int64_t)((uint64_t)left / (uint64_t)right) : left / right;
-        frame_bind(frame, &instruction->result, mask_to_type(div_result, instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
-    }
+        return execute_const_instruction(instruction, frame_data);
+    case IR_INSTRUCTION__DIV:
+        return execute_div_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__JMP:
-        return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
-    case IR_INSTRUCTION__LOAD: {
-        int64_t address = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        if (address < 0 || (size_t)address >= interpreter->heap.size) {
-            runtime_error(interpreter, instruction->location, "Load from invalid address %lld", (long long)address);
-        }
-        frame_bind(frame, &instruction->result, interpreter->heap.cells[address]);
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__MOD: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        if (right == 0) {
-            runtime_error(interpreter, instruction->location, "Modulo by zero");
-        }
-        int64_t mod_result = is_unsigned_type(instruction->result.type) ? (int64_t)((uint64_t)left % (uint64_t)right) : left % right;
-        frame_bind(frame, &instruction->result, mask_to_type(mod_result, instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__MUL: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, mask_to_type(left * right, instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
-    }
+        return execute_jmp_instruction(instruction);
+    case IR_INSTRUCTION__LOAD:
+        return execute_load_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__MOD:
+        return execute_mod_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__MUL:
+        return execute_mul_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__NEG:
-        frame_bind(frame, &instruction->result, mask_to_type(-frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location), instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
+        return execute_neg_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__NOT:
-        frame_bind(frame, &instruction->result, !frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location));
-        return (Step){.kind = STEP_NEXT};
-    case IR_INSTRUCTION__OFFSET: {
-        int64_t base = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
-        String field_name = instruction->offset_instruction.struct_field->name;
-        size_t field_offset = 0;
-        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
-            if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
-                break;
-            }
-            field_offset += ir_type_size(struct_type->strukt.fields[i]->type);
-        }
-        frame_bind(frame, &instruction->result, base + (int64_t)field_offset);
-        return (Step){.kind = STEP_NEXT};
-    }
+        return execute_not_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__OFFSET:
+        return execute_offset_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__PHI:
-        for (size_t i = 0; i < instruction->arguments.size; i++) {
-            if (instruction->phi_instruction.labels[i] == previous_label) {
-                int64_t value = frame_lookup(interpreter, frame, instruction->arguments.items[i], instruction->location);
-                frame_bind(frame, &instruction->result, value);
-                return (Step){.kind = STEP_NEXT};
-            }
-        }
-        runtime_error(interpreter, instruction->location, "Phi '%.*s' has no entry for predecessor @%zu", STRING(instruction->result.name), previous_label);
+        return execute_phi_instruction(interpreter, instruction, frame_data, previous_label);
     case IR_INSTRUCTION__PLACEHOLDER:
-        runtime_error(interpreter, instruction->location, "Unresolved placeholder '%.*s'", STRING(instruction->result.name));
-    case IR_INSTRUCTION__RET: {
-        int64_t return_value = 0;
-        if (instruction->arguments.size > 0) {
-            return_value = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        }
-        return (Step){.kind = STEP_RETURN, .return_value = return_value};
-    }
-    case IR_INSTRUCTION__STORE: {
-        int64_t address = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t value = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        if (address < 0 || (size_t)address >= interpreter->heap.size) {
-            runtime_error(interpreter, instruction->location, "Store to invalid address %lld", (long long)address);
-        }
-        interpreter->heap.cells[address] = value;
-        return (Step){.kind = STEP_NEXT};
-    }
-    case IR_INSTRUCTION__SUB: {
-        int64_t left = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
-        int64_t right = frame_lookup(interpreter, frame, instruction->arguments.items[1], instruction->location);
-        frame_bind(frame, &instruction->result, mask_to_type(left - right, instruction->result.type));
-        return (Step){.kind = STEP_NEXT};
-    }
+        return execute_placeholder_instruction(interpreter, instruction);
+    case IR_INSTRUCTION__RET:
+        return execute_ret_instruction(interpreter, instruction, frame_data, return_address);
+    case IR_INSTRUCTION__STORE:
+        return execute_store_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__SUB:
+        return execute_sub_instruction(interpreter, instruction, frame_data);
     }
     runtime_error(interpreter, instruction->location, "Unknown instruction kind %d", instruction->kind);
 }
@@ -346,31 +801,39 @@ static IR_Block *find_block(IR_Function *function, size_t label) {
     return NULL;
 }
 
-static int64_t call_external(Interpreter *interpreter, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location) {
+static void call_external(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argc, uint8_t *return_address, Source_Location call_location) {
     (void)argc;
     if (string_equals_cstr(function->name, "$exit")) {
-        exit((int)args[0]);
+        exit((int)*(int32_t *)argument_addresses[0]);
     }
     if (string_equals_cstr(function->name, "$fputc")) {
-        return (int64_t)fputc((int)args[0], (FILE *)(uintptr_t)args[1]);
+        int c = (int)*(int32_t *)argument_addresses[0];
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[1];
+        int result = fputc(c, stream);
+        if (return_address != NULL) {
+            *(int32_t *)return_address = (int32_t)result;
+        }
+        return;
     }
     runtime_error(interpreter, call_location, "Unknown external function '%.*s'", STRING(function->name));
 }
 
-static int64_t run_function(Interpreter *interpreter, IR_Function *function, int64_t *args, size_t argc, Source_Location call_location) {
-    if (argc != function->parameters.size) {
-        runtime_error(interpreter, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argc);
+static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location) {
+    if (argument_count != function->parameters.size) {
+        runtime_error(interpreter, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argument_count);
     }
     if (function->is_external) {
-        return call_external(interpreter, function, args, argc, call_location);
+        call_external(interpreter, function, argument_addresses, argument_count, return_address, call_location);
+        return;
     }
     if (function->blocks.size == 0) {
         runtime_error(interpreter, function->location, "'%.*s' has no blocks", STRING(function->name));
     }
 
-    Frame frame = {0};
-    for (size_t i = 0; i < argc; i++) {
-        frame_bind(&frame, function->parameters.items[i], args[i]);
+    uint8_t *frame_data = function->frame_size > 0 ? calloc(function->frame_size, 1) : NULL;
+    for (size_t i = 0; i < argument_count; i++) {
+        IR_Value *parameter_value = function->parameters.items[i];
+        memcpy(frame_data + parameter_value->slot.offset, argument_addresses[i], parameter_value->slot.size);
     }
 
     IR_Block *block = function->blocks.items[0];
@@ -379,7 +842,7 @@ static int64_t run_function(Interpreter *interpreter, IR_Function *function, int
         bool terminated = false;
         for (size_t i = 0; i < block->instructions.size; i++) {
             IR_Instruction *instruction = block->instructions.items[i];
-            Step step = execute_instruction(interpreter, instruction, &frame, previous_label);
+            Step step = execute_instruction(interpreter, instruction, frame_data, return_address, previous_label);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
@@ -394,8 +857,8 @@ static int64_t run_function(Interpreter *interpreter, IR_Function *function, int
                 break;
             }
             // STEP_RETURN
-            free(frame.items);
-            return step.return_value;
+            free(frame_data);
+            return;
         }
         if (!terminated) {
             runtime_error(interpreter, block->location, "'%.*s' block @%zu fell off without a terminator", STRING(function->name), block->label);
@@ -417,22 +880,24 @@ int64_t interpret(IR_Module *module) {
         fputc('\n', stderr);
         panic();
     }
+    interpreter.globals_data = module->globals_size > 0 ? calloc(module->globals_size, 1) : NULL;
     for (size_t i = 0; i < module->global_variables.size; i++) {
         IR_Global_Variable *global_variable = module->global_variables.items[i];
-        int64_t address = heap_alloc(&interpreter.heap);
+        uint8_t *payload_address = interpreter.globals_data + global_variable->payload_slot.offset;
         if (string_equals_cstr(global_variable->name, "$optind")) {
-            interpreter.heap.cells[address] = 1;
+            *(int32_t *)payload_address = 1;
         } else if (string_equals_cstr(global_variable->name, "$stdout")) {
-            interpreter.heap.cells[address] = (int64_t)(uintptr_t)stdout;
+            *(uint8_t **)payload_address = (uint8_t *)stdout;
         } else if (string_equals_cstr(global_variable->name, "$stderr")) {
-            interpreter.heap.cells[address] = (int64_t)(uintptr_t)stderr;
+            *(uint8_t **)payload_address = (uint8_t *)stderr;
         } else if (string_equals_cstr(global_variable->name, "$stdin")) {
-            interpreter.heap.cells[address] = (int64_t)(uintptr_t)stdin;
+            *(uint8_t **)payload_address = (uint8_t *)stdin;
         }
-        frame_bind(&interpreter.globals, &global_variable->value, address);
+        *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
     }
-    int64_t result = run_function(&interpreter, main_function, NULL, 0, main_function->location);
-    free(interpreter.globals.items);
-    free(interpreter.heap.cells);
-    return main_function->return_type->kind == IR_TYPE__I32 ? result : 0;
+    int32_t main_return = 0;
+    uint8_t *main_return_address = main_function->return_type->kind == IR_TYPE__I32 ? (uint8_t *)&main_return : NULL;
+    run_function(&interpreter, main_function, NULL, 0, main_return_address, main_function->location);
+    free(interpreter.globals_data);
+    return main_function->return_type->kind == IR_TYPE__I32 ? (int64_t)main_return : 0;
 }
