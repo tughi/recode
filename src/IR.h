@@ -18,6 +18,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE__OPAQUE,
     IR_TYPE__PROC,
     IR_TYPE__PTR,
+    IR_TYPE__STRUCT,
     IR_TYPE__U8,
     IR_TYPE__U16,
     IR_TYPE__U32,
@@ -34,12 +35,24 @@ typedef struct {
     IR_Type *return_type;
 } IR_Proc_Type;
 
+typedef struct {
+    String name;
+    IR_Type *type;
+} IR_Struct_Field;
+
+typedef struct {
+    String name;
+    IR_Struct_Field **fields;
+    size_t field_count;
+} IR_Struct_Type;
+
 struct IR_Type {
     IR_Type_Kind kind;
     union {
         String name;
         IR_Type *pointee;
         IR_Proc_Type proc;
+        IR_Struct_Type strukt;
     };
 };
 
@@ -57,7 +70,7 @@ IR_Type *ir_type_i16(void);
 IR_Type *ir_type_i32(void);
 IR_Type *ir_type_i64(void);
 IR_Type *ir_type_isize(void);
-IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name);
+IR_Type *ir_type_named_lookup(IR_Type_List *types, String name);
 IR_Type *ir_type_new_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_count, IR_Type *return_type);
@@ -69,6 +82,7 @@ IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 void ir_type_fprintf(FILE *out, IR_Type *type);
+size_t ir_type_size(IR_Type *type);
 
 typedef enum {
     IR_VALUE__FUNCTION,
@@ -108,6 +122,10 @@ typedef struct IR_Jmp_Instruction {
     size_t label;
 } IR_Jmp_Instruction;
 
+typedef struct IR_Offset_Instruction {
+    IR_Struct_Field *struct_field;
+} IR_Offset_Instruction;
+
 typedef struct IR_Phi_Instruction {
     size_t *labels;
 } IR_Phi_Instruction;
@@ -133,6 +151,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__MUL,
     IR_INSTRUCTION__NEG,
     IR_INSTRUCTION__NOT,
+    IR_INSTRUCTION__OFFSET,
     IR_INSTRUCTION__PHI,
     IR_INSTRUCTION__PLACEHOLDER,
     IR_INSTRUCTION__RET,
@@ -160,6 +179,7 @@ struct IR_Instruction {
         IR_Br_Instruction br_instruction;
         IR_Const_Instruction const_instruction;
         IR_Jmp_Instruction jmp_instruction;
+        IR_Offset_Instruction offset_instruction;
         IR_Phi_Instruction phi_instruction;
     };
 };

@@ -157,9 +157,16 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         frame_bind(frame, &instruction->result, frame_lookup(interpreter, frame, target, instruction->location));
         return (Step){.kind = STEP_NEXT};
     }
-    case IR_INSTRUCTION__ALLOC:
-        frame_bind(frame, &instruction->result, heap_alloc(&interpreter->heap));
+    case IR_INSTRUCTION__ALLOC: {
+        IR_Type *element_type = instruction->alloc_instruction.element_type;
+        int64_t base = heap_alloc(&interpreter->heap);
+        size_t total = ir_type_size(element_type);
+        for (size_t i = 1; i < total; i++) {
+            heap_alloc(&interpreter->heap);
+        }
+        frame_bind(frame, &instruction->result, base);
         return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__BR: {
         int64_t condition = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
         size_t target = condition != 0 ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
@@ -279,6 +286,20 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     case IR_INSTRUCTION__NOT:
         frame_bind(frame, &instruction->result, !frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location));
         return (Step){.kind = STEP_NEXT};
+    case IR_INSTRUCTION__OFFSET: {
+        int64_t base = frame_lookup(interpreter, frame, instruction->arguments.items[0], instruction->location);
+        IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
+        String field_name = instruction->offset_instruction.struct_field->name;
+        size_t field_offset = 0;
+        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
+            if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
+                break;
+            }
+            field_offset += ir_type_size(struct_type->strukt.fields[i]->type);
+        }
+        frame_bind(frame, &instruction->result, base + (int64_t)field_offset);
+        return (Step){.kind = STEP_NEXT};
+    }
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             if (instruction->phi_instruction.labels[i] == previous_label) {

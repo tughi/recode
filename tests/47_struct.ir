@@ -1,0 +1,21 @@
+; exit: 7
+
+type Point = struct {
+  x: i32
+  y: i32
+}
+
+$main(): i32 {
+@1:
+  %p.ptr: ptr<Point> = alloc Point
+  %0: i32 = const 3
+  %x.ptr: ptr<i32> = offset %p.ptr Point.x
+  store %x.ptr %0
+  %1: i32 = const 4
+  %y.ptr: ptr<i32> = offset %p.ptr Point.y
+  store %y.ptr %1
+  %x: i32 = load %x.ptr
+  %y: i32 = load %y.ptr
+  %sum: i32 = add %x %y
+  ret %sum
+}

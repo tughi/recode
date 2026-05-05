@@ -1,0 +1,38 @@
+; exit: 10
+
+type Point = struct {
+  x: i32
+  y: i32
+}
+
+type Line = struct {
+  p1: Point
+  p2: Point
+}
+
+$main(): i32 {
+@1:
+  %line.ptr: ptr<Line> = alloc Line
+  %p1.ptr: ptr<Point> = offset %line.ptr Line.p1
+  %0: i32 = const 1
+  %p1.x.ptr: ptr<i32> = offset %p1.ptr Point.x
+  store %p1.x.ptr %0
+  %1: i32 = const 2
+  %p1.y.ptr: ptr<i32> = offset %p1.ptr Point.y
+  store %p1.y.ptr %1
+  %p2.ptr: ptr<Point> = offset %line.ptr Line.p2
+  %2: i32 = const 3
+  %p2.x.ptr: ptr<i32> = offset %p2.ptr Point.x
+  store %p2.x.ptr %2
+  %3: i32 = const 4
+  %p2.y.ptr: ptr<i32> = offset %p2.ptr Point.y
+  store %p2.y.ptr %3
+  %x1: i32 = load %p1.x.ptr
+  %y1: i32 = load %p1.y.ptr
+  %x2: i32 = load %p2.x.ptr
+  %y2: i32 = load %p2.y.ptr
+  %4: i32 = add %x1 %y1
+  %5: i32 = add %x2 %y2
+  %sum: i32 = add %4 %5
+  ret %sum
+}

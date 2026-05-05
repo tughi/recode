@@ -143,10 +143,13 @@ IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_c
     return type;
 }
 
-IR_Type *ir_type_lookup_opaque(IR_Type_List *types, String name) {
+IR_Type *ir_type_named_lookup(IR_Type_List *types, String name) {
     for (size_t i = 0; i < types->size; i++) {
         IR_Type *existing = types->items[i];
         if (existing->kind == IR_TYPE__OPAQUE && string_equals(existing->name, name)) {
+            return existing;
+        }
+        if (existing->kind == IR_TYPE__STRUCT && string_equals(existing->strukt.name, name)) {
             return existing;
         }
     }
@@ -159,6 +162,17 @@ IR_Type *ir_type_new_opaque(IR_Type_List *types, String name) {
     type->name = name;
     ir_type_list_add(types, type);
     return type;
+}
+
+size_t ir_type_size(IR_Type *type) {
+    if (type->kind == IR_TYPE__STRUCT) {
+        size_t total = 0;
+        for (size_t i = 0; i < type->strukt.field_count; i++) {
+            total += ir_type_size(type->strukt.fields[i]->type);
+        }
+        return total;
+    }
+    return 1;
 }
 
 bool ir_type_equals(IR_Type *a, IR_Type *b) {
@@ -186,6 +200,9 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
         return ir_type_equals(a->pointee, b->pointee);
     }
     if (a->kind == IR_TYPE__OPAQUE) {
+        return false;
+    }
+    if (a->kind == IR_TYPE__STRUCT) {
         return false;
     }
     return true;
@@ -233,6 +250,9 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
         fputs("ptr<", out);
         ir_type_fprintf(out, type->pointee);
         fputc('>', out);
+        return;
+    case IR_TYPE__STRUCT:
+        fprintf(out, "%.*s", STRING(type->strukt.name));
         return;
     case IR_TYPE__U8:
         fputs("u8", out);

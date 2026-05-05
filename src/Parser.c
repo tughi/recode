@@ -182,9 +182,9 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "void")) {
         return ir_type_void();
     }
-    IR_Type *opaque = ir_type_lookup_opaque(parser->types, name.lexeme);
-    if (opaque != NULL) {
-        return opaque;
+    IR_Type *named = ir_type_named_lookup(parser->types, name.lexeme);
+    if (named != NULL) {
+        return named;
     }
     parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
 }
@@ -586,6 +586,42 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "offset")) {
+        skip_spaces(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        skip_spaces(parser, 1);
+        if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+            parse_error_current(parser, "Expected struct type name");
+        }
+        Identifier_Token type_name = parser->current.identifier;
+        advance(parser);
+        IR_Type *struct_type = ir_type_named_lookup(parser->types, type_name.lexeme);
+        if (struct_type == NULL || struct_type->kind != IR_TYPE__STRUCT) {
+            parse_error(parser, type_name.location, "Unknown struct type '%.*s'", STRING(type_name.lexeme));
+        }
+        skip_spaces(parser, 0);
+        expect_other(parser, '.');
+        skip_spaces(parser, 0);
+        if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+            parse_error_current(parser, "Expected field name");
+        }
+        Identifier_Token field_name = parser->current.identifier;
+        advance(parser);
+        IR_Struct_Field *struct_field = NULL;
+        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
+            if (string_equals(struct_type->strukt.fields[i]->name, field_name.lexeme)) {
+                struct_field = struct_type->strukt.fields[i];
+                break;
+            }
+        }
+        if (struct_field == NULL) {
+            parse_error(parser, field_name.location, "Struct '%.*s' has no field '%.*s'", STRING(struct_type->strukt.name), STRING(field_name.lexeme));
+        }
+        instruction->offset_instruction.struct_field = struct_field;
+        instruction->kind = IR_INSTRUCTION__OFFSET;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "phi")) {
         instruction->kind = IR_INSTRUCTION__PHI;
         instruction->phi_instruction.labels = NULL;
@@ -798,6 +834,16 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "operand", ir_type_bool(), instruction->arguments.items[0]->type);
         expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
+    case IR_INSTRUCTION__OFFSET: {
+        IR_Type *pointee = expect_pointer_type(parser, location, "offset pointer", instruction->arguments.items[0]->type);
+        if (pointee->kind != IR_TYPE__STRUCT) {
+            parse_error(parser, location, "offset pointer must point to a struct");
+        }
+        IR_Type *field_type = instruction->offset_instruction.struct_field->type;
+        IR_Type *expected = ir_type_pointer(parser->types, field_type);
+        expect_type(parser, location, "offset result", expected, instruction->result.type);
+        return;
+    }
     case IR_INSTRUCTION__PHI:
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             expect_type(parser, location, "phi incoming", instruction->result.type, instruction->arguments.items[i]->type);
@@ -841,13 +887,62 @@ static void parse_type_declaration(Parser *parser) {
     skip_spaces(parser, 1);
     Source_Location body_location = current_location(parser);
     String body = expect_identifier(parser);
-    if (!string_equals_cstr(body, "opaque")) {
-        parse_error(parser, body_location, "Expected 'opaque', got '%.*s'", STRING(body));
-    }
-    if (ir_type_lookup_opaque(parser->types, name) != NULL) {
+    if (ir_type_named_lookup(parser->types, name) != NULL) {
         parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
     }
-    ir_type_new_opaque(parser->types, name);
+    if (string_equals_cstr(body, "opaque")) {
+        ir_type_new_opaque(parser->types, name);
+        return;
+    }
+    if (!string_equals_cstr(body, "struct")) {
+        parse_error(parser, body_location, "Expected 'opaque' or 'struct', got '%.*s'", STRING(body));
+    }
+    skip_spaces(parser, 1);
+    expect_other(parser, '{');
+
+    IR_Struct_Field **fields = NULL;
+    size_t field_count = 0;
+
+    while (true) {
+        skip_end_of_lines(parser);
+        if (parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == '}') {
+            advance(parser);
+        }
+        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '}') {
+            advance(parser);
+            break;
+        }
+        skip_spaces(parser, 2);
+        Source_Location field_location = current_location(parser);
+        String field_name = expect_identifier(parser);
+        for (size_t i = 0; i < field_count; i++) {
+            if (string_equals(fields[i]->name, field_name)) {
+                parse_error(parser, field_location, "Duplicate field '%.*s'", STRING(field_name));
+            }
+        }
+        expect_other(parser, ':');
+        skip_spaces(parser, 1);
+        Source_Location type_location = current_location(parser);
+        IR_Type *field_type = parse_type(parser);
+        if (field_type->kind == IR_TYPE__OPAQUE || field_type->kind == IR_TYPE__VOID) {
+            parse_error(parser, type_location, "Unsupported struct field type");
+        }
+        IR_Struct_Field *field = malloc(sizeof(IR_Struct_Field));
+        field->name = field_name;
+        field->type = field_type;
+        fields = realloc(fields, (field_count + 1) * sizeof(IR_Struct_Field *));
+        fields[field_count++] = field;
+    }
+
+    if (field_count == 0) {
+        parse_error(parser, name_location, "Struct '%.*s' must declare at least one field", STRING(name));
+    }
+    IR_Type *struct_type = malloc(sizeof(IR_Type));
+    struct_type->kind = IR_TYPE__STRUCT;
+    struct_type->strukt.name = name;
+    struct_type->strukt.fields = fields;
+    struct_type->strukt.field_count = field_count;
+    ir_type_list_add(parser->types, struct_type);
 }
 
 static IR_Global_Variable *parse_global(Parser *parser) {

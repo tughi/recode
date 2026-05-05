@@ -45,7 +45,10 @@ Lists the variables whose values are still needed by subsequent instructions at 
 ### Type declaration
 
 ```
-type Point = struct { x: i32, y: i32 }
+type Point = struct {
+    x: i32
+    y: i32
+}
 type FILE = opaque
 ```
 
