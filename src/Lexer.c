@@ -3,17 +3,19 @@
 
 struct Lexer {
     String source;
-    size_t source_column;
-    size_t source_line;
+    String source_path;
     size_t source_position;
+    size_t source_line;
+    size_t source_column;
 };
 
-Lexer *lexer_create(String source) {
+Lexer *lexer_create(Source source) {
     Lexer *lexer = malloc(sizeof(Lexer));
-    lexer->source = source;
-    lexer->source_column = 1;
-    lexer->source_line = 1;
+    lexer->source = source.content;
+    lexer->source_path = source.path;
     lexer->source_position = 0;
+    lexer->source_line = 1;
+    lexer->source_column = 1;
     return lexer;
 }
 
@@ -42,7 +44,11 @@ static Token scan_space(Lexer *lexer) {
     while (position < length && source[position] == ' ') {
         position++;
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, position);
     Token token;
     token.kind = TOKEN_KIND__SPACE;
@@ -55,7 +61,11 @@ static Token scan_space(Lexer *lexer) {
 static Token scan_end_of_line(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t start = lexer->source_position;
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, start + 1);
     Token token;
     token.kind = TOKEN_KIND__END_OF_LINE;
@@ -75,7 +85,11 @@ static Token scan_character(Lexer *lexer) {
     if (position < length) {
         position++;
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     Token token;
     if (position < length && source[position] == '\'') {
         position++;
@@ -125,7 +139,11 @@ static Token scan_string(Lexer *lexer) {
             position++;
         }
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     Token token;
     if (position < length && source[position] == '"') {
         position++;
@@ -190,7 +208,11 @@ static Token scan_integer(Lexer *lexer) {
             position++;
         }
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, position);
     Token token;
     token.kind = TOKEN_KIND__INTEGER;
@@ -225,7 +247,11 @@ static Token scan_label(Lexer *lexer) {
     if (position == body_start) {
         return scan_other(lexer);
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, position);
     Token token;
     token.kind = TOKEN_KIND__LABEL;
@@ -248,7 +274,11 @@ static Token scan_variable(Lexer *lexer) {
     if (position == body_start) {
         return scan_other(lexer);
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, position);
     Token token;
     token.kind = TOKEN_KIND__VARIABLE;
@@ -266,7 +296,11 @@ static Token scan_identifier(Lexer *lexer) {
     while (position < length && is_identifier_char(source[position])) {
         position++;
     }
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, position);
     Token token;
     token.kind = TOKEN_KIND__IDENTIFIER;
@@ -278,7 +312,11 @@ static Token scan_identifier(Lexer *lexer) {
 static Token scan_other(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t start = lexer->source_position;
-    Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+    Source_Location location = {
+        .source = lexer->source_path,
+        .line = lexer->source_line,
+        .column = lexer->source_column,
+    };
     lexer_advance(lexer, start, start + 1);
     Token token;
     token.kind = TOKEN_KIND__OTHER;
@@ -296,7 +334,11 @@ Token lexer_next(Lexer *lexer) {
         size_t position = lexer->source_position;
 
         if (position >= length) {
-            Source_Location location = {.column = lexer->source_column, .line = lexer->source_line};
+            Source_Location location = {
+                .source = lexer->source_path,
+                .line = lexer->source_line,
+                .column = lexer->source_column,
+            };
             Token token;
             token.kind = TOKEN_KIND__END_OF_FILE;
             token.end_of_file.lexeme = (String){.content = source + position, .length = 0};

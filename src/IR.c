@@ -1,4 +1,5 @@
 #include "IR.h"
+#include "Panic.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -153,37 +154,22 @@ IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_c
 
 IR_Type *ir_type_named_lookup(IR_Type_List *types, String name) {
     for (size_t i = 0; i < types->size; i++) {
-        IR_Type *existing = types->items[i];
-        if (existing->kind == IR_TYPE__OPAQUE && string_equals(existing->name, name)) {
-            return existing;
-        }
-        if (existing->kind == IR_TYPE__STRUCT && string_equals(existing->strukt.name, name)) {
-            return existing;
+        IR_Type *type = types->items[i];
+        switch (type->kind) {
+        case IR_TYPE__OPAQUE:
+        case IR_TYPE__PLACEHOLDER:
+        case IR_TYPE__STRUCT:
+            if (string_equals(type->name, name)) {
+                return type;
+            }
+        default:
+            break;
         }
     }
     return NULL;
 }
 
-IR_Type *ir_type_new_opaque(IR_Type_List *types, String name) {
-    IR_Type *type = malloc(sizeof(IR_Type));
-    type->kind = IR_TYPE__OPAQUE;
-    type->name = name;
-    ir_type_list_add(types, type);
-    return type;
-}
-
 size_t ir_type_size(IR_Type *type) {
-    if (type->kind == IR_TYPE__STRUCT) {
-        size_t total = 0;
-        for (size_t i = 0; i < type->strukt.field_count; i++) {
-            total += ir_type_size(type->strukt.fields[i]->type);
-        }
-        return total;
-    }
-    return 1;
-}
-
-size_t ir_type_byte_size(IR_Type *type) {
     switch (type->kind) {
     case IR_TYPE__BOOL:
     case IR_TYPE__I8:
@@ -204,11 +190,14 @@ size_t ir_type_byte_size(IR_Type *type) {
         return 8;
     case IR_TYPE__STRUCT: {
         size_t total = 0;
-        for (size_t i = 0; i < type->strukt.field_count; i++) {
-            total += ir_type_byte_size(type->strukt.fields[i]->type);
+        for (size_t i = 0; i < type->struct_field_count; i++) {
+            total += ir_type_size(type->struct_fields[i]->type);
         }
         return total;
     }
+    case IR_TYPE__PLACEHOLDER:
+        fprintf(stderr, "%.*s:%zu:%zu: Unresolved type '%.*s'\n", STRING(type->location.source), type->location.line, type->location.column, STRING(type->name));
+        panic();
     case IR_TYPE__ANY:
     case IR_TYPE__OPAQUE:
     case IR_TYPE__VOID:
@@ -278,6 +267,8 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
         fputs("isize", out);
         return;
     case IR_TYPE__OPAQUE:
+    case IR_TYPE__PLACEHOLDER:
+    case IR_TYPE__STRUCT:
         fprintf(out, "%.*s", STRING(type->name));
         return;
     case IR_TYPE__PROC:
@@ -295,9 +286,6 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
         fputs("ptr<", out);
         fprint_ir_type(out, type->pointee);
         fputc('>', out);
-        return;
-    case IR_TYPE__STRUCT:
-        fprintf(out, "%.*s", STRING(type->strukt.name));
         return;
     case IR_TYPE__U8:
         fputs("u8", out);

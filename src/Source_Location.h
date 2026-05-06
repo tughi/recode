@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 typedef struct Source_Location {
-    size_t column;
+    String source;
     size_t line;
+    size_t column;
 } Source_Location;

@@ -645,16 +645,16 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
         // indexed form: base + index * sizeof(pointee)
         IR_Type *pointee = instruction->arguments.items[0]->type->pointee;
         size_t index = *(size_t *)value_address(interpreter, frame_data, instruction->arguments.items[1]);
-        *(uint8_t **)result_address = base + index * ir_type_byte_size(pointee);
+        *(uint8_t **)result_address = base + index * ir_type_size(pointee);
     } else {
         IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
         String field_name = instruction->offset_instruction.struct_field->name;
         size_t field_offset = 0;
-        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
-            if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
+        for (size_t i = 0; i < struct_type->struct_field_count; i++) {
+            if (string_equals(struct_type->struct_fields[i]->name, field_name)) {
                 break;
             }
-            field_offset += ir_type_byte_size(struct_type->strukt.fields[i]->type);
+            field_offset += ir_type_size(struct_type->struct_fields[i]->type);
         }
         *(uint8_t **)result_address = base + field_offset;
     }

@@ -17,6 +17,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE__I64,
     IR_TYPE__ISIZE,
     IR_TYPE__OPAQUE,
+    IR_TYPE__PLACEHOLDER,
     IR_TYPE__PROC,
     IR_TYPE__PTR,
     IR_TYPE__STRUCT,
@@ -41,19 +42,21 @@ typedef struct {
     IR_Type *type;
 } IR_Struct_Field;
 
-typedef struct {
-    String name;
-    IR_Struct_Field **fields;
-    size_t field_count;
-} IR_Struct_Type;
-
 struct IR_Type {
     IR_Type_Kind kind;
     union {
-        String name;
+        struct {
+            String name;
+            Source_Location location;
+            union {
+                struct {
+                    IR_Struct_Field **struct_fields;
+                    size_t struct_field_count;
+                };
+            };
+        };
         IR_Type *pointee;
         IR_Proc_Type proc;
-        IR_Struct_Type strukt;
     };
 };
 
@@ -73,7 +76,6 @@ IR_Type *ir_type_i32(void);
 IR_Type *ir_type_i64(void);
 IR_Type *ir_type_isize(void);
 IR_Type *ir_type_named_lookup(IR_Type_List *types, String name);
-IR_Type *ir_type_new_opaque(IR_Type_List *types, String name);
 IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_count, IR_Type *return_type);
 IR_Type *ir_type_u8(void);
@@ -83,7 +85,6 @@ IR_Type *ir_type_u64(void);
 IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
-size_t ir_type_byte_size(IR_Type *type);
 size_t ir_type_size(IR_Type *type);
 void fprint_ir_type(FILE *out, IR_Type *type);
 

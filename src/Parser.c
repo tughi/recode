@@ -187,11 +187,16 @@ static IR_Type *parse_type(Parser *parser) {
     if (string_equals_cstr(name.lexeme, "void")) {
         return ir_type_void();
     }
-    IR_Type *named = ir_type_named_lookup(parser->types, name.lexeme);
-    if (named != NULL) {
-        return named;
+    IR_Type *type = ir_type_named_lookup(parser->types, name.lexeme);
+    if (type != NULL) {
+        return type;
     }
-    parse_error(parser, name.location, "Unknown type '%.*s'", STRING(name.lexeme));
+    type = malloc(sizeof(IR_Type));
+    type->kind = IR_TYPE__PLACEHOLDER;
+    type->name = name.lexeme;
+    type->location = name.location;
+    ir_type_list_add(parser->types, type);
+    return type;
 }
 
 static bool is_integer_value_in_range(IR_Type *type, uint64_t value, bool negative) {
@@ -284,7 +289,7 @@ static IR_Instruction *alloc_instruction(void) {
 }
 
 static uint32_t slot_alignment(IR_Type *type) {
-    size_t size = ir_type_byte_size(type);
+    size_t size = ir_type_size(type);
     if (size == 0) {
         return 1;
     }
@@ -295,7 +300,7 @@ static uint32_t slot_alignment(IR_Type *type) {
 }
 
 static Frame_Slot reserve_frame_slot(uint32_t *frame_size, IR_Type *type) {
-    uint32_t size = (uint32_t)ir_type_byte_size(type);
+    uint32_t size = (uint32_t)ir_type_size(type);
     uint32_t alignment = slot_alignment(type);
     uint32_t offset = (*frame_size + alignment - 1) & ~(alignment - 1);
     *frame_size = offset + size;
@@ -637,14 +642,14 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         Identifier_Token field_name = parser->current.identifier;
         advance(parser);
         IR_Struct_Field *struct_field = NULL;
-        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
-            if (string_equals(struct_type->strukt.fields[i]->name, field_name.lexeme)) {
-                struct_field = struct_type->strukt.fields[i];
+        for (size_t i = 0; i < struct_type->struct_field_count; i++) {
+            if (string_equals(struct_type->struct_fields[i]->name, field_name.lexeme)) {
+                struct_field = struct_type->struct_fields[i];
                 break;
             }
         }
         if (struct_field == NULL) {
-            parse_error(parser, field_name.location, "Struct '%.*s' has no field '%.*s'", STRING(struct_type->strukt.name), STRING(field_name.lexeme));
+            parse_error(parser, field_name.location, "Struct '%.*s' has no field '%.*s'", STRING(struct_type->name), STRING(field_name.lexeme));
         }
         instruction->offset_instruction.struct_field = struct_field;
         instruction->kind = IR_INSTRUCTION__OFFSET;
@@ -942,11 +947,21 @@ static void parse_type_declaration(Parser *parser) {
     skip_spaces(parser, 1);
     Source_Location body_location = current_location(parser);
     String body = expect_identifier(parser);
-    if (ir_type_named_lookup(parser->types, name) != NULL) {
+    IR_Type *type = ir_type_named_lookup(parser->types, name);
+    if (type != NULL && type->kind != IR_TYPE__PLACEHOLDER) {
         parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
     }
     if (string_equals_cstr(body, "opaque")) {
-        ir_type_new_opaque(parser->types, name);
+        if (type != NULL) {
+            type->kind = IR_TYPE__OPAQUE;
+            type->location = name_location;
+        } else {
+            type = malloc(sizeof(IR_Type));
+            type->kind = IR_TYPE__OPAQUE;
+            type->name = name;
+            type->location = name_location;
+            ir_type_list_add(parser->types, type);
+        }
         return;
     }
     if (!string_equals_cstr(body, "struct")) {
@@ -992,12 +1007,15 @@ static void parse_type_declaration(Parser *parser) {
     if (field_count == 0) {
         parse_error(parser, name_location, "Struct '%.*s' must declare at least one field", STRING(name));
     }
-    IR_Type *struct_type = malloc(sizeof(IR_Type));
+    IR_Type *struct_type = type != NULL ? type : malloc(sizeof(IR_Type));
     struct_type->kind = IR_TYPE__STRUCT;
-    struct_type->strukt.name = name;
-    struct_type->strukt.fields = fields;
-    struct_type->strukt.field_count = field_count;
-    ir_type_list_add(parser->types, struct_type);
+    struct_type->name = name;
+    struct_type->location = name_location;
+    struct_type->struct_fields = fields;
+    struct_type->struct_field_count = field_count;
+    if (type == NULL) {
+        ir_type_list_add(parser->types, struct_type);
+    }
 }
 
 static IR_Global_Variable *parse_global(Parser *parser) {
@@ -1174,7 +1192,7 @@ IR_Module *parse(Source source) {
     parser.function_frame_size = 0;
     parser.globals_frame_size = 0;
 
-    parser.lexer = lexer_create(source.content);
+    parser.lexer = lexer_create(source);
     parser.current = lexer_next(parser.lexer);
     parser.next = lexer_next(parser.lexer);
 

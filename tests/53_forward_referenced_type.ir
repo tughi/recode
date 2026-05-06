@@ -1,0 +1,16 @@
+type Line = struct {
+  p1: Point
+  p2: Point
+}
+
+type Point = struct {
+  x: i32
+  y: i32
+}
+
+$main(): i32 {
+@1:
+  %line.ptr: ptr<Line> = alloc Line
+  %0: i32 = const 0
+  ret %0
+}
