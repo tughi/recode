@@ -66,9 +66,9 @@ Declares an external global variable (e.g., from C).
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`
 
-**Pointer:** `ptr<T>`, `ptr<ptr<T>>`, `ptr<proc (args...) -> return_type>`
+**Pointer:** `ptr<T>`, `ptr<ptr<T>>`, `ptr<proc (args...) -> return_type>`, `ptr<Any>`
 
-**Special:** `Any` (generic/opaque pointer target)
+**Special:** `Any` is only valid as a pointer pointee — it represents an erased pointee type (analogous to `void*` in C) and has no size of its own
 
 ## Instructions
 
@@ -116,12 +116,13 @@ call $print %value
 
 ### `cast`
 
-Converts a value between compatible types (numeric widening/narrowing, pointer reinterpretation).
+Converts between integer types (widening/narrowing, matching C sign-extension rules) or between any two pointer types.
 
 ```
-%wide: i32 = cast %narrow       -- u8 to i32
-%byte: u8 = cast %wide          -- i32 to u8
+%wide: i32 = cast %narrow       -- u8 to i32, zero-extends
+%byte: u8 = cast %wide          -- i32 to u8, truncates
 %any: ptr<Any> = cast %specific -- ptr<T> to ptr<Any>
+%reint: ptr<u8> = cast %i32ptr  -- ptr<i32> to ptr<u8>
 ```
 
 ### `cmp_eq`

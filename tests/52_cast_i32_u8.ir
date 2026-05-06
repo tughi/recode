@@ -1,0 +1,12 @@
+; exit: 255
+
+$main(): i32 {
+@1:
+  %i32.ptr: ptr<i32> = alloc i32
+  %0: i32 = const -1
+  store %i32.ptr %0
+  %u8.ptr: ptr<u8> = cast %i32.ptr
+  %1: u8 = load %u8.ptr
+  %2: i32 = cast %1
+  ret %2
+}

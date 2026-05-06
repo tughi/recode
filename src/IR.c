@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+static IR_Type ir_type_any_singleton = {
+    .kind = IR_TYPE__ANY,
+};
+
+IR_Type *ir_type_any(void) {
+    return &ir_type_any_singleton;
+}
+
 static IR_Type ir_type_bool_singleton = {
     .kind = IR_TYPE__BOOL,
 };
@@ -201,6 +209,7 @@ size_t ir_type_byte_size(IR_Type *type) {
         }
         return total;
     }
+    case IR_TYPE__ANY:
     case IR_TYPE__OPAQUE:
     case IR_TYPE__VOID:
         return 0;
@@ -247,6 +256,9 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
         return;
     }
     switch (type->kind) {
+    case IR_TYPE__ANY:
+        fputs("Any", out);
+        return;
     case IR_TYPE__BOOL:
         fputs("bool", out);
         return;

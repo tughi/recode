@@ -148,6 +148,9 @@ static IR_Type *parse_type(Parser *parser) {
         advance(parser);
         return ir_type_pointer(parser->types, pointee);
     }
+    if (string_equals_cstr(name.lexeme, "Any")) {
+        return ir_type_any();
+    }
     if (string_equals_cstr(name.lexeme, "bool")) {
         return ir_type_bool();
     }
@@ -814,13 +817,13 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__CAST: {
         IR_Type *from_type = instruction->arguments.items[0]->type;
         IR_Type *to_type = instruction->result.type;
-        if (!is_integer_type(from_type)) {
-            parse_error(parser, location, "cast source must be an integer type");
+        if (is_integer_type(from_type) && is_integer_type(to_type)) {
+            return;
         }
-        if (!is_integer_type(to_type)) {
-            parse_error(parser, location, "cast result must be an integer type");
+        if (from_type->kind == IR_TYPE__PTR && to_type->kind == IR_TYPE__PTR) {
+            return;
         }
-        return;
+        parse_error(parser, location, "cast requires integer or pointer types");
     }
     case IR_INSTRUCTION__CMP_EQ:
     case IR_INSTRUCTION__CMP_NE:

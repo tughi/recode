@@ -148,6 +148,10 @@ static Step execute_cast_instruction(Interpreter *interpreter, IR_Instruction *i
     IR_Value *source_value = instruction->arguments.items[0];
     uint8_t *source_address = value_address(interpreter, frame_data, source_value);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (source_value->type->kind == IR_TYPE__PTR && instruction->result.type->kind == IR_TYPE__PTR) {
+        *(uint8_t **)result_address = *(uint8_t **)source_address;
+        return (Step){.kind = STEP_NEXT};
+    }
     int64_t widened_data = 0;
     switch (source_value->type->kind) {
     case IR_TYPE__I8:

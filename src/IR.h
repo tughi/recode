@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 typedef enum IR_Type_Kind {
+    IR_TYPE__ANY,
     IR_TYPE__BOOL,
     IR_TYPE__I8,
     IR_TYPE__I16,
@@ -64,6 +65,7 @@ typedef struct {
 
 void ir_type_list_add(IR_Type_List *list, IR_Type *type);
 
+IR_Type *ir_type_any(void);
 IR_Type *ir_type_bool(void);
 IR_Type *ir_type_i8(void);
 IR_Type *ir_type_i16(void);
