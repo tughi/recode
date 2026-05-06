@@ -94,14 +94,6 @@ static Step execute_add_instruction(Interpreter *interpreter, IR_Instruction *in
 static Step execute_address_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     IR_Value *target_value = instruction->arguments.items[0];
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    if (target_value->kind == IR_VALUE__FUNCTION) {
-        IR_Function *function = find_function(interpreter, target_value->name);
-        if (function == NULL) {
-            runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(target_value->name));
-        }
-        *(uint8_t **)result_address = (uint8_t *)function;
-        return (Step){.kind = STEP_NEXT};
-    }
     memcpy(result_address, value_address(interpreter, frame_data, target_value), instruction->result.slot.size);
     return (Step){.kind = STEP_NEXT};
 }
@@ -121,15 +113,7 @@ static Step execute_br_instruction(Interpreter *interpreter, IR_Instruction *ins
 
 static Step execute_call_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     IR_Value *callee_value = instruction->arguments.items[0];
-    IR_Function *callee;
-    if (callee_value->kind == IR_VALUE__FUNCTION) {
-        callee = find_function(interpreter, callee_value->name);
-        if (callee == NULL) {
-            runtime_error(interpreter, instruction->location, "Unknown function '%.*s'", STRING(callee_value->name));
-        }
-    } else {
-        callee = (IR_Function *)*(uint8_t **)value_address(interpreter, frame_data, callee_value);
-    }
+    IR_Function *callee = *(IR_Function **)value_address(interpreter, frame_data, callee_value);
     size_t argument_count = instruction->arguments.size - 1;
     uint8_t **argument_addresses = argument_count == 0 ? NULL : malloc(argument_count * sizeof(uint8_t *));
     for (size_t i = 0; i < argument_count; i++) {
@@ -815,15 +799,44 @@ static IR_Block *find_block(IR_Function *function, size_t label) {
 static void call_external(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argc, uint8_t *return_address, Source_Location call_location) {
     (void)argc;
     if (string_equals_cstr(function->name, "$exit")) {
+        if (function->parameters.size != 1 || function->parameters.items[0]->type != ir_type_i32() || function->return_type != ir_type_void()) {
+            todo("Report wrong $exit declaration");
+        }
         exit((int)*(int32_t *)argument_addresses[0]);
     }
     if (string_equals_cstr(function->name, "$fputc")) {
-        int c = (int)*(int32_t *)argument_addresses[0];
+        static IR_Type *ptr_file_type = NULL;
+        if (ptr_file_type == NULL) {
+            IR_Global_Variable_List *global_variables = &interpreter->module->global_variables;
+            for (size_t i = 0; i < global_variables->size; i++) {
+                IR_Global_Variable *global_variable = global_variables->items[i];
+                if (string_equals_cstr(global_variable->name, "$stdout")) {
+                    ptr_file_type = global_variable->type;
+                    break;
+                }
+            }
+            if (ptr_file_type == NULL || ptr_file_type->kind != IR_TYPE__PTR || ptr_file_type->pointee->kind != IR_TYPE__OPAQUE) {
+                panic();
+            }
+        }
+        if (function->parameters.size != 2 || function->parameters.items[0]->type != ir_type_i32() || function->parameters.items[1]->type != ptr_file_type || function->return_type != ir_type_i32()) {
+            todo("Report wrong $fputc declaration");
+        }
+        int32_t c = *(int32_t *)argument_addresses[0];
         FILE *stream = (FILE *)*(uint8_t **)argument_addresses[1];
         int result = fputc(c, stream);
         if (return_address != NULL) {
             *(int32_t *)return_address = (int32_t)result;
         }
+        return;
+    }
+    if (string_equals_cstr(function->name, "$malloc")) {
+        if (function->parameters.size != 1 || function->parameters.items[0]->type != ir_type_u64() || function->return_type != ir_type_pointer(&interpreter->module->types, ir_type_any())) {
+            todo("Report wrong $malloc declaration");
+        }
+        size_t size = *(size_t *)argument_addresses[0];
+        uint8_t *result = malloc(size);
+        *(uint8_t **)return_address = result;
         return;
     }
     runtime_error(interpreter, call_location, "Unknown external function '%.*s'", STRING(function->name));
@@ -905,6 +918,10 @@ int64_t interpret(IR_Module *module, int argc, char *argv[]) {
             *(uint8_t **)payload_address = (uint8_t *)stdin;
         }
         *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
+    }
+    for (size_t i = 0; i < module->functions.size; i++) {
+        IR_Function *function = module->functions.items[i];
+        *(IR_Function **)(interpreter.globals_data + function->value.slot.offset) = function;
     }
     size_t main_arguments_count = main_function->parameters.size;
     uint8_t **main_argument_addresses = main_arguments_count == 0 ? NULL : malloc(main_arguments_count * sizeof(uint8_t *));

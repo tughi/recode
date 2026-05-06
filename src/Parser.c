@@ -797,8 +797,7 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__ADDRESS: {
         IR_Value *argument = instruction->arguments.items[0];
         if (argument->kind == IR_VALUE__FUNCTION && argument->type != NULL) {
-            IR_Type *pointee = expect_pointer_type(parser, location, "address result", instruction->result.type);
-            expect_type(parser, location, "address target", argument->type, pointee);
+            expect_type(parser, location, "address result", argument->type, instruction->result.type);
         } else {
             expect_pointer_type(parser, location, "address result", instruction->result.type);
         }
@@ -812,8 +811,27 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__BR:
         expect_type(parser, location, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
         return;
-    case IR_INSTRUCTION__CALL:
+    case IR_INSTRUCTION__CALL: {
+        IR_Type *callee_type = instruction->arguments.items[0]->type;
+        if (callee_type == NULL) {
+            return;
+        }
+        IR_Type *proc_type = expect_pointer_type(parser, location, "call callee", callee_type);
+        if (proc_type->kind != IR_TYPE__PROC) {
+            parse_error(parser, location, "call callee must be ptr<proc>");
+        }
+        size_t arg_count = instruction->arguments.size - 1;
+        if (arg_count != proc_type->proc.param_count) {
+            parse_error(parser, location, "call argument count mismatch: expected %zu, got %zu", proc_type->proc.param_count, arg_count);
+        }
+        for (size_t i = 0; i < arg_count; i++) {
+            expect_type(parser, location, "call argument", proc_type->proc.param_types[i], instruction->arguments.items[i + 1]->type);
+        }
+        if (instruction->result.type != NULL) {
+            expect_type(parser, location, "call result", proc_type->proc.return_type, instruction->result.type);
+        }
         return;
+    }
     case IR_INSTRUCTION__CAST: {
         IR_Type *from_type = instruction->arguments.items[0]->type;
         IR_Type *to_type = instruction->result.type;
@@ -1075,8 +1093,11 @@ static IR_Function *parse_function(Parser *parser) {
     for (size_t i = 0; i < function->parameters.size; i++) {
         param_types[i] = function->parameters.items[i]->type;
     }
-    function->value.type = ir_type_proc(parser->types, param_types, function->parameters.size, return_type);
+    IR_Type *proc_type = ir_type_proc(parser->types, param_types, function->parameters.size, return_type);
     free(param_types);
+    IR_Type *ptr_proc_type = ir_type_pointer(parser->types, proc_type);
+    function->value.type = ptr_proc_type;
+    function->value.slot = reserve_frame_slot(&parser->globals_frame_size, ptr_proc_type);
 
     if (parser->current.kind != TOKEN_KIND__SPACE) {
         function->is_external = true;
