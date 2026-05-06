@@ -1,0 +1,10 @@
+type Node = struct {
+  next: ptr<Node>
+}
+
+$main(): i32 {
+@1:
+  %node.ptr: ptr<Node> = alloc Node
+  %0: i32 = const 0
+  ret %0
+}

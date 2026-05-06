@@ -948,20 +948,16 @@ static void parse_type_declaration(Parser *parser) {
     Source_Location body_location = current_location(parser);
     String body = expect_identifier(parser);
     IR_Type *type = ir_type_named_lookup(parser->types, name);
-    if (type != NULL && type->kind != IR_TYPE__PLACEHOLDER) {
+    if (type == NULL) {
+        type = malloc(sizeof(IR_Type));
+        type->name = name;
+        ir_type_list_add(parser->types, type);
+    } else if (type->kind != IR_TYPE__PLACEHOLDER) {
         parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
     }
+    type->location = name_location;
     if (string_equals_cstr(body, "opaque")) {
-        if (type != NULL) {
-            type->kind = IR_TYPE__OPAQUE;
-            type->location = name_location;
-        } else {
-            type = malloc(sizeof(IR_Type));
-            type->kind = IR_TYPE__OPAQUE;
-            type->name = name;
-            type->location = name_location;
-            ir_type_list_add(parser->types, type);
-        }
+        type->kind = IR_TYPE__OPAQUE;
         return;
     }
     if (!string_equals_cstr(body, "struct")) {
@@ -1007,15 +1003,9 @@ static void parse_type_declaration(Parser *parser) {
     if (field_count == 0) {
         parse_error(parser, name_location, "Struct '%.*s' must declare at least one field", STRING(name));
     }
-    IR_Type *struct_type = type != NULL ? type : malloc(sizeof(IR_Type));
-    struct_type->kind = IR_TYPE__STRUCT;
-    struct_type->name = name;
-    struct_type->location = name_location;
-    struct_type->struct_fields = fields;
-    struct_type->struct_field_count = field_count;
-    if (type == NULL) {
-        ir_type_list_add(parser->types, struct_type);
-    }
+    type->kind = IR_TYPE__STRUCT;
+    type->struct_fields = fields;
+    type->struct_field_count = field_count;
 }
 
 static IR_Global_Variable *parse_global(Parser *parser) {
