@@ -339,9 +339,9 @@ static void expect_type(Parser *parser, Source_Location location, const char *wh
     if (!ir_type_equals(expected, actual)) {
         error_prefix(parser, location);
         fprintf(stderr, "%s: expected ", what);
-        ir_type_fprintf(stderr, expected);
+        fprint_ir_type(stderr, expected);
         fputs(", got ", stderr);
-        ir_type_fprintf(stderr, actual);
+        fprint_ir_type(stderr, actual);
         fputc('\n', stderr);
         panic();
     }
@@ -351,7 +351,7 @@ static IR_Type *expect_pointer_type(Parser *parser, Source_Location location, co
     if (actual == NULL || actual->kind != IR_TYPE__PTR) {
         error_prefix(parser, location);
         fprintf(stderr, "%s: expected pointer, got ", what);
-        ir_type_fprintf(stderr, actual);
+        fprint_ir_type(stderr, actual);
         fputc('\n', stderr);
         panic();
     }
@@ -609,8 +609,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         skip_spaces(parser, 1);
+        if (parser->current.kind == TOKEN_KIND__VARIABLE) {
+            // indexed form: offset %ptr %index
+            ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+            instruction->offset_instruction.struct_field = NULL;
+            instruction->kind = IR_INSTRUCTION__OFFSET;
+            return instruction;
+        }
         if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
-            parse_error_current(parser, "Expected struct type name");
+            parse_error_current(parser, "Expected struct type name or index variable");
         }
         Identifier_Token type_name = parser->current.identifier;
         advance(parser);
@@ -855,12 +862,20 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         return;
     case IR_INSTRUCTION__OFFSET: {
         IR_Type *pointee = expect_pointer_type(parser, location, "offset pointer", instruction->arguments.items[0]->type);
-        if (pointee->kind != IR_TYPE__STRUCT) {
-            parse_error(parser, location, "offset pointer must point to a struct");
+        if (instruction->offset_instruction.struct_field == NULL) {
+            // indexed form: offset %ptr %index → ptr<pointee>
+            if (!is_integer_type(instruction->arguments.items[1]->type)) {
+                parse_error(parser, location, "offset index must be an integer type");
+            }
+            expect_type(parser, location, "offset result", instruction->arguments.items[0]->type, instruction->result.type);
+        } else {
+            if (pointee->kind != IR_TYPE__STRUCT) {
+                parse_error(parser, location, "offset pointer must point to a struct");
+            }
+            IR_Type *field_type = instruction->offset_instruction.struct_field->type;
+            IR_Type *expected = ir_type_pointer(parser->types, field_type);
+            expect_type(parser, location, "offset result", expected, instruction->result.type);
         }
-        IR_Type *field_type = instruction->offset_instruction.struct_field->type;
-        IR_Type *expected = ir_type_pointer(parser->types, field_type);
-        expect_type(parser, location, "offset result", expected, instruction->result.type);
         return;
     }
     case IR_INSTRUCTION__PHI:

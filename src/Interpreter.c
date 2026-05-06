@@ -652,17 +652,24 @@ static Step execute_not_instruction(Interpreter *interpreter, IR_Instruction *in
 
 static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     uint8_t *base = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
-    IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
-    String field_name = instruction->offset_instruction.struct_field->name;
-    size_t field_offset = 0;
-    for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
-        if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
-            break;
-        }
-        field_offset += ir_type_byte_size(struct_type->strukt.fields[i]->type);
-    }
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    *(uint8_t **)result_address = base + field_offset;
+    if (instruction->offset_instruction.struct_field == NULL) {
+        // indexed form: base + index * sizeof(pointee)
+        IR_Type *pointee = instruction->arguments.items[0]->type->pointee;
+        size_t index = *(size_t *)value_address(interpreter, frame_data, instruction->arguments.items[1]);
+        *(uint8_t **)result_address = base + index * ir_type_byte_size(pointee);
+    } else {
+        IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
+        String field_name = instruction->offset_instruction.struct_field->name;
+        size_t field_offset = 0;
+        for (size_t i = 0; i < struct_type->strukt.field_count; i++) {
+            if (string_equals(struct_type->strukt.fields[i]->name, field_name)) {
+                break;
+            }
+            field_offset += ir_type_byte_size(struct_type->strukt.fields[i]->type);
+        }
+        *(uint8_t **)result_address = base + field_offset;
+    }
     return (Step){.kind = STEP_NEXT};
 }
 
@@ -866,7 +873,7 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
     }
 }
 
-int64_t interpret(IR_Module *module) {
+int64_t interpret(IR_Module *module, int argc, char *argv[]) {
     String main_name = string_from("$main");
     Interpreter interpreter = {.module = module};
     IR_Function *main_function = find_function(&interpreter, main_name);
@@ -876,7 +883,7 @@ int64_t interpret(IR_Module *module) {
     }
     if (main_function->return_type->kind != IR_TYPE__I32 && main_function->return_type->kind != IR_TYPE__VOID) {
         fprintf(stderr, "%.*s:%zu:%zu: Unsupported return type", STRING(module->source.path), main_function->location.line, main_function->location.column);
-        ir_type_fprintf(stderr, main_function->return_type);
+        fprint_ir_type(stderr, main_function->return_type);
         fputc('\n', stderr);
         panic();
     }
@@ -895,9 +902,36 @@ int64_t interpret(IR_Module *module) {
         }
         *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
     }
+    size_t main_arguments_count = main_function->parameters.size;
+    uint8_t **main_argument_addresses = main_arguments_count == 0 ? NULL : malloc(main_arguments_count * sizeof(uint8_t *));
+    int32_t main_argc = (int32_t)argc;
+    char **main_argv = argv;
+    if (main_arguments_count > 0) {
+        if (main_function->parameters.items[0]->type != ir_type_i32()) {
+            fprintf(stderr, "%.*s:%zu:%zu: $main first parameter must be i32, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
+            fprint_ir_type(stderr, main_function->parameters.items[0]->type);
+            fputc('\n', stderr);
+            panic();
+        }
+        main_argument_addresses[0] = (uint8_t *)&main_argc;
+        if (main_arguments_count > 1) {
+            if (main_function->parameters.items[1]->type != ir_type_pointer(&module->types, ir_type_pointer(&module->types, ir_type_u8()))) {
+                fprintf(stderr, "%.*s:%zu:%zu: $main second parameter must be ptr<ptr<u8>>, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
+                fprint_ir_type(stderr, main_function->parameters.items[1]->type);
+                fputc('\n', stderr);
+                panic();
+            }
+            main_argument_addresses[1] = (uint8_t *)&main_argv;
+            if (main_arguments_count > 2) {
+                fprintf(stderr, "%.*s:%zu:%zu: $main has too many parameters\n", STRING(module->source.path), main_function->location.line, main_function->location.column);
+                panic();
+            }
+        }
+    }
     int32_t main_return = 0;
     uint8_t *main_return_address = main_function->return_type->kind == IR_TYPE__I32 ? (uint8_t *)&main_return : NULL;
-    run_function(&interpreter, main_function, NULL, 0, main_return_address, main_function->location);
+    run_function(&interpreter, main_function, main_argument_addresses, main_arguments_count, main_return_address, main_function->location);
+    free(main_argument_addresses);
     free(interpreter.globals_data);
     return main_function->return_type->kind == IR_TYPE__I32 ? (int64_t)main_return : 0;
 }

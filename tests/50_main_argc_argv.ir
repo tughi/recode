@@ -1,0 +1,28 @@
+; exit: 26
+
+$main(%argc: i32, %argv: ptr<ptr<u8>>): i32 {
+@1:
+  %p: ptr<u8> = load %argv
+  %l: usize = call $len %p
+  %0: i32 = cast %l
+  ret %0
+}
+
+$len(%s: ptr<u8>): usize {
+@1:
+  %l.1: usize = const 0
+  jmp @2
+@2:
+  %l.2: usize = phi @1 %l.1 @4 %l.4
+  %c.ptr: ptr<u8> = offset %s %l.2
+  %c: u8 = load %c.ptr
+  %0: u8 = const 0
+  %1: bool = cmp_eq %c %0
+  br %1 @3 @4
+@3:
+  ret %l.2
+@4:
+  %2: usize = const 1
+  %l.4: usize = add %l.2 %2
+  jmp @2
+}

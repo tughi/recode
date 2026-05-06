@@ -241,7 +241,7 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
     return true;
 }
 
-void ir_type_fprintf(FILE *out, IR_Type *type) {
+void fprint_ir_type(FILE *out, IR_Type *type) {
     if (type == NULL) {
         fputs("(unknown)", out);
         return;
@@ -274,14 +274,14 @@ void ir_type_fprintf(FILE *out, IR_Type *type) {
             if (i > 0) {
                 fputs(", ", out);
             }
-            ir_type_fprintf(out, type->proc.param_types[i]);
+            fprint_ir_type(out, type->proc.param_types[i]);
         }
         fputs(") -> ", out);
-        ir_type_fprintf(out, type->proc.return_type);
+        fprint_ir_type(out, type->proc.return_type);
         return;
     case IR_TYPE__PTR:
         fputs("ptr<", out);
-        ir_type_fprintf(out, type->pointee);
+        fprint_ir_type(out, type->pointee);
         fputc('>', out);
         return;
     case IR_TYPE__STRUCT:

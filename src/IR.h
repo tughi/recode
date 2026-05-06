@@ -81,9 +81,9 @@ IR_Type *ir_type_u64(void);
 IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
-void ir_type_fprintf(FILE *out, IR_Type *type);
 size_t ir_type_byte_size(IR_Type *type);
 size_t ir_type_size(IR_Type *type);
+void fprint_ir_type(FILE *out, IR_Type *type);
 
 typedef enum {
     IR_VALUE__FUNCTION,

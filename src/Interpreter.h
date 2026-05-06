@@ -3,4 +3,4 @@
 #include "IR.h"
 #include <stdint.h>
 
-int64_t interpret(IR_Module *module);
+int64_t interpret(IR_Module *module, int argc, char *argv[]);
