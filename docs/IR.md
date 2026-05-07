@@ -279,8 +279,8 @@ store %ptr %value
 Constructs a struct value with the specified field values.
 
 ```
-%point: Point = struct { Point.x: %x, Point.y: %y }
-%line: Line = struct { Line.p1: %p1, Line.p2: %p2 }
+%point: Point = struct Point .x %x .y %y
+%line: Line = struct Line .p1 %p1 .p2 %p2
 ```
 
 ### `sub`

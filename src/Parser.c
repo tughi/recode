@@ -679,6 +679,52 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "struct")) {
+        skip_spaces(parser, 1);
+        IR_Type *struct_type = parse_type(parser);
+        if (struct_type->kind != IR_TYPE__STRUCT) {
+            parse_error(parser, result_variable.location, "Not a struct type");
+        }
+        if (struct_type != result_type) {
+            parse_error(parser, result_variable.location, "Unexpected result type");
+        }
+        IR_Struct_Field **fields = calloc(struct_type->struct_field_count, sizeof(IR_Struct_Field *));
+        size_t field_count = 0;
+        while (parser->current.kind == TOKEN_KIND__SPACE) {
+            if (parser->next.kind != TOKEN_KIND__OTHER || parser->next.other.value != '.') {
+                break;
+            }
+            skip_spaces(parser, 1);
+            advance(parser);
+            if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+                parse_error_current(parser, "Expected field name");
+            }
+            Identifier_Token field_name = parser->current.identifier;
+            advance(parser);
+            IR_Struct_Field *field = NULL;
+            for (size_t i = 0; i < struct_type->struct_field_count; i++) {
+                if (string_equals(struct_type->struct_fields[i]->name, field_name.lexeme)) {
+                    field = struct_type->struct_fields[i];
+                    break;
+                }
+            }
+            if (field == NULL) {
+                parse_error(parser, field_name.location, "Struct '%.*s' has no field '%.*s'", STRING(struct_type->name), STRING(field_name.lexeme));
+            }
+            for (size_t i = 0; i < field_count; i++) {
+                if (fields[i] == field) {
+                    parse_error(parser, field_name.location, "Duplicate field initialization");
+                }
+            }
+            skip_spaces(parser, 1);
+            ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+            fields[field_count++] = field;
+        }
+        instruction->struct_instruction.fields = fields;
+        instruction->kind = IR_INSTRUCTION__STRUCT;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "sub")) {
         skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -925,6 +971,17 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "store value", pointee, instruction->arguments.items[1]->type);
         return;
     }
+    case IR_INSTRUCTION__STRUCT: {
+        // IR_Type *struct_type = instruction->result.type;
+        // if (instruction->arguments.size != struct_type->struct_field_count) {
+        //     parse_error(parser, location, "Expecting %zu fields, not just %zu", struct_type->struct_field_count, instruction->arguments.size);
+        // }
+        for (size_t i = 0; i < instruction->arguments.size; i++) {
+            IR_Struct_Field *field = instruction->struct_instruction.fields[i];
+            expect_type(parser, location, "struct field value", field->type, instruction->arguments.items[i]->type);
+        }
+        return;
+    }
     }
 }
 
@@ -946,22 +1003,23 @@ static void parse_type_declaration(Parser *parser) {
     expect_other(parser, '=');
     skip_spaces(parser, 1);
     Source_Location body_location = current_location(parser);
-    String body = expect_identifier(parser);
+    String type_kind = expect_identifier(parser);
     IR_Type *type = ir_type_named_lookup(parser->types, name);
     if (type == NULL) {
         type = malloc(sizeof(IR_Type));
+        type->kind = IR_TYPE__PLACEHOLDER;
         type->name = name;
         ir_type_list_add(parser->types, type);
     } else if (type->kind != IR_TYPE__PLACEHOLDER) {
         parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
     }
     type->location = name_location;
-    if (string_equals_cstr(body, "opaque")) {
+    if (string_equals_cstr(type_kind, "opaque")) {
         type->kind = IR_TYPE__OPAQUE;
         return;
     }
-    if (!string_equals_cstr(body, "struct")) {
-        parse_error(parser, body_location, "Expected 'opaque' or 'struct', got '%.*s'", STRING(body));
+    if (!string_equals_cstr(type_kind, "struct")) {
+        parse_error(parser, body_location, "Expected 'opaque' or 'struct', got '%.*s'", STRING(type_kind));
     }
     skip_spaces(parser, 1);
     expect_other(parser, '{');

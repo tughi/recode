@@ -692,6 +692,24 @@ static Step execute_store_instruction(Interpreter *interpreter, IR_Instruction *
     return (Step){.kind = STEP_NEXT};
 }
 
+static Step execute_struct_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
+    IR_Type *struct_type = instruction->result.type;
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    for (size_t i = 0; i < instruction->arguments.size; i++) {
+        IR_Struct_Field *field = instruction->struct_instruction.fields[i];
+        size_t field_offset = 0;
+        for (size_t j = 0; j < struct_type->struct_field_count; j++) {
+            if (struct_type->struct_fields[j] == field) {
+                break;
+            }
+            field_offset += ir_type_size(struct_type->struct_fields[j]->type);
+        }
+        IR_Value *source_value = instruction->arguments.items[i];
+        memcpy(result_address + field_offset, value_address(interpreter, frame_data, source_value), source_value->slot.size);
+    }
+    return (Step){.kind = STEP_NEXT};
+}
+
 static Step execute_sub_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
     uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
@@ -781,6 +799,8 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         return execute_ret_instruction(interpreter, instruction, frame_data, return_address);
     case IR_INSTRUCTION__STORE:
         return execute_store_instruction(interpreter, instruction, frame_data);
+    case IR_INSTRUCTION__STRUCT:
+        return execute_struct_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__SUB:
         return execute_sub_instruction(interpreter, instruction, frame_data);
     }

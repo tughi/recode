@@ -141,6 +141,10 @@ typedef struct IR_Phi_Instruction {
     size_t *labels;
 } IR_Phi_Instruction;
 
+typedef struct IR_Struct_Instruction {
+    IR_Struct_Field **fields;
+} IR_Struct_Instruction;
+
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__ADD,
     IR_INSTRUCTION__ADDRESS,
@@ -167,6 +171,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__PLACEHOLDER,
     IR_INSTRUCTION__RET,
     IR_INSTRUCTION__STORE,
+    IR_INSTRUCTION__STRUCT,
     IR_INSTRUCTION__SUB,
 } IR_Instruction_Kind;
 
@@ -192,6 +197,7 @@ struct IR_Instruction {
         IR_Jmp_Instruction jmp_instruction;
         IR_Offset_Instruction offset_instruction;
         IR_Phi_Instruction phi_instruction;
+        IR_Struct_Instruction struct_instruction;
     };
 };
 
