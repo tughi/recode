@@ -644,7 +644,8 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
     if (instruction->offset_instruction.struct_field == NULL) {
         // indexed form: base + index * sizeof(pointee)
         IR_Type *pointee = instruction->arguments.items[0]->type->pointee;
-        size_t index = *(size_t *)value_address(interpreter, frame_data, instruction->arguments.items[1]);
+        size_t index = 0;
+        memcpy(&index, value_address(interpreter, frame_data, instruction->arguments.items[1]), instruction->arguments.items[1]->slot.size);
         *(uint8_t **)result_address = base + index * ir_type_size(pointee);
     } else {
         IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;

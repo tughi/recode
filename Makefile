@@ -27,9 +27,11 @@ test: $(TARGET)
 	pass=0; fail=0; total=0; \
 	for f in tests/*.ir; do \
 		total=$$((total + 1)); \
-		expected=$$(sed -n '1s/^; exit: \([0-9][0-9]*\)$$/\1/p' $$f); \
+		expected=$$(sed -n 's/^; exit: \([0-9][0-9]*\)$$/\1/p' $$f | head -1); \
 		: $${expected:=0}; \
-		$(TARGET) $$f >/dev/null; actual=$$?; \
+		args=$$(sed -n 's/^; args: \(.*\)$$/\1/p' $$f | head -1); \
+		eval "set -- $$args"; \
+		$(TARGET) $$f "$$@" >/dev/null; actual=$$?; \
 		if [ "$$actual" = "$$expected" ]; then \
 			printf '%sPASS%s %s\n' "$$green" "$$reset" "$$f"; \
 			pass=$$((pass + 1)); \
