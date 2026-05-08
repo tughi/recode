@@ -287,14 +287,14 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
         fprintf(out, "%.*s", STRING(type->name));
         return;
     case IR_TYPE__PROC:
-        fputs("proc(", out);
+        fputs("proc (", out);
         for (size_t i = 0; i < type->proc.param_count; i++) {
             if (i > 0) {
                 fputs(", ", out);
             }
             fprint_ir_type(out, type->proc.param_types[i]);
         }
-        fputs(") -> ", out);
+        fputs("): ", out);
         fprint_ir_type(out, type->proc.return_type);
         return;
     case IR_TYPE__MULTI_PTR:

@@ -119,10 +119,6 @@ static IR_Type *parse_type(Parser *parser) {
         if (!(parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ')') && !(parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == ')')) {
             skip_spaces(parser, 0);
             for (;;) {
-                expect_identifier(parser);
-                skip_spaces(parser, 0);
-                expect_other(parser, ':');
-                skip_spaces(parser, 1);
                 IR_Type *param_type = parse_type(parser);
                 param_types = realloc(param_types, (param_count + 1) * sizeof(IR_Type *));
                 param_types[param_count++] = param_type;
@@ -138,11 +134,15 @@ static IR_Type *parse_type(Parser *parser) {
         skip_spaces(parser, 0);
         expect_other(parser, ')');
 
-        skip_spaces(parser, 1);
-        expect_other(parser, '-');
-        expect_other(parser, '>');
-        skip_spaces(parser, 1);
-        IR_Type *return_type = parse_type(parser);
+        IR_Type *return_type;
+        if ((parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') || (parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == ':')) {
+            skip_spaces(parser, 0);
+            expect_other(parser, ':');
+            skip_spaces(parser, 1);
+            return_type = parse_type(parser);
+        } else {
+            return_type = ir_type_void();
+        }
 
         IR_Type *proc_type = ir_type_proc(parser->types, param_types, param_count, return_type);
         free(param_types);

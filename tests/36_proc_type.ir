@@ -2,7 +2,7 @@
 
 $main(): i32 {
 @1:
-  %1: [proc (param: i32) -> i32] = address $identity
+  %1: [proc (i32): i32] = address $identity
   %2: i32 = const 42
   %3: i32 = call %1 %2
   ret %3

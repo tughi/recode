@@ -1,0 +1,12 @@
+; exit: 42
+
+$main(): i32 {
+@1:
+  %1: [proc (i32)] = address $exit
+  %2: i32 = const 42
+  call %1 %2
+  %3: i32 = const 13
+  ret %3
+}
+
+$exit(%code: i32)
