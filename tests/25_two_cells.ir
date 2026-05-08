@@ -2,8 +2,8 @@
 
 $main(): i32 {
 @1:
-  %a.ptr: ptr<i32> = alloc i32
-  %b.ptr: ptr<i32> = alloc i32
+  %a.ptr: [i32] = alloc i32
+  %b.ptr: [i32] = alloc i32
   %0: i32 = const 10
   store %a.ptr %0
   %1: i32 = const 20

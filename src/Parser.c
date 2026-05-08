@@ -93,6 +93,18 @@ static String expect_identifier(Parser *parser) {
 }
 
 static IR_Type *parse_type(Parser *parser) {
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '[') {
+        advance(parser);
+        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '*') {
+            advance(parser);
+            expect_other(parser, ']');
+            IR_Type *pointee = parse_type(parser);
+            return ir_type_multipointer(parser->types, pointee);
+        }
+        IR_Type *pointee = parse_type(parser);
+        expect_other(parser, ']');
+        return ir_type_pointer(parser->types, pointee);
+    }
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
         parse_error_current(parser, "Expected type");
     }
@@ -135,18 +147,6 @@ static IR_Type *parse_type(Parser *parser) {
         IR_Type *proc_type = ir_type_proc(parser->types, param_types, param_count, return_type);
         free(param_types);
         return proc_type;
-    }
-    if (string_equals_cstr(name.lexeme, "ptr")) {
-        if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '<') {
-            parse_error_current(parser, "Expected '<' after 'ptr'");
-        }
-        advance(parser);
-        IR_Type *pointee = parse_type(parser);
-        if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '>') {
-            parse_error_current(parser, "Expected '>'");
-        }
-        advance(parser);
-        return ir_type_pointer(parser->types, pointee);
     }
     if (string_equals_cstr(name.lexeme, "Any")) {
         return ir_type_any();
@@ -889,7 +889,7 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         if (is_integer_type(from_type) && is_integer_type(to_type)) {
             return;
         }
-        if (from_type->kind == IR_TYPE__PTR && to_type->kind == IR_TYPE__PTR) {
+        if ((from_type->kind == IR_TYPE__MULTI_PTR || from_type->kind == IR_TYPE__PTR) && (to_type->kind == IR_TYPE__MULTI_PTR || to_type->kind == IR_TYPE__PTR)) {
             return;
         }
         parse_error(parser, location, "cast requires integer or pointer types");
@@ -933,14 +933,24 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "result", ir_type_bool(), instruction->result.type);
         return;
     case IR_INSTRUCTION__OFFSET: {
-        IR_Type *pointee = expect_pointer_type(parser, location, "offset pointer", instruction->arguments.items[0]->type);
+        IR_Type *arg_type = instruction->arguments.items[0]->type;
         if (instruction->offset_instruction.struct_field == NULL) {
-            // indexed form: offset %ptr %index → ptr<pointee>
+            // indexed form: [*]T %index → [T]
+            if (arg_type == NULL || arg_type->kind != IR_TYPE__MULTI_PTR) {
+                error_prefix(parser, location);
+                fprintf(stderr, "offset indexed: expected [*]T pointer, got ");
+                fprint_ir_type(stderr, arg_type);
+                fputc('\n', stderr);
+                panic();
+            }
             if (!is_integer_type(instruction->arguments.items[1]->type)) {
                 parse_error(parser, location, "offset index must be an integer type");
             }
-            expect_type(parser, location, "offset result", instruction->arguments.items[0]->type, instruction->result.type);
+            IR_Type *expected = ir_type_pointer(parser->types, arg_type->pointee);
+            expect_type(parser, location, "offset result", expected, instruction->result.type);
         } else {
+            // struct form: [T] Struct.field → [T_field]
+            IR_Type *pointee = expect_pointer_type(parser, location, "offset struct pointer", arg_type);
             if (pointee->kind != IR_TYPE__STRUCT) {
                 parse_error(parser, location, "offset pointer must point to a struct");
             }

@@ -107,6 +107,20 @@ void ir_type_list_add(IR_Type_List *list, IR_Type *type) {
     list->items[list->size++] = type;
 }
 
+IR_Type *ir_type_multipointer(IR_Type_List *types, IR_Type *pointee) {
+    for (size_t i = 0; i < types->size; i++) {
+        IR_Type *existing = types->items[i];
+        if (existing->kind == IR_TYPE__MULTI_PTR && existing->pointee == pointee) {
+            return existing;
+        }
+    }
+    IR_Type *type = malloc(sizeof(IR_Type));
+    type->kind = IR_TYPE__MULTI_PTR;
+    type->pointee = pointee;
+    ir_type_list_add(types, type);
+    return type;
+}
+
 IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee) {
     for (size_t i = 0; i < types->size; i++) {
         IR_Type *existing = types->items[i];
@@ -185,6 +199,7 @@ size_t ir_type_size(IR_Type *type) {
     case IR_TYPE__U64:
     case IR_TYPE__ISIZE:
     case IR_TYPE__USIZE:
+    case IR_TYPE__MULTI_PTR:
     case IR_TYPE__PTR:
     case IR_TYPE__PROC:
         return 8;
@@ -227,7 +242,7 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
         }
         return true;
     }
-    if (a->kind == IR_TYPE__PTR) {
+    if (a->kind == IR_TYPE__MULTI_PTR || a->kind == IR_TYPE__PTR) {
         return ir_type_equals(a->pointee, b->pointee);
     }
     if (a->kind == IR_TYPE__OPAQUE) {
@@ -282,10 +297,14 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
         fputs(") -> ", out);
         fprint_ir_type(out, type->proc.return_type);
         return;
-    case IR_TYPE__PTR:
-        fputs("ptr<", out);
+    case IR_TYPE__MULTI_PTR:
+        fputs("[*]", out);
         fprint_ir_type(out, type->pointee);
-        fputc('>', out);
+        return;
+    case IR_TYPE__PTR:
+        fputc('[', out);
+        fprint_ir_type(out, type->pointee);
+        fputc(']', out);
         return;
     case IR_TYPE__U8:
         fputs("u8", out);

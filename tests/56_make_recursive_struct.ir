@@ -1,10 +1,10 @@
 type Node = struct {
-  next: ptr<Node>
+  next: [Node]
 }
 
 $main(): i32 {
 @1:
-  %0: ptr<Node> = alloc Node
+  %0: [Node] = alloc Node
   %node: Node = struct Node .next %0
   %1: i32 = const 0
   ret %1

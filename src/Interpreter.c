@@ -132,7 +132,7 @@ static Step execute_cast_instruction(Interpreter *interpreter, IR_Instruction *i
     IR_Value *source_value = instruction->arguments.items[0];
     uint8_t *source_address = value_address(interpreter, frame_data, source_value);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    if (source_value->type->kind == IR_TYPE__PTR && instruction->result.type->kind == IR_TYPE__PTR) {
+    if ((source_value->type->kind == IR_TYPE__PTR || source_value->type->kind == IR_TYPE__MULTI_PTR) && (instruction->result.type->kind == IR_TYPE__PTR || instruction->result.type->kind == IR_TYPE__MULTI_PTR)) {
         *(uint8_t **)result_address = *(uint8_t **)source_address;
         return (Step){.kind = STEP_NEXT};
     }
@@ -225,6 +225,7 @@ static Step execute_cmp_eq_instruction(Interpreter *interpreter, IR_Instruction 
     case IR_TYPE__ISIZE:
     case IR_TYPE__U64:
     case IR_TYPE__USIZE:
+    case IR_TYPE__MULTI_PTR:
     case IR_TYPE__PTR:
     case IR_TYPE__PROC:
         result = *(uint64_t *)left_address == *(uint64_t *)right_address;
@@ -429,6 +430,7 @@ static Step execute_cmp_ne_instruction(Interpreter *interpreter, IR_Instruction 
     case IR_TYPE__ISIZE:
     case IR_TYPE__U64:
     case IR_TYPE__USIZE:
+    case IR_TYPE__MULTI_PTR:
     case IR_TYPE__PTR:
     case IR_TYPE__PROC:
         result = *(uint64_t *)left_address != *(uint64_t *)right_address;
@@ -957,8 +959,8 @@ int64_t interpret(IR_Module *module, int argc, char *argv[]) {
         }
         main_argument_addresses[0] = (uint8_t *)&main_argc;
         if (main_arguments_count > 1) {
-            if (main_function->parameters.items[1]->type != ir_type_pointer(&module->types, ir_type_pointer(&module->types, ir_type_u8()))) {
-                fprintf(stderr, "%.*s:%zu:%zu: $main second parameter must be ptr<ptr<u8>>, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
+            if (main_function->parameters.items[1]->type != ir_type_multipointer(&module->types, ir_type_multipointer(&module->types, ir_type_u8()))) {
+                fprintf(stderr, "%.*s:%zu:%zu: $main second parameter must be [*][*]u8, got ", STRING(module->source.path), main_function->location.line, main_function->location.column);
                 fprint_ir_type(stderr, main_function->parameters.items[1]->type);
                 fputc('\n', stderr);
                 panic();

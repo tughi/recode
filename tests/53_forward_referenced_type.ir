@@ -10,7 +10,7 @@ type Point = struct {
 
 $main(): i32 {
 @1:
-  %line.ptr: ptr<Line> = alloc Line
+  %line.ptr: [Line] = alloc Line
   %0: i32 = const 0
   ret %0
 }

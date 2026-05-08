@@ -1,10 +1,10 @@
 type File = opaque
 
-external $stdout: ptr<File>
+external $stdout: [File]
 
 $main(): i32 {
 @1:
-  %1: ptr<File> = load $stdout
+  %1: [File] = load $stdout
   %2: u8 = const 'H'
   %3: i32 = call $write_char %1 %2
   %4: u8 = const 105 ; 'i'
@@ -15,11 +15,11 @@ $main(): i32 {
   ret %8
 }
 
-$write_char(%file: ptr<File>, %c: u8): i32 {
+$write_char(%file: [File], %c: u8): i32 {
 @1:
   %1: i32 = cast %c
   %2: i32 = call $fputc %1 %file
   ret %2
 }
 
-$fputc(%c: i32, %file: ptr<File>): i32
+$fputc(%c: i32, %file: [File]): i32

@@ -4,7 +4,7 @@ external $optind: i32
 
 $main(): i32 {
 @1:
-  %ptr: ptr<i32> = address $optind
+  %ptr: [i32] = address $optind
   %0: i32 = const 42
   store %ptr %0
   %1: i32 = load $optind

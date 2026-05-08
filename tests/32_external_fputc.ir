@@ -1,12 +1,12 @@
 type File = opaque
 
-external $stdout: ptr<File>
+external $stdout: [File]
 
-$fputc(%char: i32, %file: ptr<File>): i32
+$fputc(%char: i32, %file: [File]): i32
 
 $main(): i32 {
 @1:
-  %1: ptr<File> = load $stdout
+  %1: [File] = load $stdout
   %2: i32 = const 72            ; 'H'
   %3: i32 = call $fputc %2 %1
   %4: i32 = const 105           ; 'i'

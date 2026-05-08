@@ -10,10 +10,10 @@ $main(): i32 {
   %0: i32 = const 3
   %1: i32 = const 4
   %p: Point = struct Point .x %0 .y %1
-  %p.ptr: ptr<Point> = alloc Point
+  %p.ptr: [Point] = alloc Point
   store %p.ptr %p
-  %x.ptr: ptr<i32> = offset %p.ptr Point.x
-  %y.ptr: ptr<i32> = offset %p.ptr Point.y
+  %x.ptr: [i32] = offset %p.ptr Point.x
+  %y.ptr: [i32] = offset %p.ptr Point.y
   %x: i32 = load %x.ptr
   %y: i32 = load %y.ptr
   %sum: i32 = add %x %y

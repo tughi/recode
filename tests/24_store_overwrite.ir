@@ -2,7 +2,7 @@
 
 $main(): i32 {
 @1:
-  %value.ptr: ptr<i32> = alloc i32
+  %value.ptr: [i32] = alloc i32
   %0: i32 = const 99
   store %value.ptr %0
   %1: i32 = const 7

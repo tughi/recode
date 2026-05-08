@@ -2,7 +2,7 @@
 
 $main(): i32 {
 @1:
-  %ctr.ptr: ptr<i32> = alloc i32
+  %ctr.ptr: [i32] = alloc i32
   %0: i32 = const 0
   store %ctr.ptr %0
   jmp @2

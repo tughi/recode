@@ -16,6 +16,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE__I32,
     IR_TYPE__I64,
     IR_TYPE__ISIZE,
+    IR_TYPE__MULTI_PTR,
     IR_TYPE__OPAQUE,
     IR_TYPE__PLACEHOLDER,
     IR_TYPE__PROC,
@@ -76,6 +77,7 @@ IR_Type *ir_type_i32(void);
 IR_Type *ir_type_i64(void);
 IR_Type *ir_type_isize(void);
 IR_Type *ir_type_named_lookup(IR_Type_List *types, String name);
+IR_Type *ir_type_multipointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_pointer(IR_Type_List *types, IR_Type *pointee);
 IR_Type *ir_type_proc(IR_Type_List *types, IR_Type **param_types, size_t param_count, IR_Type *return_type);
 IR_Type *ir_type_u8(void);

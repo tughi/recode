@@ -23,7 +23,7 @@ $function_name(%param: type, ...) {
 A declaration without a body declares an external function:
 
 ```
-$fputc(%c: u8, %file: ptr<FILE>): i32
+$fputc(%c: i32, %file: [File]): i32
 ```
 
 ### Labels
@@ -57,7 +57,7 @@ Defines a named struct type or declares an opaque (externally defined) type.
 ### External global variable
 
 ```
-external $stdout: ptr<FILE>
+external $stdout: [File]
 ```
 
 Declares an external global variable (e.g., from C).
@@ -66,7 +66,9 @@ Declares an external global variable (e.g., from C).
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`
 
-**Pointer:** `ptr<T>`, `ptr<ptr<T>>`, `ptr<proc (args...) -> return_type>`, `ptr<Any>`
+**Single pointer:** `[T]` — points to exactly one `T`; supports `load`, `store`, and struct `offset`. Produced by `alloc`, struct `offset`, and indexed `offset`.
+
+**Multi-pointer:** `[*]T` — points into an array of `T`; supports indexed `offset` only (not direct `load`/`store`). Used for `$main`'s `argv` parameter and string pointers.
 
 **Special:** `Any` is only valid as a pointer pointee — it represents an erased pointee type (analogous to `void*` in C) and has no size of its own
 
@@ -82,18 +84,18 @@ Integer addition.
 
 ### `address`
 
-Takes the address of a named symbol, producing a pointer.
+Takes the address of a named symbol, producing a single pointer.
 
 ```
-%fp: ptr<proc (value: i32) -> i32> = address $echo__value
+%fp: [proc (value: i32) -> i32] = address $echo__value
 ```
 
 ### `alloc`
 
-Allocates stack memory for a local variable and returns a pointer to it.
+Allocates stack memory for a local variable and returns a `[T]` single pointer to it.
 
 ```
-%x.ptr: ptr<i32> = alloc i32
+%x.ptr: [i32] = alloc i32
 ```
 
 ### `br`
@@ -106,7 +108,7 @@ br %condition @2 @3
 
 ### `call`
 
-Calls a function. Callee type must be a function pointer. Arguments follow the callee. The result is omitted for void calls.
+Calls a function. Callee type must be a `[proc]` function pointer. Arguments follow the callee. The result is omitted for void calls.
 
 ```
 %result: i32 = call $add %a %b
@@ -116,13 +118,14 @@ call $print %value
 
 ### `cast`
 
-Converts between integer types (widening/narrowing, matching C sign-extension rules) or between any two pointer types.
+Converts between integer types (widening/narrowing, matching C sign-extension rules) or between any two pointer types (`[T]`, `[*]T`, or combinations).
 
 ```
 %wide: i32 = cast %narrow       -- u8 to i32, zero-extends
 %byte: u8 = cast %wide          -- i32 to u8, truncates
-%any: ptr<Any> = cast %specific -- ptr<T> to ptr<Any>
-%reint: ptr<u8> = cast %i32ptr  -- ptr<i32> to ptr<u8>
+%any: [Any] = cast %specific    -- [T] to [Any]
+%reint: [u8] = cast %i32ptr     -- [i32] to [u8]
+%mp: [*]u8 = cast %sp           -- [u8] to [*]u8
 ```
 
 ### `cmp_eq`
@@ -202,7 +205,7 @@ jmp @3
 
 ### `load`
 
-Reads a value from memory at the given pointer.
+Reads a value from a `[T]` single pointer.
 
 ```
 %value: i32 = load %ptr
@@ -242,11 +245,16 @@ Boolean negation.
 
 ### `offset`
 
-Pointer arithmetic. Computes a pointer to an array element by index or to a struct field by name.
+Pointer arithmetic. Two forms:
+
+- **Indexed** (`[*]T %index → [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
+- **Struct field** (`[Struct] Name.field → [FieldT]`): computes a `[FieldT]` single pointer to a named field. The source must be `[Struct]`.
+
+Both forms always produce a `[T]` single pointer.
 
 ```
-%elem: ptr<u8> = offset %array_ptr %index
-%field: ptr<i32> = offset %struct_ptr Point.x
+%elem: [u8] = offset %array_ptr %index
+%field: [i32] = offset %struct_ptr Point.x
 ```
 
 ### `phi`
@@ -268,7 +276,7 @@ ret
 
 ### `store`
 
-Writes a value to memory at the given pointer.
+Writes a value to memory through a `[T]` single pointer.
 
 ```
 store %ptr %value

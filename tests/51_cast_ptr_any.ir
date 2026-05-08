@@ -2,11 +2,11 @@
 
 $main(): i32 {
 @1:
-  %x.ptr: ptr<i32> = alloc i32
+  %x.ptr: [i32] = alloc i32
   %0: i32 = const 42
   store %x.ptr %0
-  %any.ptr: ptr<Any> = cast %x.ptr
-  %x.ptr2: ptr<i32> = cast %any.ptr
+  %any.ptr: [Any] = cast %x.ptr
+  %x.ptr2: [i32] = cast %any.ptr
   %result: i32 = load %x.ptr2
   ret %result
 }
