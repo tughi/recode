@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct {
     IR_Module *module;
@@ -930,17 +931,19 @@ int64_t interpret(IR_Module *module, int argc, char *argv[]) {
     interpreter.globals_data = module->globals_size > 0 ? calloc(module->globals_size, 1) : NULL;
     for (size_t i = 0; i < module->global_variables.size; i++) {
         IR_Global_Variable *global_variable = module->global_variables.items[i];
-        uint8_t *payload_address = interpreter.globals_data + global_variable->payload_slot.offset;
+        uint8_t *host_address = NULL;
         if (string_equals_cstr(global_variable->name, "$optind")) {
-            *(int32_t *)payload_address = 1;
+            host_address = (uint8_t *)&optind;
         } else if (string_equals_cstr(global_variable->name, "$stdout")) {
-            *(uint8_t **)payload_address = (uint8_t *)stdout;
+            host_address = (uint8_t *)&stdout;
         } else if (string_equals_cstr(global_variable->name, "$stderr")) {
-            *(uint8_t **)payload_address = (uint8_t *)stderr;
+            host_address = (uint8_t *)&stderr;
         } else if (string_equals_cstr(global_variable->name, "$stdin")) {
-            *(uint8_t **)payload_address = (uint8_t *)stdin;
+            host_address = (uint8_t *)&stdin;
         }
-        *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
+        if (host_address != NULL) {
+            *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = host_address;
+        }
     }
     for (size_t i = 0; i < module->functions.size; i++) {
         IR_Function *function = module->functions.items[i];

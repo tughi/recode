@@ -1135,7 +1135,6 @@ static void parse_external(Parser *parser, IR_Module *module) {
             parse_error(parser, name.location, "External global variable '%.*s' must have a pointer type", STRING(name.lexeme));
         }
         variable->type = type->pointee;
-        variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, variable->type);
         variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
         ir_global_variable_list_add(&module->global_variables, variable);
     }
