@@ -223,10 +223,10 @@ typedef struct IR_Function {
     IR_Value value;
     String name;
     Source_Location location;
+    bool is_external;
     IR_Value_List parameters;
     IR_Type *return_type;
     IR_Block_List blocks;
-    bool is_external;
     uint32_t frame_size;
 } IR_Function;
 
@@ -242,8 +242,8 @@ typedef struct IR_Global_Variable {
     IR_Value value;
     String name;
     Source_Location location;
-    IR_Type *type;
     bool is_external;
+    IR_Type *type;
     Frame_Slot payload_slot;
 } IR_Global_Variable;
 

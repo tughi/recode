@@ -1,6 +1,6 @@
 ; exit: 42
 
-$exit(%code: i32)
+$exit: [proc (i32)] = external
 
 $main(): i32 {
 @1:

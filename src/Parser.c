@@ -24,7 +24,12 @@ typedef struct {
 typedef union {
     IR_Function function;
     IR_Global_Variable global_variable;
-    IR_Value value;
+    struct {
+        IR_Value value;
+        String name;
+        Source_Location location;
+        bool is_external;
+    };
 } IR_Global;
 
 static void advance(Parser *parser) {
@@ -1076,39 +1081,64 @@ static void parse_type_declaration(Parser *parser) {
     type->struct_field_count = field_count;
 }
 
-static IR_Global_Variable *parse_global(Parser *parser) {
-    Source_Location external_location = current_location(parser);
-    advance(parser);
-    skip_spaces(parser, 1);
-    Variable_Token variable_name = expect_variable(parser, '$');
+static void parse_external(Parser *parser, IR_Module *module) {
+    Variable_Token name = expect_variable(parser, '$');
+    skip_spaces(parser, 0);
     expect_other(parser, ':');
     skip_spaces(parser, 1);
-    IR_Type *variable_type = parse_type(parser);
-    IR_Type *variable_value_type = ir_type_pointer(parser->types, variable_type);
-
-    IR_Value *variable_value = ir_value_list_lookup(&parser->global_values, variable_name.lexeme);
-    IR_Global_Variable *variable;
-    if (variable_value == NULL) {
-        variable = calloc(1, sizeof(IR_Global_Variable));
-        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
-        variable->value.name = variable_name.lexeme;
-        variable->value.type = variable_value_type;
-        ir_value_list_add(&parser->global_values, &variable->value);
-    } else {
-        variable = (IR_Global_Variable *)variable_value;
-        if (variable->type != NULL) {
-            parse_error(parser, variable_name.location, "Redefinition of '%.*s'", STRING(variable_name.lexeme));
-        }
-        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
-        variable->value.type = variable_value_type;
+    IR_Type *type = parse_type(parser);
+    skip_spaces(parser, 1);
+    expect_other(parser, '=');
+    skip_spaces(parser, 1);
+    String assignment = expect_identifier(parser);
+    if (!string_equals_cstr(assignment, "external")) {
+        parse_error(parser, name.location, "Expected 'external'");
     }
-    variable->name = variable_name.lexeme;
-    variable->location = external_location;
-    variable->type = variable_type;
-    variable->is_external = true;
-    variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, variable_type);
-    variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, variable_value_type);
-    return variable;
+
+    IR_Value *global_value = ir_value_list_lookup(&parser->global_values, name.lexeme);
+    IR_Global *global;
+    if (global_value != NULL) {
+        if (global_value->type != NULL) {
+            parse_error(parser, name.location, "Redefinition of '%.*s'", STRING(name.lexeme));
+        }
+        global = (IR_Global *)global_value;
+    } else {
+        global = calloc(1, sizeof(IR_Global));
+        ir_value_list_add(&parser->global_values, &global->value);
+    }
+    global->value.name = name.lexeme;
+    global->value.type = type;
+    global->name = name.lexeme;
+    global->location = name.location;
+    global->is_external = true;
+
+    if (type->kind == IR_TYPE__PTR && type->pointee->kind == IR_TYPE__PROC) {
+        IR_Function *function = &global->function;
+        function->value.kind = IR_VALUE__FUNCTION;
+
+        IR_Proc_Type *proc = &type->pointee->proc;
+        function->return_type = proc->return_type;
+        for (size_t i = 0; i < proc->param_count; i++) {
+            IR_Value *param = calloc(1, sizeof(IR_Value));
+            param->kind = IR_VALUE__INSTRUCTION_RESULT;
+            param->type = proc->param_types[i];
+            ir_value_list_add(&function->parameters, param);
+        }
+
+        function->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
+        ir_function_list_add(&module->functions, function);
+    } else {
+        IR_Global_Variable *variable = &global->global_variable;
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
+
+        if (type->kind != IR_TYPE__PTR) {
+            parse_error(parser, name.location, "External global variable '%.*s' must have a pointer type", STRING(name.lexeme));
+        }
+        variable->type = type->pointee;
+        variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, variable->type);
+        variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
+        ir_global_variable_list_add(&module->global_variables, variable);
+    }
 }
 
 static IR_Function *parse_function(Parser *parser) {
@@ -1175,17 +1205,8 @@ static IR_Function *parse_function(Parser *parser) {
     function->value.type = ptr_proc_type;
     function->value.slot = reserve_frame_slot(&parser->globals_frame_size, ptr_proc_type);
 
-    if (parser->current.kind != TOKEN_KIND__SPACE) {
-        function->is_external = true;
-        function->frame_size = parser->function_frame_size;
-        return function;
-    }
     skip_spaces(parser, 1);
-    if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '{') {
-        function->is_external = true;
-        function->frame_size = parser->function_frame_size;
-        return function;
-    }
+    expect_other(parser, '{');
     advance(parser);
 
     while (true) {
@@ -1265,17 +1286,21 @@ IR_Module *parse(Source source) {
             break;
         }
 
-        if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "external")) {
-            ir_global_variable_list_add(&module->global_variables, parse_global(&parser));
-            continue;
-        }
-
         if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "type")) {
             parse_type_declaration(&parser);
             continue;
         }
 
-        ir_function_list_add(&module->functions, parse_function(&parser));
+        if (parser.current.kind == TOKEN_KIND__VARIABLE && parser.current.variable.prefix == '$') {
+            if (parser.next.kind == TOKEN_KIND__OTHER && parser.next.other.value == ':') {
+                parse_external(&parser, module);
+                continue;
+            }
+            ir_function_list_add(&module->functions, parse_function(&parser));
+            continue;
+        }
+
+        parse_error_current(&parser, "Unexpected top-level token");
     }
 
     for (size_t i = 0; i < module->functions.size; i++) {

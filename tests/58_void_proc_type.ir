@@ -9,4 +9,4 @@ $main(): i32 {
   ret %3
 }
 
-$exit(%code: i32)
+$exit: [proc (i32)] = external

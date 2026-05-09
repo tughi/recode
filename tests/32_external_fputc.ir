@@ -1,8 +1,8 @@
 type File = opaque
 
-external $stdout: [File]
+$stdout: [[File]] = external
 
-$fputc(%char: i32, %file: [File]): i32
+$fputc: [proc (i32, [File]): i32] = external
 
 $main(): i32 {
 @1:

@@ -14,16 +14,10 @@ $function_name(%param: type, ...): return_type {
 
 Defines a procedure with typed parameters and a return type. The return type annotation is optional — omitting it implies `void`.
 
-```
-$function_name(%param: type, ...) {
-    ...
-}
-```
-
-A declaration without a body declares an external function:
+External functions are declared as external globals:
 
 ```
-$fputc(%c: i32, %file: [File]): i32
+$fputc: [proc (i32, [File]): i32] = external
 ```
 
 ### Labels
@@ -57,10 +51,10 @@ Defines a named struct type or declares an opaque (externally defined) type.
 ### External global variable
 
 ```
-external $stdout: [File]
+$stdout: [[File]] = external
 ```
 
-Declares an external global variable (e.g., from C).
+Declares an external global variable (e.g., from C). All global symbols are pointer values, so the type must reflect that (e.g., a global `i32` would be declared as `[i32]`).
 
 ## Types
 
@@ -87,7 +81,7 @@ Integer addition.
 Takes the address of a named symbol, producing a single pointer.
 
 ```
-%fp: [proc (value: i32) -> i32] = address $echo__value
+%fp: [proc (value: i32): i32] = address $echo__value
 ```
 
 ### `alloc`
@@ -247,8 +241,8 @@ Boolean negation.
 
 Pointer arithmetic. Two forms:
 
-- **Indexed** (`[*]T %index → [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
-- **Struct field** (`[Struct] Name.field → [FieldT]`): computes a `[FieldT]` single pointer to a named field. The source must be `[Struct]`.
+- **Indexed** (`[*]T %index => [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
+- **Struct field** (`[Struct] Name.field => [FieldT]`): computes a `[FieldT]` single pointer to a named field. The source must be `[Struct]`.
 
 Both forms always produce a `[T]` single pointer.
 

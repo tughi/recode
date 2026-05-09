@@ -1,6 +1,6 @@
 ; exit: 0
 
-external $optind: i32
+$optind: [i32] = external
 
 $main(): i32 {
 @1:
