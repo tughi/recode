@@ -1081,6 +1081,35 @@ static void parse_type_declaration(Parser *parser) {
     type->struct_field_count = field_count;
 }
 
+static IR_External_Function check_external_function(Parser *parser, IR_Function *function) {
+    String name = function->name;
+    IR_Type *return_type = function->return_type;
+    size_t parameter_count = function->parameters.size;
+    IR_Value **parameters = function->parameters.items;
+    if (string_equals_cstr(name, "$exit")) {
+        if (return_type == ir_type_void() && parameter_count == 1 && parameters[0]->type == ir_type_i32()) {
+            return IR_EXTERNAL_FUNCTION__exit;
+        }
+    } else if (string_equals_cstr(name, "$fputc")) {
+        if (return_type == ir_type_i32() && parameter_count == 2 && parameters[0]->type == ir_type_i32() && parameters[1]->type->kind == IR_TYPE__PTR && parameters[1]->type->pointee->kind == IR_TYPE__OPAQUE) {
+            return IR_EXTERNAL_FUNCTION__fputc;
+        }
+    } else if (string_equals_cstr(name, "$free")) {
+        if (return_type == ir_type_void() && parameter_count == 1 && parameters[0]->type == ir_type_pointer(parser->types, ir_type_any())) {
+            return IR_EXTERNAL_FUNCTION__free;
+        }
+    } else if (string_equals_cstr(name, "$malloc")) {
+        if (return_type == ir_type_pointer(parser->types, ir_type_any()) && parameter_count == 1 && parameters[0]->type == ir_type_usize()) {
+            return IR_EXTERNAL_FUNCTION__malloc;
+        }
+    } else if (string_equals_cstr(name, "$realloc")) {
+        if (return_type == ir_type_pointer(parser->types, ir_type_any()) && parameter_count == 2 && parameters[0]->type == ir_type_pointer(parser->types, ir_type_any()) && parameters[1]->type == ir_type_usize()) {
+            return IR_EXTERNAL_FUNCTION__realloc;
+        }
+    }
+    parse_error(parser, function->location, "Unsupported external function");
+}
+
 static void parse_external(Parser *parser, IR_Module *module) {
     Variable_Token name = expect_variable(parser, '$');
     skip_spaces(parser, 0);
@@ -1124,6 +1153,8 @@ static void parse_external(Parser *parser, IR_Module *module) {
             param->type = proc->param_types[i];
             ir_value_list_add(&function->parameters, param);
         }
+
+        function->which = check_external_function(parser, function);
 
         function->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
         ir_function_list_add(&module->functions, function);

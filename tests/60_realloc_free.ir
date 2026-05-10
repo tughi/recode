@@ -1,0 +1,14 @@
+$malloc: [proc (usize): [Any]] = external
+$realloc: [proc ([Any], usize): [Any]] = external
+$free: [proc ([Any]): void] = external
+
+$main(): i32 {
+@1:
+  %size1: usize = const 10
+  %ptr1: [Any] = call $malloc %size1
+  %size2: usize = const 20
+  %ptr2: [Any] = call $realloc %ptr1 %size2
+  call $free %ptr2
+  %result: i32 = const 0
+  ret %result
+}

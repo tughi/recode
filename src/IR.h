@@ -219,15 +219,28 @@ struct IR_Block {
     IR_Instruction_List instructions;
 };
 
+typedef enum {
+    IR_EXTERNAL_FUNCTION__exit,
+    IR_EXTERNAL_FUNCTION__fputc,
+    IR_EXTERNAL_FUNCTION__free,
+    IR_EXTERNAL_FUNCTION__malloc,
+    IR_EXTERNAL_FUNCTION__realloc,
+} IR_External_Function;
+
 typedef struct IR_Function {
     IR_Value value;
     String name;
     Source_Location location;
     bool is_external;
-    IR_Value_List parameters;
     IR_Type *return_type;
-    IR_Block_List blocks;
-    uint32_t frame_size;
+    IR_Value_List parameters;
+    union {
+        struct {
+            IR_Block_List blocks;
+            uint32_t frame_size;
+        };
+        IR_External_Function which;
+    };
 } IR_Function;
 
 typedef struct {

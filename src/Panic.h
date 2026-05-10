@@ -9,8 +9,10 @@
         exit(1);                                                                 \
     } while (0)
 
-#define todo(message)                                                                       \
-    do {                                                                                    \
-        fprintf(stderr, "%s:%d: \033[0;95mTODO: %s\033[0m\n", __FILE__, __LINE__, message); \
-        exit(1);                                                                            \
+#define todo(message, ...)                                              \
+    do {                                                                \
+        fprintf(stderr, "%s:%d: \033[0;95mTODO: ", __FILE__, __LINE__); \
+        fprintf(stderr, "" message, ##__VA_ARGS__);                     \
+        fprintf(stderr, "\033[0m\n");                                   \
+        exit(1);                                                        \
     } while (0)
