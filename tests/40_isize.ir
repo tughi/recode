@@ -1,5 +1,7 @@
 ; exit: 0
 
+; isize arithmetic and comparisons
+
 $main(): i32 {
 @1:                     ; max + 1 = min, min - 1 = max
   %1: isize = const 9_223_372_036_854_775_807isize

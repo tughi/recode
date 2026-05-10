@@ -1,5 +1,7 @@
 ; exit: 0
 
+; $main without return type
+
 $main() {
 @1:
   ret

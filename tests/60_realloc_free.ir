@@ -1,3 +1,5 @@
+; malloc, realloc, free external functions
+
 $malloc: [proc (usize): [Any]] = external
 $realloc: [proc ([Any], usize): [Any]] = external
 $free: [proc ([Any]): void] = external

@@ -1,3 +1,5 @@
+; recursive struct type
+
 type Node = struct {
   next: [Node]
 }

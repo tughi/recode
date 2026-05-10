@@ -1,3 +1,5 @@
+; struct constructor with a recursive type
+
 type Node = struct {
   next: [Node]
 }

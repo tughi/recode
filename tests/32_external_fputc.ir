@@ -1,3 +1,5 @@
+; opaque type and fputc
+
 type File = opaque
 
 $stdout: [[File]] = external

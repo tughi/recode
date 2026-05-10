@@ -1,5 +1,7 @@
 ; exit: 42
 
+; liveness annotations are silently skipped
+
 $main(): i32 {
 @1:
   [ ]

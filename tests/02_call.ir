@@ -1,5 +1,7 @@
 ; exit: 42
 
+; direct function call with return value
+
 $main(): i32 {
 @1:
   %1: i32 = const 42

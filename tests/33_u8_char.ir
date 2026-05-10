@@ -1,3 +1,5 @@
+; character literals and cast u8 to i32
+
 type File = opaque
 
 $stdout: [[File]] = external
@@ -15,9 +17,9 @@ $main(): i32 {
   ret %8
 }
 
-$write_char(%file: [File], %c: u8): i32 {
+$write_char(%file: [File], %char: u8): i32 {
 @1:
-  %1: i32 = cast %c
+  %1: i32 = cast %char
   %2: i32 = call $fputc %1 %file
   ret %2
 }

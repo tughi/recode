@@ -1,12 +1,16 @@
-; exit: 7
+; exit: 42
+
+; overwriting a stored value
 
 $main(): i32 {
 @1:
   %value.ptr: [i32] = alloc i32
-  %0: i32 = const 99
+  %0: i32 = const 6
   store %value.ptr %0
+  %value.0: i32 = load %value.ptr
   %1: i32 = const 7
   store %value.ptr %1
-  %value: i32 = load %value.ptr
-  ret %value
+  %value.1: i32 = load %value.ptr
+  %result: i32 = mul %value.0 %value.1
+  ret %result
 }

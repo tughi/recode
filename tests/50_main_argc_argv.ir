@@ -1,5 +1,7 @@
 ; exit: 26
 
+; $main with argc and argv
+
 $main(%argc: i32, %argv: [*][*]u8): i32 {
 @1:
   %0: i32 = const 0

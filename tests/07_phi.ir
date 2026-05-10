@@ -1,5 +1,7 @@
 ; exit: 7
 
+; phi merges values from predecessor blocks
+
 $main(): i32 {
 @1:
   %cond: bool = const true

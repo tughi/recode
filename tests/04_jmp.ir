@@ -1,5 +1,7 @@
 ; exit: 7
 
+; unconditional jump
+
 $main(): i32 {
 @1:
   jmp @3

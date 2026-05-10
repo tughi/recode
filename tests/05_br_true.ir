@@ -1,5 +1,7 @@
 ; exit: 7
 
+; conditional branch takes "true" branch
+
 $main(): i32 {
 @1:
   %cond: bool = const true

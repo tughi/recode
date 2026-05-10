@@ -1,5 +1,7 @@
 ; exit: 42
 
+; memory instructions: alloc, load and store
+
 $main(): i32 {
 @1:
   %value.ptr: [i32] = alloc i32

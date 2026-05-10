@@ -1,5 +1,7 @@
 ; exit: 30
 
+; alloc creates separate cells
+
 $main(): i32 {
 @1:
   %a.ptr: [i32] = alloc i32

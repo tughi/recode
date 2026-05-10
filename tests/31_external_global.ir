@@ -1,5 +1,7 @@
 ; exit: 0
 
+; declare and use external variable
+
 $optind: [i32] = external
 
 $main(): i32 {

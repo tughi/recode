@@ -1,5 +1,7 @@
 ; exit: 1
 
+; $main with argc parameter
+
 $main(%argc: i32): i32 {
 @1:
   ret %argc

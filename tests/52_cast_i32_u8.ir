@@ -1,5 +1,7 @@
 ; exit: 255
 
+; cast [i32] to [u8] to reinterpret raw bytes
+
 $main(): i32 {
 @1:
   %i32.ptr: [i32] = alloc i32

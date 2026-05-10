@@ -1,5 +1,7 @@
 ; exit: 1
 
+; process exit code wraps to 8 bits
+
 $main(): i32 {
 @1:
   %0: i32 = const 513

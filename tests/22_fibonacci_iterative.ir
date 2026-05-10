@@ -1,5 +1,7 @@
 ; exit: 233
 
+; iterative fibonacci
+
 ; proc fib(n: i32) -> i32 {
 ;   let a = 0
 ;   let b = 1

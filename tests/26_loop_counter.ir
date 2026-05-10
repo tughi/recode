@@ -1,22 +1,24 @@
 ; exit: 5
 
+; mutable loop counter via alloc
+
 $main(): i32 {
 @1:
-  %ctr.ptr: [i32] = alloc i32
+  %counter.ptr: [i32] = alloc i32
   %0: i32 = const 0
-  store %ctr.ptr %0
+  store %counter.ptr %0
   jmp @2
 @2:
-  %ctr.0: i32 = load %ctr.ptr
+  %counter.0: i32 = load %counter.ptr
   %1: i32 = const 5
-  %2: bool = cmp_ge %ctr.0 %1
+  %2: bool = cmp_ge %counter.0 %1
   br %2 @4 @3
 @3:
   %3: i32 = const 1
-  %ctr.1: i32 = add %ctr.0 %3
-  store %ctr.ptr %ctr.1
+  %counter.1: i32 = add %counter.0 %3
+  store %counter.ptr %counter.1
   jmp @2
 @4:
-  %ctr: i32 = load %ctr.ptr
-  ret %ctr
+  %counter: i32 = load %counter.ptr
+  ret %counter
 }

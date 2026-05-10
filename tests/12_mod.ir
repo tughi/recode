@@ -1,5 +1,7 @@
 ; exit: 42
 
+; mod instruction for i32
+
 $main(): i32 {
 @1:
   %1: i32 = const 142

@@ -1,5 +1,7 @@
 ; exit: 7
 
+; struct constructor instruction
+
 type Point = struct {
   x: i32
   y: i32

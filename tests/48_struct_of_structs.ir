@@ -1,5 +1,7 @@
 ; exit: 10
 
+; nested struct
+
 type Point = struct {
   x: i32
   y: i32

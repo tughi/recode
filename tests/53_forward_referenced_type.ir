@@ -1,3 +1,5 @@
+; use type before its declaration
+
 type Line = struct {
   p1: Point
   p2: Point
