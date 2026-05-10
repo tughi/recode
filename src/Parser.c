@@ -439,13 +439,6 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
-    if (string_equals_cstr(mnemonic, "address")) {
-        skip_spaces(parser, 1);
-        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
-        instruction->kind = IR_INSTRUCTION__ADDRESS;
-        return instruction;
-    }
-
     if (string_equals_cstr(mnemonic, "alloc")) {
         skip_spaces(parser, 1);
         IR_Type *element_type = parse_type(parser);
@@ -848,15 +841,6 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         }
         expect_type(parser, location, "operand 1", type, instruction->arguments.items[0]->type);
         expect_type(parser, location, "operand 2", type, instruction->arguments.items[1]->type);
-        return;
-    }
-    case IR_INSTRUCTION__ADDRESS: {
-        IR_Value *argument = instruction->arguments.items[0];
-        if (argument->kind == IR_VALUE__FUNCTION && argument->type != NULL) {
-            expect_type(parser, location, "address result", argument->type, instruction->result.type);
-        } else {
-            expect_pointer_type(parser, location, "address result", instruction->result.type);
-        }
         return;
     }
     case IR_INSTRUCTION__ALLOC: {

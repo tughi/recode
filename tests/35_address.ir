@@ -1,12 +1,19 @@
 ; exit: 42
 
+; storing into external global variable through a pointer
+
 $optind: [i32] = external
 
 $main(): i32 {
 @1:
-  %ptr: [i32] = address $optind
+  %ptr: [i32] = call $copy $optind
   %0: i32 = const 42
   store %ptr %0
   %1: i32 = load $optind
   ret %1
+}
+
+$copy(%ptr: [i32]): [i32] {
+@1:
+  ret %ptr
 }

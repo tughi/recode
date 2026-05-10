@@ -76,14 +76,6 @@ Integer addition.
 %result: i32 = add %left %right
 ```
 
-### `address`
-
-Takes the address of a named symbol, producing a single pointer.
-
-```
-%fp: [proc (value: i32): i32] = address $echo__value
-```
-
 ### `alloc`
 
 Allocates stack memory for a local variable and returns a `[T]` single pointer to it.

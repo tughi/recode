@@ -1,8 +1,12 @@
 ; exit: 42
 
+; call function via function pointer
+
 $main(): i32 {
 @1:
-  %1: [proc (i32): i32] = address $identity
+  %0: [[proc (i32): i32]] = alloc [proc (i32): i32]
+  store %0 $identity
+  %1: [proc (i32): i32] = load %0
   %2: i32 = const 42
   %3: i32 = call %1 %2
   ret %3

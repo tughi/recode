@@ -92,13 +92,6 @@ static Step execute_add_instruction(Interpreter *interpreter, IR_Instruction *in
     return (Step){.kind = STEP_NEXT};
 }
 
-static Step execute_address_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
-    IR_Value *target_value = instruction->arguments.items[0];
-    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    memcpy(result_address, value_address(interpreter, frame_data, target_value), instruction->result.slot.size);
-    return (Step){.kind = STEP_NEXT};
-}
-
 static Step execute_alloc_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     uint8_t *payload_address = frame_data + instruction->alloc_instruction.payload_slot.offset;
     memset(payload_address, 0, instruction->alloc_instruction.payload_slot.size);
@@ -755,8 +748,6 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
         return execute_add_instruction(interpreter, instruction, frame_data);
-    case IR_INSTRUCTION__ADDRESS:
-        return execute_address_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__ALLOC:
         return execute_alloc_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__BR:
