@@ -11,6 +11,8 @@
 typedef struct {
     IR_Module *module;
     uint8_t *globals_data;
+    Observer *observer;
+    Call_Frame *current_frame;
 } Interpreter;
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -866,12 +868,25 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
         memcpy(frame_data + parameter_value->slot.offset, argument_addresses[i], parameter_value->slot.size);
     }
 
-    IR_Block *block = function->blocks.items[0];
+    Call_Frame frame = {
+        .function = function,
+        .block = function->blocks.items[0],
+        .instruction = NULL,
+        .frame_data = frame_data,
+        .globals_data = interpreter->globals_data,
+        .caller = interpreter->current_frame,
+    };
+    interpreter->current_frame = &frame;
+
     size_t previous_label = SIZE_MAX;
     while (true) {
         bool terminated = false;
-        for (size_t i = 0; i < block->instructions.size; i++) {
-            IR_Instruction *instruction = block->instructions.items[i];
+        for (size_t i = 0; i < frame.block->instructions.size; i++) {
+            IR_Instruction *instruction = frame.block->instructions.items[i];
+            frame.instruction = instruction;
+            if (interpreter->observer != NULL) {
+                interpreter->observer->on_step(interpreter->observer, &frame);
+            }
             Step step = execute_instruction(interpreter, instruction, frame_data, return_address, previous_label);
             if (step.kind == STEP_NEXT) {
                 continue;
@@ -881,24 +896,25 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
                 if (target == NULL) {
                     runtime_error(interpreter, instruction->location, "'%.*s' has no block @%zu", STRING(function->name), step.jump_label);
                 }
-                previous_label = block->label;
-                block = target;
+                previous_label = frame.block->label;
+                frame.block = target;
                 terminated = true;
                 break;
             }
             // STEP_RETURN
+            interpreter->current_frame = frame.caller;
             free(frame_data);
             return;
         }
         if (!terminated) {
-            runtime_error(interpreter, block->location, "'%.*s' block @%zu fell off without a terminator", STRING(function->name), block->label);
+            runtime_error(interpreter, frame.block->location, "'%.*s' block @%zu fell off without a terminator", STRING(function->name), frame.block->label);
         }
     }
 }
 
-int64_t interpret(IR_Module *module, int argc, char *argv[]) {
+int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer) {
     String main_name = string_from("$main");
-    Interpreter interpreter = {.module = module};
+    Interpreter interpreter = {.module = module, .observer = observer};
     IR_Function *main_function = find_function(&interpreter, main_name);
     if (main_function == NULL) {
         fprintf(stderr, "%.*s: No $main function\n", STRING(module->lexed_source.source.path));

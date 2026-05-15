@@ -23,5 +23,5 @@ int main(int argc, char *argv[]) {
 
     IR_Module *module = parse(tokenize(source));
 
-    return (int)interpret(module, argc - 1, argv + 1);
+    return (int)interpret(module, argc - 1, argv + 1, NULL);
 }
