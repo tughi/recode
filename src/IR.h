@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Source.h"
+#include "Lexed_Source.h"
 #include "Source_Location.h"
 #include "String.h"
 #include <stdbool.h>
@@ -267,7 +267,7 @@ typedef struct {
 void ir_global_variable_list_add(IR_Global_Variable_List *list, IR_Global_Variable *global);
 
 typedef struct IR_Module {
-    Source source;
+    Lexed_Source lexed_source;
     IR_Function_List functions;
     IR_Global_Variable_List global_variables;
     IR_Type_List types;

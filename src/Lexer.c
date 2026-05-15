@@ -360,8 +360,17 @@ Token lexer_next(Lexer *lexer) {
             while (position < length && source[position] != '\n') {
                 position++;
             }
+            Source_Location location = {
+                .source = lexer->source_path,
+                .line = lexer->source_line,
+                .column = lexer->source_column,
+            };
             lexer_advance(lexer, start, position);
-            continue;
+            Token token;
+            token.kind = TOKEN_KIND__COMMENT;
+            token.comment.lexeme = (String){.content = source + start, .length = position - start};
+            token.comment.location = location;
+            return token;
         }
         case '0' ... '9':
             return scan_integer(lexer);

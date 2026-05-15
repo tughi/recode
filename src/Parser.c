@@ -1,5 +1,4 @@
 #include "Parser.h"
-#include "Lexer.h"
 #include "Panic.h"
 #include <stdarg.h>
 #include <stdbool.h>
@@ -10,7 +9,8 @@
 
 typedef struct {
     Source source;
-    Lexer *lexer;
+    Lexed_Source *lexed_source;
+    size_t cursor;
     Token current;
     Token next;
     IR_Type_List *types;
@@ -32,9 +32,20 @@ typedef union {
     };
 } IR_Global;
 
+static Token fetch_token(Parser *parser) {
+    while (parser->cursor < parser->lexed_source->tokens_size) {
+        Token token = parser->lexed_source->tokens[parser->cursor++];
+        if (token.kind == TOKEN_KIND__COMMENT) {
+            continue;
+        }
+        return token;
+    }
+    return parser->lexed_source->tokens[parser->lexed_source->tokens_size - 1];
+}
+
 static void advance(Parser *parser) {
     parser->current = parser->next;
-    parser->next = lexer_next(parser->lexer);
+    parser->next = fetch_token(parser);
 }
 
 static void skip_spaces(Parser *parser, size_t count) {
@@ -1276,21 +1287,23 @@ static IR_Function *parse_function(Parser *parser) {
     return function;
 }
 
-IR_Module *parse(Source source) {
+IR_Module *parse(Lexed_Source lexed_source) {
+    IR_Module *module = calloc(1, sizeof(IR_Module));
+    module->lexed_source = lexed_source;
+
     Parser parser;
-    parser.source = source;
+    parser.source = module->lexed_source.source;
+    parser.lexed_source = &module->lexed_source;
+    parser.cursor = 0;
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
     parser.function_frame_size = 0;
     parser.globals_frame_size = 0;
 
-    parser.lexer = lexer_create(source);
-    parser.current = lexer_next(parser.lexer);
-    parser.next = lexer_next(parser.lexer);
+    parser.current = fetch_token(&parser);
+    parser.next = fetch_token(&parser);
 
-    IR_Module *module = calloc(1, sizeof(IR_Module));
-    module->source = source;
     parser.types = &module->types;
 
     while (true) {
@@ -1322,6 +1335,5 @@ IR_Module *parse(Source source) {
     }
 
     module->globals_size = parser.globals_frame_size;
-    lexer_destroy(parser.lexer);
     return module;
 }

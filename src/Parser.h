@@ -1,6 +1,5 @@
 #pragma once
 
 #include "IR.h"
-#include "Source.h"
 
-IR_Module *parse(Source source);
+IR_Module *parse(Lexed_Source lexed_source);

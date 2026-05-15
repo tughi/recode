@@ -12,6 +12,11 @@ typedef struct Character_Token {
     uint8_t value;
 } Character_Token;
 
+typedef struct Comment_Token {
+    String lexeme;
+    Source_Location location;
+} Comment_Token;
+
 typedef struct End_Of_File_Token {
     String lexeme;
     Source_Location location;
@@ -70,6 +75,7 @@ typedef struct Variable_Token {
 
 typedef enum Token_Kind {
     TOKEN_KIND__CHARACTER,
+    TOKEN_KIND__COMMENT,
     TOKEN_KIND__END_OF_FILE,
     TOKEN_KIND__END_OF_LINE,
     TOKEN_KIND__ERROR,
@@ -85,7 +91,12 @@ typedef enum Token_Kind {
 typedef struct Token {
     Token_Kind kind;
     union {
+        struct {
+            String lexeme;
+            Source_Location location;
+        };
         Character_Token character;
+        Comment_Token comment;
         End_Of_File_Token end_of_file;
         End_Of_Line_Token end_of_line;
         Error_Token error;

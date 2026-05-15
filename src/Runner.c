@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         source = load_source(path);
     }
 
-    IR_Module *module = parse(source);
+    IR_Module *module = parse(tokenize(source));
 
     return (int)interpret(module, argc - 1, argv + 1);
 }
