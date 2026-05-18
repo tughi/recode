@@ -1,16 +1,25 @@
+#include "Debugger.h"
 #include "Interpreter.h"
 #include "Parser.h"
 #include "Source.h"
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: Runner IR [args...]\n");
+    bool debug_mode = false;
+    int arg_index = 1;
+    if (arg_index < argc && strcmp(argv[arg_index], "-d") == 0) {
+        debug_mode = true;
+        arg_index++;
+    }
+
+    if (arg_index >= argc) {
+        fprintf(stderr, "Usage: Runner [-d] IR [args...]\n");
         return 1;
     }
 
     Source source;
-    String path = string_from(argv[1]);
+    String path = string_from(argv[arg_index]);
     if (string_equals_cstr(path, "-")) {
         source = load_source_from_stdin();
     } else {
@@ -23,5 +32,8 @@ int main(int argc, char *argv[]) {
 
     IR_Module *module = parse(tokenize(source));
 
-    return (int)interpret(module, argc - 1, argv + 1, NULL);
+    if (debug_mode) {
+        return (int)debug(module, argc - arg_index, argv + arg_index);
+    }
+    return (int)interpret(module, argc - arg_index, argv + arg_index, NULL);
 }
