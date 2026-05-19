@@ -1,5 +1,7 @@
 CC = cc
 CFLAGS = -std=c11 -Wall -Wextra -g
+RAYLIB_CFLAGS := $(shell pkg-config --cflags raylib)
+RAYLIB_LIBS := $(shell pkg-config --libs raylib)
 
 BUILD = build
 TARGET = $(BUILD)/Runner
@@ -8,10 +10,10 @@ OBJS = $(SRCS:src/%.c=$(BUILD)/%.o)
 DEPS = $(OBJS:.o=.d)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(RAYLIB_LIBS)
 
 $(BUILD)/%.o: src/%.c | $(BUILD)
-	$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
+	$(CC) $(CFLAGS) $(RAYLIB_CFLAGS) -MMD -MP -c -o $@ $<
 
 -include $(DEPS)
 

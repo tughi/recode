@@ -85,7 +85,8 @@ typedef enum Token_Kind {
     TOKEN_KIND__OTHER,
     TOKEN_KIND__SPACE,
     TOKEN_KIND__STRING,
-    TOKEN_KIND__VARIABLE
+    TOKEN_KIND__VARIABLE,
+    TOKEN_KINDS,
 } Token_Kind;
 
 typedef struct Token {
