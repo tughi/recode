@@ -71,7 +71,6 @@ static bool is_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     return false;
 }
 
-#if 0
 static IR_Instruction *find_instruction_at_line(IR_Module *module, size_t line) {
     for (size_t f = 0; f < module->functions.size; f++) {
         IR_Function *function = module->functions.items[f];
@@ -88,75 +87,24 @@ static IR_Instruction *find_instruction_at_line(IR_Module *module, size_t line) 
     return NULL;
 }
 
-static IR_Instruction *add_breakpoint_at_line(Debugger *debugger, size_t line) {
-    IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
-    if (instruction == NULL || is_breakpoint(debugger, instruction)) {
-        return instruction;
+static void toggle_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
+    for (size_t i = 0; i < debugger->breakpoints.size; i++) {
+        if (debugger->breakpoints.items[i] == instruction) {
+            debugger->breakpoints.items[i] = debugger->breakpoints.items[--debugger->breakpoints.size];
+            return;
+        }
     }
     ir_instruction_list_add(&debugger->breakpoints, instruction);
-    return instruction;
 }
 
-static bool remove_breakpoint_at_line(Debugger *debugger, size_t line) {
+static bool line_has_breakpoint(Debugger *debugger, size_t line) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         if (debugger->breakpoints.items[i]->location.line == line) {
-            debugger->breakpoints.items[i] = debugger->breakpoints.items[--debugger->breakpoints.size];
             return true;
         }
     }
     return false;
 }
-
-static void list_breakpoints(Debugger *debugger) {
-    if (debugger->breakpoints.size == 0) {
-        fprintf(stderr, "No breakpoints\n");
-        return;
-    }
-    for (size_t i = 0; i < debugger->breakpoints.size; i++) {
-        IR_Instruction *instruction = debugger->breakpoints.items[i];
-        fprintf(stderr, "  %.*s:%zu\n", STRING(instruction->location.source), instruction->location.line);
-    }
-}
-
-static void break_command(Debugger *debugger, Call_Frame *frame, const char *arg) {
-    while (*arg == ' ') {
-        arg++;
-    }
-    IR_Instruction *instruction;
-    if (*arg == '\0') {
-        instruction = frame->instruction;
-        if (!is_breakpoint(debugger, instruction)) {
-            ir_instruction_list_add(&debugger->breakpoints, instruction);
-        }
-    } else {
-        size_t line = (size_t)atoi(arg);
-        if (line == 0) {
-            fprintf(stderr, "Usage: b [<line>]\n");
-            return;
-        }
-        instruction = add_breakpoint_at_line(debugger, line);
-        if (instruction == NULL) {
-            fprintf(stderr, "No instruction at line %zu\n", line);
-            return;
-        }
-    }
-    fprintf(stderr, "Breakpoint at %.*s:%zu\n", STRING(instruction->location.source), instruction->location.line);
-}
-
-static void delete_command(Debugger *debugger, const char *arg) {
-    while (*arg == ' ') {
-        arg++;
-    }
-    size_t line = (size_t)atoi(arg);
-    if (line == 0) {
-        fprintf(stderr, "Usage: d <line>\n");
-        return;
-    }
-    if (!remove_breakpoint_at_line(debugger, line)) {
-        fprintf(stderr, "No breakpoint at line %zu\n", line);
-    }
-}
-#endif
 
 static size_t frame_depth(Call_Frame *frame) {
     size_t depth = 0;
@@ -346,6 +294,17 @@ static void draw_panel_scrollbar(Rectangle bounds, float content_height, float *
     DrawRectangle((int)track_x, (int)thumb_y, (int)scrollbar_width, (int)thumb_height, thumb_color);
 }
 
+static float source_panel_gutter_width(Debugger *debugger) {
+    Font font = debugger->font;
+    size_t lines_size = debugger->module->lexed_source.lines_size;
+    int gutter_digits = 1;
+    for (size_t n = lines_size; n >= 10; n /= 10) {
+        gutter_digits++;
+    }
+    int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
+    return (float)(gutter_digits * digit_advance) + digit_advance;
+}
+
 static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
     (void)position;
     return &source_panel->panel;
@@ -396,6 +355,19 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
     if (source_panel->scroll_y < 0) {
         source_panel->scroll_y = 0;
     }
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 mouse = GetMousePosition();
+        Rectangle bounds = source_panel->panel.bounds;
+        float gutter_width = source_panel_gutter_width(debugger);
+        if (mouse.x >= bounds.x && mouse.x < bounds.x + gutter_width && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
+            size_t line = (size_t)((mouse.y - bounds.y + source_panel->scroll_y) / line_height) + 1;
+            IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
+            if (instruction != NULL) {
+                toggle_breakpoint(debugger, instruction);
+            }
+        }
+    }
 }
 
 static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
@@ -425,7 +397,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         gutter_digits++;
     }
     int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
-    float gutter_width = (float)(gutter_digits * digit_advance) + digit_advance;
+    float gutter_width = source_panel_gutter_width(debugger);
     float source_x = bounds.x + gutter_width;
 
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
@@ -436,6 +408,9 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         }
         if (i + 1 == current_line) {
             DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKBLUE);
+        }
+        if (line_has_breakpoint(debugger, i + 1)) {
+            DrawRectangle((int)bounds.x, (int)row_y, (int)gutter_width, line_height, MAROON);
         }
 
         char number_text[32];
