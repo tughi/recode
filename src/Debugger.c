@@ -23,16 +23,17 @@ typedef struct {
     IR_Instruction_List breakpoints;
     Font font;
     Call_Frame *current_frame;
-    Panel *panels;
+    Panel *root_panel;
     Panel *active_panel;
 } Debugger;
 
 struct Panel {
-    void (*draw)(Panel *self, Debugger *debugger);
+    void (*draw)(Panel *self, Debugger *debugger, Rectangle bounds);
     void (*handle_input)(Panel *self, Debugger *debugger);
     void (*handle_step)(Panel *self, Debugger *debugger);
+    Panel *(*pick)(Panel *self, Vector2 position);
     Rectangle bounds;
-    Panel *next;
+    float weight;
 };
 
 typedef struct {
@@ -41,6 +42,21 @@ typedef struct {
     bool scrollbar_dragging;
     float scrollbar_drag_offset;
 } Source_Panel;
+
+typedef enum {
+    SPLIT_DIRECTION__HORIZONTAL,
+    SPLIT_DIRECTION__VERTICAL,
+} Split_Direction;
+
+typedef struct {
+    Panel panel;
+    Split_Direction direction;
+    Panel **children;
+    size_t children_size;
+    size_t dragged_gutter;
+} Split_Panel;
+
+#define GUTTER_SIZE 4
 
 static bool is_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
@@ -333,6 +349,11 @@ static void draw_panel_scrollbar(Rectangle bounds, float content_height, float *
     DrawRectangle((int)track_x, (int)thumb_y, (int)scrollbar_width, (int)thumb_height, thumb_color);
 }
 
+static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
+    (void)position;
+    return &source_panel->panel;
+}
+
 static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
     int line_height = debugger->font.baseSize;
     float panel_height = source_panel->panel.bounds.height;
@@ -380,8 +401,7 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
     }
 }
 
-static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger) {
-    Rectangle bounds = source_panel->panel.bounds;
+static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
     size_t current_line = debugger->current_frame->instruction->location.line;
     static const Color colors[TOKEN_KINDS] = {
         [TOKEN_KIND__CHARACTER] = BEIGE,
@@ -458,6 +478,161 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger) {
     draw_panel_scrollbar(bounds, content_height, &source_panel->scroll_y, &source_panel->scrollbar_dragging, &source_panel->scrollbar_drag_offset);
 }
 
+static Source_Panel make_source_panel(float weight) {
+    return (Source_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))source_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))source_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))source_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) source_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
+static Rectangle split_panel_child_bounds(Split_Panel *split, size_t index, Rectangle bounds) {
+    float gutters_total = (float)((split->children_size - 1) * GUTTER_SIZE);
+    if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
+        float available = bounds.width - gutters_total;
+        float remaining = available;
+        float x = bounds.x;
+        for (size_t i = 0; i < index; i++) {
+            float width = remaining * split->children[i]->weight;
+            x += width + GUTTER_SIZE;
+            remaining -= width;
+        }
+        return (Rectangle){x, bounds.y, remaining * split->children[index]->weight, bounds.height};
+    } else {
+        float available = bounds.height - gutters_total;
+        float remaining = available;
+        float y = bounds.y;
+        for (size_t i = 0; i < index; i++) {
+            float height = remaining * split->children[i]->weight;
+            y += height + GUTTER_SIZE;
+            remaining -= height;
+        }
+        return (Rectangle){bounds.x, y, bounds.width, remaining * split->children[index]->weight};
+    }
+}
+
+static Rectangle split_panel_gutter_bounds(Split_Panel *split, size_t index, Rectangle bounds) {
+    Rectangle child = split_panel_child_bounds(split, index, bounds);
+    if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
+        return (Rectangle){child.x + child.width, bounds.y, GUTTER_SIZE, bounds.height};
+    } else {
+        return (Rectangle){bounds.x, child.y + child.height, bounds.width, GUTTER_SIZE};
+    }
+}
+
+static void split_panel_draw(Split_Panel *split, Debugger *debugger, Rectangle bounds) {
+    for (size_t i = 0; i < split->children_size; i++) {
+        Panel *child = split->children[i];
+        Rectangle child_bounds = split_panel_child_bounds(split, i, bounds);
+        child->bounds = child_bounds;
+        child->draw(child, debugger, child_bounds);
+    }
+    bool dragging = debugger->active_panel == &split->panel && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    for (size_t i = 0; i + 1 < split->children_size; i++) {
+        Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
+        Color color = dragging && i == split->dragged_gutter ? GRAY : DARKGRAY;
+        DrawRectangleRec(gutter, color);
+    }
+}
+
+static void split_panel_handle_step(Split_Panel *split, Debugger *debugger) {
+    for (size_t i = 0; i < split->children_size; i++) {
+        Panel *child = split->children[i];
+        child->bounds = split_panel_child_bounds(split, i, split->panel.bounds);
+        child->handle_step(child, debugger);
+    }
+}
+
+static void split_panel_handle_input(Split_Panel *split, Debugger *debugger) {
+    (void)debugger;
+    Vector2 mouse = GetMousePosition();
+    Rectangle bounds = split->panel.bounds;
+    MouseCursor resize_cursor = split->direction == SPLIT_DIRECTION__HORIZONTAL ? MOUSE_CURSOR_RESIZE_EW : MOUSE_CURSOR_RESIZE_NS;
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        for (size_t i = 0; i + 1 < split->children_size; i++) {
+            Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
+            if (CheckCollisionPointRec(mouse, gutter)) {
+                split->dragged_gutter = i;
+                break;
+            }
+        }
+    }
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        SetMouseCursor(resize_cursor);
+        size_t i = split->dragged_gutter;
+        float gutters_total = (float)((split->children_size - 1) * GUTTER_SIZE);
+        float new_weight;
+        if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
+            float available = bounds.width - gutters_total;
+            float remaining = available;
+            float x = bounds.x;
+            for (size_t k = 0; k < i; k++) {
+                float width = remaining * split->children[k]->weight;
+                x += width + GUTTER_SIZE;
+                remaining -= width;
+            }
+            new_weight = (mouse.x - x) / remaining;
+        } else {
+            float available = bounds.height - gutters_total;
+            float remaining = available;
+            float y = bounds.y;
+            for (size_t k = 0; k < i; k++) {
+                float height = remaining * split->children[k]->weight;
+                y += height + GUTTER_SIZE;
+                remaining -= height;
+            }
+            new_weight = (mouse.y - y) / remaining;
+        }
+        if (new_weight < 0.05f) {
+            new_weight = 0.05f;
+        }
+        if (new_weight > 0.95f) {
+            new_weight = 0.95f;
+        }
+        split->children[i]->weight = new_weight;
+        return;
+    }
+
+    for (size_t i = 0; i + 1 < split->children_size; i++) {
+        Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
+        if (CheckCollisionPointRec(mouse, gutter)) {
+            SetMouseCursor(resize_cursor);
+            break;
+        }
+    }
+}
+
+static Panel *split_panel_pick(Split_Panel *split, Vector2 position) {
+    for (size_t i = 0; i < split->children_size; i++) {
+        Panel *child = split->children[i];
+        if (CheckCollisionPointRec(position, child->bounds)) {
+            return child->pick(child, position);
+        }
+    }
+    return &split->panel;
+}
+
+static Split_Panel make_split_panel(float weight, Split_Direction direction, Panel **children, size_t children_size) {
+    return (Split_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))split_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))split_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))split_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) split_panel_pick,
+            .weight = weight,
+        },
+        .direction = direction,
+        .children = children,
+        .children_size = children_size,
+    };
+}
+
 static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     Debugger *debugger = (Debugger *)observer;
 
@@ -472,26 +647,21 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
 
     debugger->current_frame = current_frame;
 
-    for (Panel *panel = debugger->panels; panel != NULL; panel = panel->next) {
-        panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
-    }
-
-    for (Panel *panel = debugger->panels; panel != NULL; panel = panel->next) {
-        panel->handle_step(panel, debugger);
-    }
+    debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
+    debugger->root_panel->handle_step(debugger->root_panel, debugger);
 
     while (!WindowShouldClose()) {
-        for (Panel *panel = debugger->panels; panel != NULL; panel = panel->next) {
-            panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
-        }
+        debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
 
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            debugger->active_panel = debugger->root_panel->pick(debugger->root_panel, GetMousePosition());
+        }
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
         debugger->active_panel->handle_input(debugger->active_panel, debugger);
 
         BeginDrawing();
         ClearBackground(BLACK);
-        for (Panel *panel = debugger->panels; panel != NULL; panel = panel->next) {
-            panel->draw(panel, debugger);
-        }
+        debugger->root_panel->draw(debugger->root_panel, debugger, debugger->root_panel->bounds);
         EndDrawing();
 
         if (IsKeyPressed(KEY_S)) {
@@ -603,21 +773,20 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
     InitWindow(800, 600, "Code IR Debugger");
     SetTargetFPS(60);
 
-    Source_Panel source_panel = {
-        .panel = {
-            .draw = (void (*)(Panel *, Debugger *))source_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))source_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))source_panel_handle_step,
-        },
-    };
+    Source_Panel source_panel = make_source_panel(0.5f);
+    Source_Panel right_top_panel = make_source_panel(0.5f);
+    Source_Panel right_bottom_panel = make_source_panel(1.0f);
+    Panel *right_panel_children[] = {&right_top_panel.panel, &right_bottom_panel.panel};
+    Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 2);
+    Panel *split_children[] = {&source_panel.panel, &right_panel.panel};
+    Split_Panel split_panel = make_split_panel(1.0f, SPLIT_DIRECTION__HORIZONTAL, split_children, sizeof(split_children) / sizeof(*split_children));
     Debugger debugger = {
         .observer = {.on_step = debugger_on_step},
         .module = module,
         .mode = DEBUGGER_MODE__STEP,
         .next_depth = 0,
         .font = load_bitmap_font("fonts/Code.font"),
-        .panels = &source_panel.panel,
-        .active_panel = &source_panel.panel,
+        .root_panel = &split_panel.panel,
     };
     int64_t result = interpret(module, argc, argv, &debugger.observer);
 
