@@ -56,6 +56,10 @@ typedef struct {
     size_t dragged_gutter;
 } Split_Panel;
 
+typedef struct {
+    Panel panel;
+} Stack_Panel;
+
 #define GUTTER_SIZE 4
 
 static bool is_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
@@ -163,13 +167,6 @@ static size_t frame_depth(Call_Frame *frame) {
 }
 
 #if 0
-static void print_backtrace(Call_Frame *frame) {
-    size_t i = 0;
-    for (Call_Frame *f = frame; f != NULL; f = f->caller) {
-        fprintf(stderr, "  #%zu %.*s at %.*s:%zu\n", i++, STRING(f->function->name), STRING(f->instruction->location.source), f->instruction->location.line);
-    }
-}
-
 static IR_Value *lookup_local(IR_Function *function, String name) {
     for (size_t i = 0; i < function->parameters.size; i++) {
         if (string_equals(function->parameters.items[i]->name, name)) {
@@ -633,6 +630,71 @@ static Split_Panel make_split_panel(float weight, Split_Direction direction, Pan
     };
 }
 
+static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Rectangle bounds) {
+    (void)stack_panel;
+    if (debugger->current_frame == NULL) {
+        return;
+    }
+    Font font = debugger->font;
+    int line_height = font.baseSize;
+    BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
+    float y = bounds.y;
+    bool first = true;
+    for (Call_Frame *f = debugger->current_frame; f != NULL; f = f->caller) {
+        if (first) {
+            DrawRectangle((int)bounds.x, (int)y, (int)bounds.width, line_height, DARKBLUE);
+            first = false;
+        }
+        char name[128];
+        snprintf(name, sizeof(name), "%.*s", STRING(f->function->name));
+        String source = f->instruction->location.source;
+        for (size_t i = source.length; i > 0; i--) {
+            if (source.content[i - 1] == '/') {
+                source.content += i;
+                source.length -= i;
+                break;
+            }
+        }
+        char location[128];
+        snprintf(location, sizeof(location), "%.*s:%zu", STRING(source), f->instruction->location.line);
+        Vector2 location_size = MeasureTextEx(font, location, line_height, 0);
+        DrawTextEx(font, name, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
+        DrawTextEx(font, location, (Vector2){bounds.x + bounds.width - location_size.x, y}, line_height, 0, GRAY);
+        y += line_height;
+        if (y >= bounds.y + bounds.height) {
+            break;
+        }
+    }
+    EndScissorMode();
+}
+
+static void stack_panel_handle_input(Stack_Panel *stack_panel, Debugger *debugger) {
+    (void)stack_panel;
+    (void)debugger;
+}
+
+static void stack_panel_handle_step(Stack_Panel *stack_panel, Debugger *debugger) {
+    (void)stack_panel;
+    (void)debugger;
+}
+
+static Panel *stack_panel_pick(Stack_Panel *stack_panel, Vector2 position) {
+    (void)position;
+    return &stack_panel->panel;
+}
+
+static Stack_Panel make_stack_panel(float weight) {
+    return (Stack_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))stack_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))stack_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))stack_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) stack_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
 static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     Debugger *debugger = (Debugger *)observer;
 
@@ -774,9 +836,9 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
     SetTargetFPS(60);
 
     Source_Panel source_panel = make_source_panel(0.5f);
-    Source_Panel right_top_panel = make_source_panel(0.5f);
+    Stack_Panel stack_panel = make_stack_panel(0.3f);
     Source_Panel right_bottom_panel = make_source_panel(1.0f);
-    Panel *right_panel_children[] = {&right_top_panel.panel, &right_bottom_panel.panel};
+    Panel *right_panel_children[] = {&stack_panel.panel, &right_bottom_panel.panel};
     Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 2);
     Panel *split_children[] = {&source_panel.panel, &right_panel.panel};
     Split_Panel split_panel = make_split_panel(1.0f, SPLIT_DIRECTION__HORIZONTAL, split_children, sizeof(split_children) / sizeof(*split_children));
