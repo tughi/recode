@@ -37,10 +37,15 @@ struct Panel {
 };
 
 typedef struct {
-    Panel panel;
     float scroll_y;
-    bool scrollbar_dragging;
-    float scrollbar_drag_offset;
+    bool dragging;
+    float drag_offset;
+    float opacity;
+} Scrollbar;
+
+typedef struct {
+    Panel panel;
+    Scrollbar scrollbar;
 } Source_Panel;
 
 typedef enum {
@@ -59,6 +64,11 @@ typedef struct {
 typedef struct {
     Panel panel;
 } Stack_Panel;
+
+typedef struct {
+    Panel panel;
+    Scrollbar scrollbar;
+} Variables_Panel;
 
 #define GUTTER_SIZE 4
 
@@ -114,132 +124,6 @@ static size_t frame_depth(Call_Frame *frame) {
     return depth;
 }
 
-#if 0
-static IR_Value *lookup_local(IR_Function *function, String name) {
-    for (size_t i = 0; i < function->parameters.size; i++) {
-        if (string_equals(function->parameters.items[i]->name, name)) {
-            return function->parameters.items[i];
-        }
-    }
-    for (size_t b = 0; b < function->blocks.size; b++) {
-        IR_Block *block = function->blocks.items[b];
-        for (size_t i = 0; i < block->instructions.size; i++) {
-            IR_Instruction *instruction = block->instructions.items[i];
-            if (instruction->result.name.length > 0 && string_equals(instruction->result.name, name)) {
-                return &instruction->result;
-            }
-        }
-    }
-    return NULL;
-}
-
-static IR_Value *lookup_global(IR_Module *module, String name) {
-    for (size_t i = 0; i < module->global_variables.size; i++) {
-        if (string_equals(module->global_variables.items[i]->name, name)) {
-            return &module->global_variables.items[i]->value;
-        }
-    }
-    for (size_t i = 0; i < module->functions.size; i++) {
-        if (string_equals(module->functions.items[i]->name, name)) {
-            return &module->functions.items[i]->value;
-        }
-    }
-    return NULL;
-}
-
-static void print_typed(IR_Type *type, uint8_t *address) {
-    switch (type->kind) {
-    case IR_TYPE__BOOL:
-        fprintf(stderr, "%s", *(uint8_t *)address ? "true" : "false");
-        break;
-    case IR_TYPE__I8:
-        fprintf(stderr, "%d", *(int8_t *)address);
-        break;
-    case IR_TYPE__I16:
-        fprintf(stderr, "%d", *(int16_t *)address);
-        break;
-    case IR_TYPE__I32:
-        fprintf(stderr, "%d", *(int32_t *)address);
-        break;
-    case IR_TYPE__I64:
-    case IR_TYPE__ISIZE:
-        fprintf(stderr, "%lld", *(int64_t *)address);
-        break;
-    case IR_TYPE__U8:
-        fprintf(stderr, "%u", *(uint8_t *)address);
-        break;
-    case IR_TYPE__U16:
-        fprintf(stderr, "%u", *(uint16_t *)address);
-        break;
-    case IR_TYPE__U32:
-        fprintf(stderr, "%u", *(uint32_t *)address);
-        break;
-    case IR_TYPE__U64:
-    case IR_TYPE__USIZE:
-        fprintf(stderr, "%llu", *(uint64_t *)address);
-        break;
-    case IR_TYPE__PTR:
-    case IR_TYPE__MULTI_PTR:
-    case IR_TYPE__PROC:
-        fprintf(stderr, "%p", *(void **)address);
-        break;
-    case IR_TYPE__STRUCT: {
-        fprintf(stderr, "{");
-        size_t offset = 0;
-        for (size_t i = 0; i < type->struct_field_count; i++) {
-            IR_Struct_Field *field = type->struct_fields[i];
-            fprintf(stderr, "%s .%.*s = ", i == 0 ? "" : ",", STRING(field->name));
-            print_typed(field->type, address + offset);
-            offset += ir_type_size(field->type);
-        }
-        fprintf(stderr, " }");
-        break;
-    }
-    case IR_TYPE__VOID:
-        fprintf(stderr, "(void)");
-        break;
-    default:
-        fprintf(stderr, "<%zu bytes @ %p>", ir_type_size(type), (void *)address);
-        break;
-    }
-}
-
-static void print_value(Call_Frame *frame, IR_Value *value) {
-    uint8_t *base = value->name.content[0] == '$' ? frame->globals_data : frame->frame_data;
-    uint8_t *address = base + value->slot.offset;
-    fprintf(stderr, "%.*s: ", STRING(value->name));
-    fprint_ir_type(stderr, value->type);
-    fprintf(stderr, " = ");
-    print_typed(value->type, address);
-    fprintf(stderr, "\n");
-}
-
-static void print_command(Debugger *debugger, Call_Frame *frame, const char *arg) {
-    while (*arg == ' ') {
-        arg++;
-    }
-    if (*arg == '\0') {
-        fprintf(stderr, "Usage: p <%%name|$name>\n");
-        return;
-    }
-    String name = string_from(arg);
-    IR_Value *value;
-    if (name.content[0] == '$') {
-        value = lookup_global(debugger->module, name);
-    } else if (name.content[0] == '%') {
-        value = lookup_local(frame->function, name);
-    } else {
-        fprintf(stderr, "Names must start with '%%' or '$'\n");
-        return;
-    }
-    if (value == NULL) {
-        fprintf(stderr, "No value named '%.*s'\n", STRING(name));
-        return;
-    }
-    print_value(frame, value);
-}
-#endif
-
 static bool draw_token_text(Font font, Token *token, Color color, Vector2 *position, float max_right) {
     for (size_t i = 0; i < token->lexeme.length; i++) {
         int codepoint = token->lexeme.content[i];
@@ -253,9 +137,10 @@ static bool draw_token_text(Font font, Token *token, Color color, Vector2 *posit
     return true;
 }
 
-static void draw_panel_scrollbar(Rectangle bounds, float content_height, float *scroll_y, bool *dragging, float *drag_offset) {
+static void draw_panel_scrollbar(Rectangle bounds, float content_height, Scrollbar *scrollbar) {
     if (content_height <= bounds.height) {
-        *dragging = false;
+        scrollbar->dragging = false;
+        scrollbar->opacity = 0;
         return;
     }
     float scrollbar_width = 8;
@@ -266,31 +151,44 @@ static void draw_panel_scrollbar(Rectangle bounds, float content_height, float *
     }
     float max_scroll = content_height - bounds.height;
     float thumb_travel = bounds.height - thumb_height;
-    float thumb_y = bounds.y + thumb_travel * (*scroll_y / max_scroll);
+    float thumb_y = bounds.y + thumb_travel * (scrollbar->scroll_y / max_scroll);
 
     Vector2 mouse = GetMousePosition();
     Rectangle thumb_rect = {track_x, thumb_y, scrollbar_width, thumb_height};
-    if (*dragging) {
+    if (scrollbar->dragging) {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            float new_thumb_y = mouse.y - *drag_offset;
-            *scroll_y = (new_thumb_y - bounds.y) / thumb_travel * max_scroll;
-            if (*scroll_y < 0) {
-                *scroll_y = 0;
+            float new_thumb_y = mouse.y - scrollbar->drag_offset;
+            scrollbar->scroll_y = (new_thumb_y - bounds.y) / thumb_travel * max_scroll;
+            if (scrollbar->scroll_y < 0) {
+                scrollbar->scroll_y = 0;
             }
-            if (*scroll_y > max_scroll) {
-                *scroll_y = max_scroll;
+            if (scrollbar->scroll_y > max_scroll) {
+                scrollbar->scroll_y = max_scroll;
             }
-            thumb_y = bounds.y + thumb_travel * (*scroll_y / max_scroll);
+            thumb_y = bounds.y + thumb_travel * (scrollbar->scroll_y / max_scroll);
         } else {
-            *dragging = false;
+            scrollbar->dragging = false;
         }
     } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse, thumb_rect)) {
-        *dragging = true;
-        *drag_offset = mouse.y - thumb_y;
+        scrollbar->dragging = true;
+        scrollbar->drag_offset = mouse.y - thumb_y;
     }
 
-    Color thumb_color = *dragging ? LIGHTGRAY : GRAY;
-    DrawRectangle((int)track_x, (int)bounds.y, (int)scrollbar_width, (int)bounds.height, (Color){255, 255, 255, 40});
+    bool active = scrollbar->dragging || CheckCollisionPointRec(mouse, bounds);
+    float fade_step = GetFrameTime() / 0.2f;
+    scrollbar->opacity += active ? fade_step : -fade_step;
+    if (scrollbar->opacity < 0) {
+        scrollbar->opacity = 0;
+    }
+    if (scrollbar->opacity > 1) {
+        scrollbar->opacity = 1;
+    }
+    if (scrollbar->opacity <= 0) {
+        return;
+    }
+    Color thumb_color = scrollbar->dragging ? LIGHTGRAY : GRAY;
+    thumb_color.a = (unsigned char)(thumb_color.a * scrollbar->opacity);
+    DrawRectangle((int)track_x, (int)bounds.y, (int)scrollbar_width, (int)bounds.height, (Color){255, 255, 255, (unsigned char)(40 * scrollbar->opacity)});
     DrawRectangle((int)track_x, (int)thumb_y, (int)scrollbar_width, (int)thumb_height, thumb_color);
 }
 
@@ -314,10 +212,10 @@ static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debug
     int line_height = debugger->font.baseSize;
     float panel_height = source_panel->panel.bounds.height;
     float line_y = (float)(debugger->current_frame->instruction->location.line - 1) * line_height;
-    if (line_y < source_panel->scroll_y) {
-        source_panel->scroll_y = line_y;
-    } else if (line_y + line_height > source_panel->scroll_y + panel_height) {
-        source_panel->scroll_y = line_y + line_height - panel_height;
+    if (line_y < source_panel->scrollbar.scroll_y) {
+        source_panel->scrollbar.scroll_y = line_y;
+    } else if (line_y + line_height > source_panel->scrollbar.scroll_y + panel_height) {
+        source_panel->scrollbar.scroll_y = line_y + line_height - panel_height;
     }
 }
 
@@ -329,31 +227,31 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
 
     float wheel = GetMouseWheelMove();
     if (wheel != 0) {
-        source_panel->scroll_y -= wheel * line_height * 3;
+        source_panel->scrollbar.scroll_y -= wheel * line_height * 3;
     }
     if (IsKeyDown(KEY_UP)) {
-        source_panel->scroll_y -= line_height * 0.5f;
+        source_panel->scrollbar.scroll_y -= line_height * 0.5f;
     }
     if (IsKeyDown(KEY_DOWN)) {
-        source_panel->scroll_y += line_height * 0.5f;
+        source_panel->scrollbar.scroll_y += line_height * 0.5f;
     }
     if (IsKeyPressed(KEY_PAGE_UP) || IsKeyPressedRepeat(KEY_PAGE_UP)) {
-        source_panel->scroll_y -= panel_height;
+        source_panel->scrollbar.scroll_y -= panel_height;
     }
     if (IsKeyPressed(KEY_PAGE_DOWN) || IsKeyPressedRepeat(KEY_PAGE_DOWN)) {
-        source_panel->scroll_y += panel_height;
+        source_panel->scrollbar.scroll_y += panel_height;
     }
     if (IsKeyPressed(KEY_HOME)) {
-        source_panel->scroll_y = 0;
+        source_panel->scrollbar.scroll_y = 0;
     }
     if (IsKeyPressed(KEY_END)) {
-        source_panel->scroll_y = max_scroll;
+        source_panel->scrollbar.scroll_y = max_scroll;
     }
-    if (source_panel->scroll_y > max_scroll) {
-        source_panel->scroll_y = max_scroll;
+    if (source_panel->scrollbar.scroll_y > max_scroll) {
+        source_panel->scrollbar.scroll_y = max_scroll;
     }
-    if (source_panel->scroll_y < 0) {
-        source_panel->scroll_y = 0;
+    if (source_panel->scrollbar.scroll_y < 0) {
+        source_panel->scrollbar.scroll_y = 0;
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -361,7 +259,7 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
         Rectangle bounds = source_panel->panel.bounds;
         float gutter_width = source_panel_gutter_width(debugger);
         if (mouse.x >= bounds.x && mouse.x < bounds.x + gutter_width && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
-            size_t line = (size_t)((mouse.y - bounds.y + source_panel->scroll_y) / line_height) + 1;
+            size_t line = (size_t)((mouse.y - bounds.y + source_panel->scrollbar.scroll_y) / line_height) + 1;
             IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
             if (instruction != NULL) {
                 toggle_breakpoint(debugger, instruction);
@@ -389,8 +287,8 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
     float bottom = bounds.y + bounds.height;
-    size_t first_line = (size_t)(source_panel->scroll_y / line_height);
-    float y_origin = bounds.y - (source_panel->scroll_y - (float)first_line * line_height);
+    size_t first_line = (size_t)(source_panel->scrollbar.scroll_y / line_height);
+    float y_origin = bounds.y - (source_panel->scrollbar.scroll_y - (float)first_line * line_height);
 
     int gutter_digits = 1;
     for (size_t n = lexed_source->lines_size; n >= 10; n /= 10) {
@@ -447,7 +345,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     EndScissorMode();
 
     float content_height = (float)lexed_source->lines_size * line_height;
-    draw_panel_scrollbar(bounds, content_height, &source_panel->scroll_y, &source_panel->scrollbar_dragging, &source_panel->scrollbar_drag_offset);
+    draw_panel_scrollbar(bounds, content_height, &source_panel->scrollbar);
 }
 
 static Source_Panel make_source_panel(float weight) {
@@ -670,6 +568,165 @@ static Stack_Panel make_stack_panel(float weight) {
     };
 }
 
+static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *address) {
+    switch (type->kind) {
+    case IR_TYPE__BOOL:
+        return (size_t)snprintf(buf, size, "%s", *(uint8_t *)address ? "true" : "false");
+    case IR_TYPE__I8:
+        return (size_t)snprintf(buf, size, "%d", *(int8_t *)address);
+    case IR_TYPE__I16:
+        return (size_t)snprintf(buf, size, "%d", *(int16_t *)address);
+    case IR_TYPE__I32:
+        return (size_t)snprintf(buf, size, "%d", *(int32_t *)address);
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        return (size_t)snprintf(buf, size, "%lld", (long long)*(int64_t *)address);
+    case IR_TYPE__U8:
+        return (size_t)snprintf(buf, size, "%u", *(uint8_t *)address);
+    case IR_TYPE__U16:
+        return (size_t)snprintf(buf, size, "%u", *(uint16_t *)address);
+    case IR_TYPE__U32:
+        return (size_t)snprintf(buf, size, "%u", *(uint32_t *)address);
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        return (size_t)snprintf(buf, size, "%llu", (unsigned long long)*(uint64_t *)address);
+    case IR_TYPE__PTR:
+    case IR_TYPE__MULTI_PTR:
+    case IR_TYPE__PROC:
+        return (size_t)snprintf(buf, size, "%p", *(void **)address);
+    case IR_TYPE__STRUCT: {
+        size_t n = (size_t)snprintf(buf, size, "{");
+        size_t offset = 0;
+        for (size_t i = 0; i < type->struct_field_count; i++) {
+            IR_Struct_Field *field = type->struct_fields[i];
+            n += (size_t)snprintf(buf + n, n < size ? size - n : 0, "%s .%.*s = ", i == 0 ? "" : ",", STRING(field->name));
+            n += format_typed(buf + n, n < size ? size - n : 0, field->type, address + offset);
+            offset += ir_type_size(field->type);
+        }
+        n += (size_t)snprintf(buf + n, n < size ? size - n : 0, " }");
+        return n;
+    }
+    case IR_TYPE__VOID:
+        return (size_t)snprintf(buf, size, "(void)");
+    default:
+        return (size_t)snprintf(buf, size, "<%zu bytes>", ir_type_size(type));
+    }
+}
+
+static void draw_variable_line(Font font, Rectangle bounds, float y, Call_Frame *frame, IR_Value *value) {
+    int line_height = font.baseSize;
+    uint8_t *base = value->name.content[0] == '$' ? frame->globals_data : frame->frame_data;
+    uint8_t *address = base + value->slot.offset;
+    char value_text[256];
+    format_typed(value_text, sizeof(value_text), value->type, address);
+    Vector2 value_size = MeasureTextEx(font, value_text, line_height, 0);
+    char name_text[64];
+    snprintf(name_text, sizeof(name_text), "%.*s", STRING(value->name));
+    DrawTextEx(font, name_text, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
+    Vector2 name_size = MeasureTextEx(font, name_text, line_height, 0);
+    char type_text[128];
+    FILE *f = fmemopen(type_text, sizeof(type_text), "w");
+    fputs(": ", f);
+    fprint_ir_type(f, value->type);
+    fclose(f);
+    DrawTextEx(font, type_text, (Vector2){bounds.x + name_size.x, y}, line_height, 0, GRAY);
+    DrawTextEx(font, value_text, (Vector2){bounds.x + bounds.width - value_size.x, y}, line_height, 0, RAYWHITE);
+}
+
+static size_t variables_panel_count(Call_Frame *frame) {
+    if (frame == NULL) {
+        return 0;
+    }
+    IR_Function *function = frame->function;
+    size_t count = function->parameters.size;
+    for (size_t b = 0; b < function->blocks.size; b++) {
+        IR_Block *block = function->blocks.items[b];
+        for (size_t k = 0; k < block->instructions.size; k++) {
+            IR_Value *result = &block->instructions.items[k]->result;
+            if (result->type == NULL || result->type->kind == IR_TYPE__VOID || result->name.length == 0) {
+                continue;
+            }
+            count++;
+        }
+    }
+    return count;
+}
+
+static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *debugger, Rectangle bounds) {
+    if (debugger->current_frame == NULL) {
+        return;
+    }
+    Font font = debugger->font;
+    int line_height = font.baseSize;
+    BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
+    IR_Function *function = debugger->current_frame->function;
+    Call_Frame *frame = debugger->current_frame;
+    float y = bounds.y - variables_panel->scrollbar.scroll_y;
+    float bottom = bounds.y + bounds.height;
+    for (size_t i = 0; i < function->parameters.size; i++) {
+        if (y + line_height > bounds.y && y < bottom) {
+            draw_variable_line(font, bounds, y, frame, function->parameters.items[i]);
+        }
+        y += line_height;
+    }
+    for (size_t b = 0; b < function->blocks.size; b++) {
+        IR_Block *block = function->blocks.items[b];
+        for (size_t k = 0; k < block->instructions.size; k++) {
+            IR_Value *result = &block->instructions.items[k]->result;
+            if (result->type == NULL || result->type->kind == IR_TYPE__VOID || result->name.length == 0) {
+                continue;
+            }
+            if (y + line_height > bounds.y && y < bottom) {
+                draw_variable_line(font, bounds, y, frame, result);
+            }
+            y += line_height;
+        }
+    }
+    EndScissorMode();
+    float content_height = (float)variables_panel_count(debugger->current_frame) * line_height;
+    draw_panel_scrollbar(bounds, content_height, &variables_panel->scrollbar);
+}
+
+static void variables_panel_handle_input(Variables_Panel *variables_panel, Debugger *debugger) {
+    int line_height = debugger->font.baseSize;
+    float panel_height = variables_panel->panel.bounds.height;
+    float content_height = (float)variables_panel_count(debugger->current_frame) * line_height;
+    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
+
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0) {
+        variables_panel->scrollbar.scroll_y -= wheel * line_height * 3;
+    }
+    if (variables_panel->scrollbar.scroll_y > max_scroll) {
+        variables_panel->scrollbar.scroll_y = max_scroll;
+    }
+    if (variables_panel->scrollbar.scroll_y < 0) {
+        variables_panel->scrollbar.scroll_y = 0;
+    }
+}
+
+static void variables_panel_handle_step(Variables_Panel *variables_panel, Debugger *debugger) {
+    (void)debugger;
+    variables_panel->scrollbar.scroll_y = 0;
+}
+
+static Panel *variables_panel_pick(Variables_Panel *variables_panel, Vector2 position) {
+    (void)position;
+    return &variables_panel->panel;
+}
+
+static Variables_Panel make_variables_panel(float weight) {
+    return (Variables_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))variables_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))variables_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))variables_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) variables_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
 static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     Debugger *debugger = (Debugger *)observer;
 
@@ -812,8 +869,8 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
 
     Source_Panel source_panel = make_source_panel(0.5f);
     Stack_Panel stack_panel = make_stack_panel(0.3f);
-    Source_Panel right_bottom_panel = make_source_panel(1.0f);
-    Panel *right_panel_children[] = {&stack_panel.panel, &right_bottom_panel.panel};
+    Variables_Panel variables_panel = make_variables_panel(1.0f);
+    Panel *right_panel_children[] = {&stack_panel.panel, &variables_panel.panel};
     Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 2);
     Panel *split_children[] = {&source_panel.panel, &right_panel.panel};
     Split_Panel split_panel = make_split_panel(1.0f, SPLIT_DIRECTION__HORIZONTAL, split_children, sizeof(split_children) / sizeof(*split_children));
