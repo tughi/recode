@@ -56,6 +56,16 @@ $stdout: [[File]] = external
 
 Declares an external global variable (e.g., from C). All global symbols are pointer values, so the type must reflect that (e.g., a global `i32` would be declared as `[i32]`).
 
+### String-literal global
+
+```
+$message: [*]u8 = "Hello!\n"
+```
+
+Declares a module-level byte payload. The declared type must be `[*]u8`; the literal's decoded bytes are stored once at module load and the global's value is a `[*]u8` pointer to them. The decoded bytes are always implicitly null-terminated (the trailing `\0` is appended automatically and is not counted by callers who track length separately), so byte-walking loops terminating on `0` work without an explicit `"\0"` in the source.
+
+Recognised escape sequences: `\0`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
+
 ## Types
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`

@@ -1114,10 +1114,6 @@ static void parse_external(Parser *parser, IR_Module *module) {
     skip_spaces(parser, 1);
     expect_other(parser, '=');
     skip_spaces(parser, 1);
-    String assignment = expect_identifier(parser);
-    if (!string_equals_cstr(assignment, "external")) {
-        parse_error(parser, name.location, "Expected 'external'");
-    }
 
     IR_Value *global_value = ir_value_list_lookup(&parser->global_values, name.lexeme);
     IR_Global *global;
@@ -1134,6 +1130,32 @@ static void parse_external(Parser *parser, IR_Module *module) {
     global->value.type = type;
     global->name = name.lexeme;
     global->location = name.location;
+
+    if (parser->current.kind == TOKEN_KIND__STRING) {
+        if (type->kind != IR_TYPE__MULTI_PTR || type->pointee->kind != IR_TYPE__U8) {
+            parse_error(parser, name.location, "String literal initializer requires [*]u8 type");
+        }
+        String decoded = parser->current.string.value;
+        advance(parser);
+
+        IR_Global_Variable *variable = &global->global_variable;
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
+        variable->type = type->pointee;
+        variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
+        uint32_t payload_offset = parser->globals_frame_size;
+        uint32_t payload_size = (uint32_t)decoded.length + 1;
+        parser->globals_frame_size = payload_offset + payload_size;
+        variable->payload_slot = (Frame_Slot){.offset = payload_offset, .size = payload_size};
+        variable->payload_data = (const uint8_t *)decoded.content;
+        global->is_external = false;
+        ir_global_variable_list_add(&module->global_variables, variable);
+        return;
+    }
+
+    if (parser->current.kind != TOKEN_KIND__IDENTIFIER || !string_equals_cstr(parser->current.identifier.lexeme, "external")) {
+        parse_error_current(parser, "Expected 'external' or string literal");
+    }
+    advance(parser);
     global->is_external = true;
 
     if (type->kind == IR_TYPE__PTR && type->pointee->kind == IR_TYPE__PROC) {

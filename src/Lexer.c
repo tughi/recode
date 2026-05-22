@@ -147,9 +147,43 @@ static Token scan_string(Lexer *lexer) {
     Token token;
     if (position < length && source[position] == '"') {
         position++;
+        char *value_data = malloc(position - start - 1);
+        size_t value_size = 0;
+        for (size_t i = start + 1; i + 1 < position; i++) {
+            if (source[i] == '\\' && i + 2 < position) {
+                i++;
+                switch (source[i]) {
+                case '0':
+                    value_data[value_size++] = '\0';
+                    break;
+                case 'n':
+                    value_data[value_size++] = '\n';
+                    break;
+                case 't':
+                    value_data[value_size++] = '\t';
+                    break;
+                case '\\':
+                case '\'':
+                case '"':
+                    value_data[value_size++] = source[i];
+                    break;
+                default:
+                    free(value_data);
+                    token.kind = TOKEN_KIND__ERROR;
+                    token.error.lexeme = (String){.content = source + start, .length = position - start};
+                    token.error.location = location;
+                    lexer_advance(lexer, start, position);
+                    return token;
+                }
+            } else {
+                value_data[value_size++] = source[i];
+            }
+        }
+        value_data[value_size] = '\0';
         token.kind = TOKEN_KIND__STRING;
         token.string.lexeme = (String){.content = source + start, .length = position - start};
         token.string.location = location;
+        token.string.value = (String){.content = value_data, .length = value_size};
     } else {
         token.kind = TOKEN_KIND__ERROR;
         token.error.lexeme = (String){.content = source + start, .length = position - start};

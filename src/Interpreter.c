@@ -929,22 +929,25 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
     interpreter.globals_data = module->globals_size > 0 ? calloc(module->globals_size, 1) : NULL;
     for (size_t i = 0; i < module->global_variables.size; i++) {
         IR_Global_Variable *global_variable = module->global_variables.items[i];
-        if (!global_variable->is_external) {
-            continue;
-        }
-        uint8_t *host_address;
-        if (string_equals_cstr(global_variable->name, "$optind")) {
-            host_address = (uint8_t *)&optind;
-        } else if (string_equals_cstr(global_variable->name, "$stdout")) {
-            host_address = (uint8_t *)&stdout;
-        } else if (string_equals_cstr(global_variable->name, "$stderr")) {
-            host_address = (uint8_t *)&stderr;
-        } else if (string_equals_cstr(global_variable->name, "$stdin")) {
-            host_address = (uint8_t *)&stdin;
+        if (global_variable->is_external) {
+            uint8_t *host_address;
+            if (string_equals_cstr(global_variable->name, "$optind")) {
+                host_address = (uint8_t *)&optind;
+            } else if (string_equals_cstr(global_variable->name, "$stdout")) {
+                host_address = (uint8_t *)&stdout;
+            } else if (string_equals_cstr(global_variable->name, "$stderr")) {
+                host_address = (uint8_t *)&stderr;
+            } else if (string_equals_cstr(global_variable->name, "$stdin")) {
+                host_address = (uint8_t *)&stdin;
+            } else {
+                todo("Add support for external: %.*s", STRING(global_variable->name));
+            }
+            *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = host_address;
         } else {
-            todo("Add support for external: %.*s", STRING(global_variable->name));
+            uint8_t *payload_address = interpreter.globals_data + global_variable->payload_slot.offset;
+            memcpy(payload_address, global_variable->payload_data, global_variable->payload_slot.size);
+            *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
         }
-        *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = host_address;
     }
     for (size_t i = 0; i < module->functions.size; i++) {
         IR_Function *function = module->functions.items[i];

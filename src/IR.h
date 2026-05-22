@@ -256,6 +256,8 @@ typedef struct IR_Global_Variable {
     Source_Location location;
     bool is_external;
     IR_Type *type;
+    Frame_Slot payload_slot;
+    const uint8_t *payload_data;
 } IR_Global_Variable;
 
 typedef struct {

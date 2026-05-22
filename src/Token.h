@@ -65,6 +65,7 @@ typedef struct Space_Token {
 typedef struct String_Token {
     String lexeme;
     Source_Location location;
+    String value;
 } String_Token;
 
 typedef struct Variable_Token {

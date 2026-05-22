@@ -1,0 +1,31 @@
+; print a string literal global via fputc
+
+type File = opaque
+
+$stdout: [[File]] = external
+$fputc: [proc (i32, [File]): i32] = external
+
+$message: [*]u8 = "Hello \"IR Code\"!\n"
+
+$main(): i32 {
+@1:
+  %out: [File] = load $stdout
+  %0: usize = const 0
+  jmp @2
+@2:
+  %i: usize = phi @1 %0 @3 %i.1
+  %p: [u8] = offset $message %i
+  %b: u8 = load %p
+  %zero: u8 = const 0
+  %done: bool = cmp_eq %b %zero
+  br %done @4 @3
+@3:
+  %c: i32 = cast %b
+  %0.1: i32 = call $fputc %c %out
+  %one: usize = const 1
+  %i.1: usize = add %i %one
+  jmp @2
+@4:
+  %ret: i32 = const 0
+  ret %ret
+}
