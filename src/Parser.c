@@ -547,6 +547,14 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
                 advance(parser);
                 return instruction;
             }
+            if (string_equals_cstr(literal.lexeme, "null")) {
+                if (result_type == NULL || (result_type->kind != IR_TYPE__PTR && result_type->kind != IR_TYPE__MULTI_PTR)) {
+                    parse_error(parser, literal.location, "const null requires a pointer result type");
+                }
+                instruction->const_instruction.value = 0;
+                advance(parser);
+                return instruction;
+            }
             parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal.lexeme));
         }
         if (parser->current.kind == TOKEN_KIND__CHARACTER) {

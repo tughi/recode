@@ -471,6 +471,10 @@ static Step execute_const_instruction(IR_Instruction *instruction, uint8_t *fram
     case IR_TYPE__USIZE:
         *(uint64_t *)result_address = (uint64_t)result;
         break;
+    case IR_TYPE__MULTI_PTR:
+    case IR_TYPE__PTR:
+        *(uint8_t **)result_address = (uint8_t *)(uintptr_t)result;
+        break;
     default:
         break;
     }

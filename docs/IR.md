@@ -181,6 +181,8 @@ Loads a compile-time constant literal into a register.
 %flag: bool = const true
 %ch: u8 = const 'a'
 %mask: u64 = const 0x0000_0000_ffff_ffff
+%ptr: [i32] = const null
+%buf: [*]u8 = const null
 ```
 
 ### `div`
