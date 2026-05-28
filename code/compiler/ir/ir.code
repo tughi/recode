@@ -1,0 +1,30 @@
+import collections
+
+type Program = struct {
+    procedures: collections.List<^Procedure>
+}
+
+type Procedure = struct {
+    name: str
+    parameters: collections.List<^Value>
+    return_type: ^Type
+    blocks: collections.List<^Block>
+}
+
+type Block = struct {
+    label: usize
+    instructions: collections.List<^Instruction>
+}
+
+type Type = variant {
+    Primitive_Type
+}
+
+type Primitive_Type = struct {
+    name: str
+}
+
+type Value = struct {
+    name: str
+    type: ^Type
+}

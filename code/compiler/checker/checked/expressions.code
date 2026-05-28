@@ -1,8 +1,10 @@
+import compiler.lexer
+
 type Expression = variant {
     Integer_Expression
 }
 
 type Integer_Expression = struct {
-    value: u64
+    token: lexer.Integer
     type: ^Type
 }

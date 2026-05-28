@@ -12,10 +12,12 @@ $function_name(%param: type, ...): return_type {
 }
 ```
 
-Defines a procedure with typed parameters and a return type. A declaration without a body declares an external function:
+Defines a procedure with typed parameters and a return type. The return type annotation is optional — omitting it implies `void`.
+
+External functions are declared as external globals:
 
 ```
-$fputc(%c: u8, %file: ptr<FILE>): i32
+$fputc: [proc (i32, [File]): i32] = external
 ```
 
 ### Labels
@@ -37,7 +39,10 @@ Lists the variables whose values are still needed by subsequent instructions at 
 ### Type declaration
 
 ```
-type Point = struct { x: i32, y: i32 }
+type Point = struct {
+    x: i32
+    y: i32
+}
 type FILE = opaque
 ```
 
@@ -46,18 +51,30 @@ Defines a named struct type or declares an opaque (externally defined) type.
 ### External global variable
 
 ```
-external $stdout: ptr<FILE>
+$stdout: [[File]] = external
 ```
 
-Declares an external global variable (e.g., from C).
+Declares an external global variable (e.g., from C). All global symbols are pointer values, so the type must reflect that (e.g., a global `i32` would be declared as `[i32]`).
+
+### String-literal global
+
+```
+$message: [*]u8 = "Hello!\n"
+```
+
+Declares a module-level byte payload. The declared type must be `[*]u8`; the literal's decoded bytes are stored once at module load and the global's value is a `[*]u8` pointer to them. The decoded bytes are always implicitly null-terminated (the trailing `\0` is appended automatically and is not counted by callers who track length separately), so byte-walking loops terminating on `0` work without an explicit `"\0"` in the source.
+
+Recognised escape sequences: `\0`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
 
 ## Types
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`
 
-**Pointer:** `ptr<T>`, `ptr<ptr<T>>`, `ptr<proc (args...) -> return_type>`
+**Single pointer:** `[T]` — points to exactly one `T`; supports `load`, `store`, and struct `offset`. Produced by `alloc`, struct `offset`, and indexed `offset`.
 
-**Special:** `Any` (generic/opaque pointer target)
+**Multi-pointer:** `[*]T` — points into an array of `T`; supports indexed `offset` only (not direct `load`/`store`). Used for `$main`'s `argv` parameter and string pointers.
+
+**Special:** `Any` is only valid as a pointer pointee — it represents an erased pointee type (analogous to `void*` in C) and has no size of its own
 
 ## Instructions
 
@@ -69,20 +86,12 @@ Integer addition.
 %result: i32 = add %left %right
 ```
 
-### `address`
-
-Takes the address of a named symbol, producing a pointer.
-
-```
-%fp: ptr<proc (value: i32) -> i32> = address $echo__value
-```
-
 ### `alloc`
 
-Allocates stack memory for a local variable and returns a pointer to it.
+Allocates stack memory for a local variable and returns a `[T]` single pointer to it.
 
 ```
-%x.ptr: ptr<i32> = alloc i32
+%x.ptr: [i32] = alloc i32
 ```
 
 ### `br`
@@ -95,7 +104,7 @@ br %condition @2 @3
 
 ### `call`
 
-Calls a function. Callee type must be a function pointer. Arguments follow the callee. The result is omitted for void calls.
+Calls a function. Callee type must be a `[proc]` function pointer. Arguments follow the callee. The result is omitted for void calls.
 
 ```
 %result: i32 = call $add %a %b
@@ -105,12 +114,14 @@ call $print %value
 
 ### `cast`
 
-Converts a value between compatible types (numeric widening/narrowing, pointer reinterpretation).
+Converts between integer types (widening/narrowing, matching C sign-extension rules) or between any two pointer types (`[T]`, `[*]T`, or combinations).
 
 ```
-%wide: i32 = cast %narrow       -- u8 to i32
-%byte: u8 = cast %wide          -- i32 to u8
-%any: ptr<Any> = cast %specific -- ptr<T> to ptr<Any>
+%wide: i32 = cast %narrow       -- u8 to i32, zero-extends
+%byte: u8 = cast %wide          -- i32 to u8, truncates
+%any: [Any] = cast %specific    -- [T] to [Any]
+%reint: [u8] = cast %i32ptr     -- [i32] to [u8]
+%mp: [*]u8 = cast %sp           -- [u8] to [*]u8
 ```
 
 ### `cmp_eq`
@@ -170,6 +181,8 @@ Loads a compile-time constant literal into a register.
 %flag: bool = const true
 %ch: u8 = const 'a'
 %mask: u64 = const 0x0000_0000_ffff_ffff
+%ptr: [i32] = const null
+%buf: [*]u8 = const null
 ```
 
 ### `div`
@@ -190,7 +203,7 @@ jmp @3
 
 ### `load`
 
-Reads a value from memory at the given pointer.
+Reads a value from a `[T]` single pointer.
 
 ```
 %value: i32 = load %ptr
@@ -230,11 +243,16 @@ Boolean negation.
 
 ### `offset`
 
-Pointer arithmetic. Computes a pointer to an array element by index or to a struct field by name.
+Pointer arithmetic. Two forms:
+
+- **Indexed** (`[*]T %index => [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
+- **Struct field** (`[Struct] Name.field => [FieldT]`): computes a `[FieldT]` single pointer to a named field. The source must be `[Struct]`.
+
+Both forms always produce a `[T]` single pointer.
 
 ```
-%elem: ptr<u8> = offset %array_ptr %index
-%field: ptr<i32> = offset %struct_ptr Point.x
+%elem: [u8] = offset %array_ptr %index
+%field: [i32] = offset %struct_ptr Point.x
 ```
 
 ### `phi`
@@ -256,7 +274,7 @@ ret
 
 ### `store`
 
-Writes a value to memory at the given pointer.
+Writes a value to memory through a `[T]` single pointer.
 
 ```
 store %ptr %value
@@ -267,8 +285,8 @@ store %ptr %value
 Constructs a struct value with the specified field values.
 
 ```
-%point: Point = struct { Point.x: %x, Point.y: %y }
-%line: Line = struct { Line.p1: %p1, Line.p2: %p2 }
+%point: Point = struct Point .x %x .y %y
+%line: Line = struct Line .p1 %p1 .p2 %p2
 ```
 
 ### `sub`

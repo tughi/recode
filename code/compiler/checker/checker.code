@@ -504,7 +504,7 @@ proc (^Checker).check_integer_expression(self, anon integer_expression: parsed.I
         raise self.error("Cannot infer type of integer literal")
     }
     return self.alloc_expression(checked.Integer_Expression(
-        value: integer_expression.token.value
+        token: integer_expression.token
         type: expression_type
     ))
 }

@@ -1,0 +1,16 @@
+import collections
+import compiler.lexer
+
+type Instruction = variant {
+    Const_Instruction
+    Ret_Instruction
+}
+
+type Const_Instruction = struct {
+    result: ^Value
+    literal: lexer.Integer
+}
+
+type Ret_Instruction = struct {
+    value: ^Value
+}

@@ -478,7 +478,7 @@ def stage():
     run("cp -R bootstrap/stage0 compiler")
 
 
-def compiler(skip_tests=False):
+def compiler(skip_tests=False, save=False):
     build()
 
     if not os.path.exists(f"build/compiler"):
@@ -502,10 +502,55 @@ def compiler(skip_tests=False):
             continue
 
         logger.info(f"Compiling: {test_dir}")
-        compiler_command = ["build/compiler/ReCode", "-o", f"build/{test_dir}/generated", "-n", "test", test_dir]
+
+        build_dir = f"build/{test_dir}"
+        if not os.path.exists(build_dir):
+            run(f"mkdir -p {build_dir}")
+        build_ir_path = f"{build_dir}/test.ir"
+        if os.path.exists(build_ir_path):
+            os.remove(build_ir_path)
+
+        compiler_command = ["build/compiler/ReCode", "-o", build_dir, "-n", "test", test_dir]
         if run(compiler_command, check=False).returncode != 0:
             trace(*compiler_command)
             exit(1)
+
+        expected_execute = test_data.get("execute", {})
+        expected_exit = expected_execute.get("error", 0)
+        expected_stdout = expected_execute.get("stdout", [])
+        expected_stderr = expected_execute.get("stderr", [])
+        execute_args = expected_execute.get("args", [])
+
+        runner_command = ["../recode-runner/build/Runner", build_ir_path, *execute_args]
+        runner_result = run(runner_command, capture_output=True, text=True, check=False)
+
+        if runner_result.returncode != expected_exit:
+            logger.error(f"{COLOR_ERROR}Unexpected Runner exit: {runner_result.returncode} (expected {expected_exit}){COLOR_RESET}")
+            if runner_result.stderr:
+                logger.error(f"{COLOR_DEBUG}{runner_result.stderr}{COLOR_RESET}")
+            exit(1)
+
+        actual_stdout = [re.sub(r"\x1b\[[0-9;]+m", "", line) for line in runner_result.stdout.splitlines()]
+        if actual_stdout != expected_stdout:
+            logger.error(f"{COLOR_ERROR}Unexpected Runner stdout\n{COLOR_DEBUG}{compute_diff(actual_stdout, expected_stdout)}{COLOR_RESET}")
+            exit(1)
+
+        actual_stderr = [re.sub(r"\x1b\[[0-9;]+m", "", line) for line in runner_result.stderr.splitlines()]
+        if actual_stderr != expected_stderr:
+            logger.error(f"{COLOR_ERROR}Unexpected Runner stderr\n{COLOR_DEBUG}{compute_diff(actual_stderr, expected_stderr)}{COLOR_RESET}")
+            exit(1)
+
+        expected_ir_path = f"{test_dir}/test.ir"
+        diff_result = run(
+            f"diff -N {build_ir_path} {expected_ir_path}",
+            capture_output=True, text=True, check=False,
+        )
+        if diff_result.returncode != 0:
+            if save:
+                shutil.copyfile(build_ir_path, expected_ir_path)
+            else:
+                logger.error(f"{COLOR_ERROR}Unexpected IR output\n{COLOR_DEBUG}{diff_result.stdout}{COLOR_RESET}")
+                exit(1)
 
 
 def editor(launch):
@@ -562,6 +607,7 @@ if __name__ == "__main__":
     compiler_args_parser = args_command_parser.add_parser("compiler", help="run the compiler")
     compiler_args_parser.add_argument("--clean", action="store_true", help="clean before running")
     compiler_args_parser.add_argument("--skip-tests", action="store_true", help="skip running tests")
+    compiler_args_parser.add_argument("--save", action="store_true", help="save the IR output as the expected baseline")
 
     args = args_parsers.parse_args()
     if args.command == "clean":
@@ -576,7 +622,7 @@ if __name__ == "__main__":
         elif args.command == "test":
             test(args.path, save=args.save, stage=1)
         elif args.command == "compiler":
-            compiler(skip_tests=args.skip_tests)
+            compiler(skip_tests=args.skip_tests, save=args.save)
         elif args.command == "editor":
             editor(args.launch)
         else:

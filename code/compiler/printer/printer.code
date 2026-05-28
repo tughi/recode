@@ -1,0 +1,92 @@
+import compiler.ir
+import libc
+
+proc print(program: ^ir.Program, file: ^libc.FILE) {
+    let procedure_item = program.procedures.first
+    let first = true
+    while procedure_item != null {
+        if not first {
+            file.end_line()
+        }
+        first = false
+        print_procedure(procedure_item.value, file: file)
+        procedure_item = procedure_item.next
+    }
+}
+
+proc print_procedure(anon procedure: ^ir.Procedure, file: ^libc.FILE) {
+    file.write(char: '$').write(procedure.name).write(char: '(')
+    let parameter_item = procedure.parameters.first
+    let first_parameter = true
+    while parameter_item != null {
+        if not first_parameter {
+            file.write(", ")
+        }
+        first_parameter = false
+        print_value_definition(parameter_item.value, file: file)
+        parameter_item = parameter_item.next
+    }
+    file.write(char: ')')
+    if procedure.return_type != null {
+        file.write(": ")
+        print_type(procedure.return_type, file: file)
+    }
+    file.write(" {").end_line()
+
+    let block_item = procedure.blocks.first
+    while block_item != null {
+        print_block(block_item.value, file: file)
+        block_item = block_item.next
+    }
+
+    file.write(char: '}').end_line()
+}
+
+proc print_block(anon block: ^ir.Block, file: ^libc.FILE) {
+    file.write(char: '@').write(u64: block.label.as(u64)).write(char: ':').end_line()
+    let instruction_item = block.instructions.first
+    while instruction_item != null {
+        file.write("  ")
+        print_instruction(instruction_item.value, file: file)
+        file.end_line()
+        instruction_item = instruction_item.next
+    }
+}
+
+proc print_instruction(anon instruction: ^ir.Instruction, file: ^libc.FILE) {
+    switch instruction {
+        is ir.Const_Instruction as const_instruction {
+            print_value_definition(const_instruction.result, file: file)
+            file.write(" = const ").write(u64: const_instruction.literal.value)
+        }
+        is ir.Ret_Instruction as ret_instruction {
+            file.write("ret")
+            if ret_instruction.value != null {
+                file.write(char: ' ')
+                print_value_reference(ret_instruction.value, file: file)
+            }
+        }
+        is nil {
+        }
+    }
+}
+
+proc print_value_definition(anon value: ^ir.Value, file: ^libc.FILE) {
+    print_value_reference(value, file: file)
+    file.write(": ")
+    print_type(value.type, file: file)
+}
+
+proc print_value_reference(anon value: ^ir.Value, file: ^libc.FILE) {
+    file.write(char: '%').write(value.name)
+}
+
+proc print_type(anon type: ^ir.Type, file: ^libc.FILE) {
+    switch type {
+        is ir.Primitive_Type as primitive_type {
+            file.write(primitive_type.name)
+        }
+        is nil {
+        }
+    }
+}

@@ -32,6 +32,13 @@ proc (^Builder).append_chars(self, anon content: [^]u8, count: usize) -> ^Builde
     return self
 }
 
+proc (^Builder).append_decimal(self, anon value: usize) -> ^Builder {
+    if value >= 10 {
+        return self.append_decimal(value / 10)
+    }
+    return self.append_char((value % 10).as(u8) + '0')
+}
+
 proc (^Builder).build(self) -> str {
     self.append_char(0)
     let string = String(

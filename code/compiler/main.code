@@ -1,9 +1,11 @@
 import allocator
 import compiler.checker
+import compiler.lowerer
 import compiler.parser
-import compiler.parser.dump
+import compiler.printer
 import compiler.source
 import libc
+import string
 
 proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     try allocator.default_allocator.reserve(size: 64 * 1024 * 1024) else {
@@ -12,7 +14,7 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
     }
 
     let arg = 1
-    let output_dir: ?str = nil
+    let output_dir = ""
     let binary_name: ?str = nil
     while arg < argc and argv[arg][0] == '-' {
         let option = argv[arg].to_str()
@@ -87,30 +89,32 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
         return 1
     }
 
-    try checker.check(builtin_package: builtin_package, main_package: main_package) else {
+    let checked_package = try checker.check(builtin_package: builtin_package, main_package: main_package) else {
         libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
         return 1
     }
 
-    let package = main_package
-    while package != null {
-        let module = package.first_module
-        while module != null {
-            module.statements.dump()
-            module = module.next_module
-        }
-        package = package.next_package
-    }
+    let ir_program = lowerer.lower(checked_package)
 
-    package = builtin_package
-    while package != null {
-        let module = package.first_module
-        while module != null {
-            module.statements.dump()
-            module = module.next_module
-        }
-        package = package.next_package
+    let path_builder = string.new_builder()
+    path_builder.append(output_dir)
+    if output_dir.length > 0 and output_dir.char_at(output_dir.length - 1) != '/' {
+        path_builder.append_char('/')
     }
+    if binary_name is str as name {
+        path_builder.append(name)
+    }
+    path_builder.append(".ir")
+    let path = path_builder.build()
+
+    let file = libc.fopen(path.data(), "w".data())
+    if file == null {
+        libc.stderr.write("Cannot open file: ").write(path).end_line()
+        return 1
+    }
+    defer libc.fclose(file)
+
+    printer.print(program: ir_program, file: file)
 
     return 0
 }
