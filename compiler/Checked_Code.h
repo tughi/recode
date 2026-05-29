@@ -378,6 +378,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__EXPRESSION,
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
+    CHECKED_STATEMENT_KIND__RAISE,
     CHECKED_STATEMENT_KIND__RETURN,
     CHECKED_STATEMENT_KIND__VARIABLE,
     CHECKED_STATEMENT_KIND__VARIANT_IF,
@@ -895,6 +896,13 @@ typedef struct Checked_Loop_Statement {
 
 Checked_Loop_Statement *Checked_Loop_Statement__create(Source_Location location, Checked_Statement *body_statement);
 
+typedef struct Checked_Raise_Statement {
+    Checked_Statement super;
+    Checked_Expression *expression;
+} Checked_Raise_Statement;
+
+Checked_Raise_Statement *Checked_Raise_Statement__create(Source_Location location, Checked_Expression *expression);
+
 typedef struct Checked_Return_Statement {
     Checked_Statement super;
     Checked_Expression *expression;
@@ -967,6 +975,7 @@ typedef struct Checked_Source {
     Checked_Package *first_package;
     Checked_Package *builtin_package;
     struct Checked_Symbols *symbols;
+    Checked_Type *bool_type;
 } Checked_Source;
 
 #endif

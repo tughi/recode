@@ -7,17 +7,17 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
     {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
-        struct test_Result__8_48 __002__ = test__auto_raise_error__anon(false);
+        struct test_Result__8_48 __001__ = test__auto_raise_error__anon(false);
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
-        if (__002__.success) {} else {
+        if (__001__.success) {} else {
 #line 2 "tests/12__error_handling/006__raising_without_return/test.code"
             {
 #line 3 "tests/12__error_handling/006__raising_without_return/test.code"
                 {
 #line 3 "tests/12__error_handling/006__raising_without_return/test.code"
-                    int32_t __001__ = __002__.error.code;
+                    int32_t __002__ = __001__.error.code;
 #line 3 "tests/12__error_handling/006__raising_without_return/test.code"
-                    return __001__;
+                    return __002__;
 #line 3 "tests/12__error_handling/006__raising_without_return/test.code"
                 }
 #line 4 "tests/12__error_handling/006__raising_without_return/test.code"

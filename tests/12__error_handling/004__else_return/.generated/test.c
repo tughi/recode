@@ -9,13 +9,13 @@ int32_t test__main() {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
     {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-        struct test_Result__12_36 __002__ = test__increment__anon(13);
+        struct test_Result__12_36 __001__ = test__increment__anon(13);
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-        int32_t __003__;
+        int32_t __002__;
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-        if (__002__.success) {
+        if (__001__.success) {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-            __003__ = __002__.value;
+            __002__ = __001__.value;
 #line 2 "tests/12__error_handling/004__else_return/test.code"
         } else {
 #line 2 "tests/12__error_handling/004__else_return/test.code"
@@ -25,19 +25,19 @@ int32_t test__main() {
 #line 3 "tests/12__error_handling/004__else_return/test.code"
                 {
 #line 3 "tests/12__error_handling/004__else_return/test.code"
-                    int32_t __001__ = __002__.error.code - 42;
+                    int32_t __003__ = __001__.error.code - 42;
 #line 3 "tests/12__error_handling/004__else_return/test.code"
-                    return __001__;
+                    return __003__;
 #line 3 "tests/12__error_handling/004__else_return/test.code"
                 }
 #line 4 "tests/12__error_handling/004__else_return/test.code"
             }
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-            __003__ = __004__;
+            __002__ = __004__;
 #line 4 "tests/12__error_handling/004__else_return/test.code"
         }
 #line 2 "tests/12__error_handling/004__else_return/test.code"
-        result = __003__;
+        result = __002__;
 #line 4 "tests/12__error_handling/004__else_return/test.code"
     }
 #line 5 "tests/12__error_handling/004__else_return/test.code"

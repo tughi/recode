@@ -1,6 +1,7 @@
 #include "Checker.h"
 #include "File.h"
 #include "Generator.h"
+#include "Lowerer.h"
 #include "Parser.h"
 
 void help_recode(char *executable) {
@@ -97,6 +98,8 @@ int32_t main(int32_t argc, char **argv) {
     Parsed_Package *builtin_package = parse_package(String__create_from("code"), String__create_from("builtin"), NULL);
 
     Checked_Source *checked_source = check(builtin_package, main_package);
+
+    checked_source = lower(checked_source);
 
     generate(checked_source, output_dir, true);
 

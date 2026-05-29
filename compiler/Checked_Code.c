@@ -1055,6 +1055,7 @@ bool Checked_Statement__is_terminal(Checked_Statement *self) {
         Checked_Loop_Statement *loop_statement = (Checked_Loop_Statement *)self;
         return Checked_Statement__is_terminal(loop_statement->body_statement);
     }
+    case CHECKED_STATEMENT_KIND__RAISE:
     case CHECKED_STATEMENT_KIND__RETURN:
         return true;
     default:
@@ -1119,6 +1120,12 @@ Checked_If_Statement *Checked_If_Statement__create(Source_Location location, Che
 Checked_Loop_Statement *Checked_Loop_Statement__create(Source_Location location, Checked_Statement *body_statement) {
     Checked_Loop_Statement *statement = (Checked_Loop_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__LOOP, sizeof(Checked_Loop_Statement), location);
     statement->body_statement = body_statement;
+    return statement;
+}
+
+Checked_Raise_Statement *Checked_Raise_Statement__create(Source_Location location, Checked_Expression *expression) {
+    Checked_Raise_Statement *statement = (Checked_Raise_Statement *)Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__RAISE, sizeof(Checked_Raise_Statement), location);
+    statement->expression = expression;
     return statement;
 }
 
