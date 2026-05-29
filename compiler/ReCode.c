@@ -1,6 +1,5 @@
 #include "Checker.h"
 #include "File.h"
-#include "Generator.h"
 #include "Lowerer.h"
 #include "Parser.h"
 
@@ -99,9 +98,17 @@ int32_t main(int32_t argc, char **argv) {
 
     Checked_Source *checked_source = check(builtin_package, main_package);
 
-    checked_source = lower(checked_source);
+    IR_Program *ir_program = lower(checked_source);
 
-    generate(checked_source, output_dir, true);
+    String *output_file_path = String__create_copy(output_dir);
+    if (!String__ends_with_cstring(output_file_path, "/")) {
+        String__append_char(output_file_path, '/');
+    }
+    String__append_string(output_file_path, binary_name);
+    String__append_cstring(output_file_path, ".ir");
+
+    Writer *output_writer = File__create_writer(output_file_path);
+    pWriter__write__ir_program(output_writer, ir_program);
 
     return 0;
 }

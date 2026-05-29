@@ -2,7 +2,8 @@
 #define __LOWERER_H__
 
 #include "Checked_Code.h"
+#include "IR.h"
 
-Checked_Source *lower(Checked_Source *checked_source);
+IR_Program *lower(Checked_Source *checked_source);
 
 #endif

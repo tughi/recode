@@ -344,23 +344,26 @@ def test(paths, save=False, stage=1):
     tester = Tester(apply_change=save)
 
     for test_dir in sorted(test_dirs(paths)):
-        if not os.path.exists(f"build/{test_dir}/generated"):
-            run(f"mkdir -p build/{test_dir}/generated")
+        build_dir = f"build/{test_dir}"
+        if not os.path.exists(build_dir):
+            run(f"mkdir -p {build_dir}")
 
         logger.info(f"Testing: {test_dir}")
+
+        build_ir_path = f"{build_dir}/test.ir"
+        if os.path.exists(build_ir_path):
+            os.remove(build_ir_path)
 
         compiler_command = [
             f"build/stage{stage}/ReCode",
             "-o",
-            f"build/{test_dir}/generated",
+            build_dir,
             "-n",
             "test",
             f"{test_dir}",
         ]
 
         tester.load_test_data(test_dir)
-
-        run([f"rm -fr build/{test_dir}/generated/*"], shell=True)
 
         compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
         if compiler_result.returncode != 0:
@@ -387,49 +390,29 @@ def test(paths, save=False, stage=1):
                 )
                 exit(1)
 
-            if not tester.check_generated_files():
+            runner_command = ["../recode-runner/build/Runner", build_ir_path, *tester.actual_test_data.execute_args]
+            test_result = run(runner_command, capture_output=True, text=True, check=False)
+
+            tester.update_actual_execute_error(test_result.returncode)
+            if not tester.check_test_data():
+                logger.error(f"{COLOR_ERROR}Unexpected execute exit: {test_result.returncode}{COLOR_RESET}")
+                if test_result.stderr:
+                    logger.error(f"{COLOR_DEBUG}{test_result.stderr}{COLOR_RESET}")
                 exit(1)
 
-            test_binary = f"build/{test_dir}/test"
-
-            test_data_file = f"{test_dir}/test.json"
-            run_test = os.path.exists(test_data_file) and os.path.exists(test_binary) and os.path.getmtime(test_data_file) > os.path.getmtime(test_binary)
-
-            test_binary = f"build/{test_dir}/test"
-            if assemble(tester.list_generated_files(), test_binary, check=True):
-                run_test = True
-
-            if run_test:
-                test_result = run(
-                    [test_binary, *tester.actual_test_data.execute_args],
-                    capture_output=True,
-                    text=True,
-                    check=False,
+            tester.update_actual_execute_stderr(test_result.stderr)
+            if not tester.check_test_data():
+                logger.error(
+                    f"{COLOR_ERROR}Unexpected execute stderr\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stderr, tester.expect_test_data.execute_stderr)}{COLOR_RESET}"
                 )
+                exit(1)
 
-                tester.update_actual_execute_error(test_result.returncode)
-                if not tester.check_test_data():
-                    logger.error(f"{COLOR_ERROR}Unexpected execute exit: {test_result.returncode}{COLOR_RESET}")
-                    trace(test_binary, *tester.actual_test_data.execute_args)
-                    os.remove(test_binary)
-                    exit(1)
-
-                tester.update_actual_execute_stderr(test_result.stderr)
-                if not tester.check_test_data():
-                    logger.error(
-                        f"{COLOR_ERROR}Unexpected execute stderr\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stderr, tester.expect_test_data.execute_stderr)}{COLOR_RESET}"
-                    )
-                    trace(test_binary, *tester.actual_test_data.execute_args)
-                    os.remove(test_binary)
-                    exit(1)
-
-                tester.update_actual_execute_stdout(test_result.stdout)
-                if not tester.check_test_data():
-                    logger.error(
-                        f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stdout, tester.expect_test_data.execute_stdout)}{COLOR_RESET}"
-                    )
-                    os.remove(test_binary)
-                    exit(1)
+            tester.update_actual_execute_stdout(test_result.stdout)
+            if not tester.check_test_data():
+                logger.error(
+                    f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stdout, tester.expect_test_data.execute_stdout)}{COLOR_RESET}"
+                )
+                exit(1)
 
 
 def test_dirs(paths):
