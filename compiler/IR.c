@@ -40,6 +40,14 @@ IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t p
     return type;
 }
 
+IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type) {
+    IR_Value *value = (IR_Value *)malloc(sizeof(IR_Value));
+    value->kind = kind;
+    value->name = name;
+    value->type = type;
+    return value;
+}
+
 void IR_Value_List__append(IR_Value_List *self, IR_Value *value) {
     if (self->size == self->capacity) {
         self->capacity = self->capacity == 0 ? 4 : self->capacity * 2;
@@ -106,6 +114,7 @@ IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_
     procedure->value.name = name;
     procedure->value.type = type;
     procedure->name = name;
+    procedure->parameters = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     procedure->return_type = return_type;
     procedure->first_block = NULL;
     procedure->last_block = NULL;
@@ -229,6 +238,12 @@ Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
     pWriter__write__char(self, '$');
     pWriter__write__string(self, procedure->name);
     pWriter__write__char(self, '(');
+    if (procedure->parameters.size > 0) {
+        pWriter__write__ir_value_definition(self, procedure->parameters.values[0]);
+        for (size_t i = 1; i < procedure->parameters.size; i++) {
+            pWriter__write__ir_value_definition(self, procedure->parameters.values[i]);
+        }
+    }
     pWriter__write__char(self, ')');
     if (procedure->return_type != NULL) {
         pWriter__write__cstring(self, ": ");
@@ -236,13 +251,11 @@ Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
     }
     pWriter__write__cstring(self, " {");
     pWriter__end_line(self);
-
     IR_Block *block = procedure->first_block;
     while (block != NULL) {
         pWriter__write__ir_block(self, block);
         block = block->next_block;
     }
-
     pWriter__write__char(self, '}');
     return pWriter__end_line(self);
 }

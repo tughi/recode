@@ -317,25 +317,22 @@ class Tester:
                 return False
         return True
 
-    def check_generated_files(self) -> bool:
+    def check_ir_file(self, build_ir_path: str) -> bool:
+        expected_ir_path = f"{self.test_dir}/test.ir"
         result = run(
-            f"diff -rN build/{self.test_dir}/generated {self.test_dir}/.generated",
+            f"diff -N {build_ir_path} {expected_ir_path}",
             capture_output=True,
             text=True,
             check=False,
         )
         if result.returncode != 0:
             if self.apply_change:
-                shutil.rmtree(f"{self.test_dir}/.generated", ignore_errors=True)
-                shutil.copytree(f"build/{self.test_dir}/generated", f"{self.test_dir}/.generated", dirs_exist_ok=True)
+                shutil.copyfile(build_ir_path, expected_ir_path)
                 self.apply_change = False
             else:
-                logger.error(f"{COLOR_ERROR}Unexpected compiler result\n{COLOR_DEBUG}{result.stdout}{COLOR_RESET}")
+                logger.error(f"{COLOR_ERROR}Unexpected IR output\n{COLOR_DEBUG}{result.stdout}{COLOR_RESET}")
                 return False
         return True
-
-    def list_generated_files(self) -> List[str]:
-        return [f"{self.test_dir}/.generated/{file}" for file in os.listdir(f"{self.test_dir}/.generated")]
 
 
 def test(paths, save=False, stage=1):
@@ -412,6 +409,9 @@ def test(paths, save=False, stage=1):
                 logger.error(
                     f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stdout, tester.expect_test_data.execute_stdout)}{COLOR_RESET}"
                 )
+                exit(1)
+
+            if not tester.check_ir_file(build_ir_path):
                 exit(1)
 
 

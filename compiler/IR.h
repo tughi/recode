@@ -44,6 +44,7 @@ IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t p
 
 typedef enum IR_Value_Kind {
     IR_VALUE_KIND__INSTRUCTION_RESULT,
+    IR_VALUE_KIND__PARAMETER,
     IR_VALUE_KIND__PROCEDURE,
 } IR_Value_Kind;
 
@@ -52,6 +53,8 @@ typedef struct IR_Value {
     String *name;
     IR_Type *type;
 } IR_Value;
+
+IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type);
 
 typedef struct IR_Value_List {
     IR_Value **values;
@@ -107,6 +110,7 @@ void IR_Block__append_instruction(IR_Block *self, IR_Instruction *instruction);
 typedef struct IR_Procedure {
     IR_Value value;
     String *name;
+    IR_Value_List parameters;
     IR_Type *return_type;
     IR_Block *first_block;
     IR_Block *last_block;
