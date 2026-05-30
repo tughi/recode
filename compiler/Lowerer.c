@@ -89,7 +89,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             pWriter__end_line(stderr_writer);
             panic();
         }
-        IR_Value *callee = Lowerer__find_global(self, ((Checked_Procedure_Symbol *)symbol)->procedure_name);
+        IR_Value *callee = Lowerer__find_global(self, symbol->name);
         IR_Value_List arguments = {.values = NULL, .size = 0, .capacity = 0};
         for (Checked_Call_Argument *argument = call_expression->first_argument; argument != NULL; argument = argument->next_argument) {
             IR_Value_List__append(&arguments, Lowerer__lower_expression(self, argument->expression));
@@ -168,7 +168,7 @@ void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedu
     }
 
     IR_Type *procedure_type = (IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type);
-    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->procedure_name, (IR_Type *)IR_Pointer_Type__create(procedure_type), return_type);
+    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->super.name, (IR_Type *)IR_Pointer_Type__create(procedure_type), return_type);
     IR_Program__append_procedure(self->program, procedure);
     IR_Value_List__append(&self->globals, &procedure->value);
 
@@ -183,7 +183,7 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
         return;
     }
 
-    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, procedure_symbol->procedure_name);
+    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, procedure_symbol->super.name);
 
     self->value_counter = 0;
     self->scope.size = 0;
