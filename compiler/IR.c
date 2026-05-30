@@ -14,6 +14,7 @@ static IR_Type IR_TYPES[] = {
     [IR_TYPE_KIND__U32] = {.kind = IR_TYPE_KIND__U32},
     [IR_TYPE_KIND__U64] = {.kind = IR_TYPE_KIND__U64},
     [IR_TYPE_KIND__USIZE] = {.kind = IR_TYPE_KIND__USIZE},
+    [IR_TYPE_KIND__NOTHING] = {.kind = IR_TYPE_KIND__NOTHING},
 };
 
 IR_Type *IR_Type__get(IR_Type_Kind kind) {
@@ -193,8 +194,11 @@ Writer *pWriter__write__ir_value_definition(Writer *self, IR_Value *value) {
 Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction) {
     switch (instruction->kind) {
     case IR_INSTRUCTION_KIND__CALL:
-        pWriter__write__ir_value_definition(self, &instruction->result);
-        pWriter__write__cstring(self, " = call");
+        if (instruction->result.type->kind != IR_TYPE_KIND__NOTHING) {
+            pWriter__write__ir_value_definition(self, &instruction->result);
+            pWriter__write__cstring(self, " = ");
+        }
+        pWriter__write__cstring(self, "call");
         for (size_t i = 0; i < instruction->operands.size; i++) {
             pWriter__write__char(self, ' ');
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
@@ -241,11 +245,12 @@ Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
     if (procedure->parameters.size > 0) {
         pWriter__write__ir_value_definition(self, procedure->parameters.values[0]);
         for (size_t i = 1; i < procedure->parameters.size; i++) {
+            pWriter__write__cstring(self, ", ");
             pWriter__write__ir_value_definition(self, procedure->parameters.values[i]);
         }
     }
     pWriter__write__char(self, ')');
-    if (procedure->return_type != NULL) {
+    if (procedure->return_type->kind != IR_TYPE_KIND__NOTHING) {
         pWriter__write__cstring(self, ": ");
         pWriter__write__ir_type(self, procedure->return_type);
     }

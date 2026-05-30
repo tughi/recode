@@ -16,6 +16,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE_KIND__U32,
     IR_TYPE_KIND__U64,
     IR_TYPE_KIND__USIZE,
+    IR_TYPE_KIND__NOTHING,
     IR_TYPE_KIND__POINTER,
     IR_TYPE_KIND__PROCEDURE,
 } IR_Type_Kind;

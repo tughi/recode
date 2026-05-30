@@ -55,6 +55,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__I64);
     case CHECKED_TYPE_KIND__ISIZE:
         return IR_Type__get(IR_TYPE_KIND__ISIZE);
+    case CHECKED_TYPE_KIND__NOTHING:
+        return IR_Type__get(IR_TYPE_KIND__NOTHING);
     case CHECKED_TYPE_KIND__U8:
         return IR_Type__get(IR_TYPE_KIND__U8);
     case CHECKED_TYPE_KIND__U16:
@@ -94,7 +96,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         for (Checked_Call_Argument *argument = call_expression->first_argument; argument != NULL; argument = argument->next_argument) {
             IR_Value_List__append(&arguments, Lowerer__lower_expression(self, argument->expression));
         }
-        IR_Call_Instruction *instruction = IR_Call_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), callee);
+        IR_Type *result_type = Lowerer__lower_type(self, expression->type);
+        String *result_name = result_type->kind != IR_TYPE_KIND__NOTHING ? Lowerer__fresh_name(self) : NULL;
+        IR_Call_Instruction *instruction = IR_Call_Instruction__create(result_name, result_type, callee);
         for (size_t i = 0; i < arguments.size; i++) {
             IR_Value_List__append(&instruction->super.operands, arguments.values[i]);
         }
@@ -134,6 +138,11 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
             Lowerer__lower_statement(self, child_statement);
             child_statement = child_statement->next_statement;
         }
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__EXPRESSION: {
+        Checked_Expression_Statement *expression_statement = (Checked_Expression_Statement *)statement;
+        Lowerer__lower_expression(self, expression_statement->expression);
         break;
     }
     case CHECKED_STATEMENT_KIND__RETURN: {
@@ -196,6 +205,10 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
     self->block = block;
 
     Lowerer__lower_statement(self, procedure_symbol->checked_block_statement);
+
+    if (procedure->return_type->kind == IR_TYPE_KIND__NOTHING && (self->block->last_instruction == NULL || self->block->last_instruction->kind != IR_INSTRUCTION_KIND__RET)) {
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(NULL));
+    }
 }
 
 bool Checked_Procedure_Symbol__is_lowerable(Checked_Procedure_Symbol *procedure_symbol) {
