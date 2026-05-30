@@ -6,7 +6,20 @@ typedef struct Lowerer {
     IR_Program *program;
     IR_Block *block;
     int32_t value_counter;
+    IR_Value_List globals;
 } Lowerer;
+
+IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
+    for (size_t i = 0; i < self->globals.size; i++) {
+        if (String__equals_string(self->globals.values[i]->name, name)) {
+            return self->globals.values[i];
+        }
+    }
+    pWriter__write__cstring(stderr_writer, "No IR global named: ");
+    pWriter__write__string(stderr_writer, name);
+    pWriter__end_line(stderr_writer);
+    panic();
+}
 
 String *Lowerer__fresh_name(Lowerer *self) {
     self->value_counter++;
@@ -51,9 +64,33 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__INTEGER: {
         Checked_Integer_Expression *integer_expression = (Checked_Integer_Expression *)expression;
-        IR_Instruction *instruction = IR_Instruction__create_const(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value);
-        IR_Block__append_instruction(self->block, instruction);
-        return &instruction->result;
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__CALL: {
+        Checked_Call_Expression *call_expression = (Checked_Call_Expression *)expression;
+        if (call_expression->callee_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
+            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: indirect call");
+            pWriter__end_line(stderr_writer);
+            panic();
+        }
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)call_expression->callee_expression)->symbol;
+        if (symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE) {
+            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: callee symbol kind ");
+            pWriter__write__int64(stderr_writer, symbol->kind);
+            pWriter__end_line(stderr_writer);
+            panic();
+        }
+        if (call_expression->first_argument != NULL) {
+            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: call arguments");
+            pWriter__end_line(stderr_writer);
+            panic();
+        }
+        IR_Value *callee = Lowerer__find_global(self, ((Checked_Procedure_Symbol *)symbol)->procedure_name);
+        IR_Call_Instruction *instruction = IR_Call_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), callee);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
     }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: expression kind ");
@@ -80,7 +117,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         if (return_statement->expression != NULL) {
             value = Lowerer__lower_expression(self, return_statement->expression);
         }
-        IR_Block__append_instruction(self->block, IR_Instruction__create_ret(value));
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(value));
         break;
     }
     default:
@@ -91,14 +128,32 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     }
 }
 
-void Lowerer__lower_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
-    IR_Type *return_type = Lowerer__lower_type(self, procedure_symbol->procedure_type->return_type);
-    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->procedure_name, return_type);
-    IR_Program__append_procedure(self->program, procedure);
+void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
+    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
+    IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
 
+    size_t parameter_count = 0;
+    for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
+        parameter_count++;
+    }
+    IR_Type **parameter_types = parameter_count > 0 ? (IR_Type **)malloc(parameter_count * sizeof(IR_Type *)) : NULL;
+    size_t parameter_index = 0;
+    for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
+        parameter_types[parameter_index++] = Lowerer__lower_type(self, parameter->type);
+    }
+
+    IR_Type *procedure_type = (IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type);
+    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->procedure_name, (IR_Type *)IR_Pointer_Type__create(procedure_type), return_type);
+    IR_Program__append_procedure(self->program, procedure);
+    IR_Value_List__append(&self->globals, &procedure->value);
+}
+
+void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
     if (procedure_symbol->checked_block_statement == NULL) {
         return;
     }
+
+    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, procedure_symbol->procedure_name);
 
     self->value_counter = 0;
     IR_Block *block = IR_Block__create(1);
@@ -108,21 +163,27 @@ void Lowerer__lower_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure
     Lowerer__lower_statement(self, procedure_symbol->checked_block_statement);
 }
 
+bool Checked_Procedure_Symbol__is_lowerable(Checked_Procedure_Symbol *procedure_symbol) {
+    return !procedure_symbol->parsed_procedure_statement->is_external;
+}
+
 IR_Program *lower(Checked_Source *checked_source) {
     Lowerer lowerer;
     lowerer.program = IR_Program__create();
     lowerer.block = NULL;
     lowerer.value_counter = 0;
+    lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
 
-    Checked_Symbol *symbol = checked_source->symbols->first_symbol;
-    while (symbol != NULL) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
-            if (!procedure_symbol->parsed_procedure_statement->is_external) {
-                Lowerer__lower_procedure(&lowerer, procedure_symbol);
-            }
+    for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
+            Lowerer__declare_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
         }
-        symbol = symbol->next_symbol;
+    }
+
+    for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
+            Lowerer__define_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
+        }
     }
 
     return lowerer.program;

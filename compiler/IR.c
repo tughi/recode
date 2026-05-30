@@ -20,6 +20,26 @@ IR_Type *IR_Type__get(IR_Type_Kind kind) {
     return &IR_TYPES[kind];
 }
 
+static IR_Type *IR_Type__create_kind(IR_Type_Kind kind, size_t size) {
+    IR_Type *type = (IR_Type *)malloc(size);
+    type->kind = kind;
+    return type;
+}
+
+IR_Pointer_Type *IR_Pointer_Type__create(IR_Type *pointee) {
+    IR_Pointer_Type *type = (IR_Pointer_Type *)IR_Type__create_kind(IR_TYPE_KIND__POINTER, sizeof(IR_Pointer_Type));
+    type->pointee = pointee;
+    return type;
+}
+
+IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t parameter_count, IR_Type *return_type) {
+    IR_Procedure_Type *type = (IR_Procedure_Type *)IR_Type__create_kind(IR_TYPE_KIND__PROCEDURE, sizeof(IR_Procedure_Type));
+    type->parameter_types = parameter_types;
+    type->parameter_count = parameter_count;
+    type->return_type = return_type;
+    return type;
+}
+
 void IR_Value_List__append(IR_Value_List *self, IR_Value *value) {
     if (self->size == self->capacity) {
         self->capacity = self->capacity == 0 ? 4 : self->capacity * 2;
@@ -28,27 +48,36 @@ void IR_Value_List__append(IR_Value_List *self, IR_Value *value) {
     self->values[self->size++] = value;
 }
 
-static IR_Instruction *IR_Instruction__create(IR_Instruction_Kind kind) {
-    IR_Instruction *instruction = (IR_Instruction *)malloc(sizeof(IR_Instruction));
+static IR_Instruction *IR_Instruction__create_kind(IR_Instruction_Kind kind, size_t size) {
+    IR_Instruction *instruction = (IR_Instruction *)malloc(size);
     instruction->kind = kind;
-    instruction->arguments = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
+    instruction->operands = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     instruction->next_instruction = NULL;
     return instruction;
 }
 
-IR_Instruction *IR_Instruction__create_const(String *result_name, IR_Type *result_type, uint64_t value) {
-    IR_Instruction *instruction = IR_Instruction__create(IR_INSTRUCTION_KIND__CONST);
-    instruction->result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
-    instruction->result.name = result_name;
-    instruction->result.type = result_type;
-    instruction->const_payload.value = value;
+IR_Call_Instruction *IR_Call_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *callee) {
+    IR_Call_Instruction *instruction = (IR_Call_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CALL, sizeof(IR_Call_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    IR_Value_List__append(&instruction->super.operands, callee);
     return instruction;
 }
 
-IR_Instruction *IR_Instruction__create_ret(IR_Value *value) {
-    IR_Instruction *instruction = IR_Instruction__create(IR_INSTRUCTION_KIND__RET);
+IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value) {
+    IR_Const_Instruction *instruction = (IR_Const_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CONST, sizeof(IR_Const_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->value = value;
+    return instruction;
+}
+
+IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value) {
+    IR_Ret_Instruction *instruction = (IR_Ret_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__RET, sizeof(IR_Ret_Instruction));
     if (value != NULL) {
-        IR_Value_List__append(&instruction->arguments, value);
+        IR_Value_List__append(&instruction->super.operands, value);
     }
     return instruction;
 }
@@ -71,8 +100,11 @@ void IR_Block__append_instruction(IR_Block *self, IR_Instruction *instruction) {
     self->last_instruction = instruction;
 }
 
-IR_Procedure *IR_Procedure__create(String *name, IR_Type *return_type) {
+IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_type) {
     IR_Procedure *procedure = (IR_Procedure *)malloc(sizeof(IR_Procedure));
+    procedure->value.kind = IR_VALUE_KIND__PROCEDURE;
+    procedure->value.name = name;
+    procedure->value.type = type;
     procedure->name = name;
     procedure->return_type = return_type;
     procedure->first_block = NULL;
@@ -139,7 +171,7 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
 }
 
 Writer *pWriter__write__ir_value_reference(Writer *self, IR_Value *value) {
-    pWriter__write__char(self, '%');
+    pWriter__write__char(self, value->kind == IR_VALUE_KIND__PROCEDURE ? '$' : '%');
     return pWriter__write__string(self, value->name);
 }
 
@@ -151,15 +183,23 @@ Writer *pWriter__write__ir_value_definition(Writer *self, IR_Value *value) {
 
 Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction) {
     switch (instruction->kind) {
+    case IR_INSTRUCTION_KIND__CALL:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = call");
+        for (size_t i = 0; i < instruction->operands.size; i++) {
+            pWriter__write__char(self, ' ');
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
+        }
+        return self;
     case IR_INSTRUCTION_KIND__CONST:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = const ");
-        return pWriter__write__uint64(self, instruction->const_payload.value);
+        return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
     case IR_INSTRUCTION_KIND__RET:
         pWriter__write__cstring(self, "ret");
-        if (instruction->arguments.size > 0) {
+        for (size_t i = 0; i < instruction->operands.size; i++) {
             pWriter__write__char(self, ' ');
-            pWriter__write__ir_value_reference(self, instruction->arguments.values[0]);
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
         }
         return self;
     default:
