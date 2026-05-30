@@ -69,6 +69,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CONST,
     IR_INSTRUCTION_KIND__RET,
+    IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
 
 typedef struct IR_Instruction {
@@ -96,6 +97,12 @@ typedef struct IR_Ret_Instruction {
 } IR_Ret_Instruction;
 
 IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value);
+
+typedef struct IR_Sub_Instruction {
+    IR_Instruction super;
+} IR_Sub_Instruction;
+
+IR_Sub_Instruction *IR_Sub_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right);
 
 typedef struct IR_Block {
     size_t label;

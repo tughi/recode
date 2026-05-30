@@ -111,6 +111,14 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__SUBTRACT: {
+        Checked_Binary_Expression *binary_expression = (Checked_Binary_Expression *)expression;
+        IR_Value *left = Lowerer__lower_expression(self, binary_expression->left_expression);
+        IR_Value *right = Lowerer__lower_expression(self, binary_expression->right_expression);
+        IR_Sub_Instruction *instruction = IR_Sub_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), left, right);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
         if (symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {

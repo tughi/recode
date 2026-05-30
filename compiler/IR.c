@@ -91,6 +91,16 @@ IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value) {
     return instruction;
 }
 
+IR_Sub_Instruction *IR_Sub_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right) {
+    IR_Sub_Instruction *instruction = (IR_Sub_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__SUB, sizeof(IR_Sub_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    IR_Value_List__append(&instruction->super.operands, left);
+    IR_Value_List__append(&instruction->super.operands, right);
+    return instruction;
+}
+
 IR_Block *IR_Block__create(size_t label) {
     IR_Block *block = (IR_Block *)malloc(sizeof(IR_Block));
     block->label = label;
@@ -210,6 +220,14 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
     case IR_INSTRUCTION_KIND__RET:
         pWriter__write__cstring(self, "ret");
+        for (size_t i = 0; i < instruction->operands.size; i++) {
+            pWriter__write__char(self, ' ');
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
+        }
+        return self;
+    case IR_INSTRUCTION_KIND__SUB:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = sub");
         for (size_t i = 0; i < instruction->operands.size; i++) {
             pWriter__write__char(self, ' ');
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
