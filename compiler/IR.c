@@ -91,8 +91,8 @@ IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value) {
     return instruction;
 }
 
-IR_Sub_Instruction *IR_Sub_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right) {
-    IR_Sub_Instruction *instruction = (IR_Sub_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__SUB, sizeof(IR_Sub_Instruction));
+IR_Binary_Instruction *IR_Binary_Instruction__create(IR_Instruction_Kind kind, String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right) {
+    IR_Binary_Instruction *instruction = (IR_Binary_Instruction *)IR_Instruction__create_kind(kind, sizeof(IR_Binary_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
@@ -225,9 +225,29 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
         }
         return self;
+    case IR_INSTRUCTION_KIND__ADD:
+    case IR_INSTRUCTION_KIND__DIV:
+    case IR_INSTRUCTION_KIND__MOD:
+    case IR_INSTRUCTION_KIND__MUL:
     case IR_INSTRUCTION_KIND__SUB:
         pWriter__write__ir_value_definition(self, &instruction->result);
-        pWriter__write__cstring(self, " = sub");
+        switch (instruction->kind) {
+        case IR_INSTRUCTION_KIND__ADD:
+            pWriter__write__cstring(self, " = add");
+            break;
+        case IR_INSTRUCTION_KIND__DIV:
+            pWriter__write__cstring(self, " = div");
+            break;
+        case IR_INSTRUCTION_KIND__MOD:
+            pWriter__write__cstring(self, " = mod");
+            break;
+        case IR_INSTRUCTION_KIND__MUL:
+            pWriter__write__cstring(self, " = mul");
+            break;
+        default:
+            pWriter__write__cstring(self, " = sub");
+            break;
+        }
         for (size_t i = 0; i < instruction->operands.size; i++) {
             pWriter__write__char(self, ' ');
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);

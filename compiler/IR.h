@@ -66,8 +66,12 @@ typedef struct IR_Value_List {
 void IR_Value_List__append(IR_Value_List *self, IR_Value *value);
 
 typedef enum IR_Instruction_Kind {
+    IR_INSTRUCTION_KIND__ADD,
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CONST,
+    IR_INSTRUCTION_KIND__DIV,
+    IR_INSTRUCTION_KIND__MOD,
+    IR_INSTRUCTION_KIND__MUL,
     IR_INSTRUCTION_KIND__RET,
     IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
@@ -98,11 +102,11 @@ typedef struct IR_Ret_Instruction {
 
 IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value);
 
-typedef struct IR_Sub_Instruction {
+typedef struct IR_Binary_Instruction {
     IR_Instruction super;
-} IR_Sub_Instruction;
+} IR_Binary_Instruction;
 
-IR_Sub_Instruction *IR_Sub_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right);
+IR_Binary_Instruction *IR_Binary_Instruction__create(IR_Instruction_Kind kind, String *result_name, IR_Type *result_type, IR_Value *left, IR_Value *right);
 
 typedef struct IR_Block {
     size_t label;

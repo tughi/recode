@@ -111,11 +111,33 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__ADD:
+    case CHECKED_EXPRESSION_KIND__DIVIDE:
+    case CHECKED_EXPRESSION_KIND__MODULO:
+    case CHECKED_EXPRESSION_KIND__MULTIPLY:
     case CHECKED_EXPRESSION_KIND__SUBTRACT: {
         Checked_Binary_Expression *binary_expression = (Checked_Binary_Expression *)expression;
         IR_Value *left = Lowerer__lower_expression(self, binary_expression->left_expression);
         IR_Value *right = Lowerer__lower_expression(self, binary_expression->right_expression);
-        IR_Sub_Instruction *instruction = IR_Sub_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), left, right);
+        IR_Instruction_Kind kind;
+        switch (expression->kind) {
+        case CHECKED_EXPRESSION_KIND__ADD:
+            kind = IR_INSTRUCTION_KIND__ADD;
+            break;
+        case CHECKED_EXPRESSION_KIND__DIVIDE:
+            kind = IR_INSTRUCTION_KIND__DIV;
+            break;
+        case CHECKED_EXPRESSION_KIND__MODULO:
+            kind = IR_INSTRUCTION_KIND__MOD;
+            break;
+        case CHECKED_EXPRESSION_KIND__MULTIPLY:
+            kind = IR_INSTRUCTION_KIND__MUL;
+            break;
+        default:
+            kind = IR_INSTRUCTION_KIND__SUB;
+            break;
+        }
+        IR_Binary_Instruction *instruction = IR_Binary_Instruction__create(kind, Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), left, right);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
