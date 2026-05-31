@@ -81,9 +81,11 @@ void IR_Value_List__append(IR_Value_List *self, IR_Value *value);
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__ADD,
     IR_INSTRUCTION_KIND__ALLOC,
+    IR_INSTRUCTION_KIND__BR,
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CONST,
     IR_INSTRUCTION_KIND__DIV,
+    IR_INSTRUCTION_KIND__JMP,
     IR_INSTRUCTION_KIND__LOAD,
     IR_INSTRUCTION_KIND__MOD,
     IR_INSTRUCTION_KIND__MUL,
@@ -91,6 +93,8 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__STORE,
     IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
+
+typedef struct IR_Block IR_Block;
 
 typedef struct IR_Instruction {
     IR_Value result;
@@ -106,6 +110,15 @@ typedef struct IR_Alloc_Instruction {
 
 IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable);
 
+typedef struct IR_Br_Instruction {
+    IR_Instruction super;
+    IR_Value *condition;
+    IR_Block *true_block;
+    IR_Block *false_block;
+} IR_Br_Instruction;
+
+IR_Br_Instruction *IR_Br_Instruction__create(IR_Value *condition, IR_Block *true_block, IR_Block *false_block);
+
 typedef struct IR_Call_Instruction {
     IR_Instruction super;
 } IR_Call_Instruction;
@@ -118,6 +131,13 @@ typedef struct IR_Const_Instruction {
 } IR_Const_Instruction;
 
 IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value);
+
+typedef struct IR_Jmp_Instruction {
+    IR_Instruction super;
+    IR_Block *block;
+} IR_Jmp_Instruction;
+
+IR_Jmp_Instruction *IR_Jmp_Instruction__create(IR_Block *block);
 
 typedef struct IR_Load_Instruction {
     IR_Instruction super;
@@ -153,6 +173,8 @@ typedef struct IR_Block {
 IR_Block *IR_Block__create(size_t label);
 
 void IR_Block__append_instruction(IR_Block *self, IR_Instruction *instruction);
+
+bool IR_Block__is_terminated(IR_Block *self);
 
 typedef struct IR_Procedure {
     IR_Value value;

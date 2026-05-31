@@ -4,11 +4,18 @@
 
 typedef struct Lowerer {
     IR_Program *program;
+    IR_Procedure *procedure;
     IR_Block *block;
     int32_t value_counter;
+    int32_t block_counter;
     IR_Value_List globals;
     IR_Value_List scope;
 } Lowerer;
+
+IR_Block *Lowerer__create_block(Lowerer *self) {
+    self->block_counter++;
+    return IR_Block__create(self->block_counter);
+}
 
 IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
     for (size_t i = 0; i < self->globals.size; i++) {
@@ -107,6 +114,12 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__BOOL: {
+        Checked_Bool_Expression *bool_expression = (Checked_Bool_Expression *)expression;
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), bool_expression->value ? 1 : 0);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__INTEGER: {
         Checked_Integer_Expression *integer_expression = (Checked_Integer_Expression *)expression;
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value);
@@ -197,6 +210,31 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         Lowerer__lower_expression(self, expression_statement->expression);
         break;
     }
+    case CHECKED_STATEMENT_KIND__IF: {
+        Checked_If_Statement *if_statement = (Checked_If_Statement *)statement;
+        IR_Value *condition = Lowerer__lower_expression(self, if_statement->condition_expression);
+        IR_Block *true_block = Lowerer__create_block(self);
+        IR_Block *false_block = if_statement->false_statement != NULL ? Lowerer__create_block(self) : NULL;
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(condition, true_block, false_block != NULL ? false_block : end_block));
+        IR_Procedure__append_block(self->procedure, true_block);
+        self->block = true_block;
+        Lowerer__lower_statement(self, if_statement->true_statement);
+        if (!IR_Block__is_terminated(self->block)) {
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+        }
+        if (false_block != NULL) {
+            IR_Procedure__append_block(self->procedure, false_block);
+            self->block = false_block;
+            Lowerer__lower_statement(self, if_statement->false_statement);
+            if (!IR_Block__is_terminated(self->block)) {
+                IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+            }
+        }
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        break;
+    }
     case CHECKED_STATEMENT_KIND__RETURN: {
         Checked_Return_Statement *return_statement = (Checked_Return_Statement *)statement;
         IR_Value *value = NULL;
@@ -258,19 +296,21 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
 
     IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, procedure_symbol->super.name);
 
+    self->procedure = procedure;
     self->value_counter = 0;
+    self->block_counter = 0;
     self->scope.size = 0;
     for (size_t i = 0; i < procedure->parameters.size; i++) {
         IR_Value_List__append(&self->scope, procedure->parameters.values[i]);
     }
 
-    IR_Block *block = IR_Block__create(1);
+    IR_Block *block = Lowerer__create_block(self);
     IR_Procedure__append_block(procedure, block);
     self->block = block;
 
     Lowerer__lower_statement(self, procedure_symbol->checked_block_statement);
 
-    if (procedure->return_type->kind == IR_TYPE_KIND__NOTHING && (self->block->last_instruction == NULL || self->block->last_instruction->kind != IR_INSTRUCTION_KIND__RET)) {
+    if (procedure->return_type->kind == IR_TYPE_KIND__NOTHING && !IR_Block__is_terminated(self->block)) {
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(NULL));
     }
 }
@@ -282,8 +322,10 @@ bool Checked_Procedure_Symbol__is_lowerable(Checked_Procedure_Symbol *procedure_
 IR_Program *lower(Checked_Source *checked_source) {
     Lowerer lowerer;
     lowerer.program = IR_Program__create();
+    lowerer.procedure = NULL;
     lowerer.block = NULL;
     lowerer.value_counter = 0;
+    lowerer.block_counter = 0;
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
 

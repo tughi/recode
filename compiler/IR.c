@@ -86,6 +86,20 @@ IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable) {
     return instruction;
 }
 
+IR_Br_Instruction *IR_Br_Instruction__create(IR_Value *condition, IR_Block *true_block, IR_Block *false_block) {
+    IR_Br_Instruction *instruction = (IR_Br_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__BR, sizeof(IR_Br_Instruction));
+    instruction->condition = condition;
+    instruction->true_block = true_block;
+    instruction->false_block = false_block;
+    return instruction;
+}
+
+IR_Jmp_Instruction *IR_Jmp_Instruction__create(IR_Block *block) {
+    IR_Jmp_Instruction *instruction = (IR_Jmp_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__JMP, sizeof(IR_Jmp_Instruction));
+    instruction->block = block;
+    return instruction;
+}
+
 IR_Call_Instruction *IR_Call_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *callee) {
     IR_Call_Instruction *instruction = (IR_Call_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CALL, sizeof(IR_Call_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
@@ -162,6 +176,20 @@ void IR_Block__append_instruction(IR_Block *self, IR_Instruction *instruction) {
         self->last_instruction->next_instruction = instruction;
     }
     self->last_instruction = instruction;
+}
+
+bool IR_Block__is_terminated(IR_Block *self) {
+    if (self->last_instruction == NULL) {
+        return false;
+    }
+    switch (self->last_instruction->kind) {
+    case IR_INSTRUCTION_KIND__BR:
+    case IR_INSTRUCTION_KIND__JMP:
+    case IR_INSTRUCTION_KIND__RET:
+        return true;
+    default:
+        return false;
+    }
 }
 
 IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_type) {
@@ -257,6 +285,15 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = alloc ");
         return pWriter__write__ir_type(self, ((IR_Alloc_Instruction *)instruction)->allocated_type);
+    case IR_INSTRUCTION_KIND__BR: {
+        IR_Br_Instruction *br_instruction = (IR_Br_Instruction *)instruction;
+        pWriter__write__cstring(self, "br ");
+        pWriter__write__ir_value_reference(self, br_instruction->condition);
+        pWriter__write__cstring(self, " @");
+        pWriter__write__uint64(self, br_instruction->true_block->label);
+        pWriter__write__cstring(self, " @");
+        return pWriter__write__uint64(self, br_instruction->false_block->label);
+    }
     case IR_INSTRUCTION_KIND__CALL:
         if (instruction->result.type->kind != IR_TYPE_KIND__NOTHING) {
             pWriter__write__ir_value_definition(self, &instruction->result);
@@ -271,7 +308,13 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
     case IR_INSTRUCTION_KIND__CONST:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = const ");
+        if (instruction->result.type->kind == IR_TYPE_KIND__BOOL) {
+            return pWriter__write__cstring(self, ((IR_Const_Instruction *)instruction)->value ? "true" : "false");
+        }
         return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
+    case IR_INSTRUCTION_KIND__JMP:
+        pWriter__write__cstring(self, "jmp @");
+        return pWriter__write__uint64(self, ((IR_Jmp_Instruction *)instruction)->block->label);
     case IR_INSTRUCTION_KIND__LOAD:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = load ");
