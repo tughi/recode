@@ -41,11 +41,19 @@ IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t p
     return type;
 }
 
+IR_Variable *IR_Variable__create(String *name, IR_Type *type) {
+    IR_Variable *variable = (IR_Variable *)malloc(sizeof(IR_Variable));
+    variable->super.name = name;
+    variable->super.type = type;
+    return variable;
+}
+
 IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type) {
     IR_Value *value = (IR_Value *)malloc(sizeof(IR_Value));
     value->kind = kind;
     value->name = name;
     value->type = type;
+    value->variable = NULL;
     return value;
 }
 
@@ -65,11 +73,24 @@ static IR_Instruction *IR_Instruction__create_kind(IR_Instruction_Kind kind, siz
     return instruction;
 }
 
+IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable) {
+    IR_Alloc_Instruction *instruction = (IR_Alloc_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__ALLOC, sizeof(IR_Alloc_Instruction));
+    String *result_name = String__create_copy(variable->super.name);
+    String__append_cstring(result_name, ".ptr");
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = (IR_Type *)IR_Pointer_Type__create(variable->super.type);
+    instruction->super.result.variable = variable;
+    instruction->allocated_type = variable->super.type;
+    return instruction;
+}
+
 IR_Call_Instruction *IR_Call_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *callee) {
     IR_Call_Instruction *instruction = (IR_Call_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CALL, sizeof(IR_Call_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
     IR_Value_List__append(&instruction->super.operands, callee);
     return instruction;
 }
@@ -79,6 +100,7 @@ IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type 
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
     instruction->value = value;
     return instruction;
 }
@@ -96,8 +118,16 @@ IR_Binary_Instruction *IR_Binary_Instruction__create(IR_Instruction_Kind kind, S
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
     IR_Value_List__append(&instruction->super.operands, left);
     IR_Value_List__append(&instruction->super.operands, right);
+    return instruction;
+}
+
+IR_Store_Instruction *IR_Store_Instruction__create(IR_Value *pointer, IR_Value *value) {
+    IR_Store_Instruction *instruction = (IR_Store_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__STORE, sizeof(IR_Store_Instruction));
+    IR_Value_List__append(&instruction->super.operands, pointer);
+    IR_Value_List__append(&instruction->super.operands, value);
     return instruction;
 }
 
@@ -124,6 +154,7 @@ IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_
     procedure->value.kind = IR_VALUE_KIND__PROCEDURE;
     procedure->value.name = name;
     procedure->value.type = type;
+    procedure->value.variable = NULL;
     procedure->name = name;
     procedure->parameters = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     procedure->return_type = return_type;
@@ -182,6 +213,10 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
         return pWriter__write__cstring(self, "u64");
     case IR_TYPE_KIND__USIZE:
         return pWriter__write__cstring(self, "usize");
+    case IR_TYPE_KIND__POINTER:
+        pWriter__write__char(self, '[');
+        pWriter__write__ir_type(self, ((IR_Pointer_Type *)type)->pointee);
+        return pWriter__write__char(self, ']');
     default:
         pWriter__write__cstring(stderr_writer, "Cannot print IR type kind: ");
         pWriter__write__int64(stderr_writer, type->kind);
@@ -203,6 +238,10 @@ Writer *pWriter__write__ir_value_definition(Writer *self, IR_Value *value) {
 
 Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction) {
     switch (instruction->kind) {
+    case IR_INSTRUCTION_KIND__ALLOC:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = alloc ");
+        return pWriter__write__ir_type(self, ((IR_Alloc_Instruction *)instruction)->allocated_type);
     case IR_INSTRUCTION_KIND__CALL:
         if (instruction->result.type->kind != IR_TYPE_KIND__NOTHING) {
             pWriter__write__ir_value_definition(self, &instruction->result);
@@ -220,6 +259,13 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
     case IR_INSTRUCTION_KIND__RET:
         pWriter__write__cstring(self, "ret");
+        for (size_t i = 0; i < instruction->operands.size; i++) {
+            pWriter__write__char(self, ' ');
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
+        }
+        return self;
+    case IR_INSTRUCTION_KIND__STORE:
+        pWriter__write__cstring(self, "store");
         for (size_t i = 0; i < instruction->operands.size; i++) {
             pWriter__write__char(self, ' ');
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);

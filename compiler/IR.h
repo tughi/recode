@@ -43,6 +43,17 @@ typedef struct IR_Procedure_Type {
 
 IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t parameter_count, IR_Type *return_type);
 
+typedef struct IR_Symbol {
+    String *name;
+    IR_Type *type;
+} IR_Symbol;
+
+typedef struct IR_Variable {
+    IR_Symbol super;
+} IR_Variable;
+
+IR_Variable *IR_Variable__create(String *name, IR_Type *type);
+
 typedef enum IR_Value_Kind {
     IR_VALUE_KIND__INSTRUCTION_RESULT,
     IR_VALUE_KIND__PARAMETER,
@@ -53,6 +64,7 @@ typedef struct IR_Value {
     IR_Value_Kind kind;
     String *name;
     IR_Type *type;
+    IR_Variable *variable;
 } IR_Value;
 
 IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type);
@@ -67,12 +79,14 @@ void IR_Value_List__append(IR_Value_List *self, IR_Value *value);
 
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__ADD,
+    IR_INSTRUCTION_KIND__ALLOC,
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CONST,
     IR_INSTRUCTION_KIND__DIV,
     IR_INSTRUCTION_KIND__MOD,
     IR_INSTRUCTION_KIND__MUL,
     IR_INSTRUCTION_KIND__RET,
+    IR_INSTRUCTION_KIND__STORE,
     IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
 
@@ -82,6 +96,13 @@ typedef struct IR_Instruction {
     IR_Value_List operands;
     struct IR_Instruction *next_instruction;
 } IR_Instruction;
+
+typedef struct IR_Alloc_Instruction {
+    IR_Instruction super;
+    IR_Type *allocated_type;
+} IR_Alloc_Instruction;
+
+IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable);
 
 typedef struct IR_Call_Instruction {
     IR_Instruction super;
@@ -101,6 +122,12 @@ typedef struct IR_Ret_Instruction {
 } IR_Ret_Instruction;
 
 IR_Ret_Instruction *IR_Ret_Instruction__create(IR_Value *value);
+
+typedef struct IR_Store_Instruction {
+    IR_Instruction super;
+} IR_Store_Instruction;
+
+IR_Store_Instruction *IR_Store_Instruction__create(IR_Value *pointer, IR_Value *value);
 
 typedef struct IR_Binary_Instruction {
     IR_Instruction super;

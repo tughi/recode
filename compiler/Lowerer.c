@@ -24,8 +24,10 @@ IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
 
 IR_Value *Lowerer__find_scope(Lowerer *self, String *name) {
     for (size_t i = 0; i < self->scope.size; i++) {
-        if (String__equals_string(self->scope.values[i]->name, name)) {
-            return self->scope.values[i];
+        IR_Value *value = self->scope.values[i];
+        String *value_name = value->variable != NULL ? value->variable->super.name : value->name;
+        if (String__equals_string(value_name, name)) {
+            return value;
         }
     }
     pWriter__write__cstring(stderr_writer, "No IR value in scope named: ");
@@ -182,6 +184,18 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
             value = Lowerer__lower_expression(self, return_statement->expression);
         }
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(value));
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__VARIABLE: {
+        Checked_Variable_Statement *variable_statement = (Checked_Variable_Statement *)statement;
+        IR_Variable *variable = IR_Variable__create(variable_statement->variable->super.name, Lowerer__lower_type(self, variable_statement->variable->super.type));
+        IR_Alloc_Instruction *instruction = IR_Alloc_Instruction__create(variable);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        IR_Value_List__append(&self->scope, &instruction->super.result);
+        if (variable_statement->expression != NULL) {
+            IR_Value *value = Lowerer__lower_expression(self, variable_statement->expression);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&instruction->super.result, value));
+        }
         break;
     }
     default:
