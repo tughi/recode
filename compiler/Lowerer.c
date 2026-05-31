@@ -19,7 +19,7 @@ IR_Block *Lowerer__create_block(Lowerer *self) {
 
 IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
     for (size_t i = 0; i < self->globals.size; i++) {
-        if (String__equals_string(self->globals.values[i]->name, name)) {
+        if (String__equals__value_name(self->globals.values[i]->name, '$', name)) {
             return self->globals.values[i];
         }
     }
@@ -32,8 +32,8 @@ IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
 IR_Value *Lowerer__find_scope(Lowerer *self, String *name) {
     for (size_t i = 0; i < self->scope.size; i++) {
         IR_Value *value = self->scope.values[i];
-        String *value_name = value->variable != NULL ? value->variable->super.name : value->name;
-        if (String__equals_string(value_name, name)) {
+        String *value_name = value->variable != NULL ? value->variable->super.value.name : value->name;
+        if (String__equals__value_name(value_name, '%', name)) {
             return value;
         }
     }
@@ -46,6 +46,7 @@ IR_Value *Lowerer__find_scope(Lowerer *self, String *name) {
 String *Lowerer__fresh_name(Lowerer *self) {
     self->value_counter++;
     String *name = String__create();
+    String__append_char(name, '%');
     String__append_int16_t(name, self->value_counter);
     return name;
 }
@@ -188,8 +189,8 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block *right_block = Lowerer__create_block(self);
         IR_Block *end_block = Lowerer__create_block(self);
         IR_Br_Instruction *branch = expression->kind == CHECKED_EXPRESSION_KIND__LOGIC_AND
-            ? IR_Br_Instruction__create(left, right_block, end_block)
-            : IR_Br_Instruction__create(left, end_block, right_block);
+                                        ? IR_Br_Instruction__create(left, right_block, end_block)
+                                        : IR_Br_Instruction__create(left, end_block, right_block);
         IR_Block__append_instruction(self->block, (IR_Instruction *)branch);
         IR_Procedure__append_block(self->procedure, right_block);
         self->block = right_block;
@@ -323,29 +324,48 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     }
 }
 
-void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
-    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
-    IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
-
-    size_t parameter_count = 0;
+IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *checked_procedure_type, size_t *parameter_count) {
+    size_t count = 0;
     for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
-        parameter_count++;
+        count++;
     }
-    IR_Type **parameter_types = parameter_count > 0 ? (IR_Type **)malloc(parameter_count * sizeof(IR_Type *)) : NULL;
+    IR_Type **parameter_types = count > 0 ? (IR_Type **)malloc(count * sizeof(IR_Type *)) : NULL;
     size_t parameter_index = 0;
     for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
         parameter_types[parameter_index++] = Lowerer__lower_type(self, parameter->type);
     }
+    *parameter_count = count;
+    return parameter_types;
+}
+
+void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
+    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
+    IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
+
+    size_t parameter_count;
+    IR_Type **parameter_types = Lowerer__lower_parameter_types(self, checked_procedure_type, &parameter_count);
+
+    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->super.name, parameter_types, parameter_count, return_type);
+    IR_Program__append_procedure(self->program, procedure);
+    IR_Value_List__append(&self->globals, &procedure->super.value);
+
+    size_t parameter_index = 0;
+    for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
+        IR_Value_List__append(&procedure->parameters, IR_Value__create(IR_VALUE_KIND__PARAMETER, IR__value_name('%', parameter->name), parameter_types[parameter_index++]));
+    }
+}
+
+void Lowerer__declare_external_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
+    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
+    IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
+
+    size_t parameter_count;
+    IR_Type **parameter_types = Lowerer__lower_parameter_types(self, checked_procedure_type, &parameter_count);
 
     IR_Type *procedure_type = (IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type);
-    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->super.name, (IR_Type *)IR_Pointer_Type__create(procedure_type), return_type);
-    IR_Program__append_procedure(self->program, procedure);
-    IR_Value_List__append(&self->globals, &procedure->value);
-
-    parameter_index = 0;
-    for (Checked_Procedure_Parameter *parameter = checked_procedure_type->first_parameter; parameter != NULL; parameter = parameter->next_parameter) {
-        IR_Value_List__append(&procedure->parameters, IR_Value__create(IR_VALUE_KIND__PARAMETER, parameter->name, parameter_types[parameter_index++]));
-    }
+    IR_Global *global = IR_Global__create(procedure_symbol->super.name, (IR_Type *)IR_Pointer_Type__create(procedure_type));
+    IR_Program__append_global(self->program, global);
+    IR_Value_List__append(&self->globals, &global->super.value);
 }
 
 void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
@@ -389,8 +409,12 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
 
     for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
-        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
-            Lowerer__declare_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            if (Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
+                Lowerer__declare_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
+            } else {
+                Lowerer__declare_external_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
+            }
         }
     }
 

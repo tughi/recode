@@ -41,12 +41,43 @@ IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t p
     return type;
 }
 
+String *IR__value_name(char sigil, String *name) {
+    String *result = String__create();
+    String__append_char(result, sigil);
+    String__append_string(result, name);
+    return result;
+}
+
+bool String__equals__value_name(String *self, char sigil, String *name) {
+    if (self->length != name->length + 1 || self->data[0] != sigil) {
+        return false;
+    }
+    for (size_t i = 0; i < name->length; i++) {
+        if (self->data[i + 1] != name->data[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 IR_Variable *IR_Variable__create(String *name, IR_Type *type) {
     IR_Variable *variable = (IR_Variable *)malloc(sizeof(IR_Variable));
-    variable->super.name = name;
-    variable->super.type = type;
+    variable->super.value.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    variable->super.value.name = IR__value_name('%', name);
+    variable->super.value.type = type;
+    variable->super.value.variable = NULL;
     variable->version = 0;
     return variable;
+}
+
+IR_Global *IR_Global__create(String *name, IR_Type *type) {
+    IR_Global *global = (IR_Global *)malloc(sizeof(IR_Global));
+    global->super.value.kind = IR_VALUE_KIND__GLOBAL;
+    global->super.value.name = IR__value_name('$', name);
+    global->super.value.type = type;
+    global->super.value.variable = NULL;
+    global->next_global = NULL;
+    return global;
 }
 
 IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type) {
@@ -84,13 +115,13 @@ static IR_Instruction *IR_Instruction__create_kind(IR_Instruction_Kind kind, siz
 
 IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable) {
     IR_Alloc_Instruction *instruction = (IR_Alloc_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__ALLOC, sizeof(IR_Alloc_Instruction));
-    String *result_name = String__create_copy(variable->super.name);
+    String *result_name = String__create_copy(variable->super.value.name);
     String__append_cstring(result_name, ".ptr");
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
-    instruction->super.result.type = (IR_Type *)IR_Pointer_Type__create(variable->super.type);
+    instruction->super.result.type = (IR_Type *)IR_Pointer_Type__create(variable->super.value.type);
     instruction->super.result.variable = variable;
-    instruction->allocated_type = variable->super.type;
+    instruction->allocated_type = variable->super.value.type;
     return instruction;
 }
 
@@ -131,12 +162,12 @@ IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type 
 IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer) {
     IR_Load_Instruction *instruction = (IR_Load_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__LOAD, sizeof(IR_Load_Instruction));
     variable->version++;
-    String *result_name = String__create_copy(variable->super.name);
+    String *result_name = String__create_copy(variable->super.value.name);
     String__append_char(result_name, '.');
     String__append_int16_t(result_name, variable->version);
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
-    instruction->super.result.type = variable->super.type;
+    instruction->super.result.type = variable->super.value.type;
     instruction->super.result.variable = variable;
     IR_Value_List__append(&instruction->super.operands, pointer);
     return instruction;
@@ -220,13 +251,13 @@ bool IR_Block__is_terminated(IR_Block *self) {
     }
 }
 
-IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_type) {
+IR_Procedure *IR_Procedure__create(String *name, IR_Type **parameter_types, size_t parameter_count, IR_Type *return_type) {
     IR_Procedure *procedure = (IR_Procedure *)malloc(sizeof(IR_Procedure));
-    procedure->value.kind = IR_VALUE_KIND__PROCEDURE;
-    procedure->value.name = name;
-    procedure->value.type = type;
-    procedure->value.variable = NULL;
-    procedure->name = name;
+    IR_Procedure_Type *procedure_type = IR_Procedure_Type__create(parameter_types, parameter_count, return_type);
+    procedure->super.value.kind = IR_VALUE_KIND__PROCEDURE;
+    procedure->super.value.name = IR__value_name('$', name);
+    procedure->super.value.type = (IR_Type *)IR_Pointer_Type__create((IR_Type *)procedure_type);
+    procedure->super.value.variable = NULL;
     procedure->parameters = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     procedure->return_type = return_type;
     procedure->first_block = NULL;
@@ -246,9 +277,20 @@ void IR_Procedure__append_block(IR_Procedure *self, IR_Block *block) {
 
 IR_Program *IR_Program__create() {
     IR_Program *program = (IR_Program *)malloc(sizeof(IR_Program));
+    program->first_global = NULL;
+    program->last_global = NULL;
     program->first_procedure = NULL;
     program->last_procedure = NULL;
     return program;
+}
+
+void IR_Program__append_global(IR_Program *self, IR_Global *global) {
+    if (self->first_global == NULL) {
+        self->first_global = global;
+    } else {
+        self->last_global->next_global = global;
+    }
+    self->last_global = global;
 }
 
 void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure) {
@@ -288,6 +330,22 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
         pWriter__write__char(self, '[');
         pWriter__write__ir_type(self, ((IR_Pointer_Type *)type)->pointee);
         return pWriter__write__char(self, ']');
+    case IR_TYPE_KIND__PROCEDURE: {
+        IR_Procedure_Type *procedure_type = (IR_Procedure_Type *)type;
+        pWriter__write__cstring(self, "proc (");
+        for (size_t i = 0; i < procedure_type->parameter_count; i++) {
+            if (i > 0) {
+                pWriter__write__cstring(self, ", ");
+            }
+            pWriter__write__ir_type(self, procedure_type->parameter_types[i]);
+        }
+        pWriter__write__char(self, ')');
+        if (procedure_type->return_type->kind != IR_TYPE_KIND__NOTHING) {
+            pWriter__write__cstring(self, ": ");
+            pWriter__write__ir_type(self, procedure_type->return_type);
+        }
+        return self;
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Cannot print IR type kind: ");
         pWriter__write__int64(stderr_writer, type->kind);
@@ -297,7 +355,6 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
 }
 
 Writer *pWriter__write__ir_value_reference(Writer *self, IR_Value *value) {
-    pWriter__write__char(self, value->kind == IR_VALUE_KIND__PROCEDURE ? '$' : '%');
     return pWriter__write__string(self, value->name);
 }
 
@@ -453,8 +510,7 @@ Writer *pWriter__write__ir_block(Writer *self, IR_Block *block) {
 }
 
 Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
-    pWriter__write__char(self, '$');
-    pWriter__write__string(self, procedure->name);
+    pWriter__write__string(self, procedure->super.value.name);
     pWriter__write__char(self, '(');
     if (procedure->parameters.size > 0) {
         pWriter__write__ir_value_definition(self, procedure->parameters.values[0]);
@@ -479,16 +535,25 @@ Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
     return pWriter__end_line(self);
 }
 
+Writer *pWriter__write__ir_global(Writer *self, IR_Global *global) {
+    pWriter__write__string(self, global->super.value.name);
+    pWriter__write__cstring(self, ": ");
+    pWriter__write__ir_type(self, global->super.value.type);
+    pWriter__write__cstring(self, " = external");
+    return pWriter__end_line(self);
+}
+
 Writer *pWriter__write__ir_program(Writer *self, IR_Program *program) {
-    IR_Procedure *procedure = program->first_procedure;
-    bool first = true;
-    while (procedure != NULL) {
+    for (IR_Global *global = program->first_global; global != NULL; global = global->next_global) {
+        pWriter__write__ir_global(self, global);
+    }
+    bool first = program->first_global == NULL;
+    for (IR_Procedure *procedure = program->first_procedure; procedure != NULL; procedure = procedure->next_procedure) {
         if (!first) {
             pWriter__end_line(self);
         }
         first = false;
         pWriter__write__ir_procedure(self, procedure);
-        procedure = procedure->next_procedure;
     }
     return self;
 }

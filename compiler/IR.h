@@ -43,19 +43,10 @@ typedef struct IR_Procedure_Type {
 
 IR_Procedure_Type *IR_Procedure_Type__create(IR_Type **parameter_types, size_t parameter_count, IR_Type *return_type);
 
-typedef struct IR_Symbol {
-    String *name;
-    IR_Type *type;
-} IR_Symbol;
-
-typedef struct IR_Variable {
-    IR_Symbol super;
-    int32_t version;
-} IR_Variable;
-
-IR_Variable *IR_Variable__create(String *name, IR_Type *type);
+typedef struct IR_Variable IR_Variable;
 
 typedef enum IR_Value_Kind {
+    IR_VALUE_KIND__GLOBAL,
     IR_VALUE_KIND__INSTRUCTION_RESULT,
     IR_VALUE_KIND__PARAMETER,
     IR_VALUE_KIND__PROCEDURE,
@@ -69,6 +60,28 @@ typedef struct IR_Value {
 } IR_Value;
 
 IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type);
+
+String *IR__value_name(char sigil, String *name);
+
+bool String__equals__value_name(String *self, char sigil, String *name);
+
+typedef struct IR_Symbol {
+    IR_Value value;
+} IR_Symbol;
+
+typedef struct IR_Variable {
+    IR_Symbol super;
+    int32_t version;
+} IR_Variable;
+
+IR_Variable *IR_Variable__create(String *name, IR_Type *type);
+
+typedef struct IR_Global {
+    IR_Symbol super;
+    struct IR_Global *next_global;
+} IR_Global;
+
+IR_Global *IR_Global__create(String *name, IR_Type *type);
 
 typedef struct IR_Value_List {
     IR_Value **values;
@@ -206,8 +219,7 @@ void IR_Block__append_instruction(IR_Block *self, IR_Instruction *instruction);
 bool IR_Block__is_terminated(IR_Block *self);
 
 typedef struct IR_Procedure {
-    IR_Value value;
-    String *name;
+    IR_Symbol super;
     IR_Value_List parameters;
     IR_Type *return_type;
     IR_Block *first_block;
@@ -215,16 +227,20 @@ typedef struct IR_Procedure {
     struct IR_Procedure *next_procedure;
 } IR_Procedure;
 
-IR_Procedure *IR_Procedure__create(String *name, IR_Type *type, IR_Type *return_type);
+IR_Procedure *IR_Procedure__create(String *name, IR_Type **parameter_types, size_t parameter_count, IR_Type *return_type);
 
 void IR_Procedure__append_block(IR_Procedure *self, IR_Block *block);
 
 typedef struct IR_Program {
+    IR_Global *first_global;
+    IR_Global *last_global;
     IR_Procedure *first_procedure;
     IR_Procedure *last_procedure;
 } IR_Program;
 
 IR_Program *IR_Program__create();
+
+void IR_Program__append_global(IR_Program *self, IR_Global *global);
 
 void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure);
 

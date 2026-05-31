@@ -1,8 +1,0 @@
-{
-    "compile": {
-        "error": 1,
-        "stderr": [
-            "tests/01__basics/013__external_procedure_with_argument_label/test.code:1:11-15: External procedures can have only anon parameters"
-        ]
-    }
-}
