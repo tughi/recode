@@ -169,6 +169,20 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
 
 void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     switch (statement->kind) {
+    case CHECKED_STATEMENT_KIND__ASSIGNMENT: {
+        Checked_Assignment_Statement *assignment_statement = (Checked_Assignment_Statement *)statement;
+        if (assignment_statement->object_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
+            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: assignment target expression kind ");
+            pWriter__write__int64(stderr_writer, assignment_statement->object_expression->kind);
+            pWriter__end_line(stderr_writer);
+            panic();
+        }
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)assignment_statement->object_expression)->symbol;
+        IR_Value *pointer = Lowerer__find_scope(self, symbol->name);
+        IR_Value *value = Lowerer__lower_expression(self, assignment_statement->value_expression);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(pointer, value));
+        break;
+    }
     case CHECKED_STATEMENT_KIND__BLOCK: {
         Checked_Block_Statement *block_statement = (Checked_Block_Statement *)statement;
         Checked_Statement *child_statement = block_statement->statements->first_statement;
