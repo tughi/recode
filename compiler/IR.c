@@ -378,6 +378,12 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         }
         return self;
     case IR_INSTRUCTION_KIND__ADD:
+    case IR_INSTRUCTION_KIND__CMP_EQ:
+    case IR_INSTRUCTION_KIND__CMP_GE:
+    case IR_INSTRUCTION_KIND__CMP_GT:
+    case IR_INSTRUCTION_KIND__CMP_LE:
+    case IR_INSTRUCTION_KIND__CMP_LT:
+    case IR_INSTRUCTION_KIND__CMP_NE:
     case IR_INSTRUCTION_KIND__DIV:
     case IR_INSTRUCTION_KIND__MOD:
     case IR_INSTRUCTION_KIND__MUL:
@@ -386,6 +392,24 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         switch (instruction->kind) {
         case IR_INSTRUCTION_KIND__ADD:
             pWriter__write__cstring(self, " = add");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_EQ:
+            pWriter__write__cstring(self, " = cmp_eq");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_GE:
+            pWriter__write__cstring(self, " = cmp_ge");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_GT:
+            pWriter__write__cstring(self, " = cmp_gt");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_LE:
+            pWriter__write__cstring(self, " = cmp_le");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_LT:
+            pWriter__write__cstring(self, " = cmp_lt");
+            break;
+        case IR_INSTRUCTION_KIND__CMP_NE:
+            pWriter__write__cstring(self, " = cmp_ne");
             break;
         case IR_INSTRUCTION_KIND__DIV:
             pWriter__write__cstring(self, " = div");

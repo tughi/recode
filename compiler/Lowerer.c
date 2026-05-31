@@ -128,8 +128,14 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     }
     case CHECKED_EXPRESSION_KIND__ADD:
     case CHECKED_EXPRESSION_KIND__DIVIDE:
+    case CHECKED_EXPRESSION_KIND__EQUALS:
+    case CHECKED_EXPRESSION_KIND__GREATER:
+    case CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS:
+    case CHECKED_EXPRESSION_KIND__LESS:
+    case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
     case CHECKED_EXPRESSION_KIND__MODULO:
     case CHECKED_EXPRESSION_KIND__MULTIPLY:
+    case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
     case CHECKED_EXPRESSION_KIND__SUBTRACT: {
         Checked_Binary_Expression *binary_expression = (Checked_Binary_Expression *)expression;
         IR_Value *left = Lowerer__lower_expression(self, binary_expression->left_expression);
@@ -142,11 +148,29 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         case CHECKED_EXPRESSION_KIND__DIVIDE:
             kind = IR_INSTRUCTION_KIND__DIV;
             break;
+        case CHECKED_EXPRESSION_KIND__EQUALS:
+            kind = IR_INSTRUCTION_KIND__CMP_EQ;
+            break;
+        case CHECKED_EXPRESSION_KIND__GREATER:
+            kind = IR_INSTRUCTION_KIND__CMP_GT;
+            break;
+        case CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS:
+            kind = IR_INSTRUCTION_KIND__CMP_GE;
+            break;
+        case CHECKED_EXPRESSION_KIND__LESS:
+            kind = IR_INSTRUCTION_KIND__CMP_LT;
+            break;
+        case CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS:
+            kind = IR_INSTRUCTION_KIND__CMP_LE;
+            break;
         case CHECKED_EXPRESSION_KIND__MODULO:
             kind = IR_INSTRUCTION_KIND__MOD;
             break;
         case CHECKED_EXPRESSION_KIND__MULTIPLY:
             kind = IR_INSTRUCTION_KIND__MUL;
+            break;
+        case CHECKED_EXPRESSION_KIND__NOT_EQUALS:
+            kind = IR_INSTRUCTION_KIND__CMP_NE;
             break;
         default:
             kind = IR_INSTRUCTION_KIND__SUB;
