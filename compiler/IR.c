@@ -45,6 +45,7 @@ IR_Variable *IR_Variable__create(String *name, IR_Type *type) {
     IR_Variable *variable = (IR_Variable *)malloc(sizeof(IR_Variable));
     variable->super.name = name;
     variable->super.type = type;
+    variable->version = 0;
     return variable;
 }
 
@@ -102,6 +103,20 @@ IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type 
     instruction->super.result.type = result_type;
     instruction->super.result.variable = NULL;
     instruction->value = value;
+    return instruction;
+}
+
+IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer) {
+    IR_Load_Instruction *instruction = (IR_Load_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__LOAD, sizeof(IR_Load_Instruction));
+    variable->version++;
+    String *result_name = String__create_copy(variable->super.name);
+    String__append_char(result_name, '.');
+    String__append_int16_t(result_name, variable->version);
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = variable->super.type;
+    instruction->super.result.variable = variable;
+    IR_Value_List__append(&instruction->super.operands, pointer);
     return instruction;
 }
 
@@ -257,6 +272,10 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = const ");
         return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
+    case IR_INSTRUCTION_KIND__LOAD:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = load ");
+        return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
     case IR_INSTRUCTION_KIND__RET:
         pWriter__write__cstring(self, "ret");
         for (size_t i = 0; i < instruction->operands.size; i++) {

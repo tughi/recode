@@ -50,6 +50,7 @@ typedef struct IR_Symbol {
 
 typedef struct IR_Variable {
     IR_Symbol super;
+    int32_t version;
 } IR_Variable;
 
 IR_Variable *IR_Variable__create(String *name, IR_Type *type);
@@ -83,6 +84,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CONST,
     IR_INSTRUCTION_KIND__DIV,
+    IR_INSTRUCTION_KIND__LOAD,
     IR_INSTRUCTION_KIND__MOD,
     IR_INSTRUCTION_KIND__MUL,
     IR_INSTRUCTION_KIND__RET,
@@ -116,6 +118,12 @@ typedef struct IR_Const_Instruction {
 } IR_Const_Instruction;
 
 IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value);
+
+typedef struct IR_Load_Instruction {
+    IR_Instruction super;
+} IR_Load_Instruction;
+
+IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer);
 
 typedef struct IR_Ret_Instruction {
     IR_Instruction super;

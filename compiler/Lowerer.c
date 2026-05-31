@@ -145,13 +145,19 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     }
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
-        if (symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
-            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: symbol kind ");
-            pWriter__write__int64(stderr_writer, symbol->kind);
-            pWriter__end_line(stderr_writer);
-            panic();
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
+            return Lowerer__find_scope(self, symbol->name);
         }
-        return Lowerer__find_scope(self, symbol->name);
+        if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
+            IR_Value *pointer = Lowerer__find_scope(self, symbol->name);
+            IR_Load_Instruction *instruction = IR_Load_Instruction__create(pointer->variable, pointer);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+            return &instruction->super.result;
+        }
+        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: symbol kind ");
+        pWriter__write__int64(stderr_writer, symbol->kind);
+        pWriter__end_line(stderr_writer);
+        panic();
     }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: expression kind ");
