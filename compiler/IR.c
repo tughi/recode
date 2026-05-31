@@ -66,6 +66,14 @@ void IR_Value_List__append(IR_Value_List *self, IR_Value *value) {
     self->values[self->size++] = value;
 }
 
+void IR_Block_List__append(IR_Block_List *self, IR_Block *block) {
+    if (self->size == self->capacity) {
+        self->capacity = self->capacity == 0 ? 4 : self->capacity * 2;
+        self->blocks = (IR_Block **)realloc(self->blocks, self->capacity * sizeof(IR_Block *));
+    }
+    self->blocks[self->size++] = block;
+}
+
 static IR_Instruction *IR_Instruction__create_kind(IR_Instruction_Kind kind, size_t size) {
     IR_Instruction *instruction = (IR_Instruction *)malloc(size);
     instruction->kind = kind;
@@ -131,6 +139,26 @@ IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value
     instruction->super.result.type = variable->super.type;
     instruction->super.result.variable = variable;
     IR_Value_List__append(&instruction->super.operands, pointer);
+    return instruction;
+}
+
+IR_Not_Instruction *IR_Not_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value) {
+    IR_Not_Instruction *instruction = (IR_Not_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__NOT, sizeof(IR_Not_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    IR_Value_List__append(&instruction->super.operands, value);
+    return instruction;
+}
+
+IR_Phi_Instruction *IR_Phi_Instruction__create(String *result_name, IR_Type *result_type) {
+    IR_Phi_Instruction *instruction = (IR_Phi_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__PHI, sizeof(IR_Phi_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    instruction->blocks = (IR_Block_List){.blocks = NULL, .size = 0, .capacity = 0};
     return instruction;
 }
 
@@ -319,6 +347,22 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = load ");
         return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
+    case IR_INSTRUCTION_KIND__NOT:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = not ");
+        return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
+    case IR_INSTRUCTION_KIND__PHI: {
+        IR_Phi_Instruction *phi_instruction = (IR_Phi_Instruction *)instruction;
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = phi");
+        for (size_t i = 0; i < instruction->operands.size; i++) {
+            pWriter__write__cstring(self, " @");
+            pWriter__write__uint64(self, phi_instruction->blocks.blocks[i]->label);
+            pWriter__write__char(self, ' ');
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
+        }
+        return self;
+    }
     case IR_INSTRUCTION_KIND__RET:
         pWriter__write__cstring(self, "ret");
         for (size_t i = 0; i < instruction->operands.size; i++) {

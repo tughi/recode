@@ -156,6 +156,41 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__LOGIC_AND:
+    case CHECKED_EXPRESSION_KIND__LOGIC_OR: {
+        Checked_Binary_Expression *binary_expression = (Checked_Binary_Expression *)expression;
+        IR_Value *left = Lowerer__lower_expression(self, binary_expression->left_expression);
+        IR_Block *left_block = self->block;
+        IR_Block *right_block = Lowerer__create_block(self);
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Br_Instruction *branch = expression->kind == CHECKED_EXPRESSION_KIND__LOGIC_AND
+            ? IR_Br_Instruction__create(left, right_block, end_block)
+            : IR_Br_Instruction__create(left, end_block, right_block);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)branch);
+        IR_Procedure__append_block(self->procedure, right_block);
+        self->block = right_block;
+        IR_Value *right = Lowerer__lower_expression(self, binary_expression->right_expression);
+        IR_Block *right_end_block = self->block;
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        IR_Phi_Instruction *instruction = IR_Phi_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type));
+        IR_Block_List__append(&instruction->blocks, left_block);
+        IR_Value_List__append(&instruction->super.operands, left);
+        IR_Block_List__append(&instruction->blocks, right_end_block);
+        IR_Value_List__append(&instruction->super.operands, right);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__NOT: {
+        Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
+        IR_Value *value = Lowerer__lower_expression(self, unary_expression->other_expression);
+        IR_Not_Instruction *instruction = IR_Not_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__GROUP:
+        return Lowerer__lower_expression(self, ((Checked_Group_Expression *)expression)->other_expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {

@@ -89,12 +89,22 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__LOAD,
     IR_INSTRUCTION_KIND__MOD,
     IR_INSTRUCTION_KIND__MUL,
+    IR_INSTRUCTION_KIND__NOT,
+    IR_INSTRUCTION_KIND__PHI,
     IR_INSTRUCTION_KIND__RET,
     IR_INSTRUCTION_KIND__STORE,
     IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
 
 typedef struct IR_Block IR_Block;
+
+typedef struct IR_Block_List {
+    IR_Block **blocks;
+    size_t size;
+    size_t capacity;
+} IR_Block_List;
+
+void IR_Block_List__append(IR_Block_List *self, IR_Block *block);
 
 typedef struct IR_Instruction {
     IR_Value result;
@@ -144,6 +154,19 @@ typedef struct IR_Load_Instruction {
 } IR_Load_Instruction;
 
 IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer);
+
+typedef struct IR_Not_Instruction {
+    IR_Instruction super;
+} IR_Not_Instruction;
+
+IR_Not_Instruction *IR_Not_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value);
+
+typedef struct IR_Phi_Instruction {
+    IR_Instruction super;
+    IR_Block_List blocks;
+} IR_Phi_Instruction;
+
+IR_Phi_Instruction *IR_Phi_Instruction__create(String *result_name, IR_Type *result_type);
 
 typedef struct IR_Ret_Instruction {
     IR_Instruction super;
