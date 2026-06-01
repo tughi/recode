@@ -52,6 +52,8 @@ String *Lowerer__fresh_name(Lowerer *self) {
     return name;
 }
 
+IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *checked_procedure_type, size_t *parameter_count);
+
 IR_Type *Lowerer__lower_external_type(Lowerer *self, String *name) {
     for (IR_Named_Type *type = self->program->first_type; type != NULL; type = type->next_type) {
         if (String__equals_string(type->name, name)) {
@@ -83,6 +85,13 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__NOTHING);
     case CHECKED_TYPE_KIND__POINTER:
         return (IR_Type *)IR_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Pointer_Type *)type)->other_type));
+    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
+        Checked_Procedure_Type *procedure_type = ((Checked_Procedure_Pointer_Type *)type)->procedure_type;
+        IR_Type *return_type = Lowerer__lower_type(self, procedure_type->return_type);
+        size_t parameter_count;
+        IR_Type **parameter_types = Lowerer__lower_parameter_types(self, procedure_type, &parameter_count);
+        return (IR_Type *)IR_Pointer_Type__create((IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type));
+    }
     case CHECKED_TYPE_KIND__U8:
         return IR_Type__get(IR_TYPE_KIND__U8);
     case CHECKED_TYPE_KIND__U16:
@@ -105,19 +114,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__CALL: {
         Checked_Call_Expression *call_expression = (Checked_Call_Expression *)expression;
-        if (call_expression->callee_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
-            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: indirect call");
-            pWriter__end_line(stderr_writer);
-            panic();
-        }
-        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)call_expression->callee_expression)->symbol;
-        if (symbol->kind != CHECKED_SYMBOL_KIND__PROCEDURE) {
-            pWriter__write__cstring(stderr_writer, "Lowering not supported yet: callee symbol kind ");
-            pWriter__write__int64(stderr_writer, symbol->kind);
-            pWriter__end_line(stderr_writer);
-            panic();
-        }
-        IR_Value *callee = Lowerer__find_global(self, symbol->name);
+        IR_Value *callee = Lowerer__lower_expression(self, call_expression->callee_expression);
         IR_Value_List arguments = {.values = NULL, .size = 0, .capacity = 0};
         for (Checked_Call_Argument *argument = call_expression->first_argument; argument != NULL; argument = argument->next_argument) {
             IR_Value_List__append(&arguments, Lowerer__lower_expression(self, argument->expression));
@@ -260,6 +257,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         return Lowerer__lower_expression(self, ((Checked_Group_Expression *)expression)->other_expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            return Lowerer__find_global(self, symbol->name);
+        }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
             return Lowerer__find_scope(self, symbol->name);
         }
