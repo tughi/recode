@@ -6,6 +6,7 @@
 #include "Writer.h"
 
 typedef enum IR_Type_Kind {
+    IR_TYPE_KIND__ANY,
     IR_TYPE_KIND__BOOL,
     IR_TYPE_KIND__I8,
     IR_TYPE_KIND__I16,

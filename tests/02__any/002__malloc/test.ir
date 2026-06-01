@@ -1,0 +1,11 @@
+$malloc: [proc (usize): [Any]] = external
+
+$main(): i32 {
+@1:
+  %mem.ptr: [[Any]] = alloc [Any]
+  %1: usize = const 42
+  %2: [Any] = call $malloc %1
+  store %mem.ptr %2
+  %3: i32 = const 0
+  ret %3
+}

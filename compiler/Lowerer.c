@@ -67,6 +67,8 @@ IR_Type *Lowerer__lower_external_type(Lowerer *self, String *name) {
 
 IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     switch (type->kind) {
+    case CHECKED_TYPE_KIND__ANY:
+        return IR_Type__get(IR_TYPE_KIND__ANY);
     case CHECKED_TYPE_KIND__BOOL:
         return IR_Type__get(IR_TYPE_KIND__BOOL);
     case CHECKED_TYPE_KIND__EXTERNAL:

@@ -3,6 +3,7 @@
 #include "File.h"
 
 static IR_Type IR_TYPES[] = {
+    [IR_TYPE_KIND__ANY] = {.kind = IR_TYPE_KIND__ANY},
     [IR_TYPE_KIND__BOOL] = {.kind = IR_TYPE_KIND__BOOL},
     [IR_TYPE_KIND__I8] = {.kind = IR_TYPE_KIND__I8},
     [IR_TYPE_KIND__I16] = {.kind = IR_TYPE_KIND__I16},
@@ -377,6 +378,8 @@ void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure) {
 
 Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
     switch (type->kind) {
+    case IR_TYPE_KIND__ANY:
+        return pWriter__write__cstring(self, "Any");
     case IR_TYPE_KIND__BOOL:
         return pWriter__write__cstring(self, "bool");
     case IR_TYPE_KIND__I8:
