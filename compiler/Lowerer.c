@@ -8,6 +8,7 @@ typedef struct Lowerer {
     IR_Block *block;
     int32_t value_counter;
     int32_t block_counter;
+    IR_Block *break_block;
     IR_Value_List globals;
     IR_Value_List scope;
 } Lowerer;
@@ -265,6 +266,10 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         }
         break;
     }
+    case CHECKED_STATEMENT_KIND__BREAK: {
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(self->break_block));
+        break;
+    }
     case CHECKED_STATEMENT_KIND__EXPRESSION: {
         Checked_Expression_Statement *expression_statement = (Checked_Expression_Statement *)statement;
         Lowerer__lower_expression(self, expression_statement->expression);
@@ -328,7 +333,10 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(condition, body_block, end_block));
         IR_Procedure__append_block(self->procedure, body_block);
         self->block = body_block;
+        IR_Block *outer_break_block = self->break_block;
+        self->break_block = end_block;
         Lowerer__lower_statement(self, while_statement->body_statement);
+        self->break_block = outer_break_block;
         if (!IR_Block__is_terminated(self->block)) {
             IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(condition_block));
         }
@@ -425,6 +433,7 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.block = NULL;
     lowerer.value_counter = 0;
     lowerer.block_counter = 0;
+    lowerer.break_block = NULL;
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
 
