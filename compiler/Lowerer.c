@@ -260,6 +260,11 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__NULL: {
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), 0, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__GROUP:
         return Lowerer__lower_expression(self, ((Checked_Group_Expression *)expression)->other_expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL: {

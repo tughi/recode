@@ -437,6 +437,9 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         if (instruction->result.type->kind == IR_TYPE_KIND__BOOL) {
             return pWriter__write__cstring(self, ((IR_Const_Instruction *)instruction)->value ? "true" : "false");
         }
+        if (instruction->result.type->kind == IR_TYPE_KIND__POINTER) {
+            return pWriter__write__cstring(self, "null");
+        }
         if (((IR_Const_Instruction *)instruction)->literal != NULL) {
             return pWriter__write__string(self, ((IR_Const_Instruction *)instruction)->literal->lexeme);
         }
