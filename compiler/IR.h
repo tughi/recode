@@ -173,7 +173,7 @@ typedef struct IR_Load_Instruction {
     IR_Instruction super;
 } IR_Load_Instruction;
 
-IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer);
+IR_Load_Instruction *IR_Load_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer);
 
 typedef struct IR_Neg_Instruction {
     IR_Instruction super;

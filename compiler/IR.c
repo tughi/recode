@@ -159,16 +159,12 @@ IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type 
     return instruction;
 }
 
-IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer) {
+IR_Load_Instruction *IR_Load_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer) {
     IR_Load_Instruction *instruction = (IR_Load_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__LOAD, sizeof(IR_Load_Instruction));
-    variable->version++;
-    String *result_name = String__create_copy(variable->super.value.name);
-    String__append_char(result_name, '.');
-    String__append_int16_t(result_name, variable->version);
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
-    instruction->super.result.type = variable->super.value.type;
-    instruction->super.result.variable = variable;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
     IR_Value_List__append(&instruction->super.operands, pointer);
     return instruction;
 }
