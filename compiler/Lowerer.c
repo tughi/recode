@@ -316,6 +316,26 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         }
         break;
     }
+    case CHECKED_STATEMENT_KIND__WHILE: {
+        Checked_While_Statement *while_statement = (Checked_While_Statement *)statement;
+        IR_Block *condition_block = Lowerer__create_block(self);
+        IR_Block *body_block = Lowerer__create_block(self);
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(condition_block));
+        IR_Procedure__append_block(self->procedure, condition_block);
+        self->block = condition_block;
+        IR_Value *condition = Lowerer__lower_expression(self, while_statement->condition_expression);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(condition, body_block, end_block));
+        IR_Procedure__append_block(self->procedure, body_block);
+        self->block = body_block;
+        Lowerer__lower_statement(self, while_statement->body_statement);
+        if (!IR_Block__is_terminated(self->block)) {
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(condition_block));
+        }
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        break;
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: statement kind ");
         pWriter__write__int64(stderr_writer, statement->kind);
