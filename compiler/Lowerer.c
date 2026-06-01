@@ -223,6 +223,25 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__ADDRESS_OF: {
+        Checked_Expression *operand = ((Checked_Unary_Expression *)expression)->other_expression;
+        if (operand->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
+            Checked_Symbol *symbol = ((Checked_Symbol_Expression *)operand)->symbol;
+            if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
+                return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol->name);
+            }
+        }
+        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: address-of expression");
+        pWriter__end_line(stderr_writer);
+        panic();
+    }
+    case CHECKED_EXPRESSION_KIND__DEREFERENCE: {
+        Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
+        IR_Value *pointer = Lowerer__lower_expression(self, unary_expression->other_expression);
+        IR_Load_Instruction *instruction = IR_Load_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), pointer);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__MINUS: {
         Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
         IR_Value *value = Lowerer__lower_expression(self, unary_expression->other_expression);
