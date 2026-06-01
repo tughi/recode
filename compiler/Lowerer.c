@@ -300,6 +300,24 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         self->block = end_block;
         break;
     }
+    case CHECKED_STATEMENT_KIND__LOOP: {
+        Checked_Loop_Statement *loop_statement = (Checked_Loop_Statement *)statement;
+        IR_Block *body_block = Lowerer__create_block(self);
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(body_block));
+        IR_Procedure__append_block(self->procedure, body_block);
+        self->block = body_block;
+        IR_Block *outer_break_block = self->break_block;
+        self->break_block = end_block;
+        Lowerer__lower_statement(self, loop_statement->body_statement);
+        self->break_block = outer_break_block;
+        if (!IR_Block__is_terminated(self->block)) {
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(body_block));
+        }
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        break;
+    }
     case CHECKED_STATEMENT_KIND__RETURN: {
         Checked_Return_Statement *return_statement = (Checked_Return_Statement *)statement;
         IR_Value *value = NULL;
