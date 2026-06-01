@@ -17,6 +17,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE_KIND__U64,
     IR_TYPE_KIND__USIZE,
     IR_TYPE_KIND__NOTHING,
+    IR_TYPE_KIND__OPAQUE,
     IR_TYPE_KIND__POINTER,
     IR_TYPE_KIND__PROCEDURE,
 } IR_Type_Kind;
@@ -26,6 +27,18 @@ typedef struct IR_Type {
 } IR_Type;
 
 IR_Type *IR_Type__get(IR_Type_Kind kind);
+
+typedef struct IR_Named_Type {
+    IR_Type super;
+    String *name;
+    struct IR_Named_Type *next_type;
+} IR_Named_Type;
+
+typedef struct IR_Opaque_Type {
+    IR_Named_Type super;
+} IR_Opaque_Type;
+
+IR_Opaque_Type *IR_Opaque_Type__create(String *name);
 
 typedef struct IR_Pointer_Type {
     IR_Type super;
@@ -239,6 +252,8 @@ IR_Procedure *IR_Procedure__create(String *name, IR_Type **parameter_types, size
 void IR_Procedure__append_block(IR_Procedure *self, IR_Block *block);
 
 typedef struct IR_Program {
+    IR_Named_Type *first_type;
+    IR_Named_Type *last_type;
     IR_Global *first_global;
     IR_Global *last_global;
     IR_Procedure *first_procedure;
@@ -248,6 +263,8 @@ typedef struct IR_Program {
 IR_Program *IR_Program__create();
 
 void IR_Program__append_global(IR_Program *self, IR_Global *global);
+
+void IR_Program__append_type(IR_Program *self, IR_Named_Type *type);
 
 void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure);
 

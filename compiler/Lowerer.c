@@ -52,10 +52,23 @@ String *Lowerer__fresh_name(Lowerer *self) {
     return name;
 }
 
+IR_Type *Lowerer__lower_external_type(Lowerer *self, String *name) {
+    for (IR_Named_Type *type = self->program->first_type; type != NULL; type = type->next_type) {
+        if (String__equals_string(type->name, name)) {
+            return (IR_Type *)type;
+        }
+    }
+    IR_Opaque_Type *opaque_type = IR_Opaque_Type__create(name);
+    IR_Program__append_type(self->program, &opaque_type->super);
+    return (IR_Type *)opaque_type;
+}
+
 IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__BOOL:
         return IR_Type__get(IR_TYPE_KIND__BOOL);
+    case CHECKED_TYPE_KIND__EXTERNAL:
+        return Lowerer__lower_external_type(self, ((Checked_External_Type *)type)->super.name);
     case CHECKED_TYPE_KIND__I8:
         return IR_Type__get(IR_TYPE_KIND__I8);
     case CHECKED_TYPE_KIND__I16:
@@ -68,6 +81,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__ISIZE);
     case CHECKED_TYPE_KIND__NOTHING:
         return IR_Type__get(IR_TYPE_KIND__NOTHING);
+    case CHECKED_TYPE_KIND__POINTER:
+        return (IR_Type *)IR_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Pointer_Type *)type)->other_type));
     case CHECKED_TYPE_KIND__U8:
         return IR_Type__get(IR_TYPE_KIND__U8);
     case CHECKED_TYPE_KIND__U16:

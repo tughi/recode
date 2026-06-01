@@ -1,30 +1,20 @@
-type File = opaque
+type FILE = opaque
 
-external $stdout: ptr<File>
+$stdout: [[FILE]] = external
 
-$fputc(%char: u8, %file: ptr<File>): i32
+$fputc: [proc (i32, [FILE]): i32] = external
 
-$main() {
+$main(): i32 {
 @1:
-  [ $stdout ]
-  %1: u8 = const '4'
-  [ $stdout %1 ]
-  %2: ptr<File> = load $stdout
-  [ $stdout %1 %2 ]
+  %1: i32 = const 52
+  %2: [FILE] = load $stdout
   %3: i32 = call $fputc %1 %2
-  [ $stdout ]
-  %4: u8 = const '2'
-  [ $stdout %4 ]
-  %5: ptr<File> = load $stdout
-  [ $stdout %4 %5 ]
+  %4: i32 = const 50
+  %5: [FILE] = load $stdout
   %6: i32 = call $fputc %4 %5
-  [ $stdout ]
-  %7: u8 = const '\n'
-  [ %7 $stdout ]
-  %8: ptr<File> = load $stdout
-  [ %7 %8 ]
+  %7: i32 = const 10
+  %8: [FILE] = load $stdout
   %9: i32 = call $fputc %7 %8
-  [ ]
-  ret
-  [ ]
+  %10: i32 = const 0
+  ret %10
 }

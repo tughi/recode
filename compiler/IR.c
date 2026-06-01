@@ -27,6 +27,13 @@ static IR_Type *IR_Type__create_kind(IR_Type_Kind kind, size_t size) {
     return type;
 }
 
+IR_Opaque_Type *IR_Opaque_Type__create(String *name) {
+    IR_Opaque_Type *type = (IR_Opaque_Type *)IR_Type__create_kind(IR_TYPE_KIND__OPAQUE, sizeof(IR_Opaque_Type));
+    type->super.name = name;
+    type->super.next_type = NULL;
+    return type;
+}
+
 IR_Pointer_Type *IR_Pointer_Type__create(IR_Type *pointee) {
     IR_Pointer_Type *type = (IR_Pointer_Type *)IR_Type__create_kind(IR_TYPE_KIND__POINTER, sizeof(IR_Pointer_Type));
     type->pointee = pointee;
@@ -283,6 +290,8 @@ void IR_Procedure__append_block(IR_Procedure *self, IR_Block *block) {
 
 IR_Program *IR_Program__create() {
     IR_Program *program = (IR_Program *)malloc(sizeof(IR_Program));
+    program->first_type = NULL;
+    program->last_type = NULL;
     program->first_global = NULL;
     program->last_global = NULL;
     program->first_procedure = NULL;
@@ -297,6 +306,15 @@ void IR_Program__append_global(IR_Program *self, IR_Global *global) {
         self->last_global->next_global = global;
     }
     self->last_global = global;
+}
+
+void IR_Program__append_type(IR_Program *self, IR_Named_Type *type) {
+    if (self->first_type == NULL) {
+        self->first_type = type;
+    } else {
+        self->last_type->next_type = type;
+    }
+    self->last_type = type;
 }
 
 void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure) {
@@ -332,6 +350,8 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
         return pWriter__write__cstring(self, "u64");
     case IR_TYPE_KIND__USIZE:
         return pWriter__write__cstring(self, "usize");
+    case IR_TYPE_KIND__OPAQUE:
+        return pWriter__write__string(self, ((IR_Named_Type *)type)->name);
     case IR_TYPE_KIND__POINTER:
         pWriter__write__char(self, '[');
         pWriter__write__ir_type(self, ((IR_Pointer_Type *)type)->pointee);
@@ -553,11 +573,33 @@ Writer *pWriter__write__ir_global(Writer *self, IR_Global *global) {
     return pWriter__end_line(self);
 }
 
+Writer *pWriter__write__ir_type_declaration(Writer *self, IR_Named_Type *type) {
+    pWriter__write__cstring(self, "type ");
+    pWriter__write__string(self, type->name);
+    pWriter__write__cstring(self, " = ");
+    switch (type->super.kind) {
+    case IR_TYPE_KIND__OPAQUE:
+        pWriter__write__cstring(self, "opaque");
+        break;
+    default:
+        pWriter__write__cstring(stderr_writer, "Cannot print IR type declaration kind: ");
+        pWriter__write__int64(stderr_writer, type->super.kind);
+        pWriter__end_line(stderr_writer);
+        panic();
+    }
+    return pWriter__end_line(self);
+}
+
 Writer *pWriter__write__ir_program(Writer *self, IR_Program *program) {
+    for (IR_Named_Type *type = program->first_type; type != NULL; type = type->next_type) {
+        pWriter__write__ir_type_declaration(self, type);
+        pWriter__end_line(self);
+    }
     for (IR_Global *global = program->first_global; global != NULL; global = global->next_global) {
         pWriter__write__ir_global(self, global);
+        pWriter__end_line(self);
     }
-    bool first = program->first_global == NULL;
+    bool first = true;
     for (IR_Procedure *procedure = program->first_procedure; procedure != NULL; procedure = procedure->next_procedure) {
         if (!first) {
             pWriter__end_line(self);
