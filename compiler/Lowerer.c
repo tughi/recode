@@ -130,13 +130,13 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     }
     case CHECKED_EXPRESSION_KIND__BOOL: {
         Checked_Bool_Expression *bool_expression = (Checked_Bool_Expression *)expression;
-        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), bool_expression->value ? 1 : 0);
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), bool_expression->value ? 1 : 0, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
     case CHECKED_EXPRESSION_KIND__INTEGER: {
         Checked_Integer_Expression *integer_expression = (Checked_Integer_Expression *)expression;
-        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value);
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value, integer_expression->literal);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
@@ -231,6 +231,13 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: address-of expression");
         pWriter__end_line(stderr_writer);
         panic();
+    }
+    case CHECKED_EXPRESSION_KIND__CAST: {
+        Checked_Cast_Expression *cast_expression = (Checked_Cast_Expression *)expression;
+        IR_Value *value = Lowerer__lower_expression(self, cast_expression->other_expression);
+        IR_Cast_Instruction *instruction = IR_Cast_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
     }
     case CHECKED_EXPRESSION_KIND__DEREFERENCE: {
         Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;

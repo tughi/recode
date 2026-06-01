@@ -1280,7 +1280,7 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Checker_Con
     }
     uint64_t expression_value = parsed_expression->value;
     int32_t expression_base = parsed_expression->base;
-    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value, expression_base);
+    return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value, expression_base, parsed_expression->super.literal);
 }
 
 Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context *context, Parsed_Is_Expression *parsed_expression) {

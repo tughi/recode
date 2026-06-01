@@ -615,9 +615,10 @@ typedef struct Checked_Integer_Expression {
     Checked_Expression super;
     uint64_t value;
     int32_t base;
+    Token *literal;
 } Checked_Integer_Expression;
 
-Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base);
+Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location location, Checked_Type *type, uint64_t value, int32_t base, Token *literal);
 
 typedef struct Checked_Is_Variant_Case_Expression {
     Checked_Expression super;

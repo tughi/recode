@@ -2,6 +2,7 @@
 #define __IR_H__
 
 #include "String.h"
+#include "Token.h"
 #include "Writer.h"
 
 typedef enum IR_Type_Kind {
@@ -109,6 +110,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__ALLOC,
     IR_INSTRUCTION_KIND__BR,
     IR_INSTRUCTION_KIND__CALL,
+    IR_INSTRUCTION_KIND__CAST,
     IR_INSTRUCTION_KIND__CMP_EQ,
     IR_INSTRUCTION_KIND__CMP_GE,
     IR_INSTRUCTION_KIND__CMP_GT,
@@ -168,12 +170,19 @@ typedef struct IR_Call_Instruction {
 
 IR_Call_Instruction *IR_Call_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *callee);
 
+typedef struct IR_Cast_Instruction {
+    IR_Instruction super;
+} IR_Cast_Instruction;
+
+IR_Cast_Instruction *IR_Cast_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value);
+
 typedef struct IR_Const_Instruction {
     IR_Instruction super;
     uint64_t value;
+    Token *literal;
 } IR_Const_Instruction;
 
-IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value);
+IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value, Token *literal);
 
 typedef struct IR_Jmp_Instruction {
     IR_Instruction super;

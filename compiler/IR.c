@@ -156,13 +156,24 @@ IR_Call_Instruction *IR_Call_Instruction__create(String *result_name, IR_Type *r
     return instruction;
 }
 
-IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value) {
+IR_Cast_Instruction *IR_Cast_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value) {
+    IR_Cast_Instruction *instruction = (IR_Cast_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CAST, sizeof(IR_Cast_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    IR_Value_List__append(&instruction->super.operands, value);
+    return instruction;
+}
+
+IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value, Token *literal) {
     IR_Const_Instruction *instruction = (IR_Const_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__CONST, sizeof(IR_Const_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
     instruction->super.result.variable = NULL;
     instruction->value = value;
+    instruction->literal = literal;
     return instruction;
 }
 
@@ -416,11 +427,18 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
         }
         return self;
+    case IR_INSTRUCTION_KIND__CAST:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = cast ");
+        return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
     case IR_INSTRUCTION_KIND__CONST:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = const ");
         if (instruction->result.type->kind == IR_TYPE_KIND__BOOL) {
             return pWriter__write__cstring(self, ((IR_Const_Instruction *)instruction)->value ? "true" : "false");
+        }
+        if (((IR_Const_Instruction *)instruction)->literal != NULL) {
+            return pWriter__write__string(self, ((IR_Const_Instruction *)instruction)->literal->lexeme);
         }
         return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
     case IR_INSTRUCTION_KIND__JMP:
