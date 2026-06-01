@@ -173,6 +173,16 @@ IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value
     return instruction;
 }
 
+IR_Neg_Instruction *IR_Neg_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value) {
+    IR_Neg_Instruction *instruction = (IR_Neg_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__NEG, sizeof(IR_Neg_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    IR_Value_List__append(&instruction->super.operands, value);
+    return instruction;
+}
+
 IR_Not_Instruction *IR_Not_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value) {
     IR_Not_Instruction *instruction = (IR_Not_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__NOT, sizeof(IR_Not_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
@@ -403,6 +413,10 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
     case IR_INSTRUCTION_KIND__LOAD:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = load ");
+        return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
+    case IR_INSTRUCTION_KIND__NEG:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = neg ");
         return pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
     case IR_INSTRUCTION_KIND__NOT:
         pWriter__write__ir_value_definition(self, &instruction->result);

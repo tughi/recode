@@ -108,6 +108,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__LOAD,
     IR_INSTRUCTION_KIND__MOD,
     IR_INSTRUCTION_KIND__MUL,
+    IR_INSTRUCTION_KIND__NEG,
     IR_INSTRUCTION_KIND__NOT,
     IR_INSTRUCTION_KIND__PHI,
     IR_INSTRUCTION_KIND__RET,
@@ -173,6 +174,12 @@ typedef struct IR_Load_Instruction {
 } IR_Load_Instruction;
 
 IR_Load_Instruction *IR_Load_Instruction__create(IR_Variable *variable, IR_Value *pointer);
+
+typedef struct IR_Neg_Instruction {
+    IR_Instruction super;
+} IR_Neg_Instruction;
+
+IR_Neg_Instruction *IR_Neg_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *value);
 
 typedef struct IR_Not_Instruction {
     IR_Instruction super;

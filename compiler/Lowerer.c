@@ -208,6 +208,13 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__MINUS: {
+        Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
+        IR_Value *value = Lowerer__lower_expression(self, unary_expression->other_expression);
+        IR_Neg_Instruction *instruction = IR_Neg_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__NOT: {
         Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
         IR_Value *value = Lowerer__lower_expression(self, unary_expression->other_expression);
