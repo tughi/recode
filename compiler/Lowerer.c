@@ -265,6 +265,20 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT: {
+        Checked_Type_Alignment_Expression *type_alignment_expression = (Checked_Type_Alignment_Expression *)expression;
+        uint64_t alignment = IR_Type__alignment(Lowerer__lower_type(self, type_alignment_expression->aligned_type));
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), alignment, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__TYPE_SIZE: {
+        Checked_Type_Size_Expression *type_size_expression = (Checked_Type_Size_Expression *)expression;
+        uint64_t size = IR_Type__size(Lowerer__lower_type(self, type_size_expression->sized_type));
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), size, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__GROUP:
         return Lowerer__lower_expression(self, ((Checked_Group_Expression *)expression)->other_expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL: {

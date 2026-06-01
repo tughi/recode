@@ -29,6 +29,10 @@ typedef struct IR_Type {
 
 IR_Type *IR_Type__get(IR_Type_Kind kind);
 
+size_t IR_Type__alignment(IR_Type *type);
+
+size_t IR_Type__size(IR_Type *type);
+
 typedef struct IR_Named_Type {
     IR_Type super;
     String *name;

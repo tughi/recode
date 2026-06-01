@@ -21,6 +21,44 @@ IR_Type *IR_Type__get(IR_Type_Kind kind) {
     return &IR_TYPES[kind];
 }
 
+size_t IR_Type__alignment(IR_Type *type) {
+    size_t size = IR_Type__size(type);
+    if (size == 0) {
+        return 1;
+    }
+    if (size >= 8) {
+        return 8;
+    }
+    return size;
+}
+
+size_t IR_Type__size(IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE_KIND__BOOL:
+    case IR_TYPE_KIND__I8:
+    case IR_TYPE_KIND__U8:
+        return 1;
+    case IR_TYPE_KIND__I16:
+    case IR_TYPE_KIND__U16:
+        return 2;
+    case IR_TYPE_KIND__I32:
+    case IR_TYPE_KIND__U32:
+        return 4;
+    case IR_TYPE_KIND__I64:
+    case IR_TYPE_KIND__U64:
+    case IR_TYPE_KIND__ISIZE:
+    case IR_TYPE_KIND__USIZE:
+    case IR_TYPE_KIND__POINTER:
+    case IR_TYPE_KIND__PROCEDURE:
+        return 8;
+    default:
+        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: size of type kind ");
+        pWriter__write__int64(stderr_writer, type->kind);
+        pWriter__end_line(stderr_writer);
+        panic();
+    }
+}
+
 static IR_Type *IR_Type__create_kind(IR_Type_Kind kind, size_t size) {
     IR_Type *type = (IR_Type *)malloc(size);
     type->kind = kind;
