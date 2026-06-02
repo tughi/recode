@@ -1,4 +1,4 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %result.ptr: [i32] = alloc i32
   %1: i32 = const 2
@@ -16,4 +16,10 @@ $main(): i32 {
 @4:
   %result.1: i32 = load %result.ptr
   ret %result.1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }

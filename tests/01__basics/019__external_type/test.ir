@@ -4,7 +4,7 @@ $stdout: [[FILE]] = external
 
 $fputc: [proc (i32, [FILE]): i32] = external
 
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %1: i32 = const 52
   %2: [FILE] = load $stdout
@@ -17,4 +17,10 @@ $main(): i32 {
   %9: i32 = call $fputc %7 %8
   %10: i32 = const 0
   ret %10
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }

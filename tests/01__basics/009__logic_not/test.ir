@@ -1,14 +1,14 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %1: bool = const true
-  %2: bool = call $test_not__anon %1
+  %2: bool = call $test.test_not__anon %1
   br %2 @2 @3
 @2:
   %3: i32 = const 1
   ret %3
 @3:
   %4: bool = const false
-  %5: bool = call $test_not__anon %4
+  %5: bool = call $test.test_not__anon %4
   br %5 @4 @5
 @4:
   jmp @6
@@ -17,7 +17,7 @@ $main(): i32 {
   ret %6
 @6:
   %7: bool = const false
-  %8: bool = call $test_not__anon %7
+  %8: bool = call $test.test_not__anon %7
   %9: bool = not %8
   br %9 @7 @8
 @7:
@@ -25,7 +25,7 @@ $main(): i32 {
   ret %10
 @8:
   %11: bool = const true
-  %12: bool = call $test_not__anon %11
+  %12: bool = call $test.test_not__anon %11
   %13: bool = not %12
   %14: bool = not %13
   br %14 @9 @10
@@ -37,8 +37,14 @@ $main(): i32 {
   ret %16
 }
 
-$test_not__anon(%v: bool): bool {
+$test.test_not__anon(%v: bool): bool {
 @1:
   %1: bool = not %v
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
   ret %1
 }

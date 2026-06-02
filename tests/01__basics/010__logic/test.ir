@@ -1,12 +1,12 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %t.ptr: [bool] = alloc bool
   %1: bool = const true
-  %2: bool = call $echo__anon %1
+  %2: bool = call $test.echo__anon %1
   store %t.ptr %2
   %f.ptr: [bool] = alloc bool
   %3: bool = const false
-  %4: bool = call $echo__anon %3
+  %4: bool = call $test.echo__anon %3
   store %f.ptr %4
   %t.1: bool = load %t.ptr
   br %t.1 @2 @3
@@ -61,7 +61,13 @@ $main(): i32 {
   ret %14
 }
 
-$echo__anon(%v: bool): bool {
+$test.echo__anon(%v: bool): bool {
 @1:
   ret %v
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }

@@ -1,4 +1,4 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %1: usize = const 1
   %2: usize = const 1
@@ -106,4 +106,10 @@ $main(): i32 {
 @27:
   %53: i32 = const 0
   ret %53
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }

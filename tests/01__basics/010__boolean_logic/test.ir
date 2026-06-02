@@ -1,4 +1,4 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %check1.ptr: [bool] = alloc bool
   %1: bool = const true
@@ -378,4 +378,10 @@ $main(): i32 {
 @122:
   %69: i32 = const 0
   ret %69
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }

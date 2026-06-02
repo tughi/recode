@@ -30,6 +30,16 @@ IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
     panic();
 }
 
+String *Lowerer__procedure_name(Checked_Procedure_Symbol *procedure_symbol) {
+    if (procedure_symbol->parsed_procedure_statement->is_external) {
+        return procedure_symbol->super.name;
+    }
+    String *name = String__create_copy(procedure_symbol->super.package->name);
+    String__append_char(name, '.');
+    String__append_string(name, procedure_symbol->super.name);
+    return name;
+}
+
 IR_Value *Lowerer__find_scope(Lowerer *self, String *name) {
     for (size_t i = 0; i < self->scope.size; i++) {
         IR_Value *value = self->scope.values[i];
@@ -288,7 +298,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-            return Lowerer__find_global(self, symbol->name);
+            return Lowerer__find_global(self, Lowerer__procedure_name((Checked_Procedure_Symbol *)symbol));
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
             return Lowerer__find_scope(self, symbol->name);
@@ -475,13 +485,6 @@ IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *
     return parameter_types;
 }
 
-String *Lowerer__procedure_name(Checked_Procedure_Symbol *procedure_symbol) {
-    if (procedure_symbol->receiver_type == NULL && String__equals_cstring(procedure_symbol->procedure_name, "main")) {
-        return procedure_symbol->procedure_name;
-    }
-    return procedure_symbol->super.name;
-}
-
 void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
     Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
     IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
@@ -549,6 +552,35 @@ bool Checked_Procedure_Symbol__is_lowerable(Checked_Procedure_Symbol *procedure_
     return !procedure_symbol->parsed_procedure_statement->is_external;
 }
 
+void Lowerer__define_main(Lowerer *self, Checked_Procedure_Symbol *main_symbol) {
+    IR_Procedure *main_procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(main_symbol));
+
+    size_t parameter_count = main_procedure->parameters.size;
+    IR_Type **parameter_types = parameter_count > 0 ? (IR_Type **)malloc(parameter_count * sizeof(IR_Type *)) : NULL;
+    for (size_t i = 0; i < parameter_count; i++) {
+        parameter_types[i] = main_procedure->parameters.values[i]->type;
+    }
+
+    IR_Procedure *procedure = IR_Procedure__create(String__create_from("main"), parameter_types, parameter_count, main_procedure->return_type);
+    for (size_t i = 0; i < parameter_count; i++) {
+        IR_Value *parameter = main_procedure->parameters.values[i];
+        IR_Value_List__append(&procedure->parameters, IR_Value__create(IR_VALUE_KIND__PARAMETER, parameter->name, parameter->type));
+    }
+    IR_Program__append_procedure(self->program, procedure);
+
+    IR_Block *block = IR_Block__create(1);
+    IR_Procedure__append_block(procedure, block);
+
+    IR_Type *return_type = main_procedure->return_type;
+    String *result_name = return_type->kind != IR_TYPE_KIND__NOTHING ? String__create_from("%1") : NULL;
+    IR_Call_Instruction *call = IR_Call_Instruction__create(result_name, return_type, &main_procedure->super.value);
+    for (size_t i = 0; i < parameter_count; i++) {
+        IR_Value_List__append(&call->super.operands, procedure->parameters.values[i]);
+    }
+    IR_Block__append_instruction(block, (IR_Instruction *)call);
+    IR_Block__append_instruction(block, (IR_Instruction *)IR_Ret_Instruction__create(return_type->kind != IR_TYPE_KIND__NOTHING ? &call->super.result : NULL));
+}
+
 IR_Program *lower(Checked_Source *checked_source) {
     Lowerer lowerer;
     lowerer.program = IR_Program__create();
@@ -582,6 +614,16 @@ IR_Program *lower(Checked_Source *checked_source) {
     for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
             Lowerer__define_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
+        }
+    }
+
+    for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
+            Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)symbol;
+            if (procedure_symbol->super.package == checked_source->first_package && procedure_symbol->receiver_type == NULL && String__equals_cstring(procedure_symbol->procedure_name, "main")) {
+                Lowerer__define_main(&lowerer, procedure_symbol);
+                break;
+            }
         }
     }
 

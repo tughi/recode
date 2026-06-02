@@ -1,6 +1,6 @@
-$main(): i32 {
+$test.main(): i32 {
 @1:
-  %1: i32 = call $forty_two
+  %1: i32 = call $test.forty_two
   %2: i32 = const 42
   %3: i32 = div %1 %2
   %4: i32 = const 1
@@ -8,8 +8,14 @@ $main(): i32 {
   ret %5
 }
 
-$forty_two(): i32 {
+$test.forty_two(): i32 {
 @1:
   %1: i32 = const 42
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
   ret %1
 }

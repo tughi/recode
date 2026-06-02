@@ -1,9 +1,15 @@
 $optind: [i32] = external
 
-$main(): i32 {
+$test.main(): i32 {
 @1:
   %1: i32 = load $optind
   %2: i32 = const 1
   %3: i32 = sub %1 %2
   ret %3
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }
