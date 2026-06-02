@@ -307,7 +307,11 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     }
     case CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT: {
         Checked_Type_Alignment_Expression *type_alignment_expression = (Checked_Type_Alignment_Expression *)expression;
-        uint64_t alignment = IR_Type__alignment(Lowerer__lower_type(self, type_alignment_expression->aligned_type));
+        Checked_Type *aligned_type = type_alignment_expression->aligned_type;
+        while (aligned_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+            aligned_type = ((Checked_Multi_Pointer_Type *)aligned_type)->item_type;
+        }
+        uint64_t alignment = IR_Type__alignment(Lowerer__lower_type(self, aligned_type));
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), alignment, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
