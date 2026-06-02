@@ -124,6 +124,17 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     }
 }
 
+IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression);
+
+IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expression *array_access_expression) {
+    IR_Value *array = Lowerer__lower_expression(self, array_access_expression->array_expression);
+    IR_Value *index = Lowerer__lower_expression(self, array_access_expression->index_expression);
+    IR_Type *item_type = Lowerer__lower_type(self, array_access_expression->super.type);
+    IR_Array_Offset_Instruction *instruction = IR_Array_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(item_type), array, index);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+    return &instruction->super.result;
+}
+
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__CALL: {
@@ -247,13 +258,8 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         panic();
     }
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS: {
-        Checked_Array_Access_Expression *array_access_expression = (Checked_Array_Access_Expression *)expression;
-        IR_Value *array = Lowerer__lower_expression(self, array_access_expression->array_expression);
-        IR_Value *index = Lowerer__lower_expression(self, array_access_expression->index_expression);
-        IR_Type *item_type = Lowerer__lower_type(self, expression->type);
-        IR_Array_Offset_Instruction *offset = IR_Array_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(item_type), array, index);
-        IR_Block__append_instruction(self->block, (IR_Instruction *)offset);
-        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), item_type, &offset->super.result);
+        IR_Value *pointer = Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)expression);
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), pointer);
         IR_Block__append_instruction(self->block, (IR_Instruction *)load);
         return &load->super.result;
     }
@@ -365,6 +371,8 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__DEREFERENCE) {
             Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)assignment_statement->object_expression;
             pointer = Lowerer__lower_expression(self, unary_expression->other_expression);
+        } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
+            pointer = Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)assignment_statement->object_expression);
         } else {
             pWriter__write__cstring(stderr_writer, "Lowering not supported yet: assignment target expression kind ");
             pWriter__write__int64(stderr_writer, assignment_statement->object_expression->kind);
