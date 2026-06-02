@@ -1,8 +1,6 @@
-$main() {
+$main(): i32 {
 @1:
-  [ ]
-  %array.ptr: ptr<ptr<i32>> = alloc ptr<i32>
-  [ ]
-  ret
-  [ ]
+  %array.ptr: [[*]i32] = alloc [*]i32
+  %1: i32 = const 0
+  ret %1
 }

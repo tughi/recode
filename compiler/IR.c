@@ -49,6 +49,7 @@ size_t IR_Type__size(IR_Type *type) {
     case IR_TYPE_KIND__U64:
     case IR_TYPE_KIND__ISIZE:
     case IR_TYPE_KIND__USIZE:
+    case IR_TYPE_KIND__MULTI_POINTER:
     case IR_TYPE_KIND__POINTER:
     case IR_TYPE_KIND__PROCEDURE:
         return 8;
@@ -70,6 +71,12 @@ IR_Opaque_Type *IR_Opaque_Type__create(String *name) {
     IR_Opaque_Type *type = (IR_Opaque_Type *)IR_Type__create_kind(IR_TYPE_KIND__OPAQUE, sizeof(IR_Opaque_Type));
     type->super.name = name;
     type->super.next_type = NULL;
+    return type;
+}
+
+IR_Multi_Pointer_Type *IR_Multi_Pointer_Type__create(IR_Type *pointee) {
+    IR_Multi_Pointer_Type *type = (IR_Multi_Pointer_Type *)IR_Type__create_kind(IR_TYPE_KIND__MULTI_POINTER, sizeof(IR_Multi_Pointer_Type));
+    type->pointee = pointee;
     return type;
 }
 
@@ -404,6 +411,9 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
         return pWriter__write__cstring(self, "usize");
     case IR_TYPE_KIND__OPAQUE:
         return pWriter__write__string(self, ((IR_Named_Type *)type)->name);
+    case IR_TYPE_KIND__MULTI_POINTER:
+        pWriter__write__cstring(self, "[*]");
+        return pWriter__write__ir_type(self, ((IR_Multi_Pointer_Type *)type)->pointee);
     case IR_TYPE_KIND__POINTER:
         pWriter__write__char(self, '[');
         pWriter__write__ir_type(self, ((IR_Pointer_Type *)type)->pointee);

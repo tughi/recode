@@ -19,6 +19,7 @@ typedef enum IR_Type_Kind {
     IR_TYPE_KIND__U64,
     IR_TYPE_KIND__USIZE,
     IR_TYPE_KIND__NOTHING,
+    IR_TYPE_KIND__MULTI_POINTER,
     IR_TYPE_KIND__OPAQUE,
     IR_TYPE_KIND__POINTER,
     IR_TYPE_KIND__PROCEDURE,
@@ -45,6 +46,13 @@ typedef struct IR_Opaque_Type {
 } IR_Opaque_Type;
 
 IR_Opaque_Type *IR_Opaque_Type__create(String *name);
+
+typedef struct IR_Multi_Pointer_Type {
+    IR_Type super;
+    IR_Type *pointee;
+} IR_Multi_Pointer_Type;
+
+IR_Multi_Pointer_Type *IR_Multi_Pointer_Type__create(IR_Type *pointee);
 
 typedef struct IR_Pointer_Type {
     IR_Type super;

@@ -85,6 +85,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__ISIZE);
     case CHECKED_TYPE_KIND__NOTHING:
         return IR_Type__get(IR_TYPE_KIND__NOTHING);
+    case CHECKED_TYPE_KIND__MULTI_POINTER:
+        return (IR_Type *)IR_Multi_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Multi_Pointer_Type *)type)->item_type));
     case CHECKED_TYPE_KIND__POINTER:
         return (IR_Type *)IR_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Pointer_Type *)type)->other_type));
     case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
@@ -473,6 +475,13 @@ IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *
     return parameter_types;
 }
 
+String *Lowerer__procedure_name(Checked_Procedure_Symbol *procedure_symbol) {
+    if (procedure_symbol->receiver_type == NULL && String__equals_cstring(procedure_symbol->procedure_name, "main")) {
+        return procedure_symbol->procedure_name;
+    }
+    return procedure_symbol->super.name;
+}
+
 void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
     Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
     IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
@@ -480,7 +489,7 @@ void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedu
     size_t parameter_count;
     IR_Type **parameter_types = Lowerer__lower_parameter_types(self, checked_procedure_type, &parameter_count);
 
-    IR_Procedure *procedure = IR_Procedure__create(procedure_symbol->super.name, parameter_types, parameter_count, return_type);
+    IR_Procedure *procedure = IR_Procedure__create(Lowerer__procedure_name(procedure_symbol), parameter_types, parameter_count, return_type);
     IR_Program__append_procedure(self->program, procedure);
     IR_Value_List__append(&self->globals, &procedure->super.value);
 
@@ -515,7 +524,7 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
         return;
     }
 
-    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, procedure_symbol->super.name);
+    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(procedure_symbol));
 
     self->procedure = procedure;
     self->value_counter = 0;
