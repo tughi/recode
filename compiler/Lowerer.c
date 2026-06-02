@@ -106,6 +106,21 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         IR_Type **parameter_types = Lowerer__lower_parameter_types(self, procedure_type, &parameter_count);
         return (IR_Type *)IR_Pointer_Type__create((IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type));
     }
+    case CHECKED_TYPE_KIND__STRUCT: {
+        Checked_Struct_Type *struct_type = (Checked_Struct_Type *)type;
+        String *name = struct_type->super.name;
+        for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
+            if (String__equals_string(existing_type->name, name)) {
+                return (IR_Type *)existing_type;
+            }
+        }
+        IR_Struct_Type *ir_struct_type = IR_Struct_Type__create(name);
+        IR_Program__append_type(self->program, &ir_struct_type->super);
+        for (Checked_Struct_Member *member = struct_type->first_member; member != NULL; member = member->next_member) {
+            IR_Struct_Type__append_field(ir_struct_type, member->name, Lowerer__lower_type(self, member->type));
+        }
+        return (IR_Type *)ir_struct_type;
+    }
     case CHECKED_TYPE_KIND__U8:
         return IR_Type__get(IR_TYPE_KIND__U8);
     case CHECKED_TYPE_KIND__U16:

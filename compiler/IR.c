@@ -74,6 +74,28 @@ IR_Opaque_Type *IR_Opaque_Type__create(String *name) {
     return type;
 }
 
+IR_Struct_Type *IR_Struct_Type__create(String *name) {
+    IR_Struct_Type *type = (IR_Struct_Type *)IR_Type__create_kind(IR_TYPE_KIND__STRUCT, sizeof(IR_Struct_Type));
+    type->super.name = name;
+    type->super.next_type = NULL;
+    type->first_field = NULL;
+    type->last_field = NULL;
+    return type;
+}
+
+void IR_Struct_Type__append_field(IR_Struct_Type *self, String *name, IR_Type *type) {
+    IR_Struct_Type_Field *field = (IR_Struct_Type_Field *)malloc(sizeof(IR_Struct_Type_Field));
+    field->name = name;
+    field->type = type;
+    field->next_field = NULL;
+    if (self->first_field == NULL) {
+        self->first_field = field;
+    } else {
+        self->last_field->next_field = field;
+    }
+    self->last_field = field;
+}
+
 IR_Multi_Pointer_Type *IR_Multi_Pointer_Type__create(IR_Type *pointee) {
     IR_Multi_Pointer_Type *type = (IR_Multi_Pointer_Type *)IR_Type__create_kind(IR_TYPE_KIND__MULTI_POINTER, sizeof(IR_Multi_Pointer_Type));
     type->pointee = pointee;
@@ -421,6 +443,7 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
     case IR_TYPE_KIND__USIZE:
         return pWriter__write__cstring(self, "usize");
     case IR_TYPE_KIND__OPAQUE:
+    case IR_TYPE_KIND__STRUCT:
         return pWriter__write__string(self, ((IR_Named_Type *)type)->name);
     case IR_TYPE_KIND__MULTI_POINTER:
         pWriter__write__cstring(self, "[*]");
@@ -670,6 +693,19 @@ Writer *pWriter__write__ir_type_declaration(Writer *self, IR_Named_Type *type) {
     case IR_TYPE_KIND__OPAQUE:
         pWriter__write__cstring(self, "opaque");
         break;
+    case IR_TYPE_KIND__STRUCT: {
+        pWriter__write__cstring(self, "struct {");
+        pWriter__end_line(self);
+        for (IR_Struct_Type_Field *field = ((IR_Struct_Type *)type)->first_field; field != NULL; field = field->next_field) {
+            pWriter__write__cstring(self, "  ");
+            pWriter__write__string(self, field->name);
+            pWriter__write__cstring(self, ": ");
+            pWriter__write__ir_type(self, field->type);
+            pWriter__end_line(self);
+        }
+        pWriter__write__char(self, '}');
+        break;
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Cannot print IR type declaration kind: ");
         pWriter__write__int64(stderr_writer, type->super.kind);
