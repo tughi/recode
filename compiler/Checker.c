@@ -1047,7 +1047,7 @@ Checked_Expression *Checker__check_cast_expression(Checker *self, Checker_Contex
 Checked_Expression *Checker__check_character_expression(Checker *self, Parsed_Character_Expression *parsed_expression) {
     Checked_Type *expression_type = (Checked_Type *)self->builtin_types->u8_type;
     char value = parsed_expression->value;
-    return (Checked_Expression *)Checked_Character_Expression__create(parsed_expression->super.super.location, expression_type, value);
+    return (Checked_Expression *)Checked_Character_Expression__create(parsed_expression->super.super.location, expression_type, value, parsed_expression->super.literal);
 }
 
 Checked_Expression *Checker__check_dereference_expression(Checker *self, Checker_Context *context, Parsed_Dereference_Expression *parsed_expression) {

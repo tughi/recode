@@ -178,6 +178,17 @@ IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable) {
     return instruction;
 }
 
+IR_Array_Offset_Instruction *IR_Array_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, IR_Value *index) {
+    IR_Array_Offset_Instruction *instruction = (IR_Array_Offset_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__ARRAY_OFFSET, sizeof(IR_Array_Offset_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    IR_Value_List__append(&instruction->super.operands, pointer);
+    IR_Value_List__append(&instruction->super.operands, index);
+    return instruction;
+}
+
 IR_Br_Instruction *IR_Br_Instruction__create(IR_Value *condition, IR_Block *true_block, IR_Block *false_block) {
     IR_Br_Instruction *instruction = (IR_Br_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__BR, sizeof(IR_Br_Instruction));
     instruction->condition = condition;
@@ -458,6 +469,12 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = alloc ");
         return pWriter__write__ir_type(self, ((IR_Alloc_Instruction *)instruction)->allocated_type);
+    case IR_INSTRUCTION_KIND__ARRAY_OFFSET:
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = offset ");
+        pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
+        pWriter__write__char(self, ' ');
+        return pWriter__write__ir_value_reference(self, instruction->operands.values[1]);
     case IR_INSTRUCTION_KIND__BR: {
         IR_Br_Instruction *br_instruction = (IR_Br_Instruction *)instruction;
         pWriter__write__cstring(self, "br ");

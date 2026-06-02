@@ -780,9 +780,10 @@ Checked_Cast_Expression *Checked_Cast_Expression__create(Source_Location locatio
     return expression;
 }
 
-Checked_Character_Expression *Checked_Character_Expression__create(Source_Location location, Checked_Type *type, char value) {
+Checked_Character_Expression *Checked_Character_Expression__create(Source_Location location, Checked_Type *type, char value, Token *literal) {
     Checked_Character_Expression *expression = (Checked_Character_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__CHARACTER, sizeof(Checked_Character_Expression), location, type);
     expression->value = value;
+    expression->literal = literal;
     return expression;
 }
 

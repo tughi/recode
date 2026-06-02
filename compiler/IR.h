@@ -121,6 +121,7 @@ void IR_Value_List__append(IR_Value_List *self, IR_Value *value);
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__ADD,
     IR_INSTRUCTION_KIND__ALLOC,
+    IR_INSTRUCTION_KIND__ARRAY_OFFSET,
     IR_INSTRUCTION_KIND__BR,
     IR_INSTRUCTION_KIND__CALL,
     IR_INSTRUCTION_KIND__CAST,
@@ -167,6 +168,12 @@ typedef struct IR_Alloc_Instruction {
 } IR_Alloc_Instruction;
 
 IR_Alloc_Instruction *IR_Alloc_Instruction__create(IR_Variable *variable);
+
+typedef struct IR_Array_Offset_Instruction {
+    IR_Instruction super;
+} IR_Array_Offset_Instruction;
+
+IR_Array_Offset_Instruction *IR_Array_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, IR_Value *index);
 
 typedef struct IR_Br_Instruction {
     IR_Instruction super;

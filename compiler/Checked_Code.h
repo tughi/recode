@@ -570,9 +570,10 @@ Checked_Cast_Expression *Checked_Cast_Expression__create(Source_Location locatio
 typedef struct Checked_Character_Expression {
     Checked_Expression super;
     char value;
+    Token *literal;
 } Checked_Character_Expression;
 
-Checked_Character_Expression *Checked_Character_Expression__create(Source_Location location, Checked_Type *type, char value);
+Checked_Character_Expression *Checked_Character_Expression__create(Source_Location location, Checked_Type *type, char value, Token *literal);
 
 typedef struct Checked_Dereference_Expression {
     Checked_Unary_Expression super;

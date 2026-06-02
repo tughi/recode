@@ -246,10 +246,27 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         pWriter__end_line(stderr_writer);
         panic();
     }
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS: {
+        Checked_Array_Access_Expression *array_access_expression = (Checked_Array_Access_Expression *)expression;
+        IR_Value *array = Lowerer__lower_expression(self, array_access_expression->array_expression);
+        IR_Value *index = Lowerer__lower_expression(self, array_access_expression->index_expression);
+        IR_Type *item_type = Lowerer__lower_type(self, expression->type);
+        IR_Array_Offset_Instruction *offset = IR_Array_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(item_type), array, index);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)offset);
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), item_type, &offset->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+        return &load->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__CAST: {
         Checked_Cast_Expression *cast_expression = (Checked_Cast_Expression *)expression;
         IR_Value *value = Lowerer__lower_expression(self, cast_expression->other_expression);
         IR_Cast_Instruction *instruction = IR_Cast_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__CHARACTER: {
+        Checked_Character_Expression *character_expression = (Checked_Character_Expression *)expression;
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), (uint64_t)(uint8_t)character_expression->value, character_expression->literal);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
