@@ -439,6 +439,8 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
             pointer = Lowerer__lower_expression(self, unary_expression->other_expression);
         } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
             pointer = Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)assignment_statement->object_expression);
+        } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__MEMBER_ACCESS) {
+            pointer = Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)assignment_statement->object_expression);
         } else {
             pWriter__write__cstring(stderr_writer, "Lowering not supported yet: assignment target expression kind ");
             pWriter__write__int64(stderr_writer, assignment_statement->object_expression->kind);
