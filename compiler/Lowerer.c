@@ -150,6 +150,33 @@ IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expres
     return &instruction->super.result;
 }
 
+IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expression *member_access_expression);
+
+IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expression) {
+    switch (expression->kind) {
+    case CHECKED_EXPRESSION_KIND__SYMBOL: {
+        Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
+        return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol->name);
+    }
+    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
+        return Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)expression);
+    default:
+        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: object pointer expression kind ");
+        pWriter__write__int64(stderr_writer, expression->kind);
+        pWriter__end_line(stderr_writer);
+        panic();
+    }
+}
+
+IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expression *member_access_expression) {
+    IR_Value *object_pointer = Lowerer__lower_object_pointer(self, member_access_expression->object_expression);
+    Checked_Struct_Member *member = member_access_expression->member;
+    IR_Type *member_type = Lowerer__lower_type(self, member_access_expression->super.type);
+    IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, member->struct_type->super.name, member->name);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+    return &instruction->super.result;
+}
+
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__CALL: {
@@ -293,6 +320,12 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), (uint64_t)(uint8_t)character_expression->value, character_expression->literal);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS: {
+        IR_Value *pointer = Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)expression);
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), pointer);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+        return &load->super.result;
     }
     case CHECKED_EXPRESSION_KIND__MAKE_STRUCT: {
         Checked_Make_Struct_Expression *make_struct_expression = (Checked_Make_Struct_Expression *)expression;
