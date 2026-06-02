@@ -159,6 +159,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION_KIND__PHI,
     IR_INSTRUCTION_KIND__RET,
     IR_INSTRUCTION_KIND__STORE,
+    IR_INSTRUCTION_KIND__STRUCT,
     IR_INSTRUCTION_KIND__SUB,
 } IR_Instruction_Kind;
 
@@ -264,6 +265,17 @@ typedef struct IR_Store_Instruction {
 } IR_Store_Instruction;
 
 IR_Store_Instruction *IR_Store_Instruction__create(IR_Value *pointer, IR_Value *value);
+
+typedef struct IR_Struct_Instruction {
+    IR_Instruction super;
+    String **field_names;
+    size_t field_count;
+    size_t field_capacity;
+} IR_Struct_Instruction;
+
+IR_Struct_Instruction *IR_Struct_Instruction__create(String *result_name, IR_Type *result_type);
+
+void IR_Struct_Instruction__append_field(IR_Struct_Instruction *self, String *field_name, IR_Value *value);
 
 typedef struct IR_Binary_Instruction {
     IR_Instruction super;

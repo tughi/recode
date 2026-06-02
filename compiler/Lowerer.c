@@ -294,6 +294,17 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__MAKE_STRUCT: {
+        Checked_Make_Struct_Expression *make_struct_expression = (Checked_Make_Struct_Expression *)expression;
+        IR_Struct_Instruction *instruction = IR_Struct_Instruction__create(NULL, Lowerer__lower_type(self, expression->type));
+        for (Checked_Make_Struct_Argument *argument = make_struct_expression->first_argument; argument != NULL; argument = argument->next_argument) {
+            IR_Value *value = Lowerer__lower_expression(self, argument->expression);
+            IR_Struct_Instruction__append_field(instruction, argument->struct_member->name, value);
+        }
+        instruction->super.result.name = Lowerer__fresh_name(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__DEREFERENCE: {
         Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)expression;
         IR_Value *pointer = Lowerer__lower_expression(self, unary_expression->other_expression);

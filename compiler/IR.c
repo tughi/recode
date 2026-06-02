@@ -322,6 +322,27 @@ IR_Store_Instruction *IR_Store_Instruction__create(IR_Value *pointer, IR_Value *
     return instruction;
 }
 
+IR_Struct_Instruction *IR_Struct_Instruction__create(String *result_name, IR_Type *result_type) {
+    IR_Struct_Instruction *instruction = (IR_Struct_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__STRUCT, sizeof(IR_Struct_Instruction));
+    instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
+    instruction->super.result.name = result_name;
+    instruction->super.result.type = result_type;
+    instruction->super.result.variable = NULL;
+    instruction->field_names = NULL;
+    instruction->field_count = 0;
+    instruction->field_capacity = 0;
+    return instruction;
+}
+
+void IR_Struct_Instruction__append_field(IR_Struct_Instruction *self, String *field_name, IR_Value *value) {
+    if (self->field_count == self->field_capacity) {
+        self->field_capacity = self->field_capacity == 0 ? 4 : self->field_capacity * 2;
+        self->field_names = (String **)realloc(self->field_names, self->field_capacity * sizeof(String *));
+    }
+    self->field_names[self->field_count++] = field_name;
+    IR_Value_List__append(&self->super.operands, value);
+}
+
 IR_Block *IR_Block__create(size_t label) {
     IR_Block *block = (IR_Block *)malloc(sizeof(IR_Block));
     block->label = label;
@@ -576,6 +597,19 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
             pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
         }
         return self;
+    case IR_INSTRUCTION_KIND__STRUCT: {
+        IR_Struct_Instruction *struct_instruction = (IR_Struct_Instruction *)instruction;
+        pWriter__write__ir_value_definition(self, &instruction->result);
+        pWriter__write__cstring(self, " = struct ");
+        pWriter__write__ir_type(self, instruction->result.type);
+        for (size_t i = 0; i < struct_instruction->field_count; i++) {
+            pWriter__write__cstring(self, " .");
+            pWriter__write__string(self, struct_instruction->field_names[i]);
+            pWriter__write__char(self, ' ');
+            pWriter__write__ir_value_reference(self, instruction->operands.values[i]);
+        }
+        return self;
+    }
     case IR_INSTRUCTION_KIND__ADD:
     case IR_INSTRUCTION_KIND__CMP_EQ:
     case IR_INSTRUCTION_KIND__CMP_GE:
