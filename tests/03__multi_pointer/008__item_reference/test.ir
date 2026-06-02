@@ -1,0 +1,52 @@
+$test.main(): i32 {
+@1:
+  %number.ptr: [u64] = alloc u64
+  %1: u64 = const 0
+  store %number.ptr %1
+  %bytes.ptr: [[*]u8] = alloc [*]u8
+  %2: [*]u8 = cast %number.ptr
+  store %bytes.ptr %2
+  %fourth_byte.ptr: [[u8]] = alloc [u8]
+  %bytes.1: [*]u8 = load %bytes.ptr
+  %3: i32 = const 3
+  %4: [u8] = offset %bytes.1 %3
+  store %fourth_byte.ptr %4
+  %fourth_byte.1: [u8] = load %fourth_byte.ptr
+  %5: u8 = const 42
+  store %fourth_byte.1 %5
+  %bytes.2: [*]u8 = load %bytes.ptr
+  %6: i32 = const 3
+  %7: [u8] = offset %bytes.2 %6
+  %8: u8 = load %7
+  %9: u8 = const 42
+  %10: bool = cmp_ne %8 %9
+  br %10 @2 @3
+@2:
+  %11: i32 = const 1
+  ret %11
+@3:
+  %number.1: u64 = load %number.ptr
+  %12: u64 = const 0x0000002A00000000
+  %13: bool = cmp_ne %number.1 %12
+  br %13 @4 @5
+@4:
+  %number.2: u64 = load %number.ptr
+  %14: u64 = const 0x000000002A000000
+  %15: bool = cmp_ne %number.2 %14
+  jmp @5
+@5:
+  %16: bool = phi @3 %13 @4 %15
+  br %16 @6 @7
+@6:
+  %17: i32 = const 2
+  ret %17
+@7:
+  %18: i32 = const 0
+  ret %18
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

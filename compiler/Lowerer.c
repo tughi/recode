@@ -253,6 +253,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
                 return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol->name);
             }
         }
+        if (operand->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
+            return Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)operand);
+        }
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: address-of expression");
         pWriter__end_line(stderr_writer);
         panic();
