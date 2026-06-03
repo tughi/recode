@@ -2,6 +2,10 @@ type Number = struct {
   value: i32
 }
 
+type Boolean = struct {
+  value: bool
+}
+
 $test.ptest_Number__get_value(%self: [Number]): i32 {
 @1:
   %1: [i32] = offset %self Number.value
@@ -14,6 +18,13 @@ $test.ptest_Number__set_value__anon(%self: [Number], %value: i32) {
   %1: [i32] = offset %self Number.value
   store %1 %value
   ret
+}
+
+$test.ptest_Boolean__get_value(%self: [Boolean]): bool {
+@1:
+  %1: [bool] = offset %self Boolean.value
+  %2: bool = load %1
+  ret %2
 }
 
 $test.main(): i32 {

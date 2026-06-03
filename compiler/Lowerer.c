@@ -325,6 +325,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         if (operand->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
             return Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)operand);
         }
+        if (operand->kind == CHECKED_EXPRESSION_KIND__MEMBER_ACCESS) {
+            return Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)operand);
+        }
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: address-of expression");
         pWriter__end_line(stderr_writer);
         panic();
