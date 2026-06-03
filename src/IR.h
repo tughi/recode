@@ -88,6 +88,8 @@ IR_Type *ir_type_usize(void);
 IR_Type *ir_type_void(void);
 bool ir_type_equals(IR_Type *a, IR_Type *b);
 size_t ir_type_size(IR_Type *type);
+size_t ir_type_alignment(IR_Type *type);
+size_t ir_struct_field_offset(IR_Type *struct_type, size_t field_index);
 void fprint_ir_type(FILE *out, IR_Type *type);
 
 typedef enum {

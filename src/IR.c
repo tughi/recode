@@ -183,6 +183,10 @@ IR_Type *ir_type_named_lookup(IR_Type_List *types, String name) {
     return NULL;
 }
 
+static size_t align_up(size_t value, size_t alignment) {
+    return (value + alignment - 1) / alignment * alignment;
+}
+
 size_t ir_type_size(IR_Type *type) {
     switch (type->kind) {
     case IR_TYPE__BOOL:
@@ -204,11 +208,12 @@ size_t ir_type_size(IR_Type *type) {
     case IR_TYPE__PROC:
         return 8;
     case IR_TYPE__STRUCT: {
-        size_t total = 0;
-        for (size_t i = 0; i < type->struct_field_count; i++) {
-            total += ir_type_size(type->struct_fields[i]->type);
+        if (type->struct_field_count == 0) {
+            return 0;
         }
-        return total;
+        size_t last = type->struct_field_count - 1;
+        size_t size = ir_struct_field_offset(type, last) + ir_type_size(type->struct_fields[last]->type);
+        return align_up(size, ir_type_alignment(type));
     }
     case IR_TYPE__PLACEHOLDER:
         fprintf(stderr, "%.*s:%zu:%zu: Unresolved type '%.*s'\n", STRING(type->location.source), type->location.line, type->location.column, STRING(type->name));
@@ -219,6 +224,37 @@ size_t ir_type_size(IR_Type *type) {
         return 0;
     }
     return 0;
+}
+
+size_t ir_type_alignment(IR_Type *type) {
+    if (type->kind == IR_TYPE__STRUCT) {
+        size_t alignment = 1;
+        for (size_t i = 0; i < type->struct_field_count; i++) {
+            size_t field_alignment = ir_type_alignment(type->struct_fields[i]->type);
+            if (field_alignment > alignment) {
+                alignment = field_alignment;
+            }
+        }
+        return alignment;
+    }
+    size_t size = ir_type_size(type);
+    if (size == 0) {
+        return 1;
+    }
+    if (size >= 8) {
+        return 8;
+    }
+    return size;
+}
+
+size_t ir_struct_field_offset(IR_Type *struct_type, size_t field_index) {
+    size_t offset = 0;
+    for (size_t i = 0; i < field_index; i++) {
+        size_t field_alignment = ir_type_alignment(struct_type->struct_fields[i]->type);
+        offset = align_up(offset, field_alignment);
+        offset += ir_type_size(struct_type->struct_fields[i]->type);
+    }
+    return align_up(offset, ir_type_alignment(struct_type->struct_fields[field_index]->type));
 }
 
 bool ir_type_equals(IR_Type *a, IR_Type *b) {

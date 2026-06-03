@@ -655,9 +655,9 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
         size_t field_offset = 0;
         for (size_t i = 0; i < struct_type->struct_field_count; i++) {
             if (string_equals(struct_type->struct_fields[i]->name, field_name)) {
+                field_offset = ir_struct_field_offset(struct_type, i);
                 break;
             }
-            field_offset += ir_type_size(struct_type->struct_fields[i]->type);
         }
         *(uint8_t **)result_address = base + field_offset;
     }
@@ -703,9 +703,9 @@ static Step execute_struct_instruction(Interpreter *interpreter, IR_Instruction 
         size_t field_offset = 0;
         for (size_t j = 0; j < struct_type->struct_field_count; j++) {
             if (struct_type->struct_fields[j] == field) {
+                field_offset = ir_struct_field_offset(struct_type, j);
                 break;
             }
-            field_offset += ir_type_size(struct_type->struct_fields[j]->type);
         }
         IR_Value *source_value = instruction->arguments.items[i];
         memcpy(result_address + field_offset, value_address(interpreter, frame_data, source_value), source_value->slot.size);

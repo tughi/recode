@@ -1,0 +1,24 @@
+; exit: 1
+
+; the struct constructor honours field alignment too: writing b via the
+; constructor lands it at the aligned offset 4, read back through [*]u8
+
+type Mixed = struct {
+  a: i8
+  b: i32
+}
+
+$main(): i32 {
+@1:
+  %0: i8 = const 9
+  %1: i32 = const 0x04030201
+  %p: Mixed = struct Mixed .a %0 .b %1
+  %p.ptr: [Mixed] = alloc Mixed
+  store %p.ptr %p
+  %bytes: [*]u8 = cast %p.ptr
+  %four: usize = const 4
+  %byte4.ptr: [u8] = offset %bytes %four
+  %byte: u8 = load %byte4.ptr
+  %result: i32 = cast %byte
+  ret %result
+}

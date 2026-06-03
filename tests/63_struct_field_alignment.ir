@@ -1,0 +1,26 @@
+; exit: 1
+
+; struct field alignment and padding: a following i32 field is aligned to
+; offset 4, not packed at offset 1 right after the leading i8
+
+type Mixed = struct {
+  a: i8
+  b: i32
+}
+
+$main(): i32 {
+@1:
+  %p.ptr: [Mixed] = alloc Mixed
+  %0: i8 = const 9
+  %a.ptr: [i8] = offset %p.ptr Mixed.a
+  store %a.ptr %0
+  %1: i32 = const 0x04030201
+  %b.ptr: [i32] = offset %p.ptr Mixed.b
+  store %b.ptr %1
+  %bytes: [*]u8 = cast %p.ptr
+  %four: usize = const 4
+  %byte4.ptr: [u8] = offset %bytes %four
+  %byte: u8 = load %byte4.ptr
+  %result: i32 = cast %byte
+  ret %result
+}
