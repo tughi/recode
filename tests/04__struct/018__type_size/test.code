@@ -1,0 +1,11 @@
+type Data = struct {
+    byte: u8
+    count: i32
+}
+
+proc main() -> i32 {
+    if type_size(Data) != 8 {
+        return 1
+    }
+    return 0
+}

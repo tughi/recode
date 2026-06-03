@@ -22,6 +22,10 @@ IR_Type *IR_Type__get(IR_Type_Kind kind) {
     return &IR_TYPES[kind];
 }
 
+static size_t align_up(size_t value, size_t alignment) {
+    return (value + alignment - 1) / alignment * alignment;
+}
+
 size_t IR_Type__alignment(IR_Type *type) {
     if (type->kind == IR_TYPE_KIND__STRUCT) {
         size_t alignment = 1;
@@ -65,10 +69,16 @@ size_t IR_Type__size(IR_Type *type) {
         return 8;
     case IR_TYPE_KIND__STRUCT: {
         size_t size = 0;
+        size_t alignment = 1;
         for (IR_Struct_Type_Field *field = ((IR_Struct_Type *)type)->first_field; field != NULL; field = field->next_field) {
+            size_t field_alignment = IR_Type__alignment(field->type);
+            size = align_up(size, field_alignment);
             size += IR_Type__size(field->type);
+            if (field_alignment > alignment) {
+                alignment = field_alignment;
+            }
         }
-        return size;
+        return align_up(size, alignment);
     }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: size of type kind ");
