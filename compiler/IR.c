@@ -53,6 +53,13 @@ size_t IR_Type__size(IR_Type *type) {
     case IR_TYPE_KIND__POINTER:
     case IR_TYPE_KIND__PROCEDURE:
         return 8;
+    case IR_TYPE_KIND__STRUCT: {
+        size_t size = 0;
+        for (IR_Struct_Type_Field *field = ((IR_Struct_Type *)type)->first_field; field != NULL; field = field->next_field) {
+            size += IR_Type__size(field->type);
+        }
+        return size;
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: size of type kind ");
         pWriter__write__int64(stderr_writer, type->kind);

@@ -11,6 +11,7 @@ typedef struct Lowerer {
     IR_Block *break_block;
     IR_Value_List globals;
     IR_Value_List scope;
+    IR_Value *malloc_callee;
 } Lowerer;
 
 IR_Block *Lowerer__create_block(Lowerer *self) {
@@ -153,6 +154,9 @@ IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expres
 IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expression *member_access_expression);
 
 IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expression) {
+    if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
+        return Lowerer__lower_expression(self, expression);
+    }
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
@@ -194,6 +198,29 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         }
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__ALLOC: {
+        Checked_Alloc_Expression *alloc_expression = (Checked_Alloc_Expression *)expression;
+        IR_Type *pointer_type = Lowerer__lower_type(self, expression->type);
+        IR_Type *allocated_type = ((IR_Pointer_Type *)pointer_type)->pointee;
+
+        IR_Const_Instruction *size = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__USIZE), IR_Type__size(allocated_type), NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)size);
+
+        if (self->malloc_callee == NULL) {
+            self->malloc_callee = Lowerer__find_global(self, String__create_from("malloc"));
+        }
+        IR_Call_Instruction *call = IR_Call_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(IR_Type__get(IR_TYPE_KIND__ANY)), self->malloc_callee);
+        IR_Value_List__append(&call->super.operands, &size->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)call);
+
+        IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), pointer_type, &call->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
+
+        IR_Value *value = Lowerer__lower_expression(self, alloc_expression->value_expression);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&cast->super.result, value));
+
+        return &cast->super.result;
     }
     case CHECKED_EXPRESSION_KIND__BOOL: {
         Checked_Bool_Expression *bool_expression = (Checked_Bool_Expression *)expression;
@@ -684,6 +711,7 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.break_block = NULL;
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
+    lowerer.malloc_callee = NULL;
 
     for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
