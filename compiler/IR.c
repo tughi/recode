@@ -23,6 +23,16 @@ IR_Type *IR_Type__get(IR_Type_Kind kind) {
 }
 
 size_t IR_Type__alignment(IR_Type *type) {
+    if (type->kind == IR_TYPE_KIND__STRUCT) {
+        size_t alignment = 1;
+        for (IR_Struct_Type_Field *field = ((IR_Struct_Type *)type)->first_field; field != NULL; field = field->next_field) {
+            size_t field_alignment = IR_Type__alignment(field->type);
+            if (field_alignment > alignment) {
+                alignment = field_alignment;
+            }
+        }
+        return alignment;
+    }
     size_t size = IR_Type__size(type);
     if (size == 0) {
         return 1;
