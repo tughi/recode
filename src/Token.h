@@ -68,12 +68,6 @@ typedef struct String_Token {
     String value;
 } String_Token;
 
-typedef struct Variable_Token {
-    String lexeme;
-    Source_Location location;
-    char prefix;
-} Variable_Token;
-
 typedef enum Token_Kind {
     TOKEN_KIND__CHARACTER,
     TOKEN_KIND__COMMENT,
@@ -86,7 +80,6 @@ typedef enum Token_Kind {
     TOKEN_KIND__OTHER,
     TOKEN_KIND__SPACE,
     TOKEN_KIND__STRING,
-    TOKEN_KIND__VARIABLE,
     TOKEN_KINDS,
 } Token_Kind;
 
@@ -108,6 +101,5 @@ typedef struct Token {
         Other_Token other;
         Space_Token space;
         String_Token string;
-        Variable_Token variable;
     };
 } Token;

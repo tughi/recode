@@ -280,7 +280,6 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         [TOKEN_KIND__OTHER] = LIGHTGRAY,
         [TOKEN_KIND__SPACE] = DARKGRAY,
         [TOKEN_KIND__STRING] = BEIGE,
-        [TOKEN_KIND__VARIABLE] = WHITE,
     };
     Lexed_Source *lexed_source = &debugger->module->lexed_source;
     Font font = debugger->font;

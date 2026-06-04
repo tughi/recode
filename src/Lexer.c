@@ -263,10 +263,6 @@ static int is_identifier_char(char c) {
 
 static Token scan_other(Lexer *lexer);
 
-static int is_variable_body_char(char c) {
-    return is_identifier_char(c) || c == '.';
-}
-
 static Token scan_label(Lexer *lexer) {
     const char *source = lexer->source.content;
     size_t length = lexer->source.length;
@@ -292,33 +288,6 @@ static Token scan_label(Lexer *lexer) {
     token.label.lexeme = (String){.content = source + start, .length = position - start};
     token.label.location = location;
     token.label.value = value;
-    return token;
-}
-
-static Token scan_variable(Lexer *lexer) {
-    const char *source = lexer->source.content;
-    size_t length = lexer->source.length;
-    size_t start = lexer->source_position;
-    char prefix = source[start];
-    size_t body_start = start + 1;
-    size_t position = body_start;
-    while (position < length && is_variable_body_char(source[position])) {
-        position++;
-    }
-    if (position == body_start) {
-        return scan_other(lexer);
-    }
-    Source_Location location = {
-        .source = lexer->source_path,
-        .line = lexer->source_line,
-        .column = lexer->source_column,
-    };
-    lexer_advance(lexer, start, position);
-    Token token;
-    token.kind = TOKEN_KIND__VARIABLE;
-    token.variable.lexeme = (String){.content = source + start, .length = position - start};
-    token.variable.location = location;
-    token.variable.prefix = prefix;
     return token;
 }
 
@@ -410,9 +379,6 @@ Token lexer_next(Lexer *lexer) {
             return scan_integer(lexer);
         case '@':
             return scan_label(lexer);
-        case '%':
-        case '$':
-            return scan_variable(lexer);
         case 'a' ... 'z':
         case 'A' ... 'Z':
         case '_':

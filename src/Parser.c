@@ -32,6 +32,11 @@ typedef union {
     };
 } IR_Global;
 
+typedef struct {
+    String lexeme;
+    Source_Location location;
+} IR_Value_Name;
+
 static Token fetch_token(Parser *parser) {
     while (parser->cursor < parser->lexed_source->tokens_size) {
         Token token = parser->lexed_source->tokens[parser->cursor++];
@@ -274,20 +279,11 @@ static uint64_t expect_integer(Parser *parser, IR_Type *type, bool negative) {
 static IR_Value *ir_value_list_lookup(IR_Value_List *list, String name) {
     for (size_t i = list->size; i > 0; i--) {
         IR_Value *value = list->items[i - 1];
-        if (value->name.length == name.length && memcmp(value->name.content, name.content, name.length) == 0) {
+        if (string_equals(value->name, name)) {
             return value;
         }
     }
     return NULL;
-}
-
-static Variable_Token expect_variable(Parser *parser, char prefix) {
-    if (parser->current.kind != TOKEN_KIND__VARIABLE || parser->current.variable.prefix != prefix) {
-        parse_error_current(parser, "Expected '%c' variable", prefix);
-    }
-    Variable_Token variable = parser->current.variable;
-    advance(parser);
-    return variable;
 }
 
 static size_t expect_label(Parser *parser) {
@@ -323,32 +319,36 @@ static Frame_Slot reserve_frame_slot(uint32_t *frame_size, IR_Type *type) {
     return (Frame_Slot){.offset = offset, .size = size};
 }
 
+static IR_Value_Name parse_value_name(Parser *parser, char prefix);
+
 static IR_Value *expect_value_reference(Parser *parser) {
-    if (parser->current.kind != TOKEN_KIND__VARIABLE) {
+    char prefix;
+    if (parser->current.kind == TOKEN_KIND__OTHER && (parser->current.other.value == '%' || parser->current.other.value == '$')) {
+        prefix = parser->current.other.value;
+    } else {
         parse_error_current(parser, "Expected value reference");
     }
-    Variable_Token variable = parser->current.variable;
-    advance(parser);
-    if (variable.prefix == '%') {
-        IR_Value *value = ir_value_list_lookup(&parser->function_values, variable.lexeme);
+    IR_Value_Name value_name = parse_value_name(parser, prefix);
+    if (prefix == '%') {
+        IR_Value *value = ir_value_list_lookup(&parser->function_values, value_name.lexeme);
         if (value != NULL) {
             return value;
         }
         IR_Instruction *placeholder = alloc_instruction();
         placeholder->kind = IR_INSTRUCTION__PLACEHOLDER;
-        placeholder->location = variable.location;
+        placeholder->location = value_name.location;
         placeholder->result.kind = IR_VALUE__INSTRUCTION_RESULT;
-        placeholder->result.name = variable.lexeme;
+        placeholder->result.name = value_name.lexeme;
         placeholder->result.type = NULL;
         ir_value_list_add(&parser->function_values, &placeholder->result);
         ir_instruction_list_add(&parser->forward_references, placeholder);
         return &placeholder->result;
     }
-    IR_Value *value = ir_value_list_lookup(&parser->global_values, variable.lexeme);
+    IR_Value *value = ir_value_list_lookup(&parser->global_values, value_name.lexeme);
     if (value == NULL) {
         IR_Global *global = calloc(1, sizeof(IR_Global));
         global->value.kind = IR_VALUE__UNRESOLVED;
-        global->value.name = variable.lexeme;
+        global->value.name = value_name.lexeme;
         ir_value_list_add(&parser->global_values, &global->value);
         value = &global->value;
     }
@@ -408,9 +408,46 @@ static bool is_integer_type(IR_Type *type) {
     }
 }
 
+static bool is_local_value_name_start(Parser *parser) {
+    return parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '%';
+}
+
+static bool is_global_value_name_start(Parser *parser) {
+    return parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '$';
+}
+
+static bool is_value_name_start(Parser *parser) {
+    return is_local_value_name_start(parser) || is_global_value_name_start(parser);
+}
+
+static IR_Value_Name parse_value_name(Parser *parser, char prefix) {
+    if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != prefix) {
+        parse_error_current(parser, "Expected '%c'", prefix);
+    }
+    const char *start = parser->current.lexeme.content;
+    Source_Location location = parser->current.location;
+    advance(parser);
+    if (parser->current.kind != TOKEN_KIND__IDENTIFIER && parser->current.kind != TOKEN_KIND__INTEGER) {
+        parse_error_current(parser, "Expected variable name");
+    }
+    const char *end = parser->current.lexeme.content + parser->current.lexeme.length;
+    advance(parser);
+    while (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '.') {
+        advance(parser);
+        if (parser->current.kind != TOKEN_KIND__IDENTIFIER && parser->current.kind != TOKEN_KIND__INTEGER) {
+            parse_error_current(parser, "Expected variable name component after '.'");
+        }
+        end = parser->current.lexeme.content + parser->current.lexeme.length;
+        advance(parser);
+    }
+    return (IR_Value_Name){
+        .lexeme = (String){.content = start, .length = (size_t)(end - start)},
+        .location = location,
+    };
+}
+
 static IR_Instruction *parse_value_instruction(Parser *parser) {
-    Variable_Token result_variable = expect_variable(parser, '%');
-    String result_name = result_variable.lexeme;
+    IR_Value_Name result_name = parse_value_name(parser, '%');
     expect_other(parser, ':');
     skip_spaces(parser, 1);
     IR_Type *result_type = parse_type(parser);
@@ -422,21 +459,21 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     IR_Instruction *instruction = NULL;
     for (size_t i = 0; i < parser->forward_references.size; i++) {
         IR_Instruction *placeholder = parser->forward_references.items[i];
-        if (placeholder->result.name.length == result_name.length && memcmp(placeholder->result.name.content, result_name.content, result_name.length) == 0) {
+        if (string_equals(placeholder->result.name, result_name.lexeme)) {
             instruction = placeholder;
             parser->forward_references.items[i] = parser->forward_references.items[--parser->forward_references.size];
             break;
         }
     }
     if (instruction == NULL) {
-        if (ir_value_list_lookup(&parser->function_values, result_name) != NULL) {
-            parse_error(parser, result_variable.location, "Redefinition of '%.*s'", STRING(result_name));
+        if (ir_value_list_lookup(&parser->function_values, result_name.lexeme) != NULL) {
+            parse_error(parser, result_name.location, "Redefinition of '%.*s'", STRING(result_name.lexeme));
         }
         instruction = alloc_instruction();
-        instruction->result.name = result_name;
+        instruction->result.name = result_name.lexeme;
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
-    instruction->location = result_variable.location;
+    instruction->location = result_name.location;
     instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
     instruction->result.type = result_type;
     instruction->result.slot = reserve_frame_slot(&parser->function_frame_size, result_type);
@@ -465,7 +502,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
 
         while (parser->current.kind == TOKEN_KIND__SPACE) {
             skip_spaces(parser, 1);
-            if (parser->current.kind != TOKEN_KIND__VARIABLE) {
+            if (!is_value_name_start(parser)) {
                 break;
             }
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -634,7 +671,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         skip_spaces(parser, 1);
-        if (parser->current.kind == TOKEN_KIND__VARIABLE) {
+        if (is_value_name_start(parser)) {
             // indexed form: offset %ptr %index
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
             instruction->offset_instruction.struct_field = NULL;
@@ -700,10 +737,10 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         skip_spaces(parser, 1);
         IR_Type *struct_type = parse_type(parser);
         if (struct_type->kind != IR_TYPE__STRUCT) {
-            parse_error(parser, result_variable.location, "Not a struct type");
+            parse_error(parser, result_name.location, "Not a struct type");
         }
         if (struct_type != result_type) {
-            parse_error(parser, result_variable.location, "Unexpected result type");
+            parse_error(parser, result_name.location, "Unexpected result type");
         }
         IR_Struct_Field **fields = calloc(struct_type->struct_field_count, sizeof(IR_Struct_Field *));
         size_t field_count = 0;
@@ -806,7 +843,7 @@ static IR_Instruction *parse_store_instruction(Parser *parser) {
 }
 
 static IR_Instruction *parse_instruction(Parser *parser) {
-    if (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
+    if (is_local_value_name_start(parser)) {
         return parse_value_instruction(parser);
     }
 
@@ -825,7 +862,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
             while (parser->current.kind == TOKEN_KIND__SPACE) {
                 skip_spaces(parser, 1);
-                if (parser->current.kind != TOKEN_KIND__VARIABLE) {
+                if (!is_value_name_start(parser)) {
                     break;
                 }
                 ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -1113,8 +1150,7 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
     parse_error(parser, function->location, "Unsupported external function");
 }
 
-static void parse_external(Parser *parser, IR_Module *module) {
-    Variable_Token name = expect_variable(parser, '$');
+static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name) {
     skip_spaces(parser, 0);
     expect_other(parser, ':');
     skip_spaces(parser, 1);
@@ -1196,8 +1232,7 @@ static void parse_external(Parser *parser, IR_Module *module) {
     }
 }
 
-static IR_Function *parse_function(Parser *parser) {
-    Variable_Token function_name = expect_variable(parser, '$');
+static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) {
     expect_other(parser, '(');
 
     IR_Value *function_value = ir_value_list_lookup(&parser->global_values, function_name.lexeme);
@@ -1220,8 +1255,8 @@ static IR_Function *parse_function(Parser *parser) {
     parser->forward_references.size = 0;
     parser->function_frame_size = 0;
 
-    while (parser->current.kind == TOKEN_KIND__VARIABLE && parser->current.variable.prefix == '%') {
-        String parameter_name = expect_variable(parser, '%').lexeme;
+    while (is_local_value_name_start(parser)) {
+        String parameter_name = parse_value_name(parser, '%').lexeme;
         expect_other(parser, ':');
         skip_spaces(parser, 1);
         IR_Type *parameter_type = parse_type(parser);
@@ -1348,12 +1383,13 @@ IR_Module *parse(Lexed_Source lexed_source) {
             continue;
         }
 
-        if (parser.current.kind == TOKEN_KIND__VARIABLE && parser.current.variable.prefix == '$') {
-            if (parser.next.kind == TOKEN_KIND__OTHER && parser.next.other.value == ':') {
-                parse_external(&parser, module);
-                continue;
+        if (is_global_value_name_start(&parser)) {
+            IR_Value_Name value_name = parse_value_name(&parser, '$');
+            if (parser.current.kind == TOKEN_KIND__OTHER && parser.current.other.value == '(') {
+                ir_function_list_add(&module->functions, parse_function(&parser, value_name));
+            } else {
+                parse_external(&parser, module, value_name);
             }
-            ir_function_list_add(&module->functions, parse_function(&parser));
             continue;
         }
 
