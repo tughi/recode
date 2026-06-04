@@ -440,6 +440,16 @@ static IR_Value_Name parse_value_name(Parser *parser, char prefix) {
         end = parser->current.lexeme.content + parser->current.lexeme.length;
         advance(parser);
     }
+    if (prefix == '$') {
+        while (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '+') {
+            advance(parser);
+            if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+                parse_error_current(parser, "Expected parameter label after '+'");
+            }
+            end = parser->current.lexeme.content + parser->current.lexeme.length;
+            advance(parser);
+        }
+    }
     return (IR_Value_Name){
         .lexeme = (String){.content = start, .length = (size_t)(end - start)},
         .location = location,

@@ -1,0 +1,17 @@
+; exit: 42
+
+; global value names may end with '+'-separated identifiers, used to encode procedure parameter labels
+
+$main(): i32 {
+@1:
+  %1: i32 = const 20
+  %2: i32 = const 22
+  %3: i32 = call $test.add+anon+with %1 %2
+  ret %3
+}
+
+$test.add+anon+with(%a: i32, %b: i32): i32 {
+@1:
+  %1: i32 = add %a %b
+  ret %1
+}
