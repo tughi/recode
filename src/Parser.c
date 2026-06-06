@@ -684,7 +684,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
                 return instruction;
             }
             if (string_equals_cstr(literal.lexeme, "null")) {
-                if (result_type == NULL || (result_type->kind != IR_TYPE__PTR && result_type->kind != IR_TYPE__MULTI_PTR)) {
+                if (result_type->kind != IR_TYPE__PTR && result_type->kind != IR_TYPE__MULTI_PTR) {
                     parse_error(parser, literal.location, "const null requires a pointer result type");
                 }
                 instruction->const_instruction.value = 0;
@@ -701,6 +701,9 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
             return instruction;
         }
         Source_Location literal_location = current_location(parser);
+        if (!is_integer_type(result_type)) {
+            parse_error(parser, literal_location, "const integer literal requires an integer result type");
+        }
         bool negative = false;
         if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
             negative = true;
