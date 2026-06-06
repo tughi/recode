@@ -1,0 +1,17 @@
+; exit: 42
+
+; custom types can be namespaced using '.'
+
+type code.ast.Number = struct {
+  value: i32
+}
+
+$main(): i32 {
+@1:
+  %n: [code.ast.Number] = alloc code.ast.Number
+  %0: [i32] = offset %n code.ast.Number.value
+  %1: i32 = const 42
+  store %0 %1
+  %2: i32 = load %0
+  ret %2
+}

@@ -113,6 +113,30 @@ static String expect_identifier(Parser *parser) {
     return name;
 }
 
+typedef struct {
+    String lexeme;
+    Source_Location location;
+} Qualified_Name;
+
+static Qualified_Name parse_qualified_name(Parser *parser) {
+    if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
+        parse_error_current(parser, "Expected identifier");
+    }
+    Source_Location location = parser->current.location;
+    const char *start = parser->current.lexeme.content;
+    const char *end = parser->current.lexeme.content + parser->current.lexeme.length;
+    advance(parser);
+    while (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '.' && parser->next.kind == TOKEN_KIND__IDENTIFIER) {
+        advance(parser);
+        end = parser->current.lexeme.content + parser->current.lexeme.length;
+        advance(parser);
+    }
+    return (Qualified_Name){
+        .lexeme = (String){.content = start, .length = (size_t)(end - start)},
+        .location = location,
+    };
+}
+
 static IR_Type *parse_type(Parser *parser) {
     if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '[') {
         advance(parser);
@@ -129,8 +153,7 @@ static IR_Type *parse_type(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
         parse_error_current(parser, "Expected type");
     }
-    Identifier_Token name = parser->current.identifier;
-    advance(parser);
+    Qualified_Name name = parse_qualified_name(parser);
     if (string_equals_cstr(name.lexeme, "proc")) {
         skip_spaces(parser, 1);
         expect_other(parser, '(');
@@ -456,6 +479,45 @@ static IR_Value_Name parse_value_name(Parser *parser, char prefix) {
     };
 }
 
+typedef struct {
+    Qualified_Name qualifier;
+    Identifier_Token leaf;
+} Qualified_Name_Split;
+
+static Qualified_Name_Split split_qualified_name(Qualified_Name *qualified_name) {
+    const char *qualifier_content = qualified_name->lexeme.content;
+    size_t qualifier_length = qualified_name->lexeme.length;
+    const char *leaf_content = qualifier_content + qualifier_length - 1;
+    size_t leaf_length = 0;
+    while (leaf_content > qualifier_content) {
+        if (*leaf_content == '.') {
+            break;
+        }
+        leaf_content--;
+    }
+    Source_Location qualifier_location = qualified_name->location;
+    Source_Location leaf_location = qualifier_location;
+    if (leaf_content > qualifier_content) {
+        leaf_content++;
+        leaf_length = qualifier_length - (leaf_content - qualifier_content);
+        qualifier_length -= leaf_length + 1;
+        leaf_location.column += (size_t)(leaf_content - qualifier_content);
+    } else {
+        // empty leaf
+        leaf_content = qualifier_content + qualifier_length;
+        leaf_location.column += qualifier_length;
+    }
+    return (Qualified_Name_Split){
+        .qualifier = (Qualified_Name){
+            .lexeme = (String){.content = qualifier_content, .length = qualifier_length},
+            .location = qualifier_location,
+        },
+        .leaf = (Identifier_Token){
+            .lexeme = (String){.content = leaf_content, .length = leaf_length},
+            .location = leaf_location,
+        }};
+}
+
 static IR_Instruction *parse_value_instruction(Parser *parser) {
     IR_Value_Name result_name = parse_value_name(parser, '%');
     expect_other(parser, ':');
@@ -691,20 +753,17 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
             parse_error_current(parser, "Expected struct type name or index variable");
         }
-        Identifier_Token type_name = parser->current.identifier;
-        advance(parser);
+        Qualified_Name qualified_name = parse_qualified_name(parser);
+        Qualified_Name_Split qualified_name_split = split_qualified_name(&qualified_name);
+        Qualified_Name type_name = qualified_name_split.qualifier;
         IR_Type *struct_type = ir_type_named_lookup(parser->types, type_name.lexeme);
         if (struct_type == NULL || struct_type->kind != IR_TYPE__STRUCT) {
             parse_error(parser, type_name.location, "Unknown struct type '%.*s'", STRING(type_name.lexeme));
         }
-        skip_spaces(parser, 0);
-        expect_other(parser, '.');
-        skip_spaces(parser, 0);
-        if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
-            parse_error_current(parser, "Expected field name");
+        if (qualified_name_split.leaf.lexeme.length == 0) {
+            parse_error_current(parser, "Expected '.' followed by field name");
         }
-        Identifier_Token field_name = parser->current.identifier;
-        advance(parser);
+        Identifier_Token field_name = qualified_name_split.leaf;
         IR_Struct_Field *struct_field = NULL;
         for (size_t i = 0; i < struct_type->struct_field_count; i++) {
             if (string_equals(struct_type->struct_fields[i]->name, field_name.lexeme)) {
@@ -1062,23 +1121,22 @@ static void check_function(Parser *parser, IR_Function *function) {
 static void parse_type_declaration(Parser *parser) {
     advance(parser);
     skip_spaces(parser, 1);
-    Source_Location name_location = current_location(parser);
-    String name = expect_identifier(parser);
+    Qualified_Name name = parse_qualified_name(parser);
     skip_spaces(parser, 1);
     expect_other(parser, '=');
     skip_spaces(parser, 1);
     Source_Location body_location = current_location(parser);
     String type_kind = expect_identifier(parser);
-    IR_Type *type = ir_type_named_lookup(parser->types, name);
+    IR_Type *type = ir_type_named_lookup(parser->types, name.lexeme);
     if (type == NULL) {
         type = malloc(sizeof(IR_Type));
         type->kind = IR_TYPE__PLACEHOLDER;
-        type->name = name;
+        type->name = name.lexeme;
         ir_type_list_add(parser->types, type);
     } else if (type->kind != IR_TYPE__PLACEHOLDER) {
-        parse_error(parser, name_location, "Redefinition of type '%.*s'", STRING(name));
+        parse_error(parser, name.location, "Redefinition of type '%.*s'", STRING(name.lexeme));
     }
-    type->location = name_location;
+    type->location = name.location;
     if (string_equals_cstr(type_kind, "opaque")) {
         type->kind = IR_TYPE__OPAQUE;
         return;
@@ -1124,7 +1182,7 @@ static void parse_type_declaration(Parser *parser) {
     }
 
     if (field_count == 0) {
-        parse_error(parser, name_location, "Struct '%.*s' must declare at least one field", STRING(name));
+        parse_error(parser, name.location, "Struct '%.*s' must declare at least one field", STRING(name.lexeme));
     }
     type->kind = IR_TYPE__STRUCT;
     type->struct_fields = fields;
