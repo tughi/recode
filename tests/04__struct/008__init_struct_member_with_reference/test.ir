@@ -1,32 +1,32 @@
-type Number = struct {
+type test.Number = struct {
   value: i32
-  next: [Number]
+  next: [test.Number]
 }
 
 $test.main(): i32 {
 @1:
-  %third.ptr: [Number] = alloc Number
+  %third.ptr: [test.Number] = alloc test.Number
   %1: i32 = const 43
-  %2: Number = struct Number .value %1
+  %2: test.Number = struct test.Number .value %1
   store %third.ptr %2
-  %second.ptr: [Number] = alloc Number
+  %second.ptr: [test.Number] = alloc test.Number
   %3: i32 = const 42
-  %4: Number = struct Number .value %3 .next %third.ptr
+  %4: test.Number = struct test.Number .value %3 .next %third.ptr
   store %second.ptr %4
-  %first.ptr: [Number] = alloc Number
+  %first.ptr: [test.Number] = alloc test.Number
   %5: i32 = const 41
-  %6: Number = struct Number .value %5 .next %second.ptr
+  %6: test.Number = struct test.Number .value %5 .next %second.ptr
   store %first.ptr %6
   %second_value.ptr: [i32] = alloc i32
-  %7: [[Number]] = offset %first.ptr Number.next
-  %8: [Number] = load %7
-  %9: [i32] = offset %8 Number.value
+  %7: [[test.Number]] = offset %first.ptr test.Number.next
+  %8: [test.Number] = load %7
+  %9: [i32] = offset %8 test.Number.value
   %10: i32 = load %9
   store %second_value.ptr %10
   %second_value_ref.ptr: [[i32]] = alloc [i32]
-  %11: [[Number]] = offset %first.ptr Number.next
-  %12: [Number] = load %11
-  %13: [i32] = offset %12 Number.value
+  %11: [[test.Number]] = offset %first.ptr test.Number.next
+  %12: [test.Number] = load %11
+  %13: [i32] = offset %12 test.Number.value
   store %second_value_ref.ptr %13
   %second_value.1: i32 = load %second_value.ptr
   %14: i32 = const 42

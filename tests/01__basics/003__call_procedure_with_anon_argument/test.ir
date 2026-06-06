@@ -1,11 +1,11 @@
 $test.main(): i32 {
 @1:
   %1: i32 = const 0
-  %2: i32 = call $test.echo__anon %1
+  %2: i32 = call $test.echo+anon %1
   ret %2
 }
 
-$test.echo__anon(%value: i32): i32 {
+$test.echo+anon(%value: i32): i32 {
 @1:
   ret %value
 }

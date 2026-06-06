@@ -1,22 +1,22 @@
-type Line = struct {
-  p1: Point
-  p2: Point
+type test.Line = struct {
+  p1: test.Point
+  p2: test.Point
 }
 
-type Point = struct {
+type test.Point = struct {
   x: i32
   y: i32
 }
 
 $test.main(): i32 {
 @1:
-  %line.ptr: [Line] = alloc Line
-  %1: [Point] = offset %line.ptr Line.p2
-  %2: [i32] = offset %1 Point.y
+  %line.ptr: [test.Line] = alloc test.Line
+  %1: [test.Point] = offset %line.ptr test.Line.p2
+  %2: [i32] = offset %1 test.Point.y
   %3: i32 = const 64
   store %2 %3
-  %4: [Point] = offset %line.ptr Line.p2
-  %5: [i32] = offset %4 Point.y
+  %4: [test.Point] = offset %line.ptr test.Line.p2
+  %5: [i32] = offset %4 test.Point.y
   %6: i32 = load %5
   %7: i32 = const 64
   %8: i32 = sub %6 %7

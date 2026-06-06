@@ -1,12 +1,12 @@
 $test.main(): i32 {
 @1:
   %procedure_pointer.ptr: [[proc (i32): i32]] = alloc [proc (i32): i32]
-  store %procedure_pointer.ptr $test.echo__value
+  store %procedure_pointer.ptr $test.echo+value
   %1: i32 = const 0
   ret %1
 }
 
-$test.echo__value(%value: i32): i32 {
+$test.echo+value(%value: i32): i32 {
 @1:
   ret %value
 }

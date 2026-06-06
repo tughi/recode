@@ -1,7 +1,7 @@
 $test.main(): i32 {
 @1:
   %echo_pointer.ptr: [[proc (i32): i32]] = alloc [proc (i32): i32]
-  store %echo_pointer.ptr $test.echo__value
+  store %echo_pointer.ptr $test.echo+value
   %echo_pointer.1: [proc (i32): i32] = load %echo_pointer.ptr
   %1: i32 = const 42
   %2: i32 = call %echo_pointer.1 %1
@@ -10,7 +10,7 @@ $test.main(): i32 {
   ret %4
 }
 
-$test.echo__value(%value: i32): i32 {
+$test.echo+value(%value: i32): i32 {
 @1:
   ret %value
 }

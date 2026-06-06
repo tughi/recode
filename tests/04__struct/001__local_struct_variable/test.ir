@@ -1,11 +1,11 @@
-type Point = struct {
+type test.Point = struct {
   x: i32
   y: i32
 }
 
 $test.main(): i32 {
 @1:
-  %point.ptr: [Point] = alloc Point
+  %point.ptr: [test.Point] = alloc test.Point
   %1: i32 = const 0
   ret %1
 }

@@ -31,13 +31,46 @@ IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
     panic();
 }
 
-String *Lowerer__procedure_name(Checked_Procedure_Symbol *procedure_symbol) {
-    if (procedure_symbol->parsed_procedure_statement->is_external) {
+IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type);
+
+String *Lowerer__type_name(Checked_Type *type) {
+    Checked_Named_Type *named_type = (Checked_Named_Type *)type;
+    String *name = String__create();
+    if (named_type->package != NULL) {
+        String__append_string(name, named_type->package->name);
+        String__append_char(name, '.');
+    }
+    String__append_string(name, named_type->name);
+    return name;
+}
+
+String *Lowerer__procedure_name(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
+    Parsed_Procedure_Statement *parsed_procedure_statement = procedure_symbol->parsed_procedure_statement;
+    if (parsed_procedure_statement->is_external) {
         return procedure_symbol->super.name;
     }
-    String *name = String__create_copy(procedure_symbol->super.package->name);
-    String__append_char(name, '.');
-    String__append_string(name, procedure_symbol->super.name);
+    String *name = String__create();
+    Writer writer = String__create_writer(name);
+    Parsed_Procedure_Parameter *parameter = parsed_procedure_statement->first_parameter;
+    if (procedure_symbol->receiver_type != NULL) {
+        String__append_char(name, '(');
+        pWriter__write__ir_type(&writer, Lowerer__lower_type(self, procedure_symbol->receiver_type));
+        String__append_cstring(name, ").");
+        parameter = parameter->next_parameter;
+    } else {
+        String__append_string(name, procedure_symbol->super.package->name);
+        String__append_char(name, '.');
+    }
+    String__append_string(name, parsed_procedure_statement->super.name->lexeme);
+    while (parameter != NULL) {
+        String__append_char(name, '+');
+        if (parameter->label != NULL) {
+            String__append_string(name, parameter->label->lexeme);
+        } else {
+            String__append_cstring(name, "anon");
+        }
+        parameter = parameter->next_parameter;
+    }
     return name;
 }
 
@@ -109,7 +142,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__STRUCT: {
         Checked_Struct_Type *struct_type = (Checked_Struct_Type *)type;
-        String *name = struct_type->super.name;
+        String *name = Lowerer__type_name(type);
         for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
             if (String__equals_string(existing_type->name, name)) {
                 return (IR_Type *)existing_type;
@@ -176,7 +209,7 @@ IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expr
     IR_Value *object_pointer = Lowerer__lower_object_pointer(self, member_access_expression->object_expression);
     Checked_Struct_Member *member = member_access_expression->member;
     IR_Type *member_type = Lowerer__lower_type(self, member_access_expression->super.type);
-    IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, member->struct_type->super.name, member->name);
+    IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, Lowerer__type_name((Checked_Type *)member->struct_type), member->name);
     IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
     return &instruction->super.result;
 }
@@ -417,7 +450,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
-            return Lowerer__find_global(self, Lowerer__procedure_name((Checked_Procedure_Symbol *)symbol));
+            return Lowerer__find_global(self, Lowerer__procedure_name(self, (Checked_Procedure_Symbol *)symbol));
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
             return Lowerer__find_scope(self, symbol->name);
@@ -615,7 +648,8 @@ void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedu
     size_t parameter_count;
     IR_Type **parameter_types = Lowerer__lower_parameter_types(self, checked_procedure_type, &parameter_count);
 
-    IR_Procedure *procedure = IR_Procedure__create(Lowerer__procedure_name(procedure_symbol), parameter_types, parameter_count, return_type);
+    IR_Procedure *procedure = IR_Procedure__create(Lowerer__procedure_name(self, procedure_symbol), parameter_types, parameter_count, return_type);
+    procedure->is_method = procedure_symbol->receiver_type != NULL;
     IR_Program__append_procedure(self->program, procedure);
     IR_Value_List__append(&self->globals, &procedure->super.value);
 
@@ -650,7 +684,7 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
         return;
     }
 
-    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(procedure_symbol));
+    IR_Procedure *procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(self, procedure_symbol));
 
     self->procedure = procedure;
     self->value_counter = 0;
@@ -676,7 +710,7 @@ bool Checked_Procedure_Symbol__is_lowerable(Checked_Procedure_Symbol *procedure_
 }
 
 void Lowerer__define_main(Lowerer *self, Checked_Procedure_Symbol *main_symbol) {
-    IR_Procedure *main_procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(main_symbol));
+    IR_Procedure *main_procedure = (IR_Procedure *)Lowerer__find_global(self, Lowerer__procedure_name(self, main_symbol));
 
     size_t parameter_count = main_procedure->parameters.size;
     IR_Type **parameter_types = parameter_count > 0 ? (IR_Type **)malloc(parameter_count * sizeof(IR_Type *)) : NULL;

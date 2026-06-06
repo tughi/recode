@@ -1,11 +1,11 @@
 $test.main(): i32 {
 @1:
   %1: [i32] = const null
-  %2: i32 = call $test.deref__anon %1
+  %2: i32 = call $test.deref+anon %1
   ret %2
 }
 
-$test.deref__anon(%ptr: [i32]): i32 {
+$test.deref+anon(%ptr: [i32]): i32 {
 @1:
   %1: [i32] = const null
   %2: bool = cmp_eq %ptr %1

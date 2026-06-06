@@ -1,49 +1,32 @@
 type FILE = opaque
 
-external $stdout: ptr<FILE>
+$stdout: [[FILE]] = external
 
-$main() {
+$fputc: [proc (i32, [FILE]): i32] = external
+
+$test.main(): i32 {
 @1:
-  [ $stdout ]
-  %1: ptr<FILE> = load $stdout
-  [ %1 ]
+  %1: [FILE] = load $stdout
   %2: u8 = const '4'
-  [ %1 %2 ]
-  %3: ptr<FILE> = call $pFILE__write__char %1 %2
-  [ %3 ]
+  %3: [FILE] = call $([FILE]).write+char %1 %2
   %4: u8 = const '2'
-  [ %3 %4 ]
-  %5: ptr<FILE> = call $pFILE__write__char %3 %4
-  [ %5 ]
+  %5: [FILE] = call $([FILE]).write+char %3 %4
   %6: u8 = const '\n'
-  [ %5 %6 ]
-  %7: ptr<FILE> = call $pFILE__write__char %5 %6
-  [ ]
-  ret
-  [ ]
+  %7: [FILE] = call $([FILE]).write+char %5 %6
+  %8: i32 = const 0
+  ret %8
 }
 
-$pFILE__write__char(%self: ptr<FILE>, %char: u8): ptr<FILE> {
+$([FILE]).write+char(%self, %ch: u8): [FILE] {
 @1:
-  [ $stdout %char %self ]
-  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
-  [ %self.ptr $stdout %char %self ]
-  store %self.ptr %self
-  [ %self.ptr $stdout %char ]
-  %char.ptr: ptr<u8> = alloc u8
-  [ %self.ptr $stdout %char.ptr %char ]
-  store %char.ptr %char
-  [ %self.ptr $stdout %char.ptr ]
-  %char.1: u8 = load %char.ptr
-  [ %self.ptr %char.1 $stdout ]
-  %1: ptr<FILE> = load $stdout
-  [ %self.ptr %char.1 %1 ]
-  %2: i32 = call $fputc %char.1 %1
-  [ %self.ptr ]
-  %self.1: ptr<FILE> = load %self.ptr
-  [ %self.1 ]
-  ret %self.1
-  [ ]
+  %1: i32 = cast %ch
+  %2: [FILE] = load $stdout
+  %3: i32 = call $fputc %1 %2
+  ret %self
 }
 
-$fputc(%c: u8, %stream: ptr<FILE>): i32
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

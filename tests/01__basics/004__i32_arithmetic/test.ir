@@ -2,45 +2,45 @@ $test.main(): i32 {
 @1:
   %1: i32 = const 42
   %2: i32 = const 10
-  %3: i32 = call $test.div__anon__anon %1 %2
+  %3: i32 = call $test.div+anon+anon %1 %2
   %4: i32 = const 2
-  %5: i32 = call $test.add__anon__anon %3 %4
+  %5: i32 = call $test.add+anon+anon %3 %4
   %6: i32 = const 42
   %7: i32 = const 10
-  %8: i32 = call $test.mod__anon__anon %6 %7
+  %8: i32 = call $test.mod+anon+anon %6 %7
   %9: i32 = const 5
-  %10: i32 = call $test.add__anon__anon %8 %9
-  %11: i32 = call $test.mul__anon__anon %5 %10
+  %10: i32 = call $test.add+anon+anon %8 %9
+  %11: i32 = call $test.mul+anon+anon %5 %10
   %12: i32 = const 42
-  %13: i32 = call $test.sub__anon__anon %11 %12
+  %13: i32 = call $test.sub+anon+anon %11 %12
   ret %13
 }
 
-$test.add__anon__anon(%v1: i32, %v2: i32): i32 {
+$test.add+anon+anon(%v1: i32, %v2: i32): i32 {
 @1:
   %1: i32 = add %v1 %v2
   ret %1
 }
 
-$test.sub__anon__anon(%v1: i32, %v2: i32): i32 {
+$test.sub+anon+anon(%v1: i32, %v2: i32): i32 {
 @1:
   %1: i32 = sub %v1 %v2
   ret %1
 }
 
-$test.mul__anon__anon(%v1: i32, %v2: i32): i32 {
+$test.mul+anon+anon(%v1: i32, %v2: i32): i32 {
 @1:
   %1: i32 = mul %v1 %v2
   ret %1
 }
 
-$test.div__anon__anon(%v1: i32, %v2: i32): i32 {
+$test.div+anon+anon(%v1: i32, %v2: i32): i32 {
 @1:
   %1: i32 = div %v1 %v2
   ret %1
 }
 
-$test.mod__anon__anon(%v1: i32, %v2: i32): i32 {
+$test.mod+anon+anon(%v1: i32, %v2: i32): i32 {
 @1:
   %1: i32 = mod %v1 %v2
   ret %1

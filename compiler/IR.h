@@ -309,6 +309,7 @@ typedef struct IR_Procedure {
     IR_Symbol super;
     IR_Value_List parameters;
     IR_Type *return_type;
+    bool is_method;
     IR_Block *first_block;
     IR_Block *last_block;
     struct IR_Procedure *next_procedure;
@@ -336,5 +337,6 @@ void IR_Program__append_type(IR_Program *self, IR_Named_Type *type);
 void IR_Program__append_procedure(IR_Program *self, IR_Procedure *procedure);
 
 Writer *pWriter__write__ir_program(Writer *self, IR_Program *program);
+Writer *pWriter__write__ir_type(Writer *self, IR_Type *type);
 
 #endif

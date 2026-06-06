@@ -1,4 +1,4 @@
-type Data = struct {
+type test.Data = struct {
   byte: u8
   count: i32
 }

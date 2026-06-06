@@ -1,4 +1,4 @@
-$test.main__anon__anon(%argc: i32, %argv: [*][*]u8): i32 {
+$test.main+anon+anon(%argc: i32, %argv: [*][*]u8): i32 {
 @1:
   %1: i32 = const 2
   %2: bool = cmp_lt %argc %1
@@ -29,6 +29,6 @@ $test.main__anon__anon(%argc: i32, %argv: [*][*]u8): i32 {
 
 $main(%argc: i32, %argv: [*][*]u8): i32 {
 @1:
-  %1: i32 = call $test.main__anon__anon %argc %argv
+  %1: i32 = call $test.main+anon+anon %argc %argv
   ret %1
 }

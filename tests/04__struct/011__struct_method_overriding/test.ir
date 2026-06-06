@@ -1,41 +1,41 @@
-type Number = struct {
+type test.Number = struct {
   value: i32
 }
 
-type Boolean = struct {
+type test.Boolean = struct {
   value: bool
 }
 
-$test.ptest_Number__get_value(%self: [Number]): i32 {
+$([test.Number]).get_value(%self): i32 {
 @1:
-  %1: [i32] = offset %self Number.value
+  %1: [i32] = offset %self test.Number.value
   %2: i32 = load %1
   ret %2
 }
 
-$test.ptest_Number__set_value__anon(%self: [Number], %value: i32) {
+$([test.Number]).set_value+anon(%self, %value: i32) {
 @1:
-  %1: [i32] = offset %self Number.value
+  %1: [i32] = offset %self test.Number.value
   store %1 %value
   ret
 }
 
-$test.ptest_Boolean__get_value(%self: [Boolean]): bool {
+$([test.Boolean]).get_value(%self): bool {
 @1:
-  %1: [bool] = offset %self Boolean.value
+  %1: [bool] = offset %self test.Boolean.value
   %2: bool = load %1
   ret %2
 }
 
 $test.main(): i32 {
 @1:
-  %number.ptr: [Number] = alloc Number
+  %number.ptr: [test.Number] = alloc test.Number
   %1: i32 = const 0
-  %2: Number = struct Number .value %1
+  %2: test.Number = struct test.Number .value %1
   store %number.ptr %2
   %3: i32 = const 42
-  call $test.ptest_Number__set_value__anon %number.ptr %3
-  %4: i32 = call $test.ptest_Number__get_value %number.ptr
+  call $([test.Number]).set_value+anon %number.ptr %3
+  %4: i32 = call $([test.Number]).get_value %number.ptr
   %5: i32 = const 42
   %6: i32 = sub %4 %5
   ret %6

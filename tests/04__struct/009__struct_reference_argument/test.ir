@@ -1,24 +1,24 @@
-type Point = struct {
+type test.Point = struct {
   x: i32
   y: i32
 }
 
 $test.main(): i32 {
 @1:
-  %point.ptr: [Point] = alloc Point
+  %point.ptr: [test.Point] = alloc test.Point
   %1: i32 = const 16
   %2: i32 = const 32
-  %3: Point = struct Point .x %1 .y %2
+  %3: test.Point = struct test.Point .x %1 .y %2
   store %point.ptr %3
-  %4: i32 = call $test.get_y__anon %point.ptr
+  %4: i32 = call $test.get_y+anon %point.ptr
   %5: i32 = const 32
   %6: i32 = sub %4 %5
   ret %6
 }
 
-$test.get_y__anon(%point: [Point]): i32 {
+$test.get_y+anon(%point: [test.Point]): i32 {
 @1:
-  %1: [i32] = offset %point Point.y
+  %1: [i32] = offset %point test.Point.y
   %2: i32 = load %1
   ret %2
 }

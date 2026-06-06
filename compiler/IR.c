@@ -423,6 +423,7 @@ IR_Procedure *IR_Procedure__create(String *name, IR_Type **parameter_types, size
     procedure->super.value.variable = NULL;
     procedure->parameters = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     procedure->return_type = return_type;
+    procedure->is_method = false;
     procedure->first_block = NULL;
     procedure->last_block = NULL;
     procedure->next_procedure = NULL;
@@ -738,7 +739,11 @@ Writer *pWriter__write__ir_procedure(Writer *self, IR_Procedure *procedure) {
     pWriter__write__string(self, procedure->super.value.name);
     pWriter__write__char(self, '(');
     if (procedure->parameters.size > 0) {
-        pWriter__write__ir_value_definition(self, procedure->parameters.values[0]);
+        if (procedure->is_method) {
+            pWriter__write__string(self, procedure->parameters.values[0]->name);
+        } else {
+            pWriter__write__ir_value_definition(self, procedure->parameters.values[0]);
+        }
         for (size_t i = 1; i < procedure->parameters.size; i++) {
             pWriter__write__cstring(self, ", ");
             pWriter__write__ir_value_definition(self, procedure->parameters.values[i]);
