@@ -14,6 +14,37 @@ $function_name(%param: type, ...): return_type {
 
 Defines a procedure with typed parameters and a return type. The return type annotation is optional — omitting it implies `void`.
 
+Global names may be dotted (e.g. `$code.ast.parse`) and may end with one or more `+`-separated identifiers that encode procedure parameter labels:
+
+```
+$test.add+anon+with(%a: i32, %b: i32): i32 {
+    ...
+}
+```
+
+The `+...` suffix is part of the name — `$test.add+anon+with` is the symbol to `call`.
+
+#### Methods (receiver procedures)
+
+A receiver type written as `$( <type> ).<member>` attaches a method to a type. The same member name on different receivers names distinct procedures, so the receiver acts as a namespace. The receiver parameter is written without a type and defaults to the receiver type.
+
+```
+$([code.ast.Number]).get(%self): i32 {
+@1:
+    %0: [i32] = offset %self code.ast.Number.value
+    %1: i32 = load %0
+    ret %1
+}
+```
+
+The method is called by its full name, with the receiver passed as the first argument:
+
+```
+%n: [code.ast.Number] = alloc code.ast.Number
+...
+%v: i32 = call $([code.ast.Number]).get %n
+```
+
 External functions are declared as external globals:
 
 ```
@@ -44,9 +75,12 @@ type Point = struct {
     y: i32
 }
 type FILE = opaque
+type code.ast.Number = struct {
+    value: i32
+}
 ```
 
-Defines a named struct type or declares an opaque (externally defined) type.
+Defines a named struct type or declares an opaque (externally defined) type. Type names may be namespaced with `.` (e.g. `code.ast.Number`); the qualified name is used everywhere the type is referenced, including struct-field `offset` (`offset %p code.ast.Number.value`).
 
 ### External global variable
 
