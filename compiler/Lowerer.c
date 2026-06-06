@@ -155,6 +155,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         }
         return (IR_Type *)ir_struct_type;
     }
+    case CHECKED_TYPE_KIND__TRAIT:
+        return Lowerer__lower_type(self, (Checked_Type *)((Checked_Trait_Type *)type)->struct_type);
     case CHECKED_TYPE_KIND__U8:
         return IR_Type__get(IR_TYPE_KIND__U8);
     case CHECKED_TYPE_KIND__U16:
@@ -175,6 +177,18 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
 
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression);
 
+IR_Value *Lowerer__lower_temporary_pointer(Lowerer *self, Checked_Expression *expression) {
+    IR_Value *value = Lowerer__lower_expression(self, expression);
+    self->value_counter++;
+    String *temporary_name = String__create();
+    String__append_int16_t(temporary_name, self->value_counter);
+    IR_Variable *variable = IR_Variable__create(temporary_name, Lowerer__lower_type(self, expression->type));
+    IR_Alloc_Instruction *instruction = IR_Alloc_Instruction__create(variable);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&instruction->super.result, value));
+    return &instruction->super.result;
+}
+
 IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expression *array_access_expression) {
     IR_Value *array = Lowerer__lower_expression(self, array_access_expression->array_expression);
     IR_Value *index = Lowerer__lower_expression(self, array_access_expression->index_expression);
@@ -193,15 +207,18 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
-        return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol->name);
+        if (symbol->is_global) {
+            return Lowerer__find_global(self, symbol->name);
+        }
+        if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
+            return Lowerer__find_scope(self, symbol->name);
+        }
+        return Lowerer__lower_temporary_pointer(self, expression);
     }
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)expression);
     default:
-        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: object pointer expression kind ");
-        pWriter__write__int64(stderr_writer, expression->kind);
-        pWriter__end_line(stderr_writer);
-        panic();
+        return Lowerer__lower_temporary_pointer(self, expression);
     }
 }
 
@@ -361,9 +378,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         if (operand->kind == CHECKED_EXPRESSION_KIND__MEMBER_ACCESS) {
             return Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)operand);
         }
-        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: address-of expression");
-        pWriter__end_line(stderr_writer);
-        panic();
+        return Lowerer__lower_temporary_pointer(self, operand);
     }
     case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS: {
         IR_Value *pointer = Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)expression);

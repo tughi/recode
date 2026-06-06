@@ -1165,7 +1165,8 @@ Checked_Expression *Checker__make_trait_expression(Checker *self, Checker_Contex
 
     Checked_Type *self_type = ((Checked_Pointer_Type *)self_expression->type)->other_type;
 
-    Checked_Make_Struct_Argument *first_make_struct_argument = Checked_Make_Struct_Argument__create(self_expression->location, trait_type->self_struct_member, self_expression);
+    Checked_Expression *self_argument_expression = (Checked_Expression *)Checked_Cast_Expression__create(self_expression->location, trait_type->self_struct_member->type, self_expression);
+    Checked_Make_Struct_Argument *first_make_struct_argument = Checked_Make_Struct_Argument__create(self_expression->location, trait_type->self_struct_member, self_argument_expression);
 
     Checked_Make_Struct_Argument *last_make_struct_argument = first_make_struct_argument;
     Checked_Trait_Method *trait_method;

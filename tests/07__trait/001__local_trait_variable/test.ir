@@ -1,13 +1,17 @@
-type Animal = struct {
-  self: ptr<Any>
-  legs: ptr<proc (self: ptr<Any>) -> i32>
+type test.Animal = struct {
+  self: [Any]
+  legs: [proc ([Any]): i32]
 }
 
-$main() {
+$test.main(): i32 {
 @1:
-  [ ]
-  %animal.ptr: ptr<Animal> = alloc Animal
-  [ ]
-  ret
-  [ ]
+  %animal.ptr: [test.Animal] = alloc test.Animal
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
 }
