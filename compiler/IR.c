@@ -168,6 +168,7 @@ IR_Variable *IR_Variable__create(String *name, IR_Type *type) {
     variable->super.value.name = IR__value_name('%', name);
     variable->super.value.type = type;
     variable->super.value.variable = NULL;
+    variable->symbol = NULL;
     variable->version = 0;
     return variable;
 }
@@ -178,7 +179,14 @@ IR_Global *IR_Global__create(String *name, IR_Type *type) {
     global->super.value.name = IR__value_name('$', name);
     global->super.value.type = type;
     global->super.value.variable = NULL;
+    global->literal = NULL;
     global->next_global = NULL;
+    return global;
+}
+
+IR_Global *IR_String_Global__create(String *name, IR_Type *type, String *literal) {
+    IR_Global *global = IR_Global__create(name, type);
+    global->literal = literal;
     return global;
 }
 
@@ -589,7 +597,7 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         if (instruction->result.type->kind == IR_TYPE_KIND__BOOL) {
             return pWriter__write__cstring(self, ((IR_Const_Instruction *)instruction)->value ? "true" : "false");
         }
-        if (instruction->result.type->kind == IR_TYPE_KIND__POINTER) {
+        if (instruction->result.type->kind == IR_TYPE_KIND__POINTER || instruction->result.type->kind == IR_TYPE_KIND__MULTI_POINTER) {
             return pWriter__write__cstring(self, "null");
         }
         if (((IR_Const_Instruction *)instruction)->literal != NULL) {
@@ -769,7 +777,35 @@ Writer *pWriter__write__ir_global(Writer *self, IR_Global *global) {
     pWriter__write__string(self, global->super.value.name);
     pWriter__write__cstring(self, ": ");
     pWriter__write__ir_type(self, global->super.value.type);
-    pWriter__write__cstring(self, " = external");
+    if (global->literal != NULL) {
+        pWriter__write__cstring(self, " = \"");
+        for (size_t i = 0; i < global->literal->length; i++) {
+            char c = global->literal->data[i];
+            switch (c) {
+            case '\0':
+                pWriter__write__cstring(self, "\\0");
+                break;
+            case '\n':
+                pWriter__write__cstring(self, "\\n");
+                break;
+            case '\t':
+                pWriter__write__cstring(self, "\\t");
+                break;
+            case '\\':
+                pWriter__write__cstring(self, "\\\\");
+                break;
+            case '"':
+                pWriter__write__cstring(self, "\\\"");
+                break;
+            default:
+                pWriter__write__char(self, c);
+                break;
+            }
+        }
+        pWriter__write__char(self, '"');
+    } else {
+        pWriter__write__cstring(self, " = external");
+    }
     return pWriter__end_line(self);
 }
 

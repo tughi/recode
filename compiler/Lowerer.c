@@ -12,6 +12,8 @@ typedef struct Lowerer {
     IR_Value_List globals;
     IR_Value_List scope;
     IR_Value *malloc_callee;
+    Checked_Struct_Type *string_type;
+    int32_t string_counter;
 } Lowerer;
 
 IR_Block *Lowerer__create_block(Lowerer *self) {
@@ -74,16 +76,19 @@ String *Lowerer__procedure_name(Lowerer *self, Checked_Procedure_Symbol *procedu
     return name;
 }
 
-IR_Value *Lowerer__find_scope(Lowerer *self, String *name) {
-    for (size_t i = 0; i < self->scope.size; i++) {
-        IR_Value *value = self->scope.values[i];
-        String *value_name = value->variable != NULL ? value->variable->super.value.name : value->name;
-        if (String__equals__value_name(value_name, '%', name)) {
+IR_Value *Lowerer__find_scope(Lowerer *self, Checked_Symbol *symbol) {
+    for (size_t i = self->scope.size; i > 0; i--) {
+        IR_Value *value = self->scope.values[i - 1];
+        if (value->variable != NULL) {
+            if ((Checked_Symbol *)value->variable->symbol == symbol) {
+                return value;
+            }
+        } else if (String__equals__value_name(value->name, '%', symbol->name)) {
             return value;
         }
     }
     pWriter__write__cstring(stderr_writer, "No IR value in scope named: ");
-    pWriter__write__string(stderr_writer, name);
+    pWriter__write__string(stderr_writer, symbol->name);
     pWriter__end_line(stderr_writer);
     panic();
 }
@@ -94,6 +99,26 @@ String *Lowerer__fresh_name(Lowerer *self) {
     String__append_char(name, '%');
     String__append_int16_t(name, self->value_counter);
     return name;
+}
+
+IR_Variable *Lowerer__declare_variable(Lowerer *self, Checked_Variable_Symbol *variable_symbol, IR_Type *type) {
+    String *source_name = variable_symbol->super.name;
+    int32_t count = 0;
+    for (size_t i = 0; i < self->scope.size; i++) {
+        IR_Variable *existing = self->scope.values[i]->variable;
+        if (existing != NULL && String__equals_string(existing->symbol->super.name, source_name)) {
+            count++;
+        }
+    }
+    String *display_name = source_name;
+    if (count > 0) {
+        display_name = String__create_copy(source_name);
+        String__append_char(display_name, '.');
+        String__append_int16_t(display_name, count + 1);
+    }
+    IR_Variable *variable = IR_Variable__create(display_name, type);
+    variable->symbol = variable_symbol;
+    return variable;
 }
 
 IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *checked_procedure_type, size_t *parameter_count);
@@ -155,6 +180,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         }
         return (IR_Type *)ir_struct_type;
     }
+    case CHECKED_TYPE_KIND__STR:
+        return Lowerer__lower_type(self, (Checked_Type *)self->string_type);
     case CHECKED_TYPE_KIND__TRAIT:
         return Lowerer__lower_type(self, (Checked_Type *)((Checked_Trait_Type *)type)->struct_type);
     case CHECKED_TYPE_KIND__U8:
@@ -211,7 +238,7 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
             return Lowerer__find_global(self, symbol->name);
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
-            return Lowerer__find_scope(self, symbol->name);
+            return Lowerer__find_scope(self, symbol);
         }
         return Lowerer__lower_temporary_pointer(self, expression);
     }
@@ -369,7 +396,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         if (operand->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
             Checked_Symbol *symbol = ((Checked_Symbol_Expression *)operand)->symbol;
             if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
-                return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol->name);
+                return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol);
             }
         }
         if (operand->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
@@ -396,6 +423,54 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__CHARACTER: {
         Checked_Character_Expression *character_expression = (Checked_Character_Expression *)expression;
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), (uint64_t)(uint8_t)character_expression->value, character_expression->literal);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__STRING_LENGTH: {
+        Checked_String_Length_Expression *string_length_expression = (Checked_String_Length_Expression *)expression;
+        Checked_Struct_Member *length_member = self->string_type->first_member->next_member;
+        IR_Value *object_pointer = Lowerer__lower_object_pointer(self, string_length_expression->string_expression);
+        IR_Type *member_type = Lowerer__lower_type(self, expression->type);
+        IR_Struct_Offset_Instruction *offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, Lowerer__type_name((Checked_Type *)length_member->struct_type), length_member->name);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)offset);
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), member_type, &offset->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+        return &load->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__STRING: {
+        Checked_String_Expression *string_expression = (Checked_String_Expression *)expression;
+        Checked_Struct_Member *data_member = self->string_type->first_member;
+        Checked_Struct_Member *length_member = data_member->next_member;
+
+        IR_Value *data;
+        if (string_expression->value->length == 0) {
+            IR_Const_Instruction *null = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, data_member->type), 0, NULL);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)null);
+            data = &null->super.result;
+        } else {
+            data = NULL;
+            for (IR_Global *global = self->program->first_global; global != NULL; global = global->next_global) {
+                if (global->literal != NULL && String__equals_string(global->literal, string_expression->value)) {
+                    data = &global->super.value;
+                    break;
+                }
+            }
+            if (data == NULL) {
+                self->string_counter++;
+                String *global_name = String__create_from("str_");
+                String__append_int16_t(global_name, self->string_counter);
+                IR_Global *global = IR_String_Global__create(global_name, Lowerer__lower_type(self, data_member->type), string_expression->value);
+                IR_Program__append_global(self->program, global);
+                data = &global->super.value;
+            }
+        }
+
+        IR_Const_Instruction *length = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, length_member->type), string_expression->value->length, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)length);
+
+        IR_Struct_Instruction *instruction = IR_Struct_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type));
+        IR_Struct_Instruction__append_field(instruction, data_member->name, data);
+        IR_Struct_Instruction__append_field(instruction, length_member->name, &length->super.result);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
@@ -468,7 +543,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             return Lowerer__find_global(self, Lowerer__procedure_name(self, (Checked_Procedure_Symbol *)symbol));
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER) {
-            return Lowerer__find_scope(self, symbol->name);
+            return Lowerer__find_scope(self, symbol);
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
             IR_Value *value_pointer;
@@ -479,7 +554,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
                 result_type = Lowerer__lower_type(self, expression->type);
                 result_name = Lowerer__fresh_name(self);
             } else {
-                value_pointer = Lowerer__find_scope(self, symbol->name);
+                value_pointer = Lowerer__find_scope(self, symbol);
                 IR_Variable *variable = value_pointer->variable;
                 result_type = variable->super.value.type;
                 variable->version++;
@@ -511,7 +586,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         IR_Value *pointer;
         if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
             Checked_Symbol *symbol = ((Checked_Symbol_Expression *)assignment_statement->object_expression)->symbol;
-            pointer = Lowerer__find_scope(self, symbol->name);
+            pointer = Lowerer__find_scope(self, symbol);
         } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__DEREFERENCE) {
             Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)assignment_statement->object_expression;
             pointer = Lowerer__lower_expression(self, unary_expression->other_expression);
@@ -601,7 +676,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     }
     case CHECKED_STATEMENT_KIND__VARIABLE: {
         Checked_Variable_Statement *variable_statement = (Checked_Variable_Statement *)statement;
-        IR_Variable *variable = IR_Variable__create(variable_statement->variable->super.name, Lowerer__lower_type(self, variable_statement->variable->super.type));
+        IR_Variable *variable = Lowerer__declare_variable(self, variable_statement->variable, Lowerer__lower_type(self, variable_statement->variable->super.type));
         IR_Alloc_Instruction *instruction = IR_Alloc_Instruction__create(variable);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         IR_Value_List__append(&self->scope, &instruction->super.result);
@@ -764,6 +839,19 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.malloc_callee = NULL;
+    lowerer.string_type = NULL;
+    lowerer.string_counter = 0;
+
+    for (Checked_Symbols *symbols = checked_source->symbols; symbols != NULL; symbols = symbols->parent) {
+        for (Checked_Symbol *symbol = symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
+                Checked_Named_Type *named_type = ((Checked_Type_Symbol *)symbol)->named_type;
+                if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT && String__equals_cstring(named_type->name, "String")) {
+                    lowerer.string_type = (Checked_Struct_Type *)named_type;
+                }
+            }
+        }
+    }
 
     for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {

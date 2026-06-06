@@ -1,0 +1,280 @@
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$str_1: [*]u8 = "Hello"
+
+$str_2: [*]u8 = " world!"
+
+$str_3: [*]u8 = "Hello world!"
+
+$(String).concat+anon(%self, %other: String): String {
+@1:
+  %1.ptr: [String] = alloc String
+  store %1.ptr %self
+  %2: [usize] = offset %1.ptr String.length
+  %3: usize = load %2
+  %4: usize = const 0
+  %5: bool = cmp_eq %3 %4
+  br %5 @2 @3
+@2:
+  ret %other
+@3:
+  %result.ptr: [String] = alloc String
+  %6.ptr: [String] = alloc String
+  store %6.ptr %self
+  %7: [usize] = offset %6.ptr String.length
+  %8: usize = load %7
+  %9.ptr: [String] = alloc String
+  store %9.ptr %other
+  %10: [usize] = offset %9.ptr String.length
+  %11: usize = load %10
+  %12: usize = add %8 %11
+  %13: [Any] = call $malloc %12
+  %14: [*]u8 = cast %13
+  %15.ptr: [String] = alloc String
+  store %15.ptr %self
+  %16: [usize] = offset %15.ptr String.length
+  %17: usize = load %16
+  %18.ptr: [String] = alloc String
+  store %18.ptr %other
+  %19: [usize] = offset %18.ptr String.length
+  %20: usize = load %19
+  %21: usize = add %17 %20
+  %22: String = struct String .data %14 .length %21
+  store %result.ptr %22
+  %23.ptr: [String] = alloc String
+  store %23.ptr %self
+  %24: [usize] = offset %23.ptr String.length
+  %25: usize = load %24
+  %26: usize = const 0
+  %27: bool = cmp_gt %25 %26
+  br %27 @4 @5
+@4:
+  %self_copy.ptr: [String] = alloc String
+  store %self_copy.ptr %self
+  %self_data.ptr: [[*]u8] = alloc [*]u8
+  %28: [String] = cast %self_copy.ptr
+  %29: [[*]u8] = offset %28 String.data
+  %30: [*]u8 = load %29
+  store %self_data.ptr %30
+  %index.ptr: [usize] = alloc usize
+  %31: usize = const 0
+  store %index.ptr %31
+  jmp @6
+@6:
+  %index.1: usize = load %index.ptr
+  %32.ptr: [String] = alloc String
+  store %32.ptr %self
+  %33: [usize] = offset %32.ptr String.length
+  %34: usize = load %33
+  %35: bool = cmp_lt %index.1 %34
+  br %35 @7 @8
+@7:
+  %36: [[*]u8] = offset %result.ptr String.data
+  %37: [*]u8 = load %36
+  %index.2: usize = load %index.ptr
+  %38: [u8] = offset %37 %index.2
+  %self_data.1: [*]u8 = load %self_data.ptr
+  %index.3: usize = load %index.ptr
+  %39: [u8] = offset %self_data.1 %index.3
+  %40: u8 = load %39
+  store %38 %40
+  %index.4: usize = load %index.ptr
+  %41: usize = const 1
+  %42: usize = add %index.4 %41
+  store %index.ptr %42
+  jmp @6
+@8:
+  jmp @5
+@5:
+  %43.ptr: [String] = alloc String
+  store %43.ptr %other
+  %44: [usize] = offset %43.ptr String.length
+  %45: usize = load %44
+  %46: usize = const 0
+  %47: bool = cmp_gt %45 %46
+  br %47 @9 @10
+@9:
+  %other_copy.ptr: [String] = alloc String
+  store %other_copy.ptr %other
+  %other_data.ptr: [[*]u8] = alloc [*]u8
+  %48: [String] = cast %other_copy.ptr
+  %49: [[*]u8] = offset %48 String.data
+  %50: [*]u8 = load %49
+  store %other_data.ptr %50
+  %index.2.ptr: [usize] = alloc usize
+  %51: usize = const 0
+  store %index.2.ptr %51
+  jmp @11
+@11:
+  %index.2.1: usize = load %index.2.ptr
+  %52.ptr: [String] = alloc String
+  store %52.ptr %other
+  %53: [usize] = offset %52.ptr String.length
+  %54: usize = load %53
+  %55: bool = cmp_lt %index.2.1 %54
+  br %55 @12 @13
+@12:
+  %56: [[*]u8] = offset %result.ptr String.data
+  %57: [*]u8 = load %56
+  %58.ptr: [String] = alloc String
+  store %58.ptr %self
+  %59: [usize] = offset %58.ptr String.length
+  %60: usize = load %59
+  %index.2.2: usize = load %index.2.ptr
+  %61: usize = add %60 %index.2.2
+  %62: [u8] = offset %57 %61
+  %other_data.1: [*]u8 = load %other_data.ptr
+  %index.2.3: usize = load %index.2.ptr
+  %63: [u8] = offset %other_data.1 %index.2.3
+  %64: u8 = load %63
+  store %62 %64
+  %index.2.4: usize = load %index.2.ptr
+  %65: usize = const 1
+  %66: usize = add %index.2.4 %65
+  store %index.2.ptr %66
+  jmp @11
+@13:
+  jmp @10
+@10:
+  %67: [String] = cast %result.ptr
+  %68: String = load %67
+  ret %68
+}
+
+$(String).equals+anon(%self, %other: String): bool {
+@1:
+  %1.ptr: [String] = alloc String
+  store %1.ptr %self
+  %2: [usize] = offset %1.ptr String.length
+  %3: usize = load %2
+  %4.ptr: [String] = alloc String
+  store %4.ptr %other
+  %5: [usize] = offset %4.ptr String.length
+  %6: usize = load %5
+  %7: bool = cmp_ne %3 %6
+  br %7 @2 @3
+@2:
+  %8: bool = const false
+  ret %8
+@3:
+  %self_copy.ptr: [String] = alloc String
+  store %self_copy.ptr %self
+  %self_data.ptr: [[*]u8] = alloc [*]u8
+  %9: [String] = cast %self_copy.ptr
+  %10: [[*]u8] = offset %9 String.data
+  %11: [*]u8 = load %10
+  store %self_data.ptr %11
+  %other_copy.ptr: [String] = alloc String
+  store %other_copy.ptr %other
+  %other_data.ptr: [[*]u8] = alloc [*]u8
+  %12: [String] = cast %other_copy.ptr
+  %13: [[*]u8] = offset %12 String.data
+  %14: [*]u8 = load %13
+  store %other_data.ptr %14
+  %self_data.1: [*]u8 = load %self_data.ptr
+  %other_data.1: [*]u8 = load %other_data.ptr
+  %15: bool = cmp_eq %self_data.1 %other_data.1
+  br %15 @4 @5
+@4:
+  %16: bool = const true
+  ret %16
+@5:
+  %index.ptr: [usize] = alloc usize
+  %17: usize = const 0
+  store %index.ptr %17
+  jmp @6
+@6:
+  %index.1: usize = load %index.ptr
+  %18.ptr: [String] = alloc String
+  store %18.ptr %self
+  %19: [usize] = offset %18.ptr String.length
+  %20: usize = load %19
+  %21: bool = cmp_lt %index.1 %20
+  br %21 @7 @8
+@7:
+  %self_data.2: [*]u8 = load %self_data.ptr
+  %index.2: usize = load %index.ptr
+  %22: [u8] = offset %self_data.2 %index.2
+  %23: u8 = load %22
+  %other_data.2: [*]u8 = load %other_data.ptr
+  %index.3: usize = load %index.ptr
+  %24: [u8] = offset %other_data.2 %index.3
+  %25: u8 = load %24
+  %26: bool = cmp_ne %23 %25
+  br %26 @9 @10
+@9:
+  %27: bool = const false
+  ret %27
+@10:
+  %index.4: usize = load %index.ptr
+  %28: usize = const 1
+  %29: usize = add %index.4 %28
+  store %index.ptr %29
+  jmp @6
+@8:
+  %30: bool = const true
+  ret %30
+}
+
+$test.main(): i32 {
+@1:
+  %message.ptr: [String] = alloc String
+  %1: usize = const 5
+  %2: String = struct String .data $str_1 .length %1
+  %3: usize = const 7
+  %4: String = struct String .data $str_2 .length %3
+  %5: String = call $(String).concat+anon %2 %4
+  store %message.ptr %5
+  %message.1: String = load %message.ptr
+  %6: usize = const 12
+  %7: String = struct String .data $str_3 .length %6
+  %8: bool = call $(String).equals+anon %message.1 %7
+  %9: bool = not %8
+  br %9 @2 @3
+@2:
+  %10: i32 = const 1
+  ret %10
+@3:
+  %11: usize = const 5
+  %12: String = struct String .data $str_1 .length %11
+  %13: usize = const 5
+  %14: String = struct String .data $str_1 .length %13
+  %15: bool = call $(String).equals+anon %12 %14
+  %16: bool = not %15
+  br %16 @4 @5
+@4:
+  %17: i32 = const 2
+  ret %17
+@5:
+  %18: [*]u8 = const null
+  %19: usize = const 0
+  %20: String = struct String .data %18 .length %19
+  %21: [*]u8 = const null
+  %22: usize = const 0
+  %23: String = struct String .data %21 .length %22
+  %24: String = call $(String).concat+anon %20 %23
+  %25.ptr: [String] = alloc String
+  store %25.ptr %24
+  %26: [usize] = offset %25.ptr String.length
+  %27: usize = load %26
+  %28: usize = const 0
+  %29: bool = cmp_ne %27 %28
+  br %29 @6 @7
+@6:
+  %30: i32 = const 3
+  ret %30
+@7:
+  %31: i32 = const 0
+  ret %31
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

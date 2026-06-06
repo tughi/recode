@@ -1,0 +1,38 @@
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$str_1: [*]u8 = "I have a length!"
+
+$test.main(): i32 {
+@1:
+  %message.ptr: [String] = alloc String
+  %1: usize = const 16
+  %2: String = struct String .data $str_1 .length %1
+  store %message.ptr %2
+  %3: [usize] = offset %message.ptr String.length
+  %4: usize = load %3
+  %5: usize = const 16
+  %6: bool = cmp_ne %4 %5
+  br %6 @2 @3
+@2:
+  %7: i32 = const 1
+  ret %7
+@3:
+  %message_ptr.ptr: [[String]] = alloc [String]
+  store %message_ptr.ptr %message.ptr
+  %message_ptr.1: [String] = load %message_ptr.ptr
+  %8: [usize] = offset %message_ptr.1 String.length
+  %9: usize = load %8
+  %10: i32 = cast %9
+  %11: i32 = const 16
+  %12: i32 = sub %10 %11
+  ret %12
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -115,6 +115,7 @@ typedef struct IR_Symbol {
 
 typedef struct IR_Variable {
     IR_Symbol super;
+    struct Checked_Variable_Symbol *symbol;
     int32_t version;
 } IR_Variable;
 
@@ -122,10 +123,12 @@ IR_Variable *IR_Variable__create(String *name, IR_Type *type);
 
 typedef struct IR_Global {
     IR_Symbol super;
+    String *literal;
     struct IR_Global *next_global;
 } IR_Global;
 
 IR_Global *IR_Global__create(String *name, IR_Type *type);
+IR_Global *IR_String_Global__create(String *name, IR_Type *type, String *literal);
 
 typedef struct IR_Value_List {
     IR_Value **values;
