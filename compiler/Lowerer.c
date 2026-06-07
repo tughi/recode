@@ -940,7 +940,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         IR_Value *pointer;
         if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
             Checked_Symbol *symbol = ((Checked_Symbol_Expression *)assignment_statement->object_expression)->symbol;
-            pointer = Lowerer__find_scope(self, symbol);
+            pointer = symbol->is_global ? Lowerer__find_global(self, Lowerer__variable_name((Checked_Variable_Symbol *)symbol)) : Lowerer__find_scope(self, symbol);
         } else if (assignment_statement->object_expression->kind == CHECKED_EXPRESSION_KIND__DEREFERENCE) {
             Checked_Unary_Expression *unary_expression = (Checked_Unary_Expression *)assignment_statement->object_expression;
             pointer = Lowerer__lower_expression(self, unary_expression->other_expression);
@@ -1209,8 +1209,16 @@ IR_Const_Payload *Lowerer__lower_constant(Lowerer *self, Checked_Expression *exp
 
 void Lowerer__declare_global_variable(Lowerer *self, Checked_Variable_Symbol *variable_symbol) {
     IR_Type *type = Lowerer__lower_type(self, variable_symbol->super.type);
-    IR_Const_Payload *constant = Lowerer__lower_constant(self, variable_symbol->statement->expression);
-    IR_Global *global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), (IR_Type *)IR_Pointer_Type__create(type), constant);
+    IR_Type *pointer_type = (IR_Type *)IR_Pointer_Type__create(type);
+    IR_Global *global;
+    if (variable_symbol->statement->is_external) {
+        global = IR_Global__create(Lowerer__variable_name(variable_symbol), pointer_type);
+    } else if (variable_symbol->statement->expression == NULL) {
+        global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), pointer_type, IR_Const_Payload__create(0, NULL));
+    } else {
+        IR_Const_Payload *constant = Lowerer__lower_constant(self, variable_symbol->statement->expression);
+        global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), pointer_type, constant);
+    }
     IR_Program__append_global(self->program, global);
     IR_Value_List__append(&self->globals, &global->super.value);
 }
