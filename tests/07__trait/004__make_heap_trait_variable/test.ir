@@ -15,9 +15,9 @@ $malloc: [proc (usize): [Any]] = external
 
 $([test.Square]).area(%self): i32 {
 @1:
-  %1: [i32] = offset %self test.Square.side
+  %1: [i32] = offset %self .side
   %2: i32 = load %1
-  %3: [i32] = offset %self test.Square.side
+  %3: [i32] = offset %self .side
   %4: i32 = load %3
   %5: i32 = mul %2 %4
   ret %5
@@ -26,10 +26,10 @@ $([test.Square]).area(%self): i32 {
 $([test.Circle]).area(%self): i32 {
 @1:
   %1: i32 = const 312
-  %2: [i32] = offset %self test.Circle.radius
+  %2: [i32] = offset %self .radius
   %3: i32 = load %2
   %4: i32 = mul %1 %3
-  %5: [i32] = offset %self test.Circle.radius
+  %5: [i32] = offset %self .radius
   %6: i32 = load %5
   %7: i32 = mul %4 %6
   %8: i32 = const 100
@@ -44,7 +44,7 @@ $test.main(): i32 {
   %2: [Any] = call $malloc %1
   %3: [test.Square] = cast %2
   %4: i32 = const 10
-  %5: test.Square = struct test.Square .side %4
+  %5: test.Square = struct .side %4
   store %3 %5
   store %square.ptr %3
   %square_shape.ptr: [[test.Shape]] = alloc [test.Shape]
@@ -54,7 +54,7 @@ $test.main(): i32 {
   %square.1: [test.Square] = load %square.ptr
   %9: [Any] = cast %square.1
   %10: [proc ([Any]): i32] = cast $([test.Square]).area
-  %11: test.Shape = struct test.Shape .self %9 .area %10
+  %11: test.Shape = struct .self %9 .area %10
   store %8 %11
   store %square_shape.ptr %8
   %circle.ptr: [[test.Circle]] = alloc [test.Circle]
@@ -62,7 +62,7 @@ $test.main(): i32 {
   %13: [Any] = call $malloc %12
   %14: [test.Circle] = cast %13
   %15: i32 = const 10
-  %16: test.Circle = struct test.Circle .radius %15
+  %16: test.Circle = struct .radius %15
   store %14 %16
   store %circle.ptr %14
   %circle_shape.ptr: [[test.Shape]] = alloc [test.Shape]
@@ -72,14 +72,14 @@ $test.main(): i32 {
   %circle.1: [test.Circle] = load %circle.ptr
   %20: [Any] = cast %circle.1
   %21: [proc ([Any]): i32] = cast $([test.Circle]).area
-  %22: test.Shape = struct test.Shape .self %20 .area %21
+  %22: test.Shape = struct .self %20 .area %21
   store %19 %22
   store %circle_shape.ptr %19
   %square_shape.1: [test.Shape] = load %square_shape.ptr
-  %23: [[proc ([Any]): i32]] = offset %square_shape.1 test.Shape.area
+  %23: [[proc ([Any]): i32]] = offset %square_shape.1 .area
   %24: [proc ([Any]): i32] = load %23
   %square_shape.2: [test.Shape] = load %square_shape.ptr
-  %25: [[Any]] = offset %square_shape.2 test.Shape.self
+  %25: [[Any]] = offset %square_shape.2 .self
   %26: [Any] = load %25
   %27: i32 = call %24 %26
   %28: i32 = const 100
@@ -90,10 +90,10 @@ $test.main(): i32 {
   ret %30
 @3:
   %circle_shape.1: [test.Shape] = load %circle_shape.ptr
-  %31: [[proc ([Any]): i32]] = offset %circle_shape.1 test.Shape.area
+  %31: [[proc ([Any]): i32]] = offset %circle_shape.1 .area
   %32: [proc ([Any]): i32] = load %31
   %circle_shape.2: [test.Shape] = load %circle_shape.ptr
-  %33: [[Any]] = offset %circle_shape.2 test.Shape.self
+  %33: [[Any]] = offset %circle_shape.2 .self
   %34: [Any] = load %33
   %35: i32 = call %32 %34
   %36: i32 = const 312

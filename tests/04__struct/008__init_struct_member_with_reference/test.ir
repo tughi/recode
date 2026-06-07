@@ -7,26 +7,26 @@ $test.main(): i32 {
 @1:
   %third.ptr: [test.Number] = alloc test.Number
   %1: i32 = const 43
-  %2: test.Number = struct test.Number .value %1
+  %2: test.Number = struct .value %1
   store %third.ptr %2
   %second.ptr: [test.Number] = alloc test.Number
   %3: i32 = const 42
-  %4: test.Number = struct test.Number .value %3 .next %third.ptr
+  %4: test.Number = struct .value %3 .next %third.ptr
   store %second.ptr %4
   %first.ptr: [test.Number] = alloc test.Number
   %5: i32 = const 41
-  %6: test.Number = struct test.Number .value %5 .next %second.ptr
+  %6: test.Number = struct .value %5 .next %second.ptr
   store %first.ptr %6
   %second_value.ptr: [i32] = alloc i32
-  %7: [[test.Number]] = offset %first.ptr test.Number.next
+  %7: [[test.Number]] = offset %first.ptr .next
   %8: [test.Number] = load %7
-  %9: [i32] = offset %8 test.Number.value
+  %9: [i32] = offset %8 .value
   %10: i32 = load %9
   store %second_value.ptr %10
   %second_value_ref.ptr: [[i32]] = alloc [i32]
-  %11: [[test.Number]] = offset %first.ptr test.Number.next
+  %11: [[test.Number]] = offset %first.ptr .next
   %12: [test.Number] = load %11
-  %13: [i32] = offset %12 test.Number.value
+  %13: [i32] = offset %12 .value
   store %second_value_ref.ptr %13
   %second_value.1: i32 = load %second_value.ptr
   %14: i32 = const 42

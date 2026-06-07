@@ -13,14 +13,14 @@ $test.main(): i32 {
   %line.ptr: [test.Line] = alloc test.Line
   %1: i32 = const 16
   %2: i32 = const 32
-  %3: test.Point = struct test.Point .x %1 .y %2
+  %3: test.Point = struct .x %1 .y %2
   %4: i32 = const 48
   %5: i32 = const 64
-  %6: test.Point = struct test.Point .x %4 .y %5
-  %7: test.Line = struct test.Line .p1 %3 .p2 %6
+  %6: test.Point = struct .x %4 .y %5
+  %7: test.Line = struct .p1 %3 .p2 %6
   store %line.ptr %7
-  %8: [test.Point] = offset %line.ptr test.Line.p2
-  %9: [i32] = offset %8 test.Point.y
+  %8: [test.Point] = offset %line.ptr .p2
+  %9: [i32] = offset %8 .y
   %10: i32 = load %9
   %11: i32 = const 64
   %12: i32 = sub %10 %11

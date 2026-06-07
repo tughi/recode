@@ -8,9 +8,9 @@ $test.main(): i32 {
   %point.ptr: [test.Point] = alloc test.Point
   %1: i32 = const 16
   %2: i32 = const 32
-  %3: test.Point = struct test.Point .x %1 .y %2
+  %3: test.Point = struct .x %1 .y %2
   store %point.ptr %3
-  %4: [i32] = offset %point.ptr test.Point.x
+  %4: [i32] = offset %point.ptr .x
   %5: i32 = load %4
   %6: i32 = const 16
   %7: i32 = sub %5 %6

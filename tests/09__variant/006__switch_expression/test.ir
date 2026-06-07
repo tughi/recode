@@ -11,24 +11,24 @@ $test.main(): i32 {
 @1:
   %literal.ptr: [test.Literal] = alloc test.Literal
   %1.ptr: [test.Value] = alloc test.Value
-  %2: [i32] = offset %1.ptr test.Value.tag
+  %2: [i32] = offset %1.ptr .tag
   %3: i32 = const 3
   store %2 %3
   %4: i32 = const 42
-  %5: [i32] = offset %1.ptr test.Value.value
+  %5: [i32] = offset %1.ptr .value
   store %5 %4
   %6: test.Value = load %1.ptr
-  %7: test.Literal = struct test.Literal .value %6
+  %7: test.Literal = struct .value %6
   store %literal.ptr %7
-  %8: [test.Value] = offset %literal.ptr test.Literal.value
-  %9: [i32] = offset %8 test.Value.tag
+  %8: [test.Value] = offset %literal.ptr .value
+  %9: [i32] = offset %8 .tag
   %10: i32 = load %9
   %11: i32 = const 3
   %12: bool = cmp_eq %10 %11
   br %12 @3 @4
 @3:
-  %13: [test.Value] = offset %literal.ptr test.Literal.value
-  %14: [i32] = offset %13 test.Value.value
+  %13: [test.Value] = offset %literal.ptr .value
+  %14: [i32] = offset %13 .value
   %15: i32 = load %14
   %16: i32 = const 42
   %17: i32 = sub %15 %16

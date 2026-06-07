@@ -17,12 +17,12 @@ $test.main(): i32 {
 @1:
   %dog.ptr: [test.Dog] = alloc test.Dog
   %1: i32 = const 10
-  %2: test.Dog = struct test.Dog .age %1
+  %2: test.Dog = struct .age %1
   store %dog.ptr %2
   %animal.ptr: [test.Animal] = alloc test.Animal
   %3: [Any] = cast %dog.ptr
   %4: [proc ([Any]): i32] = cast $([test.Dog]).legs
-  %5: test.Animal = struct test.Animal .self %3 .legs %4
+  %5: test.Animal = struct .self %3 .legs %4
   store %animal.ptr %5
   %6: i32 = const 0
   ret %6

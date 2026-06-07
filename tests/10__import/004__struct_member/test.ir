@@ -12,11 +12,11 @@ $test.main(): i32 {
   %token.ptr: [test.Token] = alloc test.Token
   %1: i32 = const 0
   %2: i32 = const 42
-  %3: source.Span = struct source.Span .start %1 .end %2
-  %4: test.Token = struct test.Token .span %3
+  %3: source.Span = struct .start %1 .end %2
+  %4: test.Token = struct .span %3
   store %token.ptr %4
-  %5: [source.Span] = offset %token.ptr test.Token.span
-  %6: [i32] = offset %5 source.Span.end
+  %5: [source.Span] = offset %token.ptr .span
+  %6: [i32] = offset %5 .end
   %7: i32 = load %6
   %8: i32 = const 42
   %9: i32 = sub %7 %8

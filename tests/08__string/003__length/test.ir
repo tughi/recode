@@ -9,9 +9,9 @@ $test.main(): i32 {
 @1:
   %message.ptr: [String] = alloc String
   %1: usize = const 16
-  %2: String = struct String .data $str_1 .length %1
+  %2: String = struct .data $str_1 .length %1
   store %message.ptr %2
-  %3: [usize] = offset %message.ptr String.length
+  %3: [usize] = offset %message.ptr .length
   %4: usize = load %3
   %5: usize = const 16
   %6: bool = cmp_ne %4 %5
@@ -23,7 +23,7 @@ $test.main(): i32 {
   %message_ptr.ptr: [[String]] = alloc [String]
   store %message_ptr.ptr %message.ptr
   %message_ptr.1: [String] = load %message_ptr.ptr
-  %8: [usize] = offset %message_ptr.1 String.length
+  %8: [usize] = offset %message_ptr.1 .length
   %9: usize = load %8
   %10: i32 = cast %9
   %11: i32 = const 16

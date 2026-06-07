@@ -7,21 +7,21 @@ $test.main(): i32 {
 @1:
   %value.ptr: [test.Value] = alloc test.Value
   %1.ptr: [test.Value] = alloc test.Value
-  %2: [i32] = offset %1.ptr test.Value.tag
+  %2: [i32] = offset %1.ptr .tag
   %3: i32 = const 2
   store %2 %3
   %4: i32 = const 42
-  %5: [i32] = offset %1.ptr test.Value.value
+  %5: [i32] = offset %1.ptr .value
   store %5 %4
   %6: test.Value = load %1.ptr
   store %value.ptr %6
-  %7: [i32] = offset %value.ptr test.Value.tag
+  %7: [i32] = offset %value.ptr .tag
   %8: i32 = load %7
   %9: i32 = const 2
   %10: bool = cmp_eq %8 %9
   br %10 @2 @3
 @2:
-  %11: [i32] = offset %value.ptr test.Value.value
+  %11: [i32] = offset %value.ptr .value
   %12: i32 = load %11
   %13: i32 = const 42
   %14: i32 = sub %12 %13

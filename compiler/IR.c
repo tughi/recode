@@ -392,13 +392,12 @@ void IR_Struct_Instruction__append_field(IR_Struct_Instruction *self, String *fi
     IR_Value_List__append(&self->super.operands, value);
 }
 
-IR_Struct_Offset_Instruction *IR_Struct_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, String *struct_name, String *field_name) {
+IR_Struct_Offset_Instruction *IR_Struct_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, String *field_name) {
     IR_Struct_Offset_Instruction *instruction = (IR_Struct_Offset_Instruction *)IR_Instruction__create_kind(IR_INSTRUCTION_KIND__STRUCT_OFFSET, sizeof(IR_Struct_Offset_Instruction));
     instruction->super.result.kind = IR_VALUE_KIND__INSTRUCTION_RESULT;
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
     instruction->super.result.variable = NULL;
-    instruction->struct_name = struct_name;
     instruction->field_name = field_name;
     IR_Value_List__append(&instruction->super.operands, pointer);
     return instruction;
@@ -666,8 +665,7 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
     case IR_INSTRUCTION_KIND__STRUCT: {
         IR_Struct_Instruction *struct_instruction = (IR_Struct_Instruction *)instruction;
         pWriter__write__ir_value_definition(self, &instruction->result);
-        pWriter__write__cstring(self, " = struct ");
-        pWriter__write__ir_type(self, instruction->result.type);
+        pWriter__write__cstring(self, " = struct");
         for (size_t i = 0; i < struct_instruction->field_count; i++) {
             pWriter__write__cstring(self, " .");
             pWriter__write__string(self, struct_instruction->field_names[i]);
@@ -681,9 +679,7 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = offset ");
         pWriter__write__ir_value_reference(self, instruction->operands.values[0]);
-        pWriter__write__char(self, ' ');
-        pWriter__write__string(self, struct_offset_instruction->struct_name);
-        pWriter__write__char(self, '.');
+        pWriter__write__cstring(self, " .");
         return pWriter__write__string(self, struct_offset_instruction->field_name);
     }
     case IR_INSTRUCTION_KIND__ADD:

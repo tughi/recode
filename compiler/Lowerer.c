@@ -304,7 +304,7 @@ IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expr
     IR_Value *object_pointer = Lowerer__lower_object_pointer(self, member_access_expression->object_expression);
     Checked_Struct_Member *member = member_access_expression->member;
     IR_Type *member_type = Lowerer__lower_type(self, member_access_expression->super.type);
-    IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, Lowerer__type_name((Checked_Type *)member->struct_type), member->name);
+    IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, member->name);
     IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
     return &instruction->super.result;
 }
@@ -318,10 +318,9 @@ Checked_Type *Lowerer__variant_value_type(Checked_Expression *variant_expression
 }
 
 IR_Value *Lowerer__lower_variant_tag(Lowerer *self, Checked_Expression *variant_expression) {
-    Checked_Type *variant_type = Lowerer__variant_value_type(variant_expression);
     IR_Value *variant_pointer = Lowerer__lower_object_pointer(self, variant_expression);
     IR_Type *tag_type = IR_Type__get(IR_TYPE_KIND__I32);
-    IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), variant_pointer, Lowerer__type_name(variant_type), String__create_from("tag"));
+    IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), variant_pointer, String__create_from("tag"));
     IR_Block__append_instruction(self->block, (IR_Instruction *)tag_offset);
     IR_Load_Instruction *tag_load = IR_Load_Instruction__create(Lowerer__fresh_name(self), tag_type, &tag_offset->super.result);
     IR_Block__append_instruction(self->block, (IR_Instruction *)tag_load);
@@ -333,7 +332,7 @@ IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, Checked_Expression 
     IR_Value *variant_pointer = Lowerer__lower_object_pointer(self, variant_expression);
     IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)Lowerer__lower_type(self, variant_type);
     IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
-    IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, Lowerer__type_name(variant_type), String__create_from("value"));
+    IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, String__create_from("value"));
     IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
     IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
     if (case_type == value_field_type) {
@@ -524,7 +523,6 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__MAKE_VARIANT: {
         Checked_Make_Variant_Expression *make_variant_expression = (Checked_Make_Variant_Expression *)expression;
         IR_Type *variant_type = Lowerer__lower_type(self, expression->type);
-        String *variant_name = Lowerer__type_name(expression->type);
         IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)variant_type;
         IR_Type *tag_type = variant_struct_type->first_field->type;
         IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
@@ -535,7 +533,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Alloc_Instruction *alloc = IR_Alloc_Instruction__create(IR_Variable__create(temporary_name, variant_type));
         IR_Block__append_instruction(self->block, (IR_Instruction *)alloc);
 
-        IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), &alloc->super.result, variant_name, String__create_from("tag"));
+        IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), &alloc->super.result, String__create_from("tag"));
         IR_Block__append_instruction(self->block, (IR_Instruction *)tag_offset);
         IR_Const_Instruction *tag = IR_Const_Instruction__create(Lowerer__fresh_name(self), tag_type, make_variant_expression->variant_case->index, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)tag);
@@ -544,7 +542,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         if (make_variant_expression->variant_case->type->kind != CHECKED_TYPE_KIND__NIL) {
             IR_Value *payload = Lowerer__lower_expression(self, make_variant_expression->expression);
             IR_Type *payload_type = Lowerer__lower_type(self, make_variant_expression->expression->type);
-            IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, variant_name, String__create_from("value"));
+            IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, String__create_from("value"));
             IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
             IR_Value *value_pointer = &value_offset->super.result;
             if (value_field_type != payload_type) {
@@ -564,7 +562,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         Checked_Struct_Member *length_member = self->string_type->first_member->next_member;
         IR_Value *object_pointer = Lowerer__lower_object_pointer(self, string_length_expression->string_expression);
         IR_Type *member_type = Lowerer__lower_type(self, expression->type);
-        IR_Struct_Offset_Instruction *offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, Lowerer__type_name((Checked_Type *)length_member->struct_type), length_member->name);
+        IR_Struct_Offset_Instruction *offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, length_member->name);
         IR_Block__append_instruction(self->block, (IR_Instruction *)offset);
         IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), member_type, &offset->super.result);
         IR_Block__append_instruction(self->block, (IR_Instruction *)load);

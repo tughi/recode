@@ -24,15 +24,15 @@ $test.main(): i32 {
   %1: [FILE] = load $stdout
   %2: [Any] = cast %1
   %3: [proc ([Any], u8)] = cast $([FILE]).write_char+anon
-  %4: test.Writer = struct test.Writer .self %2 .write_char %3
+  %4: test.Writer = struct .self %2 .write_char %3
   store %out.ptr %4
   %5: i32 = const 42
-  %6: test.Number = struct test.Number .value %5
+  %6: test.Number = struct .value %5
   %7.ptr: [test.Number] = alloc test.Number
   store %7.ptr %6
   %8: [Any] = cast %7.ptr
   %9: [proc ([Any], [test.Writer])] = cast $([test.Number]).write_to+anon
-  %10: test.Writable = struct test.Writable .self %8 .write_to %9
+  %10: test.Writable = struct .self %8 .write_to %9
   %11: [test.Writer] = call $([test.Writer]).write+anon %out.ptr %10
   %12: [test.Writer] = call $([test.Writer]).end_line %11
   %13: i32 = const 42
@@ -40,7 +40,7 @@ $test.main(): i32 {
   store %14.ptr %13
   %15: [Any] = cast %14.ptr
   %16: [proc ([Any], [test.Writer])] = cast $([i32]).write_to+anon
-  %17: test.Writable = struct test.Writable .self %15 .write_to %16
+  %17: test.Writable = struct .self %15 .write_to %16
   %18: [test.Writer] = call $([test.Writer]).write+anon %out.ptr %17
   %19: [test.Writer] = call $([test.Writer]).end_line %18
   %20: i32 = const 0
@@ -49,7 +49,7 @@ $test.main(): i32 {
 
 $([test.Number]).write_to+anon(%self, %writer: [test.Writer]) {
 @1:
-  %1: [i32] = offset %self test.Number.value
+  %1: [i32] = offset %self .value
   call $([i32]).write_to+anon %1 %writer
   ret
 }
@@ -64,9 +64,9 @@ $([i32]).write_to+anon(%self, %writer: [test.Writer]) {
   %3: bool = cmp_lt %number.1 %2
   br %3 @2 @3
 @2:
-  %4: [[proc ([Any], u8)]] = offset %writer test.Writer.write_char
+  %4: [[proc ([Any], u8)]] = offset %writer .write_char
   %5: [proc ([Any], u8)] = load %4
-  %6: [[Any]] = offset %writer test.Writer.self
+  %6: [[Any]] = offset %writer .self
   %7: [Any] = load %6
   %8: u8 = const '-'
   call %5 %7 %8
@@ -88,9 +88,9 @@ $([i32]).write_to+anon(%self, %writer: [test.Writer]) {
   call $([i32]).write_to+anon %factor.ptr %writer
   jmp @5
 @5:
-  %14: [[proc ([Any], u8)]] = offset %writer test.Writer.write_char
+  %14: [[proc ([Any], u8)]] = offset %writer .write_char
   %15: [proc ([Any], u8)] = load %14
-  %16: [[Any]] = offset %writer test.Writer.self
+  %16: [[Any]] = offset %writer .self
   %17: [Any] = load %16
   %number.5: i32 = load %number.ptr
   %18: i32 = const 10
@@ -104,9 +104,9 @@ $([i32]).write_to+anon(%self, %writer: [test.Writer]) {
 
 $([test.Writer]).end_line(%self): [test.Writer] {
 @1:
-  %1: [[proc ([Any], u8)]] = offset %self test.Writer.write_char
+  %1: [[proc ([Any], u8)]] = offset %self .write_char
   %2: [proc ([Any], u8)] = load %1
-  %3: [[Any]] = offset %self test.Writer.self
+  %3: [[Any]] = offset %self .self
   %4: [Any] = load %3
   %5: u8 = const '\n'
   call %2 %4 %5
@@ -117,11 +117,11 @@ $([test.Writer]).write+anon(%self, %writable: test.Writable): [test.Writer] {
 @1:
   %1.ptr: [test.Writable] = alloc test.Writable
   store %1.ptr %writable
-  %2: [[proc ([Any], [test.Writer])]] = offset %1.ptr test.Writable.write_to
+  %2: [[proc ([Any], [test.Writer])]] = offset %1.ptr .write_to
   %3: [proc ([Any], [test.Writer])] = load %2
   %4.ptr: [test.Writable] = alloc test.Writable
   store %4.ptr %writable
-  %5: [[Any]] = offset %4.ptr test.Writable.self
+  %5: [[Any]] = offset %4.ptr .self
   %6: [Any] = load %5
   call %3 %6 %self
   ret %self

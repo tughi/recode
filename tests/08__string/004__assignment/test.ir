@@ -13,9 +13,9 @@ $test.main(): i32 {
 @1:
   %message.ptr: [String] = alloc String
   %1: usize = const 14
-  %2: String = struct String .data $str_1 .length %1
+  %2: String = struct .data $str_1 .length %1
   store %message.ptr %2
-  %3: [usize] = offset %message.ptr String.length
+  %3: [usize] = offset %message.ptr .length
   %4: usize = load %3
   %5: usize = const 14
   %6: bool = cmp_ne %4 %5
@@ -25,9 +25,9 @@ $test.main(): i32 {
   ret %7
 @3:
   %8: usize = const 24
-  %9: String = struct String .data $str_2 .length %8
+  %9: String = struct .data $str_2 .length %8
   store %message.ptr %9
-  %10: [usize] = offset %message.ptr String.length
+  %10: [usize] = offset %message.ptr .length
   %11: usize = load %10
   %12: usize = const 24
   %13: bool = cmp_ne %11 %12
@@ -40,9 +40,9 @@ $test.main(): i32 {
   store %message_ptr.ptr %message.ptr
   %message_ptr.1: [String] = load %message_ptr.ptr
   %15: usize = const 35
-  %16: String = struct String .data $str_3 .length %15
+  %16: String = struct .data $str_3 .length %15
   store %message_ptr.1 %16
-  %17: [usize] = offset %message.ptr String.length
+  %17: [usize] = offset %message.ptr .length
   %18: usize = load %17
   %19: usize = const 35
   %20: bool = cmp_ne %18 %19

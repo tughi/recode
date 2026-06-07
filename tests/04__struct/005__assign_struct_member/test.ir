@@ -11,12 +11,12 @@ type test.Point = struct {
 $test.main(): i32 {
 @1:
   %line.ptr: [test.Line] = alloc test.Line
-  %1: [test.Point] = offset %line.ptr test.Line.p2
-  %2: [i32] = offset %1 test.Point.y
+  %1: [test.Point] = offset %line.ptr .p2
+  %2: [i32] = offset %1 .y
   %3: i32 = const 64
   store %2 %3
-  %4: [test.Point] = offset %line.ptr test.Line.p2
-  %5: [i32] = offset %4 test.Point.y
+  %4: [test.Point] = offset %line.ptr .p2
+  %5: [i32] = offset %4 .y
   %6: i32 = load %5
   %7: i32 = const 64
   %8: i32 = sub %6 %7

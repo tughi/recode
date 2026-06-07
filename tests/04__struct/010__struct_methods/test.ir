@@ -4,14 +4,14 @@ type test.Number = struct {
 
 $([test.Number]).get_value(%self): i32 {
 @1:
-  %1: [i32] = offset %self test.Number.value
+  %1: [i32] = offset %self .value
   %2: i32 = load %1
   ret %2
 }
 
 $([test.Number]).set_value+anon(%self, %value: i32) {
 @1:
-  %1: [i32] = offset %self test.Number.value
+  %1: [i32] = offset %self .value
   store %1 %value
   ret
 }
@@ -20,7 +20,7 @@ $test.main(): i32 {
 @1:
   %number.ptr: [test.Number] = alloc test.Number
   %1: i32 = const 0
-  %2: test.Number = struct test.Number .value %1
+  %2: test.Number = struct .value %1
   store %number.ptr %2
   %3: i32 = const 42
   call $([test.Number]).set_value+anon %number.ptr %3

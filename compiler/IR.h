@@ -280,11 +280,10 @@ IR_Store_Instruction *IR_Store_Instruction__create(IR_Value *pointer, IR_Value *
 
 typedef struct IR_Struct_Offset_Instruction {
     IR_Instruction super;
-    String *struct_name;
     String *field_name;
 } IR_Struct_Offset_Instruction;
 
-IR_Struct_Offset_Instruction *IR_Struct_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, String *struct_name, String *field_name);
+IR_Struct_Offset_Instruction *IR_Struct_Offset_Instruction__create(String *result_name, IR_Type *result_type, IR_Value *pointer, String *field_name);
 
 typedef struct IR_Struct_Instruction {
     IR_Instruction super;

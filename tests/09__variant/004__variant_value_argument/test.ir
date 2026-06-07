@@ -7,11 +7,11 @@ $test.main(): i32 {
 @1:
   %value.ptr: [test.Value] = alloc test.Value
   %1.ptr: [test.Value] = alloc test.Value
-  %2: [i32] = offset %1.ptr test.Value.tag
+  %2: [i32] = offset %1.ptr .tag
   %3: i32 = const 2
   store %2 %3
   %4: i32 = const 42
-  %5: [i32] = offset %1.ptr test.Value.value
+  %5: [i32] = offset %1.ptr .value
   store %5 %4
   %6: test.Value = load %1.ptr
   store %value.ptr %6
@@ -20,11 +20,11 @@ $test.main(): i32 {
   store %other_value.ptr %value.1
   %another_value.ptr: [test.Value] = alloc test.Value
   %7.ptr: [test.Value] = alloc test.Value
-  %8: [i32] = offset %7.ptr test.Value.tag
+  %8: [i32] = offset %7.ptr .tag
   %9: i32 = const 1
   store %8 %9
   %10: bool = const true
-  %11: [i32] = offset %7.ptr test.Value.value
+  %11: [i32] = offset %7.ptr .value
   %12: [bool] = cast %11
   store %12 %10
   %13: test.Value = load %7.ptr

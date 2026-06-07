@@ -4,8 +4,8 @@ type test.Counter = struct {
 
 $([test.Counter]).add(%self) {
 @1:
-  %1: [i32] = offset %self test.Counter.value
-  %2: [i32] = offset %self test.Counter.value
+  %1: [i32] = offset %self .value
+  %2: [i32] = offset %self .value
   %3: i32 = load %2
   %4: i32 = const 1
   %5: i32 = add %3 %4
@@ -15,8 +15,8 @@ $([test.Counter]).add(%self) {
 
 $([test.Counter]).add+amount(%self, %amount: i32) {
 @1:
-  %1: [i32] = offset %self test.Counter.value
-  %2: [i32] = offset %self test.Counter.value
+  %1: [i32] = offset %self .value
+  %2: [i32] = offset %self .value
   %3: i32 = load %2
   %4: i32 = add %3 %amount
   store %1 %4
@@ -27,12 +27,12 @@ $test.main(): i32 {
 @1:
   %counter.ptr: [test.Counter] = alloc test.Counter
   %1: i32 = const 0
-  %2: test.Counter = struct test.Counter .value %1
+  %2: test.Counter = struct .value %1
   store %counter.ptr %2
   call $([test.Counter]).add %counter.ptr
   %3: i32 = const 4
   call $([test.Counter]).add+amount %counter.ptr %3
-  %4: [i32] = offset %counter.ptr test.Counter.value
+  %4: [i32] = offset %counter.ptr .value
   %5: i32 = load %4
   %6: i32 = const 5
   %7: i32 = sub %5 %6

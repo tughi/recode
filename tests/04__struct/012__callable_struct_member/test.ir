@@ -11,9 +11,9 @@ $test.forty_two(): i32 {
 $test.main(): i32 {
 @1:
   %procedure.ptr: [test.Function] = alloc test.Function
-  %1: test.Function = struct test.Function .run $test.forty_two
+  %1: test.Function = struct .run $test.forty_two
   store %procedure.ptr %1
-  %2: [[proc (): i32]] = offset %procedure.ptr test.Function.run
+  %2: [[proc (): i32]] = offset %procedure.ptr .run
   %3: [proc (): i32] = load %2
   %4: i32 = call %3
   %5: i32 = const 42

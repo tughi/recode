@@ -12,11 +12,11 @@ $test.main(): i32 {
 @1:
   %value.ptr: [test.Value] = alloc test.Value
   %1.ptr: [test.Value] = alloc test.Value
-  %2: [i32] = offset %1.ptr test.Value.tag
+  %2: [i32] = offset %1.ptr .tag
   %3: i32 = const 1
   store %2 %3
   %4: bool = const false
-  %5: [test.Integer] = offset %1.ptr test.Value.value
+  %5: [test.Integer] = offset %1.ptr .value
   %6: [bool] = cast %5
   store %6 %4
   %7: test.Value = load %1.ptr
