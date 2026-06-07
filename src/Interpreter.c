@@ -949,7 +949,9 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
             *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = host_address;
         } else {
             uint8_t *payload_address = interpreter.globals_data + global_variable->payload_slot.offset;
-            memcpy(payload_address, global_variable->payload_data, global_variable->payload_slot.size);
+            if (global_variable->payload_data != NULL) {
+                memcpy(payload_address, global_variable->payload_data, global_variable->payload_slot.size);
+            }
             *(uint8_t **)(interpreter.globals_data + global_variable->value.slot.offset) = payload_address;
         }
     }

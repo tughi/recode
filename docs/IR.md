@@ -117,6 +117,15 @@ $nothing: [[i32]] = null
 
 Declares a mutable global with a constant initial value. The declared type must be a single pointer `[T]`; the initializer is a literal of the pointee type `T`, using the same syntax as the `const` instruction (optional leading `-`, optional trailing type suffix, `true`/`false`, character literals, and `null` for pointer pointees). The value is encoded into the global's payload at module load and the global's value is a `[T]` pointer to it, so `load`/`store` read and write the live value.
 
+### Zero-initialized global
+
+```
+$test.number: [test.Number]
+$counter: [i32]
+```
+
+Declares a mutable global with no initializer. The declared type must be a single pointer `[T]`; the global's payload is automatically zeroed at module load and the global's value is a `[T]` pointer to it. This works for any pointee type, including structs.
+
 ## Types
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`

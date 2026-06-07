@@ -1228,9 +1228,6 @@ static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name
     expect_other(parser, ':');
     expect_space(parser, 1);
     IR_Type *type = parse_type(parser);
-    expect_space(parser, 1);
-    expect_other(parser, '=');
-    expect_space(parser, 1);
 
     IR_Value *global_value = ir_value_list_lookup(&parser->global_values, name.lexeme);
     IR_Global *global;
@@ -1247,6 +1244,26 @@ static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name
     global->value.type = type;
     global->name = name.lexeme;
     global->location = name.location;
+
+    if (parser->current.kind == TOKEN_KIND__END_OF_LINE) {
+        if (type->kind != IR_TYPE__PTR) {
+            parse_error(parser, name.location, "Global variable '%.*s' without an initializer must have a single-pointer type", STRING(name.lexeme));
+        }
+        IR_Type *pointee = type->pointee;
+        IR_Global_Variable *variable = &global->global_variable;
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
+        variable->type = pointee;
+        variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
+        variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, pointee);
+        variable->payload_data = NULL;
+        global->is_external = false;
+        ir_global_variable_list_add(&module->global_variables, variable);
+        return;
+    }
+
+    expect_space(parser, 1);
+    expect_other(parser, '=');
+    expect_space(parser, 1);
 
     if (parser->current.kind == TOKEN_KIND__STRING) {
         if (type->kind != IR_TYPE__MULTI_PTR || type->pointee->kind != IR_TYPE__U8) {
