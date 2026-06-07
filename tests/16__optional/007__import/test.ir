@@ -1,0 +1,59 @@
+type source.Item__opt = struct {
+  tag: i32
+  value: source.Item
+}
+
+type source.Item = struct {
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %has_item.ptr: [source.Item__opt] = alloc source.Item__opt
+  %1.ptr: [source.Item__opt] = alloc source.Item__opt
+  %2: [i32] = offset %1.ptr .tag
+  %3: i32 = const 1
+  store %2 %3
+  %4: i32 = const 42
+  %5: source.Item = struct .value %4
+  %6: [source.Item] = offset %1.ptr .value
+  store %6 %5
+  %7: source.Item__opt = load %1.ptr
+  store %has_item.ptr %7
+  %no_item.ptr: [source.Item__opt] = alloc source.Item__opt
+  %8.ptr: [source.Item__opt] = alloc source.Item__opt
+  %9: [i32] = offset %8.ptr .tag
+  %10: i32 = const 0
+  store %9 %10
+  %11: source.Item__opt = load %8.ptr
+  store %no_item.ptr %11
+  %12: [i32] = offset %has_item.ptr .tag
+  %13: i32 = load %12
+  %14: i32 = const 1
+  %15: bool = cmp_eq %13 %14
+  br %15 @2 @3
+@2:
+  %16: [i32] = offset %no_item.ptr .tag
+  %17: i32 = load %16
+  %18: i32 = const 0
+  %19: bool = cmp_eq %17 %18
+  br %19 @4 @5
+@4:
+  %20: [source.Item] = offset %has_item.ptr .value
+  %21: [i32] = offset %20 .value
+  %22: i32 = load %21
+  %23: i32 = const 42
+  %24: i32 = sub %22 %23
+  ret %24
+@5:
+  jmp @3
+@3:
+  %25: i32 = const 1
+  ret %25
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

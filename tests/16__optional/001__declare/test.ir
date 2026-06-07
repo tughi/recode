@@ -1,0 +1,53 @@
+type i32__opt = struct {
+  tag: i32
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %has_value.ptr: [i32__opt] = alloc i32__opt
+  %1.ptr: [i32__opt] = alloc i32__opt
+  %2: [i32] = offset %1.ptr .tag
+  %3: i32 = const 1
+  store %2 %3
+  %4: i32 = const 42
+  %5: [i32] = offset %1.ptr .value
+  store %5 %4
+  %6: i32__opt = load %1.ptr
+  store %has_value.ptr %6
+  %no_value.ptr: [i32__opt] = alloc i32__opt
+  %7.ptr: [i32__opt] = alloc i32__opt
+  %8: [i32] = offset %7.ptr .tag
+  %9: i32 = const 0
+  store %8 %9
+  %10: i32__opt = load %7.ptr
+  store %no_value.ptr %10
+  %11: [i32] = offset %has_value.ptr .tag
+  %12: i32 = load %11
+  %13: i32 = const 1
+  %14: bool = cmp_eq %12 %13
+  br %14 @2 @3
+@2:
+  %15: [i32] = offset %no_value.ptr .tag
+  %16: i32 = load %15
+  %17: i32 = const 0
+  %18: bool = cmp_eq %16 %17
+  br %18 @4 @5
+@4:
+  %19: [i32] = offset %has_value.ptr .value
+  %20: i32 = load %19
+  %21: i32 = const 42
+  %22: i32 = sub %20 %21
+  ret %22
+@5:
+  jmp @3
+@3:
+  %23: i32 = const 1
+  ret %23
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

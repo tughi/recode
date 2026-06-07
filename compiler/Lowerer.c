@@ -231,6 +231,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__U64);
     case CHECKED_TYPE_KIND__USIZE:
         return IR_Type__get(IR_TYPE_KIND__USIZE);
+    case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Variant_Type *variant_type = (Checked_Variant_Type *)type;
         String *name = Lowerer__type_name(type);
