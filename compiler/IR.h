@@ -121,14 +121,23 @@ typedef struct IR_Variable {
 
 IR_Variable *IR_Variable__create(String *name, IR_Type *type);
 
+typedef struct IR_Const_Payload {
+    uint64_t value;
+    Token *literal;
+} IR_Const_Payload;
+
+IR_Const_Payload *IR_Const_Payload__create(uint64_t value, Token *literal);
+
 typedef struct IR_Global {
     IR_Symbol super;
     String *literal;
+    IR_Const_Payload *constant;
     struct IR_Global *next_global;
 } IR_Global;
 
 IR_Global *IR_Global__create(String *name, IR_Type *type);
 IR_Global *IR_String_Global__create(String *name, IR_Type *type, String *literal);
+IR_Global *IR_Constant_Global__create(String *name, IR_Type *type, IR_Const_Payload *constant);
 
 typedef struct IR_Value_List {
     IR_Value **values;
@@ -220,8 +229,7 @@ IR_Cast_Instruction *IR_Cast_Instruction__create(String *result_name, IR_Type *r
 
 typedef struct IR_Const_Instruction {
     IR_Instruction super;
-    uint64_t value;
-    Token *literal;
+    IR_Const_Payload payload;
 } IR_Const_Instruction;
 
 IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type *result_type, uint64_t value, Token *literal);

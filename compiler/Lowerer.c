@@ -76,6 +76,17 @@ String *Lowerer__procedure_name(Lowerer *self, Checked_Procedure_Symbol *procedu
     return name;
 }
 
+String *Lowerer__variable_name(Checked_Variable_Symbol *variable_symbol) {
+    if (variable_symbol->statement->is_external) {
+        return variable_symbol->super.name;
+    }
+    String *name = String__create();
+    String__append_string(name, variable_symbol->super.package->name);
+    String__append_char(name, '.');
+    String__append_string(name, variable_symbol->super.name);
+    return name;
+}
+
 IR_Value *Lowerer__find_scope(Lowerer *self, Checked_Symbol *symbol) {
     for (size_t i = self->scope.size; i > 0; i--) {
         IR_Value *value = self->scope.values[i - 1];
@@ -272,6 +283,9 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
             return Lowerer__lower_variant_case_pointer(self, case_symbol->variant_expression, case_symbol->variant_case);
         }
         if (symbol->is_global) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
+                return Lowerer__find_global(self, Lowerer__variable_name((Checked_Variable_Symbol *)symbol));
+            }
             return Lowerer__find_global(self, symbol->name);
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
@@ -468,7 +482,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         if (operand->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
             Checked_Symbol *symbol = ((Checked_Symbol_Expression *)operand)->symbol;
             if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
-                return symbol->is_global ? Lowerer__find_global(self, symbol->name) : Lowerer__find_scope(self, symbol);
+                return symbol->is_global ? Lowerer__find_global(self, Lowerer__variable_name((Checked_Variable_Symbol *)symbol)) : Lowerer__find_scope(self, symbol);
             }
         }
         if (operand->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
@@ -669,7 +683,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             String *result_name;
             IR_Type *result_type;
             if (symbol->is_global) {
-                value_pointer = Lowerer__find_global(self, symbol->name);
+                value_pointer = Lowerer__find_global(self, Lowerer__variable_name((Checked_Variable_Symbol *)symbol));
                 result_type = Lowerer__lower_type(self, expression->type);
                 result_name = Lowerer__fresh_name(self);
             } else {
@@ -926,6 +940,31 @@ void Lowerer__declare_external_variable(Lowerer *self, Checked_Variable_Symbol *
     IR_Value_List__append(&self->globals, &global->super.value);
 }
 
+IR_Const_Payload *Lowerer__lower_constant(Lowerer *self, Checked_Expression *expression) {
+    switch (expression->kind) {
+    case CHECKED_EXPRESSION_KIND__BOOL:
+        return IR_Const_Payload__create(((Checked_Bool_Expression *)expression)->value ? 1 : 0, NULL);
+    case CHECKED_EXPRESSION_KIND__CHARACTER:
+        return IR_Const_Payload__create((uint64_t)(uint8_t)((Checked_Character_Expression *)expression)->value, ((Checked_Character_Expression *)expression)->literal);
+    case CHECKED_EXPRESSION_KIND__INTEGER:
+        return IR_Const_Payload__create(((Checked_Integer_Expression *)expression)->value, ((Checked_Integer_Expression *)expression)->literal);
+    case CHECKED_EXPRESSION_KIND__NULL:
+        return IR_Const_Payload__create(0, NULL);
+    default:
+        pWriter__write__cstring(stderr_writer, "Lowering not supported yet: non-constant global initializer");
+        pWriter__end_line(stderr_writer);
+        panic();
+    }
+}
+
+void Lowerer__declare_global_variable(Lowerer *self, Checked_Variable_Symbol *variable_symbol) {
+    IR_Type *type = Lowerer__lower_type(self, variable_symbol->super.type);
+    IR_Const_Payload *constant = Lowerer__lower_constant(self, variable_symbol->statement->expression);
+    IR_Global *global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), (IR_Type *)IR_Pointer_Type__create(type), constant);
+    IR_Program__append_global(self->program, global);
+    IR_Value_List__append(&self->globals, &global->super.value);
+}
+
 void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
     if (procedure_symbol->checked_block_statement == NULL) {
         return;
@@ -1022,9 +1061,7 @@ IR_Program *lower(Checked_Source *checked_source) {
             if (variable_symbol->statement->is_external) {
                 Lowerer__declare_external_variable(&lowerer, variable_symbol);
             } else {
-                pWriter__write__cstring(stderr_writer, "Lowering not supported yet: non-external global variable");
-                pWriter__end_line(stderr_writer);
-                panic();
+                Lowerer__declare_global_variable(&lowerer, variable_symbol);
             }
         }
     }

@@ -180,6 +180,7 @@ IR_Global *IR_Global__create(String *name, IR_Type *type) {
     global->super.value.type = type;
     global->super.value.variable = NULL;
     global->literal = NULL;
+    global->constant = NULL;
     global->next_global = NULL;
     return global;
 }
@@ -188,6 +189,19 @@ IR_Global *IR_String_Global__create(String *name, IR_Type *type, String *literal
     IR_Global *global = IR_Global__create(name, type);
     global->literal = literal;
     return global;
+}
+
+IR_Global *IR_Constant_Global__create(String *name, IR_Type *type, IR_Const_Payload *constant) {
+    IR_Global *global = IR_Global__create(name, type);
+    global->constant = constant;
+    return global;
+}
+
+IR_Const_Payload *IR_Const_Payload__create(uint64_t value, Token *literal) {
+    IR_Const_Payload *payload = (IR_Const_Payload *)malloc(sizeof(IR_Const_Payload));
+    payload->value = value;
+    payload->literal = literal;
+    return payload;
 }
 
 IR_Value *IR_Value__create(IR_Value_Kind kind, String *name, IR_Type *type) {
@@ -286,8 +300,8 @@ IR_Const_Instruction *IR_Const_Instruction__create(String *result_name, IR_Type 
     instruction->super.result.name = result_name;
     instruction->super.result.type = result_type;
     instruction->super.result.variable = NULL;
-    instruction->value = value;
-    instruction->literal = literal;
+    instruction->payload.value = value;
+    instruction->payload.literal = literal;
     return instruction;
 }
 
@@ -555,6 +569,19 @@ Writer *pWriter__write__ir_value_definition(Writer *self, IR_Value *value) {
     return pWriter__write__ir_type(self, value->type);
 }
 
+Writer *pWriter__write__ir_const_payload(Writer *self, IR_Const_Payload *payload, IR_Type *type) {
+    if (type->kind == IR_TYPE_KIND__BOOL) {
+        return pWriter__write__cstring(self, payload->value ? "true" : "false");
+    }
+    if (type->kind == IR_TYPE_KIND__POINTER || type->kind == IR_TYPE_KIND__MULTI_POINTER) {
+        return pWriter__write__cstring(self, "null");
+    }
+    if (payload->literal != NULL) {
+        return pWriter__write__string(self, payload->literal->lexeme);
+    }
+    return pWriter__write__uint64(self, payload->value);
+}
+
 Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction) {
     switch (instruction->kind) {
     case IR_INSTRUCTION_KIND__ALLOC:
@@ -594,16 +621,7 @@ Writer *pWriter__write__ir_instruction(Writer *self, IR_Instruction *instruction
     case IR_INSTRUCTION_KIND__CONST:
         pWriter__write__ir_value_definition(self, &instruction->result);
         pWriter__write__cstring(self, " = const ");
-        if (instruction->result.type->kind == IR_TYPE_KIND__BOOL) {
-            return pWriter__write__cstring(self, ((IR_Const_Instruction *)instruction)->value ? "true" : "false");
-        }
-        if (instruction->result.type->kind == IR_TYPE_KIND__POINTER || instruction->result.type->kind == IR_TYPE_KIND__MULTI_POINTER) {
-            return pWriter__write__cstring(self, "null");
-        }
-        if (((IR_Const_Instruction *)instruction)->literal != NULL) {
-            return pWriter__write__string(self, ((IR_Const_Instruction *)instruction)->literal->lexeme);
-        }
-        return pWriter__write__uint64(self, ((IR_Const_Instruction *)instruction)->value);
+        return pWriter__write__ir_const_payload(self, &((IR_Const_Instruction *)instruction)->payload, instruction->result.type);
     case IR_INSTRUCTION_KIND__JMP:
         pWriter__write__cstring(self, "jmp @");
         return pWriter__write__uint64(self, ((IR_Jmp_Instruction *)instruction)->block->label);
@@ -803,6 +821,9 @@ Writer *pWriter__write__ir_global(Writer *self, IR_Global *global) {
             }
         }
         pWriter__write__char(self, '"');
+    } else if (global->constant != NULL) {
+        pWriter__write__cstring(self, " = ");
+        pWriter__write__ir_const_payload(self, global->constant, ((IR_Pointer_Type *)global->super.value.type)->pointee);
     } else {
         pWriter__write__cstring(self, " = external");
     }

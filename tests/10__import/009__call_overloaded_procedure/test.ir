@@ -1,0 +1,28 @@
+$test.main(): i32 {
+@1:
+  %1: i32 = const 3
+  %2: i32 = const 7
+  %3: i32 = call $math.add+left+right %1 %2
+  %4: i32 = const 5
+  %5: i32 = call $math.add+value %4
+  %6: i32 = sub %3 %5
+  ret %6
+}
+
+$math.add+left+right(%left: i32, %right: i32): i32 {
+@1:
+  %1: i32 = add %left %right
+  ret %1
+}
+
+$math.add+value(%value: i32): i32 {
+@1:
+  %1: i32 = add %value %value
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
