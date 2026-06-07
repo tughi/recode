@@ -882,6 +882,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
             return &instruction->super.result;
         }
+        if (symbol->kind == CHECKED_SYMBOL_KIND__CONSTANT) {
+            return Lowerer__lower_expression(self, ((Checked_Constant_Symbol *)symbol)->value_expression);
+        }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
             return Lowerer__find_global(self, Lowerer__procedure_name(self, (Checked_Procedure_Symbol *)symbol));
         }
