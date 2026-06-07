@@ -1,0 +1,14 @@
+type Map<K, V> = struct {
+    items: ^Map_Item<K, V>
+    size: usize
+}
+
+type Map_Item<K, V> = struct {
+    key: K
+    value: V
+}
+
+proc main() -> i32 {
+    let map: Map<i32, ^str>
+    return 0
+}

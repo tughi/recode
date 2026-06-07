@@ -1,0 +1,27 @@
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+type test.Map<i32, [String]> = struct {
+  items: [test.Map_Item<i32, [String]>]
+  size: usize
+}
+
+type test.Map_Item<i32, [String]> = struct {
+  key: i32
+  value: [String]
+}
+
+$test.main(): i32 {
+@1:
+  %map.ptr: [test.Map<i32, [String]>] = alloc test.Map<i32, [String]>
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

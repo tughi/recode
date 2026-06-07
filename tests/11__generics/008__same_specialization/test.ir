@@ -2,15 +2,6 @@ type foo.Foo_Demo = struct {
   tokens: collections.List<tokens.Token>
 }
 
-type collections.List<tokens.Token> = struct {
-  first: [collections.List_item<tokens.Token>]
-}
-
-type collections.List_item<tokens.Token> = struct {
-  data: tokens.Token
-  next: [collections.List_item<tokens.Token>]
-}
-
 type tokens.Token = struct {
   tag: i32
   value: tokens.Identifier
@@ -27,6 +18,15 @@ type String = struct {
 
 type tokens.Number = struct {
   value: i32
+}
+
+type collections.List<tokens.Token> = struct {
+  first: [collections.List_item<tokens.Token>]
+}
+
+type collections.List_item<tokens.Token> = struct {
+  data: tokens.Token
+  next: [collections.List_item<tokens.Token>]
 }
 
 type bar.Bar_Demo = struct {

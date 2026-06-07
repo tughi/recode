@@ -40,14 +40,27 @@ IR_Value *Lowerer__find_global(Lowerer *self, String *name) {
 
 IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type);
 
-String *Lowerer__type_name(Checked_Type *type) {
+String *Lowerer__type_name(Lowerer *self, Checked_Type *type) {
     Checked_Named_Type *named_type = (Checked_Named_Type *)type;
     String *name = String__create();
     if (named_type->package != NULL) {
         String__append_string(name, named_type->package->name);
         String__append_char(name, '.');
     }
-    String__append_string(name, named_type->name);
+    if (named_type->generic_type != NULL) {
+        String__append_string(name, named_type->generic_type->super.name);
+        Writer writer = String__create_writer(name);
+        pWriter__write__char(&writer, '<');
+        for (Checked_Type_Argument *type_argument = named_type->first_type_argument; type_argument != NULL; type_argument = type_argument->next_type_argument) {
+            if (type_argument != named_type->first_type_argument) {
+                pWriter__write__cstring(&writer, ", ");
+            }
+            pWriter__write__ir_type(&writer, Lowerer__lower_type(self, type_argument->type));
+        }
+        pWriter__write__char(&writer, '>');
+    } else {
+        String__append_string(name, named_type->name);
+    }
     return name;
 }
 
@@ -185,7 +198,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__STRUCT: {
         Checked_Struct_Type *struct_type = (Checked_Struct_Type *)type;
-        String *name = Lowerer__type_name(type);
+        String *name = Lowerer__type_name(self, type);
         for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
             if (String__equals_string(existing_type->name, name)) {
                 return (IR_Type *)existing_type;
@@ -200,7 +213,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__RESULT: {
         Checked_Result_Type *result_type = (Checked_Result_Type *)type;
-        String *name = Lowerer__type_name(type);
+        String *name = Lowerer__type_name(self, type);
         for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
             if (String__equals_string(existing_type->name, name)) {
                 return (IR_Type *)existing_type;
@@ -234,7 +247,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT: {
         Checked_Variant_Type *variant_type = (Checked_Variant_Type *)type;
-        String *name = Lowerer__type_name(type);
+        String *name = Lowerer__type_name(self, type);
         for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
             if (String__equals_string(existing_type->name, name)) {
                 return (IR_Type *)existing_type;
