@@ -19,3 +19,5 @@ proc main() -> i32 {
     let my_vehicle = alloc Sports_Car(super: Car(super: Vehicle(wheels: 4)), turbo: true)
     return my_vehicle.get_wheels() - 4
 }
+
+proc malloc(anon size: usize) -> ^Any = external

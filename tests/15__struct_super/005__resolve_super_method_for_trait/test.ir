@@ -1,0 +1,41 @@
+type test.Vehicle = struct {
+  wheels: i32
+}
+
+type test.Car = struct {
+  super: test.Vehicle
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$([test.Vehicle]).get_wheels(%self): i32 {
+@1:
+  %1: [i32] = offset %self .wheels
+  %2: i32 = load %1
+  ret %2
+}
+
+$test.main(): i32 {
+@1:
+  %my_vehicle.ptr: [[test.Car]] = alloc [test.Car]
+  %1: usize = const 4
+  %2: [Any] = call $malloc %1
+  %3: [test.Car] = cast %2
+  %4: i32 = const 4
+  %5: test.Vehicle = struct .wheels %4
+  %6: test.Car = struct .super %5
+  store %3 %6
+  store %my_vehicle.ptr %3
+  %my_vehicle.1: [test.Car] = load %my_vehicle.ptr
+  %7: [test.Vehicle] = cast %my_vehicle.1
+  %8: i32 = call $([test.Vehicle]).get_wheels %7
+  %9: i32 = const 4
+  %10: i32 = sub %8 %9
+  ret %10
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
