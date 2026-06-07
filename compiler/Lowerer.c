@@ -9,6 +9,8 @@ typedef struct Lowerer {
     int32_t value_counter;
     int32_t block_counter;
     IR_Block *break_block;
+    IR_Block *yield_block;
+    IR_Phi_Instruction *yield_phi;
     IR_Value_List globals;
     IR_Value_List scope;
     IR_Value *malloc_callee;
@@ -193,6 +195,25 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         }
         return (IR_Type *)ir_struct_type;
     }
+    case CHECKED_TYPE_KIND__RESULT: {
+        Checked_Result_Type *result_type = (Checked_Result_Type *)type;
+        String *name = Lowerer__type_name(type);
+        for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
+            if (String__equals_string(existing_type->name, name)) {
+                return (IR_Type *)existing_type;
+            }
+        }
+        IR_Struct_Type *ir_struct_type = IR_Struct_Type__create(name);
+        IR_Program__append_type(self->program, &ir_struct_type->super);
+        IR_Struct_Type__append_field(ir_struct_type, String__create_from("success"), IR_Type__get(IR_TYPE_KIND__BOOL));
+        if (result_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+            IR_Struct_Type__append_field(ir_struct_type, String__create_from("value"), Lowerer__lower_type(self, result_type->return_type));
+        }
+        if (result_type->raise_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+            IR_Struct_Type__append_field(ir_struct_type, String__create_from("error"), Lowerer__lower_type(self, result_type->raise_type));
+        }
+        return (IR_Type *)ir_struct_type;
+    }
     case CHECKED_TYPE_KIND__STR:
         return Lowerer__lower_type(self, (Checked_Type *)self->string_type);
     case CHECKED_TYPE_KIND__TRAIT:
@@ -246,6 +267,7 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
 }
 
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression);
+void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement);
 
 IR_Value *Lowerer__lower_temporary_pointer(Lowerer *self, Checked_Expression *expression) {
     IR_Value *value = Lowerer__lower_expression(self, expression);
@@ -281,6 +303,9 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
         if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE) {
             Checked_Variant_Switch_Case_Symbol *case_symbol = (Checked_Variant_Switch_Case_Symbol *)symbol;
             return Lowerer__lower_variant_case_pointer(self, case_symbol->variant_expression, case_symbol->variant_case);
+        }
+        if (symbol->kind == CHECKED_SYMBOL_KIND__RESULT_ERROR) {
+            return Lowerer__find_scope(self, symbol);
         }
         if (symbol->is_global) {
             if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
@@ -341,6 +366,64 @@ IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, Checked_Expression 
     IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(case_type), &value_offset->super.result);
     IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
     return &cast->super.result;
+}
+
+IR_Value *Lowerer__field_pointer(Lowerer *self, IR_Value *struct_pointer, IR_Struct_Type *struct_type, const char *field_name) {
+    IR_Type *field_type = NULL;
+    for (IR_Struct_Type_Field *field = struct_type->first_field; field != NULL; field = field->next_field) {
+        if (String__equals_cstring(field->name, (char *)field_name)) {
+            field_type = field->type;
+            break;
+        }
+    }
+    IR_Struct_Offset_Instruction *offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(field_type), struct_pointer, String__create_from((char *)field_name));
+    IR_Block__append_instruction(self->block, (IR_Instruction *)offset);
+    return &offset->super.result;
+}
+
+IR_Value *Lowerer__load_field(Lowerer *self, IR_Value *struct_pointer, IR_Struct_Type *struct_type, const char *field_name) {
+    IR_Value *field_pointer = Lowerer__field_pointer(self, struct_pointer, struct_type, field_name);
+    IR_Type *field_type = ((IR_Pointer_Type *)field_pointer->type)->pointee;
+    IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), field_type, field_pointer);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+    return &load->super.result;
+}
+
+IR_Value *Lowerer__store_temporary(Lowerer *self, IR_Value *value, IR_Type *type) {
+    self->value_counter++;
+    String *temporary_name = String__create();
+    String__append_int16_t(temporary_name, self->value_counter);
+    IR_Alloc_Instruction *alloc = IR_Alloc_Instruction__create(IR_Variable__create(temporary_name, type));
+    IR_Block__append_instruction(self->block, (IR_Instruction *)alloc);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&alloc->super.result, value));
+    return &alloc->super.result;
+}
+
+IR_Value *Lowerer__build_result(Lowerer *self, IR_Type *result_type, bool success, IR_Value *value, IR_Value *error) {
+    IR_Struct_Type *struct_type = (IR_Struct_Type *)result_type;
+    self->value_counter++;
+    String *temporary_name = String__create();
+    String__append_int16_t(temporary_name, self->value_counter);
+    IR_Alloc_Instruction *alloc = IR_Alloc_Instruction__create(IR_Variable__create(temporary_name, result_type));
+    IR_Block__append_instruction(self->block, (IR_Instruction *)alloc);
+
+    IR_Value *success_pointer = Lowerer__field_pointer(self, &alloc->super.result, struct_type, "success");
+    IR_Const_Instruction *success_const = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__BOOL), success ? 1 : 0, NULL);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)success_const);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(success_pointer, &success_const->super.result));
+
+    if (value != NULL) {
+        IR_Value *value_pointer = Lowerer__field_pointer(self, &alloc->super.result, struct_type, "value");
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(value_pointer, value));
+    }
+    if (error != NULL) {
+        IR_Value *error_pointer = Lowerer__field_pointer(self, &alloc->super.result, struct_type, "error");
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(error_pointer, error));
+    }
+
+    IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), result_type, &alloc->super.result);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+    return &load->super.result;
 }
 
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
@@ -666,10 +749,126 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__RESULT: {
+        Checked_Result_Expression *result_expression = (Checked_Result_Expression *)expression;
+        IR_Type *result_type = Lowerer__lower_type(self, expression->type);
+        IR_Value *value = NULL;
+        if (result_expression->return_expression != NULL) {
+            value = Lowerer__lower_expression(self, result_expression->return_expression);
+        }
+        return Lowerer__build_result(self, result_type, true, value, NULL);
+    }
+    case CHECKED_EXPRESSION_KIND__TRY: {
+        Checked_Try_Expression *try_expression = (Checked_Try_Expression *)expression;
+        IR_Value *result = Lowerer__lower_expression(self, (Checked_Expression *)try_expression->call_expression);
+        IR_Struct_Type *result_struct_type = (IR_Struct_Type *)Lowerer__lower_type(self, try_expression->call_expression->super.type);
+        IR_Value *result_pointer = Lowerer__store_temporary(self, result, (IR_Type *)result_struct_type);
+        IR_Value *success = Lowerer__load_field(self, result_pointer, result_struct_type, "success");
+
+        IR_Block *success_block = Lowerer__create_block(self);
+        IR_Block *else_block = Lowerer__create_block(self);
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(success, success_block, else_block));
+
+        bool has_value = expression->type->kind != CHECKED_TYPE_KIND__NOTHING;
+
+        IR_Procedure__append_block(self->procedure, success_block);
+        self->block = success_block;
+        IR_Value *value = has_value ? Lowerer__load_field(self, result_pointer, result_struct_type, "value") : NULL;
+        IR_Block *value_block = self->block;
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+
+        IR_Procedure__append_block(self->procedure, else_block);
+        self->block = else_block;
+        IR_Value *error = Lowerer__load_field(self, result_pointer, result_struct_type, "error");
+        IR_Variable *error_variable = IR_Variable__create(try_expression->result_error_symbol->super.name, error->type);
+        error_variable->symbol = (Checked_Variable_Symbol *)try_expression->result_error_symbol;
+        IR_Alloc_Instruction *error_alloc = IR_Alloc_Instruction__create(error_variable);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)error_alloc);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&error_alloc->super.result, error));
+        size_t saved_scope_size = self->scope.size;
+        IR_Value_List__append(&self->scope, &error_alloc->super.result);
+        IR_Value *else_value = Lowerer__lower_expression(self, try_expression->else_expression);
+        self->scope.size = saved_scope_size;
+        IR_Block *else_end_block = self->block;
+        bool else_terminated = IR_Block__is_terminated(self->block);
+        if (!else_terminated) {
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+        }
+
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        if (!has_value) {
+            return NULL;
+        }
+        if (else_terminated) {
+            return value;
+        }
+        IR_Phi_Instruction *phi = IR_Phi_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type));
+        IR_Block_List__append(&phi->blocks, value_block);
+        IR_Value_List__append(&phi->super.operands, value);
+        IR_Block_List__append(&phi->blocks, else_end_block);
+        IR_Value_List__append(&phi->super.operands, else_value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)phi);
+        return &phi->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__UNWRAP_RESULT: {
+        Checked_Unwrap_Result_Expression *unwrap_expression = (Checked_Unwrap_Result_Expression *)expression;
+        IR_Value *result = Lowerer__lower_expression(self, (Checked_Expression *)unwrap_expression->call_expression);
+        IR_Struct_Type *result_struct_type = (IR_Struct_Type *)Lowerer__lower_type(self, unwrap_expression->call_expression->super.type);
+        IR_Value *result_pointer = Lowerer__store_temporary(self, result, (IR_Type *)result_struct_type);
+        IR_Value *success = Lowerer__load_field(self, result_pointer, result_struct_type, "success");
+
+        IR_Block *ok_block = Lowerer__create_block(self);
+        IR_Block *raise_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(success, ok_block, raise_block));
+
+        IR_Procedure__append_block(self->procedure, raise_block);
+        self->block = raise_block;
+        IR_Value *error = Lowerer__load_field(self, result_pointer, result_struct_type, "error");
+        IR_Value *propagated = Lowerer__build_result(self, self->procedure->return_type, false, NULL, error);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(propagated));
+
+        IR_Procedure__append_block(self->procedure, ok_block);
+        self->block = ok_block;
+        if (expression->type->kind != CHECKED_TYPE_KIND__NOTHING) {
+            return Lowerer__load_field(self, result_pointer, result_struct_type, "value");
+        }
+        return NULL;
+    }
+    case CHECKED_EXPRESSION_KIND__BLOCK: {
+        Checked_Block_Expression *block_expression = (Checked_Block_Expression *)expression;
+        IR_Block *end_block = Lowerer__create_block(self);
+        IR_Phi_Instruction *phi = IR_Phi_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type));
+        IR_Block *outer_yield_block = self->yield_block;
+        IR_Phi_Instruction *outer_yield_phi = self->yield_phi;
+        self->yield_block = end_block;
+        self->yield_phi = phi;
+        Lowerer__lower_statement(self, block_expression->block_statement);
+        self->yield_block = outer_yield_block;
+        self->yield_phi = outer_yield_phi;
+        if (phi->blocks.size == 0) {
+            return NULL;
+        }
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
+        if (phi->blocks.size == 1) {
+            return phi->super.operands.values[0];
+        }
+        IR_Block__append_instruction(self->block, (IR_Instruction *)phi);
+        return &phi->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__GROUP:
         return Lowerer__lower_expression(self, ((Checked_Group_Expression *)expression)->other_expression);
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
+        if (symbol->kind == CHECKED_SYMBOL_KIND__RESULT_ERROR) {
+            IR_Value *pointer = Lowerer__find_scope(self, symbol);
+            IR_Type *value_type = ((IR_Pointer_Type *)pointer->type)->pointee;
+            IR_Load_Instruction *instruction = IR_Load_Instruction__create(Lowerer__fresh_name(self), value_type, pointer);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+            return &instruction->super.result;
+        }
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE) {
             return Lowerer__find_global(self, Lowerer__procedure_name(self, (Checked_Procedure_Symbol *)symbol));
         }
@@ -801,6 +1000,21 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         }
         IR_Procedure__append_block(self->procedure, end_block);
         self->block = end_block;
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__RAISE: {
+        Checked_Raise_Statement *raise_statement = (Checked_Raise_Statement *)statement;
+        IR_Value *error = Lowerer__lower_expression(self, raise_statement->expression);
+        IR_Value *result = Lowerer__build_result(self, self->procedure->return_type, false, NULL, error);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(result));
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__YIELD: {
+        Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)statement;
+        IR_Value *value = Lowerer__lower_expression(self, yield_statement->expression);
+        IR_Block_List__append(&self->yield_phi->blocks, self->block);
+        IR_Value_List__append(&self->yield_phi->super.operands, value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(self->yield_block));
         break;
     }
     case CHECKED_STATEMENT_KIND__RETURN: {
@@ -1030,6 +1244,8 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.value_counter = 0;
     lowerer.block_counter = 0;
     lowerer.break_block = NULL;
+    lowerer.yield_block = NULL;
+    lowerer.yield_phi = NULL;
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.malloc_callee = NULL;
