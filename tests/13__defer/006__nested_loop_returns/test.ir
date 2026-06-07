@@ -1,0 +1,33 @@
+$test.main(): i32 {
+@1:
+  %result.ptr: [i32] = alloc i32
+  %1: i32 = const 42
+  store %result.ptr %1
+  jmp @2
+@2:
+  jmp @4
+@4:
+  %result.1: i32 = load %result.ptr
+  %2: i32 = const 42
+  %3: i32 = sub %result.1 %2
+  %4: i32 = const 12
+  store %result.ptr %4
+  %5: i32 = const 22
+  store %result.ptr %5
+  %6: i32 = const 32
+  store %result.ptr %6
+  ret %3
+@5:
+  %7: i32 = const 22
+  store %result.ptr %7
+  jmp @2
+@3:
+  %8: i32 = const 32
+  store %result.ptr %8
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

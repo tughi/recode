@@ -1,0 +1,67 @@
+type test.Result__11_27 = struct {
+  success: bool
+  value: i32
+  error: i32
+}
+
+$test.main(): i32 {
+@1:
+  %executed.ptr: [bool] = alloc bool
+  %1: bool = const false
+  store %executed.ptr %1
+  %2: test.Result__11_27 = call $test.raise_forty_two
+  %3.ptr: [test.Result__11_27] = alloc test.Result__11_27
+  store %3.ptr %2
+  %4: [bool] = offset %3.ptr .success
+  %5: bool = load %4
+  br %5 @2 @3
+@2:
+  %6: [i32] = offset %3.ptr .value
+  %7: i32 = load %6
+  jmp @4
+@3:
+  %8: [i32] = offset %3.ptr .error
+  %9: i32 = load %8
+  %error.ptr: [i32] = alloc i32
+  store %error.ptr %9
+  %value.ptr: [i32] = alloc i32
+  %11: i32 = load %error.ptr
+  %12: i32 = const 42
+  %13: i32 = sub %11 %12
+  store %value.ptr %13
+  %value.1: i32 = load %value.ptr
+  %14: i32 = const 13
+  store %value.ptr %14
+  jmp @5
+@5:
+  jmp @4
+@4:
+  %15: i32 = phi @2 %7 @5 %value.1
+  %16: bool = const true
+  store %executed.ptr %16
+  ret %15
+}
+
+$test.raise_forty_two(): test.Result__11_27 {
+@1:
+  %value.ptr: [i32] = alloc i32
+  %1: i32 = const 42
+  store %value.ptr %1
+  %value.1: i32 = load %value.ptr
+  %2: i32 = const 0
+  store %value.ptr %2
+  %3.ptr: [test.Result__11_27] = alloc test.Result__11_27
+  %4: [bool] = offset %3.ptr .success
+  %5: bool = const false
+  store %4 %5
+  %6: [i32] = offset %3.ptr .error
+  store %6 %value.1
+  %7: test.Result__11_27 = load %3.ptr
+  ret %7
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

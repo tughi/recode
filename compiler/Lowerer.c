@@ -11,6 +11,9 @@ typedef struct Lowerer {
     IR_Block *break_block;
     IR_Block *yield_block;
     IR_Phi_Instruction *yield_phi;
+    Checked_Defer_Statement *current_defer;
+    Checked_Defer_Statement *loop_defer_base;
+    Checked_Defer_Statement *yield_defer_base;
     IR_Value_List globals;
     IR_Value_List scope;
     IR_Value *malloc_callee;
@@ -268,6 +271,12 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
 
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression);
 void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement);
+
+void Lowerer__run_defers(Lowerer *self, Checked_Defer_Statement *from, Checked_Defer_Statement *to) {
+    for (Checked_Defer_Statement *defer = from; defer != to; defer = defer->prev_defer_statement) {
+        Lowerer__lower_statement(self, defer->statement);
+    }
+}
 
 IR_Value *Lowerer__lower_temporary_pointer(Lowerer *self, Checked_Expression *expression) {
     IR_Value *value = Lowerer__lower_expression(self, expression);
@@ -826,6 +835,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Procedure__append_block(self->procedure, raise_block);
         self->block = raise_block;
         IR_Value *error = Lowerer__load_field(self, result_pointer, result_struct_type, "error");
+        Lowerer__run_defers(self, self->current_defer, NULL);
         IR_Value *propagated = Lowerer__build_result(self, self->procedure->return_type, false, NULL, error);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(propagated));
 
@@ -842,11 +852,14 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Phi_Instruction *phi = IR_Phi_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type));
         IR_Block *outer_yield_block = self->yield_block;
         IR_Phi_Instruction *outer_yield_phi = self->yield_phi;
+        Checked_Defer_Statement *outer_yield_defer_base = self->yield_defer_base;
         self->yield_block = end_block;
         self->yield_phi = phi;
+        self->yield_defer_base = self->current_defer;
         Lowerer__lower_statement(self, block_expression->block_statement);
         self->yield_block = outer_yield_block;
         self->yield_phi = outer_yield_phi;
+        self->yield_defer_base = outer_yield_defer_base;
         if (phi->blocks.size == 0) {
             return NULL;
         }
@@ -943,14 +956,26 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     }
     case CHECKED_STATEMENT_KIND__BLOCK: {
         Checked_Block_Statement *block_statement = (Checked_Block_Statement *)statement;
+        Checked_Defer_Statement *outer_defer = self->current_defer;
         Checked_Statement *child_statement = block_statement->statements->first_statement;
-        while (child_statement != NULL) {
+        while (child_statement != NULL && !IR_Block__is_terminated(self->block)) {
             Lowerer__lower_statement(self, child_statement);
             child_statement = child_statement->next_statement;
         }
+        if (!IR_Block__is_terminated(self->block)) {
+            Lowerer__run_defers(self, self->current_defer, outer_defer);
+        }
+        self->current_defer = outer_defer;
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__DEFER: {
+        Checked_Defer_Statement *defer_statement = (Checked_Defer_Statement *)statement;
+        defer_statement->prev_defer_statement = self->current_defer;
+        self->current_defer = defer_statement;
         break;
     }
     case CHECKED_STATEMENT_KIND__BREAK: {
+        Lowerer__run_defers(self, self->current_defer, self->loop_defer_base);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(self->break_block));
         break;
     }
@@ -992,9 +1017,12 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         IR_Procedure__append_block(self->procedure, body_block);
         self->block = body_block;
         IR_Block *outer_break_block = self->break_block;
+        Checked_Defer_Statement *outer_loop_defer_base = self->loop_defer_base;
         self->break_block = end_block;
+        self->loop_defer_base = self->current_defer;
         Lowerer__lower_statement(self, loop_statement->body_statement);
         self->break_block = outer_break_block;
+        self->loop_defer_base = outer_loop_defer_base;
         if (!IR_Block__is_terminated(self->block)) {
             IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(body_block));
         }
@@ -1005,6 +1033,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     case CHECKED_STATEMENT_KIND__RAISE: {
         Checked_Raise_Statement *raise_statement = (Checked_Raise_Statement *)statement;
         IR_Value *error = Lowerer__lower_expression(self, raise_statement->expression);
+        Lowerer__run_defers(self, self->current_defer, NULL);
         IR_Value *result = Lowerer__build_result(self, self->procedure->return_type, false, NULL, error);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(result));
         break;
@@ -1012,6 +1041,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
     case CHECKED_STATEMENT_KIND__YIELD: {
         Checked_Yield_Statement *yield_statement = (Checked_Yield_Statement *)statement;
         IR_Value *value = Lowerer__lower_expression(self, yield_statement->expression);
+        Lowerer__run_defers(self, self->current_defer, self->yield_defer_base);
         IR_Block_List__append(&self->yield_phi->blocks, self->block);
         IR_Value_List__append(&self->yield_phi->super.operands, value);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(self->yield_block));
@@ -1023,6 +1053,7 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         if (return_statement->expression != NULL) {
             value = Lowerer__lower_expression(self, return_statement->expression);
         }
+        Lowerer__run_defers(self, self->current_defer, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(value));
         break;
     }
@@ -1082,9 +1113,12 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         IR_Procedure__append_block(self->procedure, body_block);
         self->block = body_block;
         IR_Block *outer_break_block = self->break_block;
+        Checked_Defer_Statement *outer_loop_defer_base = self->loop_defer_base;
         self->break_block = end_block;
+        self->loop_defer_base = self->current_defer;
         Lowerer__lower_statement(self, while_statement->body_statement);
         self->break_block = outer_break_block;
+        self->loop_defer_base = outer_loop_defer_base;
         if (!IR_Block__is_terminated(self->block)) {
             IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(condition_block));
         }
@@ -1187,6 +1221,7 @@ void Lowerer__define_procedure(Lowerer *self, Checked_Procedure_Symbol *procedur
     self->procedure = procedure;
     self->value_counter = 0;
     self->block_counter = 0;
+    self->current_defer = NULL;
     self->scope.size = 0;
     for (size_t i = 0; i < procedure->parameters.size; i++) {
         IR_Value_List__append(&self->scope, procedure->parameters.values[i]);
@@ -1246,6 +1281,9 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.break_block = NULL;
     lowerer.yield_block = NULL;
     lowerer.yield_phi = NULL;
+    lowerer.current_defer = NULL;
+    lowerer.loop_defer_base = NULL;
+    lowerer.yield_defer_base = NULL;
     lowerer.globals = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.scope = (IR_Value_List){.values = NULL, .size = 0, .capacity = 0};
     lowerer.malloc_callee = NULL;
