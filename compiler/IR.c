@@ -181,7 +181,14 @@ IR_Global *IR_Global__create(String *name, IR_Type *type) {
     global->super.value.variable = NULL;
     global->literal = NULL;
     global->constant = NULL;
+    global->is_external = false;
     global->next_global = NULL;
+    return global;
+}
+
+IR_Global *IR_External_Global__create(String *name, IR_Type *type) {
+    IR_Global *global = IR_Global__create(name, type);
+    global->is_external = true;
     return global;
 }
 
@@ -820,7 +827,7 @@ Writer *pWriter__write__ir_global(Writer *self, IR_Global *global) {
     } else if (global->constant != NULL) {
         pWriter__write__cstring(self, " = ");
         pWriter__write__ir_const_payload(self, global->constant, ((IR_Pointer_Type *)global->super.value.type)->pointee);
-    } else {
+    } else if (global->is_external) {
         pWriter__write__cstring(self, " = external");
     }
     return pWriter__end_line(self);

@@ -1,0 +1,10 @@
+type Number = struct {
+    negative: bool
+    value: u64
+}
+
+let number: Number
+
+proc main() -> i32 {
+    return number.value.as(i32)
+}

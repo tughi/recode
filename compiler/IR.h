@@ -132,10 +132,12 @@ typedef struct IR_Global {
     IR_Symbol super;
     String *literal;
     IR_Const_Payload *constant;
+    bool is_external;
     struct IR_Global *next_global;
 } IR_Global;
 
 IR_Global *IR_Global__create(String *name, IR_Type *type);
+IR_Global *IR_External_Global__create(String *name, IR_Type *type);
 IR_Global *IR_String_Global__create(String *name, IR_Type *type, String *literal);
 IR_Global *IR_Constant_Global__create(String *name, IR_Type *type, IR_Const_Payload *constant);
 

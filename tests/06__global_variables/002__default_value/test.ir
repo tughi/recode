@@ -1,0 +1,13 @@
+$test.value: [i32]
+
+$test.main(): i32 {
+@1:
+  %1: i32 = load $test.value
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

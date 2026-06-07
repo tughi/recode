@@ -109,9 +109,9 @@ $stderr: [[FILE]] = external
 
 $fputc: [proc (i32, [FILE]): i32] = external
 
-$os.stdout: [[io.Writer]] = null
+$os.stdout: [[io.Writer]]
 
-$os.stderr: [[io.Writer]] = null
+$os.stderr: [[io.Writer]]
 
 $str_1: [*]u8 = "Expression: "
 

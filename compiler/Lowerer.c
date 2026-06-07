@@ -1191,14 +1191,14 @@ void Lowerer__declare_external_procedure(Lowerer *self, Checked_Procedure_Symbol
     IR_Type **parameter_types = Lowerer__lower_parameter_types(self, checked_procedure_type, &parameter_count);
 
     IR_Type *procedure_type = (IR_Type *)IR_Procedure_Type__create(parameter_types, parameter_count, return_type);
-    IR_Global *global = IR_Global__create(Lowerer__procedure_name(self, procedure_symbol), (IR_Type *)IR_Pointer_Type__create(procedure_type));
+    IR_Global *global = IR_External_Global__create(Lowerer__procedure_name(self, procedure_symbol), (IR_Type *)IR_Pointer_Type__create(procedure_type));
     IR_Program__append_global(self->program, global);
     IR_Value_List__append(&self->globals, &global->super.value);
 }
 
 void Lowerer__declare_external_variable(Lowerer *self, Checked_Variable_Symbol *variable_symbol) {
     IR_Type *type = Lowerer__lower_type(self, variable_symbol->super.type);
-    IR_Global *global = IR_Global__create(Lowerer__variable_name(variable_symbol), (IR_Type *)IR_Pointer_Type__create(type));
+    IR_Global *global = IR_External_Global__create(Lowerer__variable_name(variable_symbol), (IR_Type *)IR_Pointer_Type__create(type));
     IR_Program__append_global(self->program, global);
     IR_Value_List__append(&self->globals, &global->super.value);
 }
@@ -1223,8 +1223,12 @@ IR_Const_Payload *Lowerer__lower_constant(Lowerer *self, Checked_Expression *exp
 void Lowerer__declare_global_variable(Lowerer *self, Checked_Variable_Symbol *variable_symbol) {
     IR_Type *type = Lowerer__lower_type(self, variable_symbol->super.type);
     IR_Type *pointer_type = (IR_Type *)IR_Pointer_Type__create(type);
-    IR_Const_Payload *constant = variable_symbol->statement->expression == NULL ? IR_Const_Payload__create(0, NULL) : Lowerer__lower_constant(self, variable_symbol->statement->expression);
-    IR_Global *global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), pointer_type, constant);
+    IR_Global *global;
+    if (variable_symbol->statement->expression == NULL) {
+        global = IR_Global__create(Lowerer__variable_name(variable_symbol), pointer_type);
+    } else {
+        global = IR_Constant_Global__create(Lowerer__variable_name(variable_symbol), pointer_type, Lowerer__lower_constant(self, variable_symbol->statement->expression));
+    }
     IR_Program__append_global(self->program, global);
     IR_Value_List__append(&self->globals, &global->super.value);
 }
