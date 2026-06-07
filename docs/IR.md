@@ -100,6 +100,18 @@ Declares a module-level byte payload. The declared type must be `[*]u8`; the lit
 
 Recognised escape sequences: `\0`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
 
+### Constant-initialized global
+
+```
+$answer: [i32]  = -42
+$delta:  [u64]  = 0xffff_ffff_ffff_fff0
+$enabled: [bool] = true
+$newline: [u8]  = '\n'
+$nothing: [[i32]] = null
+```
+
+Declares a mutable global with a constant initial value. The declared type must be a single pointer `[T]`; the initializer is a literal of the pointee type `T`, using the same syntax as the `const` instruction (optional leading `-`, optional trailing type suffix, `true`/`false`, character literals, and `null` for pointer pointees). The value is encoded into the global's payload at module load and the global's value is a `[T]` pointer to it, so `load`/`store` read and write the live value.
+
 ## Types
 
 **Primitive:** `bool`, `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `isize`, `usize`

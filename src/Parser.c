@@ -545,6 +545,49 @@ static Qualified_Name_Split split_qualified_name(Qualified_Name *qualified_name)
         }};
 }
 
+static int64_t parse_constant_literal(Parser *parser, IR_Type *type) {
+    if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
+        Identifier_Token literal = parser->current.identifier;
+        if (string_equals_cstr(literal.lexeme, "true") || string_equals_cstr(literal.lexeme, "false")) {
+            expect_type(parser, literal.location, "bool literal", ir_type_bool(), type);
+            advance(parser);
+            return string_equals_cstr(literal.lexeme, "true") ? 1 : 0;
+        }
+        if (string_equals_cstr(literal.lexeme, "null")) {
+            if (type->kind != IR_TYPE__PTR && type->kind != IR_TYPE__MULTI_PTR) {
+                parse_error(parser, literal.location, "null literal requires a pointer type");
+            }
+            advance(parser);
+            return 0;
+        }
+        parse_error_current(parser, "Unknown literal '%.*s'", STRING(literal.lexeme));
+    }
+    if (parser->current.kind == TOKEN_KIND__CHARACTER) {
+        Character_Token literal = parser->current.character;
+        expect_type(parser, literal.location, "char literal", ir_type_u8(), type);
+        advance(parser);
+        return literal.value;
+    }
+    Source_Location literal_location = current_location(parser);
+    if (!is_integer_type(type)) {
+        parse_error(parser, literal_location, "integer literal requires an integer type");
+    }
+    bool negative = false;
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
+        negative = true;
+        advance(parser);
+        skip_spaces(parser, 0);
+    }
+    uint64_t value = expect_integer(parser, type, negative);
+    if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
+        IR_Type *literal_type = parse_type(parser);
+        if (literal_type != type) {
+            parse_error(parser, literal_location, "Unexpected literal type");
+        }
+    }
+    return (int64_t)(negative ? -value : value);
+}
+
 static IR_Instruction *parse_value_instruction(Parser *parser) {
     IR_Value_Name result_name = parse_local_value_name(parser);
     expect_other(parser, ':');
@@ -675,49 +718,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
     if (string_equals_cstr(mnemonic, "const")) {
         skip_spaces(parser, 1);
         instruction->kind = IR_INSTRUCTION__CONST;
-        if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
-            Identifier_Token literal = parser->current.identifier;
-            if (string_equals_cstr(literal.lexeme, "true") || string_equals_cstr(literal.lexeme, "false")) {
-                expect_type(parser, literal.location, "const bool literal", ir_type_bool(), result_type);
-                instruction->const_instruction.value = string_equals_cstr(literal.lexeme, "true") ? 1 : 0;
-                advance(parser);
-                return instruction;
-            }
-            if (string_equals_cstr(literal.lexeme, "null")) {
-                if (result_type->kind != IR_TYPE__PTR && result_type->kind != IR_TYPE__MULTI_PTR) {
-                    parse_error(parser, literal.location, "const null requires a pointer result type");
-                }
-                instruction->const_instruction.value = 0;
-                advance(parser);
-                return instruction;
-            }
-            parse_error_current(parser, "Unknown const literal '%.*s'", STRING(literal.lexeme));
-        }
-        if (parser->current.kind == TOKEN_KIND__CHARACTER) {
-            Character_Token literal = parser->current.character;
-            expect_type(parser, literal.location, "const char literal", ir_type_u8(), result_type);
-            instruction->const_instruction.value = literal.value;
-            advance(parser);
-            return instruction;
-        }
-        Source_Location literal_location = current_location(parser);
-        if (!is_integer_type(result_type)) {
-            parse_error(parser, literal_location, "const integer literal requires an integer result type");
-        }
-        bool negative = false;
-        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '-') {
-            negative = true;
-            advance(parser);
-            skip_spaces(parser, 0);
-        }
-        uint64_t value = expect_integer(parser, result_type, negative);
-        if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
-            IR_Type *literal_type = parse_type(parser);
-            if (literal_type != result_type) {
-                parse_error(parser, literal_location, "Unexpected literal type");
-            }
-        }
-        instruction->const_instruction.value = (int64_t)(negative ? -value : value);
+        instruction->const_instruction.value = parse_constant_literal(parser, result_type);
         return instruction;
     }
 
@@ -1295,7 +1296,23 @@ static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name
     }
 
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER || !string_equals_cstr(parser->current.identifier.lexeme, "external")) {
-        parse_error_current(parser, "Expected 'external' or string literal");
+        if (type->kind != IR_TYPE__PTR) {
+            parse_error(parser, name.location, "Global variable '%.*s' with a constant initializer must have a single-pointer type", STRING(name.lexeme));
+        }
+        IR_Type *pointee = type->pointee;
+        int64_t init_value = parse_constant_literal(parser, pointee);
+
+        IR_Global_Variable *variable = &global->global_variable;
+        variable->value.kind = IR_VALUE__GLOBAL_VARIABLE;
+        variable->type = pointee;
+        variable->value.slot = reserve_frame_slot(&parser->globals_frame_size, type);
+        variable->payload_slot = reserve_frame_slot(&parser->globals_frame_size, pointee);
+        uint8_t *payload = malloc(variable->payload_slot.size);
+        memcpy(payload, &init_value, variable->payload_slot.size);
+        variable->payload_data = payload;
+        global->is_external = false;
+        ir_global_variable_list_add(&module->global_variables, variable);
+        return;
     }
     advance(parser);
     global->is_external = true;

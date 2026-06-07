@@ -1,0 +1,23 @@
+; exit: 42
+
+; constant-initialized global variables
+
+$base: [i32] = 58
+$delta: [u64] = 0xffff_ffff_ffff_fff0
+$enabled: [bool] = true
+$bias: [i8] = 0
+
+$main(): i32 {
+@1:
+  %b: i32 = load $base
+  %d: u64 = load $delta
+  %d.i32: i32 = cast %d
+  %sum: i32 = add %b %d.i32
+  %on: bool = load $enabled
+  br %on @2 @3
+@2:
+  ret %sum
+@3:
+  %zero: i32 = const 0
+  ret %zero
+}
