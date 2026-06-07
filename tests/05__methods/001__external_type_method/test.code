@@ -9,5 +9,5 @@ proc (^FILE).write(self, char ch: u8) -> ^FILE {
 }
 
 type FILE = external
-let stdout: ^FILE = external "__stdoutp"
+let stdout: ^FILE = external
 proc fputc(anon c: i32, anon stream: ^FILE) -> i32 = external

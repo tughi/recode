@@ -1,12 +1,12 @@
 type FILE = external
 
-let stdout: ^FILE = external "__stdoutp"
+let std_out: ^FILE = external "stdout"
 
 proc fputc(anon ch: i32, anon file: ^FILE) -> i32 = external
 
 proc main() -> i32 {
-    fputc(52, stdout) // '4'
-    fputc(50, stdout) // '2'
-    fputc(10, stdout) // '\n'
+    fputc(52, std_out) // '4'
+    fputc(50, std_out) // '2'
+    fputc(10, std_out) // '\n'
     return 0
 }
