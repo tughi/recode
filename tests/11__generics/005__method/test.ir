@@ -1,0 +1,118 @@
+type collections.List<i32> = struct {
+  first_item: [collections.List_Item<i32>]
+  last_item: [collections.List_Item<i32>]
+  length: usize
+}
+
+type collections.List_Item<i32> = struct {
+  data: i32
+  next: [collections.List_Item<i32>]
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$test.main(): i32 {
+@1:
+  %list.ptr: [collections.List<i32>] = alloc collections.List<i32>
+  %1: [collections.List_Item<i32>] = const null
+  %2: [collections.List_Item<i32>] = const null
+  %3: usize = const 0
+  %4: collections.List<i32> = struct .first_item %1 .last_item %2 .length %3
+  store %list.ptr %4
+  %5: i32 = const 42
+  call $([collections.List<i32>]).append+data %list.ptr %5
+  %6: i32 = const 24
+  call $([collections.List<i32>]).prepend+data %list.ptr %6
+  %7: [[collections.List_Item<i32>]] = offset %list.ptr .last_item
+  %8: [collections.List_Item<i32>] = load %7
+  %9: [i32] = offset %8 .data
+  %10: i32 = load %9
+  %11: [[collections.List_Item<i32>]] = offset %list.ptr .first_item
+  %12: [collections.List_Item<i32>] = load %11
+  %13: [i32] = offset %12 .data
+  %14: i32 = load %13
+  %15: i32 = sub %10 %14
+  %16: i32 = const 18
+  %17: i32 = sub %15 %16
+  ret %17
+}
+
+$([collections.List<i32>]).append+data(%self, %data: i32) {
+@1:
+  %new_item.ptr: [[collections.List_Item<i32>]] = alloc [collections.List_Item<i32>]
+  %1: usize = const 16
+  %2: [Any] = call $malloc %1
+  %3: [collections.List_Item<i32>] = cast %2
+  %4: [collections.List_Item<i32>] = const null
+  %5: collections.List_Item<i32> = struct .data %data .next %4
+  store %3 %5
+  store %new_item.ptr %3
+  %6: [[collections.List_Item<i32>]] = offset %self .first_item
+  %7: [collections.List_Item<i32>] = load %6
+  %8: [collections.List_Item<i32>] = const null
+  %9: bool = cmp_eq %7 %8
+  br %9 @2 @3
+@2:
+  %10: [[collections.List_Item<i32>]] = offset %self .first_item
+  %new_item.1: [collections.List_Item<i32>] = load %new_item.ptr
+  store %10 %new_item.1
+  jmp @4
+@3:
+  %11: [[collections.List_Item<i32>]] = offset %self .last_item
+  %12: [collections.List_Item<i32>] = load %11
+  %13: [[collections.List_Item<i32>]] = offset %12 .next
+  %new_item.2: [collections.List_Item<i32>] = load %new_item.ptr
+  store %13 %new_item.2
+  jmp @4
+@4:
+  %14: [[collections.List_Item<i32>]] = offset %self .last_item
+  %new_item.3: [collections.List_Item<i32>] = load %new_item.ptr
+  store %14 %new_item.3
+  %15: [usize] = offset %self .length
+  %16: [usize] = offset %self .length
+  %17: usize = load %16
+  %18: usize = const 1
+  %19: usize = add %17 %18
+  store %15 %19
+  ret
+}
+
+$([collections.List<i32>]).prepend+data(%self, %data: i32) {
+@1:
+  %new_item.ptr: [[collections.List_Item<i32>]] = alloc [collections.List_Item<i32>]
+  %1: usize = const 16
+  %2: [Any] = call $malloc %1
+  %3: [collections.List_Item<i32>] = cast %2
+  %4: [[collections.List_Item<i32>]] = offset %self .first_item
+  %5: [collections.List_Item<i32>] = load %4
+  %6: collections.List_Item<i32> = struct .data %data .next %5
+  store %3 %6
+  store %new_item.ptr %3
+  %7: [[collections.List_Item<i32>]] = offset %self .first_item
+  %8: [collections.List_Item<i32>] = load %7
+  %9: [collections.List_Item<i32>] = const null
+  %10: bool = cmp_eq %8 %9
+  br %10 @2 @3
+@2:
+  %11: [[collections.List_Item<i32>]] = offset %self .last_item
+  %new_item.1: [collections.List_Item<i32>] = load %new_item.ptr
+  store %11 %new_item.1
+  jmp @3
+@3:
+  %12: [[collections.List_Item<i32>]] = offset %self .first_item
+  %new_item.2: [collections.List_Item<i32>] = load %new_item.ptr
+  store %12 %new_item.2
+  %13: [usize] = offset %self .length
+  %14: [usize] = offset %self .length
+  %15: usize = load %14
+  %16: usize = const 1
+  %17: usize = add %15 %16
+  store %13 %17
+  ret
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

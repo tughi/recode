@@ -17,3 +17,5 @@ proc main() -> i32 {
     list.prepend(data: 24)
     return list.last_item.data - list.first_item.data - 18
 }
+
+proc malloc(anon size: usize) -> ^Any = external

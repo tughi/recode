@@ -1,0 +1,25 @@
+type test.Array<i32> = struct {
+  items: [*]i32
+  length: usize
+  capacity: usize
+}
+
+$test.main(): i32 {
+@1:
+  %array.ptr: [test.Array<i32>] = alloc test.Array<i32>
+  %1: [*]i32 = const null
+  %2: usize = const 0
+  %3: usize = const 0
+  %4: test.Array<i32> = struct .items %1 .length %2 .capacity %3
+  store %array.ptr %4
+  %5: [usize] = offset %array.ptr .length
+  %6: usize = load %5
+  %7: i32 = cast %6
+  ret %7
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

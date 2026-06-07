@@ -78,9 +78,14 @@ type FILE = opaque
 type code.ast.Number = struct {
     value: i32
 }
+type Map<i32, Optional<[u8]>> = struct {
+    size: i32
+}
 ```
 
 Defines a named struct type or declares an opaque (externally defined) type. Type names may be namespaced with `.` (e.g. `code.ast.Number`); the qualified name is used everywhere the type is referenced.
+
+Type names may also carry generic type parameters, written as `Name<T1, T2, ...>` (e.g. `Map<i32, str>`). The IR has no generics of its own — the parameter list is parsed only to validate that each argument is a well-formed type and is then folded into the type's nominal name. As with namespaced names, the full spelling including the parameters is what identifies the type, so it must match byte-for-byte (including spacing: one space after each comma, none before) at the declaration and every use.
 
 ### External global variable
 

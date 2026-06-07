@@ -1,0 +1,48 @@
+type foo.Foo_Demo = struct {
+  tokens: collections.List<tokens.Token>
+}
+
+type collections.List<tokens.Token> = struct {
+  first: [collections.List_item<tokens.Token>]
+}
+
+type collections.List_item<tokens.Token> = struct {
+  data: tokens.Token
+  next: [collections.List_item<tokens.Token>]
+}
+
+type tokens.Token = struct {
+  tag: i32
+  value: tokens.Identifier
+}
+
+type tokens.Identifier = struct {
+  name: String
+}
+
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+type tokens.Number = struct {
+  value: i32
+}
+
+type bar.Bar_Demo = struct {
+  tokens: collections.List<tokens.Token>
+}
+
+$test.main(): i32 {
+@1:
+  %foo_demo.ptr: [foo.Foo_Demo] = alloc foo.Foo_Demo
+  %bar_demo.ptr: [bar.Bar_Demo] = alloc bar.Bar_Demo
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
