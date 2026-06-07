@@ -1,0 +1,14 @@
+proc main() -> i32 {
+    return try increment(13) else try increment(13) else 0
+}
+
+type Error = struct {
+    code: i32
+}
+
+proc increment(anon value: i32) -> i32 !> Error {
+    if value > 10 {
+        raise Error(code: 42)
+    }
+    return value + 1
+}

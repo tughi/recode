@@ -1,0 +1,96 @@
+type test.Result__12_36 = struct {
+  success: bool
+  value: i32
+  error: test.Error
+}
+
+type test.Error = struct {
+  code: i32
+}
+
+$test.main(): i32 {
+@1:
+  %1: i32 = const 13
+  %2: test.Result__12_36 = call $test.increment+anon %1
+  %3.ptr: [test.Result__12_36] = alloc test.Result__12_36
+  store %3.ptr %2
+  %4: [bool] = offset %3.ptr .success
+  %5: bool = load %4
+  br %5 @2 @3
+@2:
+  %6: [i32] = offset %3.ptr .value
+  %7: i32 = load %6
+  jmp @4
+@3:
+  %8: [test.Error] = offset %3.ptr .error
+  %9: test.Error = load %8
+  %error.ptr: [test.Error] = alloc test.Error
+  store %error.ptr %9
+  %10: i32 = const 0
+  jmp @4
+@4:
+  %11: i32 = phi @2 %7 @3 %10
+  %12: i32 = const 0
+  %13: bool = cmp_eq %11 %12
+  br %13 @5 @6
+@5:
+  %14: i32 = const 13
+  %15: test.Result__12_36 = call $test.increment+anon %14
+  %16.ptr: [test.Result__12_36] = alloc test.Result__12_36
+  store %16.ptr %15
+  %17: [bool] = offset %16.ptr .success
+  %18: bool = load %17
+  br %18 @7 @8
+@7:
+  %19: [i32] = offset %16.ptr .value
+  %20: i32 = load %19
+  jmp @9
+@8:
+  %21: [test.Error] = offset %16.ptr .error
+  %22: test.Error = load %21
+  %error.2.ptr: [test.Error] = alloc test.Error
+  store %error.2.ptr %22
+  %23: i32 = const 0
+  jmp @9
+@9:
+  %24: i32 = phi @7 %20 @8 %23
+  ret %24
+@6:
+  %25: i32 = const 1
+  ret %25
+}
+
+$test.increment+anon(%value: i32): test.Result__12_36 {
+@1:
+  %1: i32 = const 10
+  %2: bool = cmp_gt %value %1
+  br %2 @2 @3
+@2:
+  %3: i32 = const 42
+  %4: test.Error = struct .code %3
+  %5.ptr: [test.Result__12_36] = alloc test.Result__12_36
+  %6: [bool] = offset %5.ptr .success
+  %7: bool = const false
+  store %6 %7
+  %8: [test.Error] = offset %5.ptr .error
+  store %8 %4
+  %9: test.Result__12_36 = load %5.ptr
+  ret %9
+@3:
+  %10: i32 = const 1
+  %11: i32 = add %value %10
+  %12.ptr: [test.Result__12_36] = alloc test.Result__12_36
+  %13: [bool] = offset %12.ptr .success
+  %14: bool = const true
+  store %13 %14
+  %15: [i32] = offset %12.ptr .value
+  store %15 %11
+  %16: test.Result__12_36 = load %12.ptr
+  ret %16
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

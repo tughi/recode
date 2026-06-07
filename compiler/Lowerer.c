@@ -804,15 +804,12 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Procedure__append_block(self->procedure, else_block);
         self->block = else_block;
         IR_Value *error = Lowerer__load_field(self, result_pointer, result_struct_type, "error");
-        IR_Variable *error_variable = IR_Variable__create(try_expression->result_error_symbol->super.name, error->type);
-        error_variable->symbol = (Checked_Variable_Symbol *)try_expression->result_error_symbol;
+        IR_Variable *error_variable = Lowerer__declare_variable(self, (Checked_Variable_Symbol *)try_expression->result_error_symbol, error->type);
         IR_Alloc_Instruction *error_alloc = IR_Alloc_Instruction__create(error_variable);
         IR_Block__append_instruction(self->block, (IR_Instruction *)error_alloc);
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&error_alloc->super.result, error));
-        size_t saved_scope_size = self->scope.size;
         IR_Value_List__append(&self->scope, &error_alloc->super.result);
         IR_Value *else_value = Lowerer__lower_expression(self, try_expression->else_expression);
-        self->scope.size = saved_scope_size;
         IR_Block *else_end_block = self->block;
         bool else_terminated = IR_Block__is_terminated(self->block);
         if (!else_terminated) {
