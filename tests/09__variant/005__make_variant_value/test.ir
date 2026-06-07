@@ -1,0 +1,54 @@
+type test.Value = struct {
+  tag: i32
+  value: test.Integer
+}
+
+type test.Integer = struct {
+  tag: i32
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %value.ptr: [test.Value] = alloc test.Value
+  %1.ptr: [test.Value] = alloc test.Value
+  %2: [i32] = offset %1.ptr test.Value.tag
+  %3: i32 = const 2
+  store %2 %3
+  %4.ptr: [test.Integer] = alloc test.Integer
+  %5: [i32] = offset %4.ptr test.Integer.tag
+  %6: i32 = const 2
+  store %5 %6
+  %7: i32 = const 256
+  %8: [i32] = offset %4.ptr test.Integer.value
+  store %8 %7
+  %9: test.Integer = load %4.ptr
+  %10: [test.Integer] = offset %1.ptr test.Value.value
+  store %10 %9
+  %11: test.Value = load %1.ptr
+  store %value.ptr %11
+  %12.ptr: [test.Value] = alloc test.Value
+  %13: [i32] = offset %12.ptr test.Value.tag
+  %14: i32 = const 2
+  store %13 %14
+  %15.ptr: [test.Integer] = alloc test.Integer
+  %16: [i32] = offset %15.ptr test.Integer.tag
+  %17: i32 = const 2
+  store %16 %17
+  %18: i32 = const 42
+  %19: [i32] = offset %15.ptr test.Integer.value
+  store %19 %18
+  %20: test.Integer = load %15.ptr
+  %21: [test.Integer] = offset %12.ptr test.Value.value
+  store %21 %20
+  %22: test.Value = load %12.ptr
+  store %value.ptr %22
+  %23: i32 = const 0
+  ret %23
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

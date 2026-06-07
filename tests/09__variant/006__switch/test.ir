@@ -1,0 +1,102 @@
+type test.Value = struct {
+  tag: i32
+  value: test.Integer
+}
+
+type test.Integer = struct {
+  tag: i32
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %value.ptr: [test.Value] = alloc test.Value
+  %1.ptr: [test.Value] = alloc test.Value
+  %2: [i32] = offset %1.ptr test.Value.tag
+  %3: i32 = const 2
+  store %2 %3
+  %4.ptr: [test.Integer] = alloc test.Integer
+  %5: [i32] = offset %4.ptr test.Integer.tag
+  %6: i32 = const 2
+  store %5 %6
+  %7: i32 = const 42
+  %8: [i32] = offset %4.ptr test.Integer.value
+  store %8 %7
+  %9: test.Integer = load %4.ptr
+  %10: [test.Integer] = offset %1.ptr test.Value.value
+  store %10 %9
+  %11: test.Value = load %1.ptr
+  store %value.ptr %11
+  jmp @2
+@2:
+  %12: [i32] = offset %value.ptr test.Value.tag
+  %13: i32 = load %12
+  %14: i32 = const 1
+  %15: bool = cmp_eq %13 %14
+  br %15 @5 @6
+@5:
+  %16: i32 = const 1
+  ret %16
+@6:
+  %17: i32 = const 2
+  %18: bool = cmp_eq %13 %17
+  br %18 @7 @8
+@7:
+  %19: [test.Integer] = offset %value.ptr test.Value.value
+  %20: [i32] = offset %19 test.Integer.tag
+  %21: i32 = load %20
+  %22: i32 = const 1
+  %23: bool = cmp_eq %21 %22
+  br %23 @10 @11
+@10:
+  %24: i32 = const 2
+  ret %24
+@11:
+  %25: i32 = const 2
+  %26: bool = cmp_eq %21 %25
+  br %26 @12 @13
+@12:
+  %27: [test.Integer] = offset %value.ptr test.Value.value
+  %28: [i32] = offset %27 test.Integer.value
+  %29: i32 = load %28
+  %30: i32 = const 42
+  %31: bool = cmp_ne %29 %30
+  br %31 @14 @15
+@14:
+  %32: i32 = const 3
+  ret %32
+@15:
+  jmp @3
+@13:
+  %33: i32 = const 0
+  %34: bool = cmp_eq %21 %33
+  br %34 @16 @17
+@16:
+  %35: i32 = const 4
+  ret %35
+@17:
+  jmp @9
+@9:
+  jmp @4
+@8:
+  %36: i32 = const 0
+  %37: bool = cmp_eq %13 %36
+  br %37 @18 @19
+@18:
+  %38: i32 = const 5
+  ret %38
+@19:
+  jmp @4
+@4:
+  %39: i32 = const 6
+  ret %39
+@3:
+  %40: i32 = const 0
+  ret %40
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

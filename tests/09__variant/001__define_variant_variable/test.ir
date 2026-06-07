@@ -1,0 +1,17 @@
+type test.Integer = struct {
+  tag: i32
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %integer.ptr: [test.Integer] = alloc test.Integer
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -154,6 +154,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__ISIZE);
     case CHECKED_TYPE_KIND__NOTHING:
         return IR_Type__get(IR_TYPE_KIND__NOTHING);
+    case CHECKED_TYPE_KIND__NULL:
+        return (IR_Type *)IR_Pointer_Type__create(IR_Type__get(IR_TYPE_KIND__ANY));
     case CHECKED_TYPE_KIND__MULTI_POINTER:
         return (IR_Type *)IR_Multi_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Multi_Pointer_Type *)type)->item_type));
     case CHECKED_TYPE_KIND__POINTER:
@@ -194,6 +196,36 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return IR_Type__get(IR_TYPE_KIND__U64);
     case CHECKED_TYPE_KIND__USIZE:
         return IR_Type__get(IR_TYPE_KIND__USIZE);
+    case CHECKED_TYPE_KIND__VARIANT: {
+        Checked_Variant_Type *variant_type = (Checked_Variant_Type *)type;
+        String *name = Lowerer__type_name(type);
+        for (IR_Named_Type *existing_type = self->program->first_type; existing_type != NULL; existing_type = existing_type->next_type) {
+            if (String__equals_string(existing_type->name, name)) {
+                return (IR_Type *)existing_type;
+            }
+        }
+        IR_Struct_Type *ir_struct_type = IR_Struct_Type__create(name);
+        IR_Program__append_type(self->program, &ir_struct_type->super);
+        IR_Type *value_type = NULL;
+        size_t value_size = 0;
+        size_t value_alignment = 0;
+        for (Checked_Variant_Case *variant_case = variant_type->first_variant_case; variant_case != NULL; variant_case = variant_case->next_variant) {
+            if (variant_case->type->kind == CHECKED_TYPE_KIND__NIL) {
+                continue;
+            }
+            IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
+            size_t case_size = IR_Type__size(case_type);
+            size_t case_alignment = IR_Type__alignment(case_type);
+            if (case_size > value_size || (case_size == value_size && case_alignment > value_alignment)) {
+                value_type = case_type;
+                value_size = case_size;
+                value_alignment = case_alignment;
+            }
+        }
+        IR_Struct_Type__append_field(ir_struct_type, String__create_from("tag"), IR_Type__get(IR_TYPE_KIND__I32));
+        IR_Struct_Type__append_field(ir_struct_type, String__create_from("value"), value_type);
+        return (IR_Type *)ir_struct_type;
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: type kind ");
         pWriter__write__int64(stderr_writer, type->kind);
@@ -226,6 +258,7 @@ IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expres
 }
 
 IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expression *member_access_expression);
+IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case);
 
 IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expression) {
     if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
@@ -234,6 +267,10 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol *symbol = ((Checked_Symbol_Expression *)expression)->symbol;
+        if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE) {
+            Checked_Variant_Switch_Case_Symbol *case_symbol = (Checked_Variant_Switch_Case_Symbol *)symbol;
+            return Lowerer__lower_variant_case_pointer(self, case_symbol->variant_expression, case_symbol->variant_case);
+        }
         if (symbol->is_global) {
             return Lowerer__find_global(self, symbol->name);
         }
@@ -256,6 +293,41 @@ IR_Value *Lowerer__lower_struct_offset(Lowerer *self, Checked_Member_Access_Expr
     IR_Struct_Offset_Instruction *instruction = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(member_type), object_pointer, Lowerer__type_name((Checked_Type *)member->struct_type), member->name);
     IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
     return &instruction->super.result;
+}
+
+Checked_Type *Lowerer__variant_value_type(Checked_Expression *variant_expression) {
+    Checked_Type *variant_type = variant_expression->type;
+    if (variant_type->kind == CHECKED_TYPE_KIND__POINTER) {
+        variant_type = ((Checked_Pointer_Type *)variant_type)->other_type;
+    }
+    return variant_type;
+}
+
+IR_Value *Lowerer__lower_variant_tag(Lowerer *self, Checked_Expression *variant_expression) {
+    Checked_Type *variant_type = Lowerer__variant_value_type(variant_expression);
+    IR_Value *variant_pointer = Lowerer__lower_object_pointer(self, variant_expression);
+    IR_Type *tag_type = IR_Type__get(IR_TYPE_KIND__I32);
+    IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), variant_pointer, Lowerer__type_name(variant_type), String__create_from("tag"));
+    IR_Block__append_instruction(self->block, (IR_Instruction *)tag_offset);
+    IR_Load_Instruction *tag_load = IR_Load_Instruction__create(Lowerer__fresh_name(self), tag_type, &tag_offset->super.result);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)tag_load);
+    return &tag_load->super.result;
+}
+
+IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case) {
+    Checked_Type *variant_type = Lowerer__variant_value_type(variant_expression);
+    IR_Value *variant_pointer = Lowerer__lower_object_pointer(self, variant_expression);
+    IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)Lowerer__lower_type(self, variant_type);
+    IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
+    IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, Lowerer__type_name(variant_type), String__create_from("value"));
+    IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
+    IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
+    if (case_type == value_field_type) {
+        return &value_offset->super.result;
+    }
+    IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(case_type), &value_offset->super.result);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
+    return &cast->super.result;
 }
 
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
@@ -426,6 +498,53 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }
+    case CHECKED_EXPRESSION_KIND__IS_VARIANT_CASE: {
+        Checked_Is_Variant_Case_Expression *is_variant_case_expression = (Checked_Is_Variant_Case_Expression *)expression;
+        IR_Value *tag = Lowerer__lower_variant_tag(self, is_variant_case_expression->variant_expression);
+        IR_Const_Instruction *index = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__I32), is_variant_case_expression->variant_case->index, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)index);
+        IR_Binary_Instruction *instruction = IR_Binary_Instruction__create(is_variant_case_expression->is_not ? IR_INSTRUCTION_KIND__CMP_NE : IR_INSTRUCTION_KIND__CMP_EQ, Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__BOOL), tag, &index->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__MAKE_VARIANT: {
+        Checked_Make_Variant_Expression *make_variant_expression = (Checked_Make_Variant_Expression *)expression;
+        IR_Type *variant_type = Lowerer__lower_type(self, expression->type);
+        String *variant_name = Lowerer__type_name(expression->type);
+        IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)variant_type;
+        IR_Type *tag_type = variant_struct_type->first_field->type;
+        IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
+
+        self->value_counter++;
+        String *temporary_name = String__create();
+        String__append_int16_t(temporary_name, self->value_counter);
+        IR_Alloc_Instruction *alloc = IR_Alloc_Instruction__create(IR_Variable__create(temporary_name, variant_type));
+        IR_Block__append_instruction(self->block, (IR_Instruction *)alloc);
+
+        IR_Struct_Offset_Instruction *tag_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(tag_type), &alloc->super.result, variant_name, String__create_from("tag"));
+        IR_Block__append_instruction(self->block, (IR_Instruction *)tag_offset);
+        IR_Const_Instruction *tag = IR_Const_Instruction__create(Lowerer__fresh_name(self), tag_type, make_variant_expression->variant_case->index, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)tag);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&tag_offset->super.result, &tag->super.result));
+
+        if (make_variant_expression->variant_case->type->kind != CHECKED_TYPE_KIND__NIL) {
+            IR_Value *payload = Lowerer__lower_expression(self, make_variant_expression->expression);
+            IR_Type *payload_type = Lowerer__lower_type(self, make_variant_expression->expression->type);
+            IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, variant_name, String__create_from("value"));
+            IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
+            IR_Value *value_pointer = &value_offset->super.result;
+            if (value_field_type != payload_type) {
+                IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(payload_type), value_pointer);
+                IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
+                value_pointer = &cast->super.result;
+            }
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(value_pointer, payload));
+        }
+
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), variant_type, &alloc->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+        return &load->super.result;
+    }
     case CHECKED_EXPRESSION_KIND__STRING_LENGTH: {
         Checked_String_Length_Expression *string_length_expression = (Checked_String_Length_Expression *)expression;
         Checked_Struct_Member *length_member = self->string_type->first_member->next_member;
@@ -566,6 +685,13 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
             return &instruction->super.result;
         }
+        if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE) {
+            Checked_Variant_Switch_Case_Symbol *case_symbol = (Checked_Variant_Switch_Case_Symbol *)symbol;
+            IR_Value *pointer = Lowerer__lower_variant_case_pointer(self, case_symbol->variant_expression, case_symbol->variant_case);
+            IR_Load_Instruction *instruction = IR_Load_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), pointer);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+            return &instruction->super.result;
+        }
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: symbol kind ");
         pWriter__write__int64(stderr_writer, symbol->kind);
         pWriter__end_line(stderr_writer);
@@ -684,6 +810,37 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
             IR_Value *value = Lowerer__lower_expression(self, variable_statement->expression);
             IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&instruction->super.result, value));
         }
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__VARIANT_SWITCH: {
+        Checked_Variant_Switch_Statement *switch_statement = (Checked_Variant_Switch_Statement *)statement;
+        IR_Value *tag = Lowerer__lower_variant_tag(self, switch_statement->expression);
+        IR_Block *end_block = Lowerer__create_block(self);
+        for (Checked_Variant_Switch_Case *switch_case = switch_statement->first_variant_switch_case; switch_case != NULL; switch_case = switch_case->next_switch_variant_case) {
+            IR_Const_Instruction *index = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__I32), switch_case->variant_case->index, NULL);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)index);
+            IR_Binary_Instruction *condition = IR_Binary_Instruction__create(IR_INSTRUCTION_KIND__CMP_EQ, Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__BOOL), tag, &index->super.result);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)condition);
+            IR_Block *case_block = Lowerer__create_block(self);
+            IR_Block *next_block = Lowerer__create_block(self);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(&condition->super.result, case_block, next_block));
+            IR_Procedure__append_block(self->procedure, case_block);
+            self->block = case_block;
+            Lowerer__lower_statement(self, switch_case->statement);
+            if (!IR_Block__is_terminated(self->block)) {
+                IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+            }
+            IR_Procedure__append_block(self->procedure, next_block);
+            self->block = next_block;
+        }
+        if (switch_statement->switch_else != NULL) {
+            Lowerer__lower_statement(self, switch_statement->switch_else->statement);
+        }
+        if (!IR_Block__is_terminated(self->block)) {
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
+        }
+        IR_Procedure__append_block(self->procedure, end_block);
+        self->block = end_block;
         break;
     }
     case CHECKED_STATEMENT_KIND__WHILE: {
