@@ -15,19 +15,19 @@ type Line = struct {
 $main(): i32 {
 @1:
   %line.ptr: [Line] = alloc Line
-  %p1.ptr: [Point] = offset %line.ptr Line.p1
+  %p1.ptr: [Point] = offset %line.ptr .p1
   %0: i32 = const 1
-  %p1.x.ptr: [i32] = offset %p1.ptr Point.x
+  %p1.x.ptr: [i32] = offset %p1.ptr .x
   store %p1.x.ptr %0
   %1: i32 = const 2
-  %p1.y.ptr: [i32] = offset %p1.ptr Point.y
+  %p1.y.ptr: [i32] = offset %p1.ptr .y
   store %p1.y.ptr %1
-  %p2.ptr: [Point] = offset %line.ptr Line.p2
+  %p2.ptr: [Point] = offset %line.ptr .p2
   %2: i32 = const 3
-  %p2.x.ptr: [i32] = offset %p2.ptr Point.x
+  %p2.x.ptr: [i32] = offset %p2.ptr .x
   store %p2.x.ptr %2
   %3: i32 = const 4
-  %p2.y.ptr: [i32] = offset %p2.ptr Point.y
+  %p2.y.ptr: [i32] = offset %p2.ptr .y
   store %p2.y.ptr %3
   %x1: i32 = load %p1.x.ptr
   %y1: i32 = load %p1.y.ptr

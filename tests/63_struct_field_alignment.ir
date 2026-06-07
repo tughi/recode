@@ -12,10 +12,10 @@ $main(): i32 {
 @1:
   %p.ptr: [Mixed] = alloc Mixed
   %0: i8 = const 9
-  %a.ptr: [i8] = offset %p.ptr Mixed.a
+  %a.ptr: [i8] = offset %p.ptr .a
   store %a.ptr %0
   %1: i32 = const 0x04030201
-  %b.ptr: [i32] = offset %p.ptr Mixed.b
+  %b.ptr: [i32] = offset %p.ptr .b
   store %b.ptr %1
   %bytes: [*]u8 = cast %p.ptr
   %four: usize = const 4

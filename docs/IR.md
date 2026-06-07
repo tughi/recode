@@ -31,7 +31,7 @@ A receiver type written as `$( <type> ).<member>` attaches a method to a type. T
 ```
 $([code.ast.Number]).get(%self): i32 {
 @1:
-    %0: [i32] = offset %self code.ast.Number.value
+    %0: [i32] = offset %self .value
     %1: i32 = load %0
     ret %1
 }
@@ -80,7 +80,7 @@ type code.ast.Number = struct {
 }
 ```
 
-Defines a named struct type or declares an opaque (externally defined) type. Type names may be namespaced with `.` (e.g. `code.ast.Number`); the qualified name is used everywhere the type is referenced, including struct-field `offset` (`offset %p code.ast.Number.value`).
+Defines a named struct type or declares an opaque (externally defined) type. Type names may be namespaced with `.` (e.g. `code.ast.Number`); the qualified name is used everywhere the type is referenced.
 
 ### External global variable
 
@@ -292,13 +292,13 @@ Boolean negation.
 Pointer arithmetic. Two forms:
 
 - **Indexed** (`[*]T %index => [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
-- **Struct field** (`[Struct] Name.field => [FieldT]`): computes a `[FieldT]` single pointer to a named field. The source must be `[Struct]`.
+- **Struct field** (`[Struct] .field => [FieldT]`): computes a `[FieldT]` single pointer to a named field. The struct type is taken from the base pointer (which must be `[Struct]`).
 
 Both forms always produce a `[T]` single pointer.
 
 ```
 %elem: [u8] = offset %array_ptr %index
-%field: [i32] = offset %struct_ptr Point.x
+%field: [i32] = offset %struct_ptr .x
 ```
 
 ### `phi`
@@ -331,8 +331,8 @@ store %ptr %value
 Constructs a struct value with the specified field values.
 
 ```
-%point: Point = struct Point .x %x .y %y
-%line: Line = struct Line .p1 %p1 .p2 %p2
+%point: Point = struct .x %x .y %y
+%line: Line = struct .p1 %p1 .p2 %p2
 ```
 
 ### `sub`

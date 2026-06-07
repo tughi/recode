@@ -11,10 +11,10 @@ $main(): i32 {
 @1:
   %p.ptr: [Point] = alloc Point
   %0: i32 = const 3
-  %x.ptr: [i32] = offset %p.ptr Point.x
+  %x.ptr: [i32] = offset %p.ptr .x
   store %x.ptr %0
   %1: i32 = const 4
-  %y.ptr: [i32] = offset %p.ptr Point.y
+  %y.ptr: [i32] = offset %p.ptr .y
   store %y.ptr %1
   %x: i32 = load %x.ptr
   %y: i32 = load %y.ptr

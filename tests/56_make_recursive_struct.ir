@@ -7,7 +7,7 @@ type Node = struct {
 $main(): i32 {
 @1:
   %0: [Node] = alloc Node
-  %node: Node = struct Node .next %0
+  %node: Node = struct .next %0
   %1: i32 = const 0
   ret %1
 }
