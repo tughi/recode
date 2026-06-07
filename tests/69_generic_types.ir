@@ -1,0 +1,28 @@
+; exit: 42
+
+; type parameters are part of the type name
+
+type Map<i32, Optional<[u8]>> = struct {
+  items: Map_Item<i32, Optional<[u8]>>
+  size: i32
+}
+
+type Map_Item<i32, Optional<[u8]>> = struct {
+  key: i32
+  value: Optional<[u8]>
+}
+
+type Optional<[u8]> = struct {
+  check: bool
+  value: [u8]
+}
+
+$main(): i32 {
+@1:
+  %m: [Map<i32, Optional<[u8]>>] = alloc Map<i32, Optional<[u8]>>
+  %0: [i32] = offset %m .size
+  %1: i32 = const 42
+  store %0 %1
+  %2: i32 = load %0
+  ret %2
+}
