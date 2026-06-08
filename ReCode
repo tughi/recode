@@ -524,10 +524,7 @@ def compiler(skip_tests=False, save=False):
             exit(1)
 
         expected_ir_path = f"{test_dir}/test.ir"
-        diff_result = run(
-            f"diff -N {build_ir_path} {expected_ir_path}",
-            capture_output=True, text=True, check=False,
-        )
+        diff_result = run(f"diff -N {build_ir_path} {expected_ir_path}", capture_output=True, text=True, check=False)
         if diff_result.returncode != 0:
             if save:
                 shutil.copyfile(build_ir_path, expected_ir_path)
@@ -542,15 +539,13 @@ def editor(launch):
     if not os.path.exists(f"build/editor"):
         run(f"mkdir build/editor")
 
-    compiler_command = ["build/stage1/ReCode", "-o", "build/editor", "editor"]
+    compiler_command = ["build/stage1/ReCode", "-o", "build/editor", "-n", "editor", "editor"]
     if run(compiler_command, capture_output=False, check=False).returncode != 0:
         trace(*compiler_command)
         exit(1)
 
-    assemble([f"build/editor/{file}" for file in os.listdir("build/editor")], "build/editor/editor", sdl=True, check=True)
-
     if launch:
-        run("build/editor/editor")
+        run("../recode-runner/build/Runner build/editor/editor.ir")
 
 
 def time():
