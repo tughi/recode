@@ -1,5 +1,7 @@
 #include "Interpreter.h"
 #include "Panic.h"
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -819,9 +821,139 @@ static IR_Block *find_block(IR_Function *function, size_t label) {
 
 static void call_external(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, uint8_t *return_address, Source_Location call_location) {
     switch (function->which) {
+    case IR_EXTERNAL_FUNCTION__SDL_CreateRenderer: {
+        SDL_Window *window = (SDL_Window *)*(uint8_t **)argument_addresses[0];
+        int index = *(int32_t *)argument_addresses[1];
+        Uint32 flags = *(uint32_t *)argument_addresses[2];
+        SDL_Renderer *result = SDL_CreateRenderer(window, index, flags);
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_CreateWindow: {
+        const char *title = (const char *)*(uint8_t **)argument_addresses[0];
+        int x = *(int32_t *)argument_addresses[1];
+        int y = *(int32_t *)argument_addresses[2];
+        int w = *(int32_t *)argument_addresses[3];
+        int h = *(int32_t *)argument_addresses[4];
+        Uint32 flags = *(uint32_t *)argument_addresses[5];
+        SDL_Window *result = SDL_CreateWindow(title, x, y, w, h, flags);
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_Delay:
+        SDL_Delay(*(uint32_t *)argument_addresses[0]);
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_DestroyRenderer:
+        SDL_DestroyRenderer((SDL_Renderer *)*(uint8_t **)argument_addresses[0]);
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_DestroyWindow:
+        SDL_DestroyWindow((SDL_Window *)*(uint8_t **)argument_addresses[0]);
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_GetError: {
+        const char *result = SDL_GetError();
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_GetWindowID: {
+        Uint32 result = SDL_GetWindowID((SDL_Window *)*(uint8_t **)argument_addresses[0]);
+        *(uint32_t *)return_address = (uint32_t)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_GetWindowSize: {
+        SDL_Window *window = (SDL_Window *)*(uint8_t **)argument_addresses[0];
+        int *w = (int *)*(uint8_t **)argument_addresses[1];
+        int *h = (int *)*(uint8_t **)argument_addresses[2];
+        SDL_GetWindowSize(window, w, h);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_Init: {
+        SDL_SetMainReady();
+        int result = SDL_Init(*(uint32_t *)argument_addresses[0]);
+        *(int32_t *)return_address = (int32_t)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_PollEvent: {
+        SDL_Event *event = (SDL_Event *)*(uint8_t **)argument_addresses[0];
+        int result = SDL_PollEvent(event);
+        *(int32_t *)return_address = (int32_t)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_Quit:
+        SDL_Quit();
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_RenderClear:
+        SDL_RenderClear((SDL_Renderer *)*(uint8_t **)argument_addresses[0]);
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_RenderDrawLine: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        int x1 = *(int32_t *)argument_addresses[1];
+        int y1 = *(int32_t *)argument_addresses[2];
+        int x2 = *(int32_t *)argument_addresses[3];
+        int y2 = *(int32_t *)argument_addresses[4];
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_RenderDrawPoint: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        int x = *(int32_t *)argument_addresses[1];
+        int y = *(int32_t *)argument_addresses[2];
+        SDL_RenderDrawPoint(renderer, x, y);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_RenderDrawRect: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        const SDL_Rect *rect = (const SDL_Rect *)*(uint8_t **)argument_addresses[1];
+        SDL_RenderDrawRect(renderer, rect);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_RenderFillRect: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        const SDL_Rect *rect = (const SDL_Rect *)*(uint8_t **)argument_addresses[1];
+        SDL_RenderFillRect(renderer, rect);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_RenderPresent:
+        SDL_RenderPresent((SDL_Renderer *)*(uint8_t **)argument_addresses[0]);
+        break;
+    case IR_EXTERNAL_FUNCTION__SDL_RenderSetClipRect: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        const SDL_Rect *rect = (const SDL_Rect *)*(uint8_t **)argument_addresses[1];
+        SDL_RenderSetClipRect(renderer, rect);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_SetRenderDrawColor: {
+        SDL_Renderer *renderer = (SDL_Renderer *)*(uint8_t **)argument_addresses[0];
+        Uint8 r = *(uint8_t *)argument_addresses[1];
+        Uint8 g = *(uint8_t *)argument_addresses[2];
+        Uint8 b = *(uint8_t *)argument_addresses[3];
+        Uint8 a = *(uint8_t *)argument_addresses[4];
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__SDL_WaitEvent: {
+        SDL_Event *event = (SDL_Event *)*(uint8_t **)argument_addresses[0];
+        int result = SDL_WaitEvent(event);
+        *(int32_t *)return_address = (int32_t)result;
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__exit:
         exit((int)*(int32_t *)argument_addresses[0]);
         break;
+    case IR_EXTERNAL_FUNCTION__fclose: {
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[0];
+        int result = fclose(stream);
+        if (return_address != NULL) {
+            *(int32_t *)return_address = (int32_t)result;
+        }
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__fopen: {
+        const char *path = (const char *)*(uint8_t **)argument_addresses[0];
+        const char *mode = (const char *)*(uint8_t **)argument_addresses[1];
+        FILE *result = fopen(path, mode);
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__fputc: {
         int32_t c = *(int32_t *)argument_addresses[0];
         FILE *stream = (FILE *)*(uint8_t **)argument_addresses[1];

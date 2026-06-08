@@ -1194,29 +1194,130 @@ static void parse_type_declaration(Parser *parser) {
     type->struct_field_count = field_count;
 }
 
+static bool is_named_pointer(IR_Type *type) {
+    return type != NULL && type->kind == IR_TYPE__PTR && (type->pointee->kind == IR_TYPE__OPAQUE || type->pointee->kind == IR_TYPE__STRUCT);
+}
+
 static IR_External_Function check_external_function(Parser *parser, IR_Function *function) {
     String name = function->name;
     IR_Type *return_type = function->return_type;
     size_t parameter_count = function->parameters.size;
     IR_Value **parameters = function->parameters.items;
-    if (string_equals_cstr(name, "$exit")) {
-        if (return_type == ir_type_void() && parameter_count == 1 && parameters[0]->type == ir_type_i32()) {
+    IR_Type *void_type = ir_type_void();
+    IR_Type *i32_type = ir_type_i32();
+    IR_Type *u32_type = ir_type_u32();
+    IR_Type *u8_type = ir_type_u8();
+    IR_Type *usize_type = ir_type_usize();
+    IR_Type *any_ptr_type = ir_type_pointer(parser->types, ir_type_any());
+    IR_Type *u8_ptr_type = ir_type_pointer(parser->types, ir_type_u8());
+    IR_Type *i32_ptr_type = ir_type_pointer(parser->types, ir_type_i32());
+    IR_Type *u8_multi_ptr_type = ir_type_multipointer(parser->types, ir_type_u8());
+    if (string_equals_cstr(name, "$SDL_CreateRenderer")) {
+        if (is_named_pointer(return_type) && parameter_count == 3 && is_named_pointer(parameters[0]->type) && parameters[1]->type == i32_type && parameters[2]->type == u32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_CreateRenderer;
+        }
+    } else if (string_equals_cstr(name, "$SDL_CreateWindow")) {
+        if (is_named_pointer(return_type) && parameter_count == 6 && parameters[0]->type == u8_multi_ptr_type && parameters[1]->type == i32_type && parameters[2]->type == i32_type && parameters[3]->type == i32_type && parameters[4]->type == i32_type && parameters[5]->type == u32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_CreateWindow;
+        }
+    } else if (string_equals_cstr(name, "$SDL_Delay")) {
+        if (return_type == void_type && parameter_count == 1 && parameters[0]->type == u32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_Delay;
+        }
+    } else if (string_equals_cstr(name, "$SDL_DestroyRenderer")) {
+        if (return_type == void_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_DestroyRenderer;
+        }
+    } else if (string_equals_cstr(name, "$SDL_DestroyWindow")) {
+        if (return_type == void_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_DestroyWindow;
+        }
+    } else if (string_equals_cstr(name, "$SDL_GetError")) {
+        if (return_type == u8_ptr_type && parameter_count == 0) {
+            return IR_EXTERNAL_FUNCTION__SDL_GetError;
+        }
+    } else if (string_equals_cstr(name, "$SDL_GetWindowID")) {
+        if (return_type == u32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_GetWindowID;
+        }
+    } else if (string_equals_cstr(name, "$SDL_GetWindowSize")) {
+        if (return_type == void_type && parameter_count == 3 && is_named_pointer(parameters[0]->type) && parameters[1]->type == i32_ptr_type && parameters[2]->type == i32_ptr_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_GetWindowSize;
+        }
+    } else if (string_equals_cstr(name, "$SDL_Init")) {
+        if (return_type == i32_type && parameter_count == 1 && parameters[0]->type == u32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_Init;
+        }
+    } else if (string_equals_cstr(name, "$SDL_PollEvent")) {
+        if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_PollEvent;
+        }
+    } else if (string_equals_cstr(name, "$SDL_Quit")) {
+        if (return_type == void_type && parameter_count == 0) {
+            return IR_EXTERNAL_FUNCTION__SDL_Quit;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderClear")) {
+        if (return_type == void_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderClear;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderDrawLine")) {
+        if (return_type == void_type && parameter_count == 5 && is_named_pointer(parameters[0]->type) && parameters[1]->type == i32_type && parameters[2]->type == i32_type && parameters[3]->type == i32_type && parameters[4]->type == i32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderDrawLine;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderDrawPoint")) {
+        if (return_type == void_type && parameter_count == 3 && is_named_pointer(parameters[0]->type) && parameters[1]->type == i32_type && parameters[2]->type == i32_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderDrawPoint;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderDrawRect")) {
+        if (return_type == void_type && parameter_count == 2 && is_named_pointer(parameters[0]->type) && is_named_pointer(parameters[1]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderDrawRect;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderFillRect")) {
+        if (return_type == void_type && parameter_count == 2 && is_named_pointer(parameters[0]->type) && is_named_pointer(parameters[1]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderFillRect;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderPresent")) {
+        if (return_type == void_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderPresent;
+        }
+    } else if (string_equals_cstr(name, "$SDL_RenderSetClipRect")) {
+        if (return_type == void_type && parameter_count == 2 && is_named_pointer(parameters[0]->type) && is_named_pointer(parameters[1]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_RenderSetClipRect;
+        }
+    } else if (string_equals_cstr(name, "$SDL_SetRenderDrawColor")) {
+        if (return_type == void_type && parameter_count == 5 && is_named_pointer(parameters[0]->type) && parameters[1]->type == u8_type && parameters[2]->type == u8_type && parameters[3]->type == u8_type && parameters[4]->type == u8_type) {
+            return IR_EXTERNAL_FUNCTION__SDL_SetRenderDrawColor;
+        }
+    } else if (string_equals_cstr(name, "$SDL_WaitEvent")) {
+        if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__SDL_WaitEvent;
+        }
+    } else if (string_equals_cstr(name, "$exit")) {
+        if (return_type == void_type && parameter_count == 1 && parameters[0]->type == i32_type) {
             return IR_EXTERNAL_FUNCTION__exit;
         }
+    } else if (string_equals_cstr(name, "$fclose")) {
+        if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__fclose;
+        }
+    } else if (string_equals_cstr(name, "$fopen")) {
+        if (is_named_pointer(return_type) && parameter_count == 2 && parameters[0]->type == u8_multi_ptr_type && parameters[1]->type == u8_multi_ptr_type) {
+            return IR_EXTERNAL_FUNCTION__fopen;
+        }
     } else if (string_equals_cstr(name, "$fputc")) {
-        if (return_type == ir_type_i32() && parameter_count == 2 && parameters[0]->type == ir_type_i32() && parameters[1]->type->kind == IR_TYPE__PTR && parameters[1]->type->pointee->kind == IR_TYPE__OPAQUE) {
+        if (return_type == i32_type && parameter_count == 2 && parameters[0]->type == i32_type && is_named_pointer(parameters[1]->type)) {
             return IR_EXTERNAL_FUNCTION__fputc;
         }
     } else if (string_equals_cstr(name, "$free")) {
-        if (return_type == ir_type_void() && parameter_count == 1 && parameters[0]->type == ir_type_pointer(parser->types, ir_type_any())) {
+        if (return_type == void_type && parameter_count == 1 && parameters[0]->type == any_ptr_type) {
             return IR_EXTERNAL_FUNCTION__free;
         }
     } else if (string_equals_cstr(name, "$malloc")) {
-        if (return_type == ir_type_pointer(parser->types, ir_type_any()) && parameter_count == 1 && parameters[0]->type == ir_type_usize()) {
+        if (return_type == any_ptr_type && parameter_count == 1 && parameters[0]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__malloc;
         }
     } else if (string_equals_cstr(name, "$realloc")) {
-        if (return_type == ir_type_pointer(parser->types, ir_type_any()) && parameter_count == 2 && parameters[0]->type == ir_type_pointer(parser->types, ir_type_any()) && parameters[1]->type == ir_type_usize()) {
+        if (return_type == any_ptr_type && parameter_count == 2 && parameters[0]->type == any_ptr_type && parameters[1]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__realloc;
         }
     }
