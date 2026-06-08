@@ -284,6 +284,9 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
     if (a->kind == IR_TYPE__OPAQUE) {
         return false;
     }
+    if (a->kind == IR_TYPE__PLACEHOLDER) {
+        return false;
+    }
     if (a->kind == IR_TYPE__STRUCT) {
         return false;
     }

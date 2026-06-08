@@ -1,0 +1,25 @@
+; Two struct fields whose types forward-reference distinct named types
+; must keep distinct types. Previously placeholder types compared equal,
+; so proc-type interning conflated `set_color` with `fill_rect`.
+
+type Renderer = struct {
+  fill_rect: [proc ([Any], Rect)]
+  set_color: [proc ([Any], Color)]
+}
+
+type Rect = struct {
+  value: i32
+}
+
+type Color = struct {
+  value: i32
+}
+
+$main(): i32 {
+@1:
+  %r.ptr: [Renderer] = alloc Renderer
+  %1: [[proc ([Any], Rect)]] = offset %r.ptr .fill_rect
+  %2: [[proc ([Any], Color)]] = offset %r.ptr .set_color
+  %3: i32 = const 0
+  ret %3
+}
