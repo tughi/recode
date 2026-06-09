@@ -11,6 +11,9 @@ SRCS = $(wildcard src/*.c)
 OBJS = $(SRCS:src/%.c=$(BUILD)/%.o)
 DEPS = $(OBJS:.o=.d)
 
+all: $(TARGET)
+	@true
+
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(RAYLIB_LIBS) $(SDL_LIBS)
 
@@ -51,4 +54,4 @@ test: $(TARGET)
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: clean test
+.PHONY: all clean test

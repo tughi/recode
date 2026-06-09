@@ -1,4 +1,7 @@
 #!/bin/sh
 set -e
-make
-./build/Runner "$@"
+
+RUNNER_HOME="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+
+make -C "$RUNNER_HOME"
+"$RUNNER_HOME/build/Runner" "$@"
