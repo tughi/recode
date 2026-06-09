@@ -1,5 +1,7 @@
 ; print a string literal global via fputc
 
+; output: Hello "IR Code"!\n
+
 type File = opaque
 
 $stdout: [[File]] = external

@@ -1,5 +1,7 @@
 ; character literals and cast u8 to i32
 
+; output: Hi\n
+
 type File = opaque
 
 $stdout: [[File]] = external

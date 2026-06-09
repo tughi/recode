@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+def main():
+    use_colors = sys.stdout.isatty()
+    tty_green = "\033[32m" if use_colors else ""
+    tty_red = "\033[31m" if use_colors else ""
+    tty_bold = "\033[1m" if use_colors else ""
+    tty_reset = "\033[0m" if use_colors else ""
+
+    tests_dir = Path(__file__).resolve().parent
+    root = tests_dir.parent
+
+    runner = root / "build" / "Runner"
+    if not runner.is_file():
+        print(f"{tty_red}Runner not found at {runner}{tty_reset}")
+        sys.exit(1)
+
+    args_regex = re.compile(r"^; args: (.*)$", re.MULTILINE)
+    exit_regex = re.compile(r"^; exit: (\d+)$", re.MULTILINE)
+    output_regex = re.compile(r"^; output: (.*)$", re.MULTILINE)
+
+    tests = sorted(tests_dir.glob("*.ir"))
+
+    passed = 0
+    for test in tests:
+        source = test.read_text()
+        args = match.group(1).split() if (match := args_regex.search(source)) else []
+        expected_exit_code = int(match.group(1)) if (match := exit_regex.search(source)) else 0
+        expected_output = match.group(1).encode().decode("unicode_escape") if (match := output_regex.search(source)) else ""
+
+        test_path = test.relative_to(root).as_posix()
+        result = subprocess.run(
+            [runner.as_posix(), test_path, *args],
+            cwd=root,
+            capture_output=True,
+        )
+        if result.returncode != expected_exit_code:
+            print(f"{tty_red}FAIL{tty_reset} {test.name} (exit: {result.returncode})")
+        elif (actual_output := result.stdout.decode()) != expected_output:
+            print(f"{tty_red}FAIL{tty_reset} {test.name} (output: {repr(actual_output)})")
+        else:
+            print(f"{tty_green}PASS{tty_reset} {test.name}")
+            passed += 1
+
+    failed = len(tests) - passed
+    print(f"{tty_bold}{tty_red if failed > 0 else tty_green}{passed}/{len(tests)} passed{tty_reset}")
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()
