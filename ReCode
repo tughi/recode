@@ -387,7 +387,7 @@ def test(paths, save=False, stage=1):
                 )
                 exit(1)
 
-            runner_command = ["../recode-runner/build/Runner", build_ir_path, *tester.actual_test_data.execute_args]
+            runner_command = ["Runner", build_ir_path, *tester.actual_test_data.execute_args]
             test_result = run(runner_command, capture_output=True, text=True, check=False)
 
             tester.update_actual_execute_error(test_result.returncode)
@@ -504,7 +504,7 @@ def compiler(skip_tests=False, save=False):
         expected_stderr = expected_execute.get("stderr", [])
         execute_args = expected_execute.get("args", [])
 
-        runner_command = ["../recode-runner/build/Runner", build_ir_path, *execute_args]
+        runner_command = ["Runner", build_ir_path, *execute_args]
         runner_result = run(runner_command, capture_output=True, text=True, check=False)
 
         if runner_result.returncode != expected_exit:
@@ -545,7 +545,7 @@ def editor(launch):
         exit(1)
 
     if launch:
-        run("../recode-runner/build/Runner build/editor/editor.ir")
+        run("Runner build/editor/editor.ir")
 
 
 def time():
