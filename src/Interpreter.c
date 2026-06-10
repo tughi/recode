@@ -646,11 +646,14 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
     uint8_t *base = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
     if (instruction->offset_instruction.struct_field == NULL) {
-        // indexed form: base + index * sizeof(pointee)
-        IR_Type *pointee = instruction->arguments.items[0]->type->pointee;
+        // indexed form: base + index * sizeof(item)
+        IR_Type *item_type = instruction->arguments.items[0]->type->pointee;
+        if (item_type->kind == IR_TYPE__ARRAY) {
+            item_type = item_type->item_type;
+        }
         size_t index = 0;
         memcpy(&index, value_address(interpreter, frame_data, instruction->arguments.items[1]), instruction->arguments.items[1]->slot.size);
-        *(uint8_t **)result_address = base + index * ir_type_size(pointee);
+        *(uint8_t **)result_address = base + index * ir_type_size(item_type);
     } else {
         IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
         String field_name = instruction->offset_instruction.struct_field->name;

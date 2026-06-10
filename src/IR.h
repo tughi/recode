@@ -10,6 +10,7 @@
 
 typedef enum IR_Type_Kind {
     IR_TYPE__ANY,
+    IR_TYPE__ARRAY,
     IR_TYPE__BOOL,
     IR_TYPE__I8,
     IR_TYPE__I16,
@@ -58,6 +59,10 @@ struct IR_Type {
         };
         IR_Type *pointee;
         IR_Proc_Type proc;
+        struct {
+            IR_Type *item_type;
+            size_t item_count;
+        };
     };
 };
 
@@ -70,6 +75,7 @@ typedef struct {
 void ir_type_list_add(IR_Type_List *list, IR_Type *type);
 
 IR_Type *ir_type_any(void);
+IR_Type *ir_type_array(IR_Type_List *types, IR_Type *item_type, size_t item_count);
 IR_Type *ir_type_bool(void);
 IR_Type *ir_type_i8(void);
 IR_Type *ir_type_i16(void);

@@ -107,6 +107,21 @@ void ir_type_list_add(IR_Type_List *list, IR_Type *type) {
     list->items[list->size++] = type;
 }
 
+IR_Type *ir_type_array(IR_Type_List *types, IR_Type *item_type, size_t item_count) {
+    for (size_t i = 0; i < types->size; i++) {
+        IR_Type *existing = types->items[i];
+        if (existing->kind == IR_TYPE__ARRAY && existing->item_type == item_type && existing->item_count == item_count) {
+            return existing;
+        }
+    }
+    IR_Type *type = malloc(sizeof(IR_Type));
+    type->kind = IR_TYPE__ARRAY;
+    type->item_type = item_type;
+    type->item_count = item_count;
+    ir_type_list_add(types, type);
+    return type;
+}
+
 IR_Type *ir_type_multipointer(IR_Type_List *types, IR_Type *pointee) {
     for (size_t i = 0; i < types->size; i++) {
         IR_Type *existing = types->items[i];
@@ -207,6 +222,8 @@ size_t ir_type_size(IR_Type *type) {
     case IR_TYPE__PTR:
     case IR_TYPE__PROC:
         return 8;
+    case IR_TYPE__ARRAY:
+        return type->item_count * ir_type_size(type->item_type);
     case IR_TYPE__STRUCT: {
         if (type->struct_field_count == 0) {
             return 0;
@@ -227,6 +244,9 @@ size_t ir_type_size(IR_Type *type) {
 }
 
 size_t ir_type_alignment(IR_Type *type) {
+    if (type->kind == IR_TYPE__ARRAY) {
+        return ir_type_alignment(type->item_type);
+    }
     if (type->kind == IR_TYPE__STRUCT) {
         size_t alignment = 1;
         for (size_t i = 0; i < type->struct_field_count; i++) {
@@ -278,6 +298,9 @@ bool ir_type_equals(IR_Type *a, IR_Type *b) {
         }
         return true;
     }
+    if (a->kind == IR_TYPE__ARRAY) {
+        return a->item_count == b->item_count && ir_type_equals(a->item_type, b->item_type);
+    }
     if (a->kind == IR_TYPE__MULTI_PTR || a->kind == IR_TYPE__PTR) {
         return ir_type_equals(a->pointee, b->pointee);
     }
@@ -301,6 +324,10 @@ void fprint_ir_type(FILE *out, IR_Type *type) {
     switch (type->kind) {
     case IR_TYPE__ANY:
         fputs("Any", out);
+        return;
+    case IR_TYPE__ARRAY:
+        fprintf(out, "[%zu]", type->item_count);
+        fprint_ir_type(out, type->item_type);
         return;
     case IR_TYPE__BOOL:
         fputs("bool", out);

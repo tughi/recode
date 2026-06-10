@@ -162,6 +162,16 @@ static IR_Type *parse_type(Parser *parser) {
             IR_Type *pointee = parse_type(parser);
             return ir_type_multipointer(parser->types, pointee);
         }
+        if (parser->current.kind == TOKEN_KIND__INTEGER) {
+            Integer_Token item_count = parser->current.integer;
+            if (item_count.overflow) {
+                parse_error_current(parser, "Array size is too large");
+            }
+            advance(parser);
+            expect_other(parser, ']');
+            IR_Type *item_type = parse_type(parser);
+            return ir_type_array(parser->types, item_type, item_count.value);
+        }
         IR_Type *pointee = parse_type(parser);
         expect_other(parser, ']');
         return ir_type_pointer(parser->types, pointee);
@@ -340,6 +350,9 @@ static IR_Instruction *alloc_instruction(void) {
 }
 
 static uint32_t slot_alignment(IR_Type *type) {
+    if (type->kind == IR_TYPE__ARRAY) {
+        return slot_alignment(type->item_type);
+    }
     size_t size = ir_type_size(type);
     if (size == 0) {
         return 1;
@@ -1054,10 +1067,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__OFFSET: {
         IR_Type *arg_type = instruction->arguments.items[0]->type;
         if (instruction->offset_instruction.struct_field == NULL) {
-            // indexed form: [*]T %index → [T]
-            if (arg_type == NULL || arg_type->kind != IR_TYPE__MULTI_PTR) {
+            // indexed form: [*]T %index → [T] or [[N]T] %index → [T]
+            IR_Type *item_type;
+            if (arg_type != NULL && arg_type->kind == IR_TYPE__MULTI_PTR) {
+                item_type = arg_type->pointee;
+            } else if (arg_type != NULL && arg_type->kind == IR_TYPE__PTR && arg_type->pointee->kind == IR_TYPE__ARRAY) {
+                item_type = arg_type->pointee->item_type;
+            } else {
                 error_prefix(parser, location);
-                fprintf(stderr, "offset indexed: expected [*]T pointer, got ");
+                fprintf(stderr, "offset indexed: expected [*]T or [[N]T] pointer, got ");
                 fprint_ir_type(stderr, arg_type);
                 fputc('\n', stderr);
                 panic();
@@ -1065,7 +1083,7 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
             if (!is_integer_type(instruction->arguments.items[1]->type)) {
                 parse_error(parser, location, "offset index must be an integer type");
             }
-            IR_Type *expected = ir_type_pointer(parser->types, arg_type->pointee);
+            IR_Type *expected = ir_type_pointer(parser->types, item_type);
             expect_type(parser, location, "offset result", expected, instruction->result.type);
         } else {
             // struct form: [T] Struct.field → [T_field]

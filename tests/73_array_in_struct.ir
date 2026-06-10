@@ -1,0 +1,25 @@
+; exit: 7
+
+; array as struct field, plus whole-array copy via load/store
+
+type Packet = struct {
+  tag: u8
+  data: [4]u8
+}
+
+$main(): i32 {
+@1:
+  %p.ptr: [Packet] = alloc Packet
+  %data.ptr: [[4]u8] = offset %p.ptr .data
+  %0: usize = const 2
+  %1: u8 = const 7
+  %item.ptr: [u8] = offset %data.ptr %0
+  store %item.ptr %1
+  %copy.ptr: [[4]u8] = alloc [4]u8
+  %data: [4]u8 = load %data.ptr
+  store %copy.ptr %data
+  %copied_item.ptr: [u8] = offset %copy.ptr %0
+  %copied_item: u8 = load %copied_item.ptr
+  %result: i32 = cast %copied_item
+  ret %result
+}
