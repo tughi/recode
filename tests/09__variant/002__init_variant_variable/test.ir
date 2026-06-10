@@ -1,11 +1,11 @@
 type test.Value = struct {
   tag: i32
-  value: test.Integer
+  value: [2]u32
 }
 
 type test.Integer = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $test.main(): i32 {
@@ -16,7 +16,7 @@ $test.main(): i32 {
   %3: i32 = const 1
   store %2 %3
   %4: bool = const false
-  %5: [test.Integer] = offset %1.ptr .value
+  %5: [[2]u32] = offset %1.ptr .value
   %6: [bool] = cast %5
   store %6 %4
   %7: test.Value = load %1.ptr

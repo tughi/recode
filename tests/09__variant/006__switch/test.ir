@@ -1,11 +1,11 @@
 type test.Value = struct {
   tag: i32
-  value: test.Integer
+  value: [2]u32
 }
 
 type test.Integer = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $test.main(): i32 {
@@ -20,79 +20,84 @@ $test.main(): i32 {
   %6: i32 = const 2
   store %5 %6
   %7: i32 = const 42
-  %8: [i32] = offset %4.ptr .value
-  store %8 %7
-  %9: test.Integer = load %4.ptr
-  %10: [test.Integer] = offset %1.ptr .value
-  store %10 %9
-  %11: test.Value = load %1.ptr
-  store %value.ptr %11
+  %8: [[1]u32] = offset %4.ptr .value
+  %9: [i32] = cast %8
+  store %9 %7
+  %10: test.Integer = load %4.ptr
+  %11: [[2]u32] = offset %1.ptr .value
+  %12: [test.Integer] = cast %11
+  store %12 %10
+  %13: test.Value = load %1.ptr
+  store %value.ptr %13
   jmp @2
 @2:
-  %12: [i32] = offset %value.ptr .tag
-  %13: i32 = load %12
-  %14: i32 = const 1
-  %15: bool = cmp_eq %13 %14
-  br %15 @5 @6
-@5:
+  %14: [i32] = offset %value.ptr .tag
+  %15: i32 = load %14
   %16: i32 = const 1
-  ret %16
+  %17: bool = cmp_eq %15 %16
+  br %17 @5 @6
+@5:
+  %18: i32 = const 1
+  ret %18
 @6:
-  %17: i32 = const 2
-  %18: bool = cmp_eq %13 %17
-  br %18 @7 @8
+  %19: i32 = const 2
+  %20: bool = cmp_eq %15 %19
+  br %20 @7 @8
 @7:
-  %19: [test.Integer] = offset %value.ptr .value
-  %20: [i32] = offset %19 .tag
-  %21: i32 = load %20
-  %22: i32 = const 1
-  %23: bool = cmp_eq %21 %22
-  br %23 @10 @11
+  %21: [[2]u32] = offset %value.ptr .value
+  %22: [test.Integer] = cast %21
+  %23: [i32] = offset %22 .tag
+  %24: i32 = load %23
+  %25: i32 = const 1
+  %26: bool = cmp_eq %24 %25
+  br %26 @10 @11
 @10:
-  %24: i32 = const 2
-  ret %24
+  %27: i32 = const 2
+  ret %27
 @11:
-  %25: i32 = const 2
-  %26: bool = cmp_eq %21 %25
-  br %26 @12 @13
+  %28: i32 = const 2
+  %29: bool = cmp_eq %24 %28
+  br %29 @12 @13
 @12:
-  %27: [test.Integer] = offset %value.ptr .value
-  %28: [i32] = offset %27 .value
-  %29: i32 = load %28
-  %30: i32 = const 42
-  %31: bool = cmp_ne %29 %30
-  br %31 @14 @15
+  %30: [[2]u32] = offset %value.ptr .value
+  %31: [test.Integer] = cast %30
+  %32: [[1]u32] = offset %31 .value
+  %33: [i32] = cast %32
+  %34: i32 = load %33
+  %35: i32 = const 42
+  %36: bool = cmp_ne %34 %35
+  br %36 @14 @15
 @14:
-  %32: i32 = const 3
-  ret %32
+  %37: i32 = const 3
+  ret %37
 @15:
   jmp @3
 @13:
-  %33: i32 = const 0
-  %34: bool = cmp_eq %21 %33
-  br %34 @16 @17
+  %38: i32 = const 0
+  %39: bool = cmp_eq %24 %38
+  br %39 @16 @17
 @16:
-  %35: i32 = const 4
-  ret %35
+  %40: i32 = const 4
+  ret %40
 @17:
   jmp @9
 @9:
   jmp @4
 @8:
-  %36: i32 = const 0
-  %37: bool = cmp_eq %13 %36
-  br %37 @18 @19
+  %41: i32 = const 0
+  %42: bool = cmp_eq %15 %41
+  br %42 @18 @19
 @18:
-  %38: i32 = const 5
-  ret %38
+  %43: i32 = const 5
+  ret %43
 @19:
   jmp @4
 @4:
-  %39: i32 = const 6
-  ret %39
+  %44: i32 = const 6
+  ret %44
 @3:
-  %40: i32 = const 0
-  ret %40
+  %45: i32 = const 0
+  ret %45
 }
 
 $main(): i32 {

@@ -7,6 +7,7 @@
 
 typedef enum IR_Type_Kind {
     IR_TYPE_KIND__ANY,
+    IR_TYPE_KIND__ARRAY,
     IR_TYPE_KIND__BOOL,
     IR_TYPE_KIND__I8,
     IR_TYPE_KIND__I16,
@@ -63,6 +64,14 @@ typedef struct IR_Struct_Type {
 IR_Struct_Type *IR_Struct_Type__create(String *name);
 
 void IR_Struct_Type__append_field(IR_Struct_Type *self, String *name, IR_Type *type);
+
+typedef struct IR_Array_Type {
+    IR_Type super;
+    IR_Type *item_type;
+    size_t length;
+} IR_Array_Type;
+
+IR_Array_Type *IR_Array_Type__create(IR_Type *item_type, size_t length);
 
 typedef struct IR_Multi_Pointer_Type {
     IR_Type super;

@@ -1,11 +1,11 @@
 type test.Value = struct {
   tag: i32
-  value: test.Integer
+  value: [2]u32
 }
 
 type test.Integer = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $test.main(): i32 {
@@ -20,20 +20,22 @@ $test.main(): i32 {
   %6: i32 = const 2
   store %5 %6
   %7: i32 = const 42
-  %8: [i32] = offset %4.ptr .value
-  store %8 %7
-  %9: test.Integer = load %4.ptr
-  %10: [test.Integer] = offset %1.ptr .value
-  store %10 %9
-  %11: test.Value = load %1.ptr
-  store %value.ptr %11
-  %12: [i32] = offset %value.ptr .tag
-  %13: i32 = load %12
-  %14: i32 = const 0
-  ret %14
+  %8: [[1]u32] = offset %4.ptr .value
+  %9: [i32] = cast %8
+  store %9 %7
+  %10: test.Integer = load %4.ptr
+  %11: [[2]u32] = offset %1.ptr .value
+  %12: [test.Integer] = cast %11
+  store %12 %10
+  %13: test.Value = load %1.ptr
+  store %value.ptr %13
+  %14: [i32] = offset %value.ptr .tag
+  %15: i32 = load %14
+  %16: i32 = const 0
+  ret %16
 @2:
-  %15: i32 = const 1
-  ret %15
+  %17: i32 = const 1
+  ret %17
 }
 
 $main(): i32 {

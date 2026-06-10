@@ -134,6 +134,8 @@ Declares a mutable global with no initializer. The declared type must be a singl
 
 **Multi-pointer:** `[*]T` — points into an array of `T`; supports indexed `offset` only (not direct `load`/`store`). Used for `$main`'s `argv` parameter and string pointers.
 
+**Fixed-size array:** `[N]T` — `N` contiguous elements of `T` (e.g. `[16]u8`). Size is `N * sizeof(T)`; alignment is `alignof(T)`. Arrays are value types like structs: they may appear as struct fields and `alloc` pointees, and are copied as a whole by `load`/`store`. Elements are reached with indexed `offset` on a `[[N]T]` pointer.
+
 **Special:** `Any` is only valid as a pointer pointee — it represents an erased pointee type (analogous to `void*` in C) and has no size of its own
 
 ## Instructions
@@ -305,13 +307,14 @@ Boolean negation.
 
 Pointer arithmetic. Two forms:
 
-- **Indexed** (`[*]T %index => [T]`): computes a `[T]` single pointer to the element at `%index` in a multi-pointer. The source must be `[*]T`.
+- **Indexed** (`[*]T %index => [T]` or `[[N]T] %index => [T]`): computes a `[T]` single pointer to the element at `%index`. The source must be a `[*]T` multi-pointer or a `[[N]T]` pointer to a fixed-size array.
 - **Struct field** (`[Struct] .field => [FieldT]`): computes a `[FieldT]` single pointer to a named field. The struct type is taken from the base pointer (which must be `[Struct]`).
 
 Both forms always produce a `[T]` single pointer.
 
 ```
 %elem: [u8] = offset %array_ptr %index
+%item: [i32] = offset %fixed_array_ptr %index
 %field: [i32] = offset %struct_ptr .x
 ```
 

@@ -10,7 +10,7 @@ type String = struct {
 
 type i32__opt = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $str_1: [*]u8 = "Alice"
@@ -27,62 +27,64 @@ $test.main(): i32 {
   %5: i32 = const 1
   store %4 %5
   %6: i32 = const 30
-  %7: [i32] = offset %3.ptr .value
-  store %7 %6
-  %8: i32__opt = load %3.ptr
-  %9: test.Person = struct .name %2 .age %8
-  store %p.ptr %9
+  %7: [[1]u32] = offset %3.ptr .value
+  %8: [i32] = cast %7
+  store %8 %6
+  %9: i32__opt = load %3.ptr
+  %10: test.Person = struct .name %2 .age %9
+  store %p.ptr %10
   %q.ptr: [test.Person] = alloc test.Person
-  %10: usize = const 3
-  %11: String = struct .data $str_2 .length %10
-  %12.ptr: [i32__opt] = alloc i32__opt
-  %13: [i32] = offset %12.ptr .tag
-  %14: i32 = const 0
-  store %13 %14
-  %15: i32__opt = load %12.ptr
-  %16: test.Person = struct .name %11 .age %15
-  store %q.ptr %16
+  %11: usize = const 3
+  %12: String = struct .data $str_2 .length %11
+  %13.ptr: [i32__opt] = alloc i32__opt
+  %14: [i32] = offset %13.ptr .tag
+  %15: i32 = const 0
+  store %14 %15
+  %16: i32__opt = load %13.ptr
+  %17: test.Person = struct .name %12 .age %16
+  store %q.ptr %17
   %p_age.ptr: [i32__opt] = alloc i32__opt
-  %17: [i32__opt] = offset %p.ptr .age
-  %18: i32__opt = load %17
-  store %p_age.ptr %18
-  %19: [i32] = offset %p_age.ptr .tag
-  %20: i32 = load %19
-  %21: i32 = const 1
-  %22: bool = cmp_eq %20 %21
-  br %22 @2 @3
+  %18: [i32__opt] = offset %p.ptr .age
+  %19: i32__opt = load %18
+  store %p_age.ptr %19
+  %20: [i32] = offset %p_age.ptr .tag
+  %21: i32 = load %20
+  %22: i32 = const 1
+  %23: bool = cmp_eq %21 %22
+  br %23 @2 @3
 @2:
-  %23: [i32] = offset %p_age.ptr .value
-  %24: i32 = load %23
-  %25: i32 = const 30
-  %26: bool = cmp_ne %24 %25
-  br %26 @5 @6
+  %24: [[1]u32] = offset %p_age.ptr .value
+  %25: [i32] = cast %24
+  %26: i32 = load %25
+  %27: i32 = const 30
+  %28: bool = cmp_ne %26 %27
+  br %28 @5 @6
 @5:
-  %27: i32 = const 1
-  ret %27
+  %29: i32 = const 1
+  ret %29
 @6:
   jmp @4
 @3:
-  %28: i32 = const 2
-  ret %28
+  %30: i32 = const 2
+  ret %30
 @4:
   %q_age.ptr: [i32__opt] = alloc i32__opt
-  %29: [i32__opt] = offset %q.ptr .age
-  %30: i32__opt = load %29
-  store %q_age.ptr %30
-  %31: [i32] = offset %q_age.ptr .tag
-  %32: i32 = load %31
-  %33: i32 = const 0
-  %34: bool = cmp_eq %32 %33
-  br %34 @7 @8
+  %31: [i32__opt] = offset %q.ptr .age
+  %32: i32__opt = load %31
+  store %q_age.ptr %32
+  %33: [i32] = offset %q_age.ptr .tag
+  %34: i32 = load %33
+  %35: i32 = const 0
+  %36: bool = cmp_eq %34 %35
+  br %36 @7 @8
 @7:
   jmp @9
 @8:
-  %35: i32 = const 3
-  ret %35
+  %37: i32 = const 3
+  ret %37
 @9:
-  %36: i32 = const 0
-  ret %36
+  %38: i32 = const 0
+  ret %38
 }
 
 $main(): i32 {

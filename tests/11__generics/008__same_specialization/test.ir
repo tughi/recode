@@ -4,7 +4,7 @@ type foo.Foo_Demo = struct {
 
 type tokens.Token = struct {
   tag: i32
-  value: tokens.Identifier
+  value: [2]u64
 }
 
 type tokens.Identifier = struct {

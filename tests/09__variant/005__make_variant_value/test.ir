@@ -1,11 +1,11 @@
 type test.Value = struct {
   tag: i32
-  value: test.Integer
+  value: [2]u32
 }
 
 type test.Integer = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $test.main(): i32 {
@@ -20,31 +20,35 @@ $test.main(): i32 {
   %6: i32 = const 2
   store %5 %6
   %7: i32 = const 256
-  %8: [i32] = offset %4.ptr .value
-  store %8 %7
-  %9: test.Integer = load %4.ptr
-  %10: [test.Integer] = offset %1.ptr .value
-  store %10 %9
-  %11: test.Value = load %1.ptr
-  store %value.ptr %11
-  %12.ptr: [test.Value] = alloc test.Value
-  %13: [i32] = offset %12.ptr .tag
-  %14: i32 = const 2
-  store %13 %14
-  %15.ptr: [test.Integer] = alloc test.Integer
-  %16: [i32] = offset %15.ptr .tag
-  %17: i32 = const 2
-  store %16 %17
-  %18: i32 = const 42
-  %19: [i32] = offset %15.ptr .value
-  store %19 %18
-  %20: test.Integer = load %15.ptr
-  %21: [test.Integer] = offset %12.ptr .value
-  store %21 %20
-  %22: test.Value = load %12.ptr
-  store %value.ptr %22
-  %23: i32 = const 0
-  ret %23
+  %8: [[1]u32] = offset %4.ptr .value
+  %9: [i32] = cast %8
+  store %9 %7
+  %10: test.Integer = load %4.ptr
+  %11: [[2]u32] = offset %1.ptr .value
+  %12: [test.Integer] = cast %11
+  store %12 %10
+  %13: test.Value = load %1.ptr
+  store %value.ptr %13
+  %14.ptr: [test.Value] = alloc test.Value
+  %15: [i32] = offset %14.ptr .tag
+  %16: i32 = const 2
+  store %15 %16
+  %17.ptr: [test.Integer] = alloc test.Integer
+  %18: [i32] = offset %17.ptr .tag
+  %19: i32 = const 2
+  store %18 %19
+  %20: i32 = const 42
+  %21: [[1]u32] = offset %17.ptr .value
+  %22: [i32] = cast %21
+  store %22 %20
+  %23: test.Integer = load %17.ptr
+  %24: [[2]u32] = offset %14.ptr .value
+  %25: [test.Integer] = cast %24
+  store %25 %23
+  %26: test.Value = load %14.ptr
+  store %value.ptr %26
+  %27: i32 = const 0
+  ret %27
 }
 
 $main(): i32 {

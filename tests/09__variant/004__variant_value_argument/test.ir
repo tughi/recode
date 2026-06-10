@@ -1,6 +1,6 @@
 type test.Value = struct {
   tag: i32
-  value: i32
+  value: [1]u32
 }
 
 $test.main(): i32 {
@@ -11,27 +11,28 @@ $test.main(): i32 {
   %3: i32 = const 2
   store %2 %3
   %4: i32 = const 42
-  %5: [i32] = offset %1.ptr .value
-  store %5 %4
-  %6: test.Value = load %1.ptr
-  store %value.ptr %6
+  %5: [[1]u32] = offset %1.ptr .value
+  %6: [i32] = cast %5
+  store %6 %4
+  %7: test.Value = load %1.ptr
+  store %value.ptr %7
   %other_value.ptr: [test.Value] = alloc test.Value
   %value.1: test.Value = load %value.ptr
   store %other_value.ptr %value.1
   %another_value.ptr: [test.Value] = alloc test.Value
-  %7.ptr: [test.Value] = alloc test.Value
-  %8: [i32] = offset %7.ptr .tag
-  %9: i32 = const 1
-  store %8 %9
-  %10: bool = const true
-  %11: [i32] = offset %7.ptr .value
-  %12: [bool] = cast %11
-  store %12 %10
-  %13: test.Value = load %7.ptr
-  %14: test.Value = call $test.demo+value %13
-  store %another_value.ptr %14
-  %15: i32 = const 0
-  ret %15
+  %8.ptr: [test.Value] = alloc test.Value
+  %9: [i32] = offset %8.ptr .tag
+  %10: i32 = const 1
+  store %9 %10
+  %11: bool = const true
+  %12: [[1]u32] = offset %8.ptr .value
+  %13: [bool] = cast %12
+  store %13 %11
+  %14: test.Value = load %8.ptr
+  %15: test.Value = call $test.demo+value %14
+  store %another_value.ptr %15
+  %16: i32 = const 0
+  ret %16
 }
 
 $test.demo+value(%value: test.Value): test.Value {

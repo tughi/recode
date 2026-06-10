@@ -27,6 +27,9 @@ static size_t align_up(size_t value, size_t alignment) {
 }
 
 size_t IR_Type__alignment(IR_Type *type) {
+    if (type->kind == IR_TYPE_KIND__ARRAY) {
+        return IR_Type__alignment(((IR_Array_Type *)type)->item_type);
+    }
     if (type->kind == IR_TYPE_KIND__STRUCT) {
         size_t alignment = 1;
         for (IR_Struct_Type_Field *field = ((IR_Struct_Type *)type)->first_field; field != NULL; field = field->next_field) {
@@ -49,6 +52,10 @@ size_t IR_Type__alignment(IR_Type *type) {
 
 size_t IR_Type__size(IR_Type *type) {
     switch (type->kind) {
+    case IR_TYPE_KIND__ARRAY: {
+        IR_Array_Type *array_type = (IR_Array_Type *)type;
+        return array_type->length * IR_Type__size(array_type->item_type);
+    }
     case IR_TYPE_KIND__BOOL:
     case IR_TYPE_KIND__I8:
     case IR_TYPE_KIND__U8:
@@ -121,6 +128,13 @@ void IR_Struct_Type__append_field(IR_Struct_Type *self, String *name, IR_Type *t
         self->last_field->next_field = field;
     }
     self->last_field = field;
+}
+
+IR_Array_Type *IR_Array_Type__create(IR_Type *item_type, size_t length) {
+    IR_Array_Type *type = (IR_Array_Type *)IR_Type__create_kind(IR_TYPE_KIND__ARRAY, sizeof(IR_Array_Type));
+    type->item_type = item_type;
+    type->length = length;
+    return type;
 }
 
 IR_Multi_Pointer_Type *IR_Multi_Pointer_Type__create(IR_Type *pointee) {
@@ -509,6 +523,13 @@ Writer *pWriter__write__ir_type(Writer *self, IR_Type *type) {
     switch (type->kind) {
     case IR_TYPE_KIND__ANY:
         return pWriter__write__cstring(self, "Any");
+    case IR_TYPE_KIND__ARRAY: {
+        IR_Array_Type *array_type = (IR_Array_Type *)type;
+        pWriter__write__char(self, '[');
+        pWriter__write__uint64(self, array_type->length);
+        pWriter__write__char(self, ']');
+        return pWriter__write__ir_type(self, array_type->item_type);
+    }
     case IR_TYPE_KIND__BOOL:
         return pWriter__write__cstring(self, "bool");
     case IR_TYPE_KIND__I8:

@@ -1,6 +1,6 @@
 type test.Value = struct {
   tag: i32
-  value: usize
+  value: [1]u64
 }
 
 $test.main(): i32 {
@@ -12,7 +12,7 @@ $test.main(): i32 {
   store %2 %3
   %4: [Any] = const null
   %5: [i32] = cast %4
-  %6: [usize] = offset %1.ptr .value
+  %6: [[1]u64] = offset %1.ptr .value
   %7: [[i32]] = cast %6
   store %7 %5
   %8: test.Value = load %1.ptr

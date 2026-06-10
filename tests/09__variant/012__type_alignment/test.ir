@@ -1,11 +1,11 @@
 type test.Data = struct {
   tag: i32
-  value: bool
+  value: [1]u8
 }
 
 type test.More_Data = struct {
   tag: i32
-  value: i64
+  value: [1]u64
 }
 
 $test.main(): i32 {

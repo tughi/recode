@@ -255,9 +255,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         }
         IR_Struct_Type *ir_struct_type = IR_Struct_Type__create(name);
         IR_Program__append_type(self->program, &ir_struct_type->super);
-        IR_Type *value_type = NULL;
         size_t value_size = 0;
-        size_t value_alignment = 0;
+        size_t value_alignment = 1;
         for (Checked_Variant_Case *variant_case = variant_type->first_variant_case; variant_case != NULL; variant_case = variant_case->next_variant) {
             if (variant_case->type->kind == CHECKED_TYPE_KIND__NIL) {
                 continue;
@@ -265,14 +264,28 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
             IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
             size_t case_size = IR_Type__size(case_type);
             size_t case_alignment = IR_Type__alignment(case_type);
-            if (case_size > value_size || (case_size == value_size && case_alignment > value_alignment)) {
-                value_type = case_type;
+            if (case_size > value_size) {
                 value_size = case_size;
+            }
+            if (case_alignment > value_alignment) {
                 value_alignment = case_alignment;
             }
         }
         IR_Struct_Type__append_field(ir_struct_type, String__create_from("tag"), IR_Type__get(IR_TYPE_KIND__I32));
-        IR_Struct_Type__append_field(ir_struct_type, String__create_from("value"), value_type);
+        if (value_size > 0) {
+            IR_Type *item_type;
+            if (value_alignment == 8) {
+                item_type = IR_Type__get(IR_TYPE_KIND__U64);
+            } else if (value_alignment == 4) {
+                item_type = IR_Type__get(IR_TYPE_KIND__U32);
+            } else if (value_alignment == 2) {
+                item_type = IR_Type__get(IR_TYPE_KIND__U16);
+            } else {
+                item_type = IR_Type__get(IR_TYPE_KIND__U8);
+            }
+            size_t length = (value_size + value_alignment - 1) / value_alignment;
+            IR_Struct_Type__append_field(ir_struct_type, String__create_from("value"), (IR_Type *)IR_Array_Type__create(item_type, length));
+        }
         return (IR_Type *)ir_struct_type;
     }
     default:
@@ -383,9 +396,6 @@ IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, Checked_Expression 
     IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, String__create_from("value"));
     IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
     IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
-    if (case_type == value_field_type) {
-        return &value_offset->super.result;
-    }
     IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(case_type), &value_offset->super.result);
     IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
     return &cast->super.result;
@@ -650,13 +660,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             IR_Type *payload_type = Lowerer__lower_type(self, make_variant_expression->expression->type);
             IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, String__create_from("value"));
             IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
-            IR_Value *value_pointer = &value_offset->super.result;
-            if (value_field_type != payload_type) {
-                IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(payload_type), value_pointer);
-                IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
-                value_pointer = &cast->super.result;
-            }
-            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(value_pointer, payload));
+            IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(payload_type), &value_offset->super.result);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&cast->super.result, payload));
         }
 
         IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), variant_type, &alloc->super.result);
