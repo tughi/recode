@@ -1,0 +1,11 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+proc main() -> i32 {
+    let points: [2]Point
+    points[1].x = 40
+    points[1].y = 2
+    return points[1].x + points[1].y - 42
+}

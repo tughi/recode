@@ -87,25 +87,15 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
     }
 }
 
-Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression) {
+Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, uint64_t length) {
     Checked_Array_Type *type = (Checked_Array_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__ARRAY, sizeof(Checked_Array_Type), location);
     type->item_type = item_type;
-    type->size_expression = size_expression;
+    type->length = length;
     return type;
 }
 
 bool Checked_Array_Type__equals(Checked_Array_Type *self, Checked_Array_Type *other) {
-    if (!Checked_Type__equals(self->item_type, other->item_type)) {
-        return false;
-    }
-    if (self->size_expression == NULL) {
-        return other->size_expression == NULL;
-    }
-    if (other->size_expression == NULL) {
-        return false;
-    }
-    // TODO: check size expressions
-    panic();
+    return Checked_Type__equals(self->item_type, other->item_type) && self->length == other->length;
 }
 
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location location, String *name, Checked_Package *package) {
@@ -843,6 +833,13 @@ Checked_Logic_And_Expression *Checked_Logic_And_Expression__create(Source_Locati
 
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     return (Checked_Logic_Or_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_OR, location, type, left_expression, right_expression);
+}
+
+Checked_Make_Array_Expression *Checked_Make_Array_Expression__create(Source_Location location, Checked_Type *type, Checked_Array_Type *array_type, Checked_Call_Argument *first_argument) {
+    Checked_Make_Array_Expression *expression = (Checked_Make_Array_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MAKE_ARRAY, sizeof(Checked_Make_Array_Expression), location, type);
+    expression->array_type = array_type;
+    expression->first_argument = first_argument;
+    return expression;
 }
 
 Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Source_Location location, Checked_Struct_Member *struct_member, Checked_Expression *expression) {

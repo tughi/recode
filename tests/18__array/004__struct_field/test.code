@@ -1,0 +1,9 @@
+type Buffer = struct {
+    data: [4]i32
+}
+
+proc main() -> i32 {
+    let buffer: Buffer
+    buffer.data[3] = 42
+    return buffer.data[3] - 42
+}

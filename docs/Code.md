@@ -425,6 +425,61 @@ type Sports_Car = struct {
 
 ---
 
+## Fixed-Size Arrays
+
+`[N]T` holds `N` contiguous elements of type `T`, stored in place (no heap allocation). The size must be an integer literal:
+
+```code
+let array: [4]i32
+array[3] = 42               // assign through index
+let item = array[3]         // index
+let item_ref = ^array[3]    // address of element
+```
+
+Arrays nest — `[2][3]i32` is an array of two `[3]i32` rows:
+
+```code
+let matrix: [2][3]i32
+matrix[1][2] = 42
+```
+
+Arrays are value types — assignment copies all elements:
+
+```code
+let copy = array            // copies the whole array
+copy[3] = 13                // does not affect array[3]
+```
+
+Arrays may be struct fields, and structs may be array elements; accesses compose both ways:
+
+```code
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+type Path = struct {
+    points: [4]Point
+}
+
+let points: [2]Point
+points[1].x = 42            // field of an array element
+
+let path: Path
+path.points[0].y = 7        // array field, then element field
+```
+
+### Construction
+
+Arrays are constructed call-style, like structs — one unnamed value per item, and every item must be provided:
+
+```code
+let numbers = [3]i32(40, 1, 1)
+let corners = [2]Point(Point(x: 1, y: 2), Point(x: 3, y: 4))
+```
+
+---
+
 ## Methods
 
 Methods are procedures with a typed receiver as the first parameter:

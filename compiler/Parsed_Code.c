@@ -7,10 +7,10 @@ Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
     return type;
 }
 
-Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Type *item_type, Parsed_Expression *size_expression) {
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Type *item_type, Integer_Token *length_literal) {
     Parsed_Array_Type *type = (Parsed_Array_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__ARRAY, sizeof(Parsed_Array_Type), location);
     type->item_type = item_type;
-    type->size_expression = size_expression;
+    type->length_literal = length_literal;
     return type;
 }
 
@@ -209,6 +209,13 @@ Parsed_Logic_And_Expression *Parsed_Logic_And_Expression__create(Parsed_Expressi
 
 Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
     return (Parsed_Logic_Or_Expression *)Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
+}
+
+Parsed_Make_Array_Expression *Parsed_Make_Array_Expression__create(Source_Location location, Parsed_Type *array_type, Parsed_Call_Argument *first_argument) {
+    Parsed_Make_Array_Expression *expression = (Parsed_Make_Array_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MAKE_ARRAY, sizeof(Parsed_Make_Array_Expression), location);
+    expression->array_type = array_type;
+    expression->first_argument = first_argument;
+    return expression;
 }
 
 Parsed_Member_Access_Expression *Parsed_Member_Access_Expression__create(Parsed_Expression *object_expression, Token *member_name) {

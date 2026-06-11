@@ -107,6 +107,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__LESS,
     CHECKED_EXPRESSION_KIND__LOGIC_AND,
     CHECKED_EXPRESSION_KIND__LOGIC_OR,
+    CHECKED_EXPRESSION_KIND__MAKE_ARRAY,
     CHECKED_EXPRESSION_KIND__MAKE_STRUCT,
     CHECKED_EXPRESSION_KIND__MAKE_VARIANT,
     CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
@@ -146,10 +147,10 @@ bool Checked_Expression__is_mutable(Checked_Expression *self);
 typedef struct Checked_Array_Type {
     Checked_Type super;
     Checked_Type *item_type;
-    Checked_Expression *size_expression;
+    uint64_t length;
 } Checked_Array_Type;
 
-Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, Checked_Expression *size_expression);
+Checked_Array_Type *Checked_Array_Type__create(Source_Location location, Checked_Type *item_type, uint64_t length);
 
 typedef struct Checked_Type_Argument {
     Source_Location location;
@@ -653,6 +654,14 @@ typedef struct Checked_Logic_Or_Expression {
 } Checked_Logic_Or_Expression;
 
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+
+typedef struct Checked_Make_Array_Expression {
+    Checked_Expression super;
+    Checked_Array_Type *array_type;
+    Checked_Call_Argument *first_argument;
+} Checked_Make_Array_Expression;
+
+Checked_Make_Array_Expression *Checked_Make_Array_Expression__create(Source_Location location, Checked_Type *type, Checked_Array_Type *array_type, Checked_Call_Argument *first_argument);
 
 typedef struct Checked_Make_Struct_Argument {
     Source_Location location;

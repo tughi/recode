@@ -25,6 +25,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__LESS,
     PARSED_EXPRESSION_KIND__LOGIC_AND,
     PARSED_EXPRESSION_KIND__LOGIC_OR,
+    PARSED_EXPRESSION_KIND__MAKE_ARRAY,
     PARSED_EXPRESSION_KIND__MEMBER_ACCESS,
     PARSED_EXPRESSION_KIND__MINUS,
     PARSED_EXPRESSION_KIND__MODULO,
@@ -66,10 +67,10 @@ Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
 typedef struct Parsed_Array_Type {
     Parsed_Type super;
     Parsed_Type *item_type;
-    Parsed_Expression *size_expression;
+    Integer_Token *length_literal;
 } Parsed_Array_Type;
 
-Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Type *item_type, Parsed_Expression *size_expression);
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location location, Parsed_Type *item_type, Integer_Token *length_literal);
 
 typedef struct Parsed_Procedure_Parameter {
     Token *label;
@@ -299,6 +300,14 @@ typedef struct Parsed_Logic_Or_Expression {
 } Parsed_Logic_Or_Expression;
 
 Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression);
+
+typedef struct Parsed_Make_Array_Expression {
+    Parsed_Expression super;
+    Parsed_Type *array_type;
+    Parsed_Call_Argument *first_argument;
+} Parsed_Make_Array_Expression;
+
+Parsed_Make_Array_Expression *Parsed_Make_Array_Expression__create(Source_Location location, Parsed_Type *array_type, Parsed_Call_Argument *first_argument);
 
 typedef struct Parsed_Member_Access_Expression {
     Parsed_Expression super;

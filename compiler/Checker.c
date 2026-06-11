@@ -369,11 +369,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Par
     case PARSED_TYPE_KIND__ARRAY: {
         Parsed_Array_Type *parsed_array_type = (Parsed_Array_Type *)parsed_type;
         Checked_Type *checked_item_type = Checker__resolve_type(self, context, parsed_array_type->item_type);
-        Checked_Expression *checked_size_expression = NULL;
-        if (parsed_array_type->size_expression != NULL) {
-            checked_size_expression = Checker__check_expression(self, context, parsed_array_type->size_expression, (Checked_Type *)self->builtin_types->isize_type);
-        }
-        return (Checked_Type *)Checked_Array_Type__create(parsed_type->location, checked_item_type, checked_size_expression);
+        return (Checked_Type *)Checked_Array_Type__create(parsed_type->location, checked_item_type, parsed_array_type->length_literal->value);
     }
     case PARSED_TYPE_KIND__PROCEDURE: {
         Parsed_Procedure_Type *parsed_procedure_type = (Parsed_Procedure_Type *)parsed_type;
@@ -687,13 +683,17 @@ Checked_Expression *Checker__check_alloc_expression(Checker *self, Checker_Conte
 Checked_Expression *Checker__check_array_access_expression(Checker *self, Checker_Context *context, Parsed_Array_Access_Expression *parsed_expression) {
     Checked_Expression *array_expression = Checker__check_expression(self, context, parsed_expression->array_expression, NULL);
     Checked_Type *array_type = array_expression->type;
-    if (array_type->kind != CHECKED_TYPE_KIND__MULTI_POINTER) {
+    Checked_Type *type;
+    if (array_type->kind == CHECKED_TYPE_KIND__ARRAY) {
+        type = ((Checked_Array_Type *)array_type)->item_type;
+    } else if (array_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+        type = ((Checked_Pointer_Type *)array_type)->other_type;
+    } else {
         pWriter__begin_location_message(stderr_writer, parsed_expression->array_expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Not an array");
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_Type *type = ((Checked_Pointer_Type *)array_type)->other_type;
     Checked_Expression *index_expression = Checker__check_expression(self, context, parsed_expression->index_expression, NULL);
     Checker__require_numeric_type(self, index_expression->type, index_expression->location);
     return (Checked_Expression *)Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression);
@@ -1351,6 +1351,40 @@ Checked_Expression *Checker__check_logic_or_expression(Checker *self, Checker_Co
     return (Checked_Expression *)Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
+Checked_Expression *Checker__check_make_array_expression(Checker *self, Checker_Context *context, Parsed_Make_Array_Expression *parsed_expression) {
+    Checked_Array_Type *array_type = (Checked_Array_Type *)Checker__resolve_type(self, context, parsed_expression->array_type);
+    Checked_Call_Argument *first_argument = NULL;
+    Checked_Call_Argument *last_argument = NULL;
+    uint64_t argument_count = 0;
+    for (Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument; parsed_argument != NULL; parsed_argument = parsed_argument->next_argument) {
+        if (parsed_argument->name != NULL) {
+            pWriter__begin_location_message(stderr_writer, parsed_argument->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Array items cannot be named");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Expression *item_expression = Checker__check_expression(self, context, parsed_argument->expression, array_type->item_type);
+        Checked_Call_Argument *argument = Checked_Call_Argument__create(item_expression, array_type->item_type);
+        if (last_argument == NULL) {
+            first_argument = argument;
+        } else {
+            last_argument->next_argument = argument;
+        }
+        last_argument = argument;
+        argument_count++;
+    }
+    if (argument_count != array_type->length) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Expected ");
+        pWriter__write__uint64(stderr_writer, array_type->length);
+        pWriter__write__cstring(stderr_writer, " array items but got ");
+        pWriter__write__uint64(stderr_writer, argument_count);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    return (Checked_Expression *)Checked_Make_Array_Expression__create(parsed_expression->super.location, (Checked_Type *)array_type, array_type, first_argument);
+}
+
 Checked_Expression *Checker__check_package_symbol_expression(Checker *self, Checked_Package *checked_package, Source_Location expression_location, Token *symbol_name);
 
 Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_Context *context, Checked_Expression *object_expression, Token *member_name) {
@@ -1750,6 +1784,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         break;
     case PARSED_EXPRESSION_KIND__LOGIC_OR:
         expression = Checker__check_logic_or_expression(self, context, (Parsed_Logic_Or_Expression *)parsed_expression);
+        break;
+    case PARSED_EXPRESSION_KIND__MAKE_ARRAY:
+        expression = Checker__check_make_array_expression(self, context, (Parsed_Make_Array_Expression *)parsed_expression);
         break;
     case PARSED_EXPRESSION_KIND__MEMBER_ACCESS:
         expression = Checker__check_member_access_expression(self, context, (Parsed_Member_Access_Expression *)parsed_expression);

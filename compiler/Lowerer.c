@@ -167,6 +167,10 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__ANY:
         return IR_Type__get(IR_TYPE_KIND__ANY);
+    case CHECKED_TYPE_KIND__ARRAY: {
+        Checked_Array_Type *array_type = (Checked_Array_Type *)type;
+        return (IR_Type *)IR_Array_Type__create(Lowerer__lower_type(self, array_type->item_type), array_type->length);
+    }
     case CHECKED_TYPE_KIND__BOOL:
         return IR_Type__get(IR_TYPE_KIND__BOOL);
     case CHECKED_TYPE_KIND__EXTERNAL:
@@ -317,8 +321,15 @@ IR_Value *Lowerer__lower_temporary_pointer(Lowerer *self, Checked_Expression *ex
     return &instruction->super.result;
 }
 
+IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expression);
+
 IR_Value *Lowerer__lower_array_offset(Lowerer *self, Checked_Array_Access_Expression *array_access_expression) {
-    IR_Value *array = Lowerer__lower_expression(self, array_access_expression->array_expression);
+    IR_Value *array;
+    if (array_access_expression->array_expression->type->kind == CHECKED_TYPE_KIND__ARRAY) {
+        array = Lowerer__lower_object_pointer(self, array_access_expression->array_expression);
+    } else {
+        array = Lowerer__lower_expression(self, array_access_expression->array_expression);
+    }
     IR_Value *index = Lowerer__lower_expression(self, array_access_expression->index_expression);
     IR_Type *item_type = Lowerer__lower_type(self, array_access_expression->super.type);
     IR_Array_Offset_Instruction *instruction = IR_Array_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(item_type), array, index);
@@ -354,6 +365,8 @@ IR_Value *Lowerer__lower_object_pointer(Lowerer *self, Checked_Expression *expre
         }
         return Lowerer__lower_temporary_pointer(self, expression);
     }
+    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+        return Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)expression);
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)expression);
     default:
@@ -720,6 +733,31 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS: {
         IR_Value *pointer = Lowerer__lower_struct_offset(self, (Checked_Member_Access_Expression *)expression);
         IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), pointer);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)load);
+        return &load->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__MAKE_ARRAY: {
+        Checked_Make_Array_Expression *make_array_expression = (Checked_Make_Array_Expression *)expression;
+        IR_Array_Type *array_type = (IR_Array_Type *)Lowerer__lower_type(self, expression->type);
+
+        self->value_counter++;
+        String *temporary_name = String__create();
+        String__append_int16_t(temporary_name, self->value_counter);
+        IR_Alloc_Instruction *alloc = IR_Alloc_Instruction__create(IR_Variable__create(temporary_name, (IR_Type *)array_type));
+        IR_Block__append_instruction(self->block, (IR_Instruction *)alloc);
+
+        size_t index = 0;
+        for (Checked_Call_Argument *argument = make_array_expression->first_argument; argument != NULL; argument = argument->next_argument) {
+            IR_Value *item = Lowerer__lower_expression(self, argument->expression);
+            IR_Const_Instruction *index_const = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__I32), index, NULL);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)index_const);
+            IR_Array_Offset_Instruction *item_offset = IR_Array_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(array_type->item_type), &alloc->super.result, &index_const->super.result);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)item_offset);
+            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&item_offset->super.result, item));
+            index++;
+        }
+
+        IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)array_type, &alloc->super.result);
         IR_Block__append_instruction(self->block, (IR_Instruction *)load);
         return &load->super.result;
     }

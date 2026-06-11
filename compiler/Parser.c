@@ -131,6 +131,7 @@ primary_expression
     | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
     | "(" expression ")"
+    | "[" INTEGER "]" type "(" call_arguments ")"
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_alloc)) {
@@ -205,6 +206,15 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parser__consume_space(self, 0);
         Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__merge(first_token->location, last_token->location), expression);
+    }
+    if (Parser__matches_one(self, Token__is_opening_bracket)) {
+        Parsed_Type *array_type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_opening_paren);
+        Parsed_Call_Argument *first_argument = Parser__parse_call_arguments(self);
+        Parser__consume_space(self, 0);
+        Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
+        return (Parsed_Expression *)Parsed_Make_Array_Expression__create(Source_Location__merge(array_type->location, last_token->location), array_type, first_argument);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unexpected token");
@@ -906,7 +916,7 @@ Parsed_Type_Argument *Parser__parse_type_arguments(Parser *self, Source_Location
 type
     | "?" type
     | "^" type
-    | "[" ( expression | "^" ) "]" type
+    | "[" ( INTEGER | "^" ) "]" type
     | IDENTIFIER ( "." IDENTIFIER )? type_arguments?
     | proc "(" procedure_parameters? ")" ( "->" type )? ( "!>" type )?
 */
@@ -934,12 +944,12 @@ Parsed_Type *Parser__parse_type(Parser *self) {
             Parsed_Type *item_type = Parser__parse_type(self);
             return (Parsed_Type *)Parsed_Multi_Pointer_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type);
         }
-        Parsed_Expression *size_expression = Parser__parse_expression(self);
+        Integer_Token *length_literal = (Integer_Token *)Parser__consume_token(self, Token__is_integer);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_bracket);
         Parser__consume_space(self, 0);
         Parsed_Type *item_type = Parser__parse_type(self);
-        return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type, size_expression);
+        return (Parsed_Type *)Parsed_Array_Type__create(Source_Location__merge(first_token->location, item_type->location), item_type, length_literal);
     }
     if (Parser__matches_one(self, Token__is_proc)) {
         Source_Location location = Parser__consume_token(self, Token__is_proc)->location;

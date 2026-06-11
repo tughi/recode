@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/18__array/011__make_array_missing_items/test.code:2:17-30: Expected 3 array items but got 2"
+        ]
+    }
+}
