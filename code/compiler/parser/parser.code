@@ -1320,26 +1320,22 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement !> error.Error {
     ))
 }
 
-proc (^Parser).panic(self, anon message: str) {
-    libc.stderr.write("compiler/parser: \e[0;91mPanic!\e[0m ").write(message).end_line()
-    libc.exit(1)
-}
-
 proc (^Parser).register_type(self, anon statement: ^parsed.Statement) {
     let unwrapped = statement.^
     if unwrapped is parsed.Type_Statement as type_statement {
         let builder = string.new_builder()
         let absolute_name = builder.append(self.current_package.name).append_char('.').append(type_statement.name.lexeme).build()
         try self.types.put(key: absolute_name, value: statement) else {
-            self.panic(error.message)
+            libc.stderr.write(error.message).end_line()
+            panic "Failed to register type"
         }
     }
 }
 
 proc (^Parser).allocate(self, size: usize, alignment: usize) -> ^Any {
     return try allocator.alloc(size: size, alignment: alignment) else {
-        self.panic(error.message)
-        yield null
+        libc.stderr.write(error.message).end_line()
+        panic "Allocation failed"
     }
 }
 

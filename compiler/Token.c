@@ -186,6 +186,10 @@ bool Token__is_package(Token *self) {
     return Token__is_keyword(self, "package");
 }
 
+bool Token__is_panic(Token *self) {
+    return Token__is_keyword(self, "panic");
+}
+
 bool Token__is_proc(Token *self) {
     return Token__is_keyword(self, "proc");
 }

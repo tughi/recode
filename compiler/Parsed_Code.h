@@ -414,6 +414,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__IF,
     PARSED_STATEMENT_KIND__IMPORT,
     PARSED_STATEMENT_KIND__LOOP,
+    PARSED_STATEMENT_KIND__PANIC,
     PARSED_STATEMENT_KIND__PROCEDURE,
     PARSED_STATEMENT_KIND__RAISE,
     PARSED_STATEMENT_KIND__RETURN,
@@ -534,6 +535,13 @@ typedef struct Parsed_Loop_Statement {
 } Parsed_Loop_Statement;
 
 Parsed_Statement *Parsed_Loop_Statement__create(Source_Location location, Parsed_Statement *body_statement);
+
+typedef struct Parsed_Panic_Statement {
+    Parsed_Statement super;
+    String_Token *message;
+} Parsed_Panic_Statement;
+
+Parsed_Statement *Parsed_Panic_Statement__create(Source_Location location, String_Token *message);
 
 typedef struct Parsed_Raise_Statement {
     Parsed_Statement super;

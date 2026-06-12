@@ -1,0 +1,11 @@
+type FILE = external
+
+let std_err: ^FILE = external "stderr"
+
+proc exit(anon status: i32) = external
+
+proc fwrite(anon buffer: ^Any, anon size: usize, anon count: usize, anon file: ^FILE) -> usize = external
+
+proc main() -> i32 {
+    panic
+}

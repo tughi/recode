@@ -144,6 +144,7 @@ bool Token__is_opening_paren(Token *self);
 bool Token__is_or(Token *self);
 bool Token__is_other(Token *self, char *lexeme);
 bool Token__is_package(Token *self);
+bool Token__is_panic(Token *self);
 bool Token__is_percent(Token *self);
 bool Token__is_plus(Token *self);
 bool Token__is_proc(Token *self);
