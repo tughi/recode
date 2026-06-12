@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/016__if_as_or_alias_in_body/test.code:10:16-22: Undefined symbol: number"
+        ]
+    }
+}

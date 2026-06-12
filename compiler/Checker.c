@@ -1377,8 +1377,12 @@ Checked_Expression *Checker__check_logic_and_expression(Checker *self, Checker_C
 }
 
 Checked_Expression *Checker__check_logic_or_expression(Checker *self, Checker_Context *context, Parsed_Logic_Or_Expression *parsed_expression) {
+    self->symbols = Checked_Symbols__create(self->symbols);
     Checked_Expression *left_expression = Checker__check_expression(self, context, parsed_expression->super.left_expression, (Checked_Type *)self->builtin_types->bool_type);
+    self->symbols = self->symbols->parent;
+    self->symbols = Checked_Symbols__create(self->symbols);
     Checked_Expression *right_expression = Checker__check_expression(self, context, parsed_expression->super.right_expression, left_expression->type);
+    self->symbols = self->symbols->parent;
     return (Checked_Expression *)Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
@@ -1756,6 +1760,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
     case PARSED_EXPRESSION_KIND__GROUP:
     case PARSED_EXPRESSION_KIND__IS:
     case PARSED_EXPRESSION_KIND__LOGIC_AND:
+    case PARSED_EXPRESSION_KIND__LOGIC_OR:
         break;
     default:
         context->allows_is_alias = false;

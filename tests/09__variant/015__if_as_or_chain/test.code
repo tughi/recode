@@ -1,0 +1,23 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let number: Value = 42
+    let flag: Value = true
+    let zero: Value = 0
+
+    let result = 0
+    if (number is i32 as integer and integer > 0) or (number is bool as boolean and boolean) {
+        result = result + 1
+    }
+    if (flag is i32 as integer and integer > 0) or (flag is bool as boolean and boolean) {
+        result = result + 2
+    }
+    if (zero is i32 as integer and integer > 0) or (zero is bool as boolean and boolean) {
+        result = result + 4
+    }
+
+    return result - 3
+}
