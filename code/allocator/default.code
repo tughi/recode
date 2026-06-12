@@ -1,4 +1,4 @@
-let default_allocator = Arena()
+let default_allocator: Arena
 
 type Out_Of_Memory = struct {
     message: str

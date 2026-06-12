@@ -1267,6 +1267,7 @@ IR_Const_Payload *Lowerer__lower_constant(Lowerer *self, Checked_Expression *exp
     case CHECKED_EXPRESSION_KIND__NULL:
         return IR_Const_Payload__create(0, NULL);
     default:
+        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: non-constant global initializer");
         pWriter__end_line(stderr_writer);
         panic();

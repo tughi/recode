@@ -1,8 +1,8 @@
 type FILE = external
 
-let stdin: ^FILE = external "__stdinp"
-let stdout: ^FILE = external "__stdoutp"
-let stderr: ^FILE = external "__stderrp"
+let stdin: ^FILE = external
+let stdout: ^FILE = external
+let stderr: ^FILE = external
 
 proc fclose(anon file: ^FILE) -> i32 = external
 proc fflush(anon file: ^FILE) -> i32 = external
@@ -10,9 +10,9 @@ proc fopen(anon filename: [^]u8, anon mode: [^]u8) -> ^FILE = external
 proc fputc(anon c: i32, anon file: ^FILE) -> i32 = external
 proc fputs(anon str: [^]u8, anon file: ^FILE) -> i32 = external
 proc fwrite(anon buffer: ^Any, anon size: usize, anon count: usize, anon file: ^FILE) -> usize = external
-proc fread(anon data: [^]u8, anon size: u64, anon count: u64, anon file: ^FILE) -> u64 = external
-proc fseek(anon file: ^FILE, anon offset: u64, anon whence: i32) -> i32 = external
-proc ftell(anon file: ^FILE) -> u64 = external
+proc fread(anon data: [^]u8, anon size: usize, anon count: usize, anon file: ^FILE) -> usize = external
+proc fseek(anon file: ^FILE, anon offset: i64, anon whence: i32) -> i32 = external
+proc ftell(anon file: ^FILE) -> i64 = external
 
 const SEEK_SET = 0
 const SEEK_END = 2

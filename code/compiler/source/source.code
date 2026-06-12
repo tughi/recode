@@ -15,13 +15,13 @@ proc load(anon file_path: str) -> Source !> str {
         libc.fclose(file)
         raise "Failed to seek to end of file"
     }
-    let file_size = libc.ftell(file)
+    let file_size = libc.ftell(file).as(usize)
     if libc.fseek(file, 0, libc.SEEK_SET) != 0 {
         libc.fclose(file)
         raise "Failed to seek to start of file"
     }
 
-    let content = libc.malloc((file_size + 1).as(usize)).as([^]u8)
+    let content = libc.malloc(file_size + 1).as([^]u8)
     if content == null {
         libc.fclose(file)
         raise "Failed to allocate memory"
@@ -36,7 +36,7 @@ proc load(anon file_path: str) -> Source !> str {
 
     libc.fclose(file)
 
-    let result = String(data: content, length: file_size.as(usize))
+    let result = String(data: content, length: file_size)
 
     return Source(
         path: file_path

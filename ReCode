@@ -467,14 +467,10 @@ def compiler(skip_tests=False, save=False):
     if not os.path.exists(f"build/compiler"):
         run(f"mkdir build/compiler")
 
-    compiler_command = ["build/stage1/ReCode", "-o", "build/compiler", "code", "compiler"]
+    compiler_command = ["build/stage1/ReCode", "-o", "build/compiler", "-n", "compiler", "code", "compiler"]
     if run(compiler_command, capture_output=False, check=False).returncode != 0:
         trace(*compiler_command)
         exit(1)
-
-    generated_files = [os.path.join(root, file) for root, _, files in os.walk("build/compiler") for file in files if file.endswith(".c")]
-    platform_files = [os.path.join(root, file) for root, _, files in os.walk("code") for file in files if file.endswith(".c")]
-    assemble(generated_files + platform_files, "build/compiler/ReCode", check=True)
 
     if skip_tests:
         return
@@ -493,7 +489,7 @@ def compiler(skip_tests=False, save=False):
         if os.path.exists(build_ir_path):
             os.remove(build_ir_path)
 
-        compiler_command = ["build/compiler/ReCode", "-o", build_dir, "-n", "test", test_dir]
+        compiler_command = ["Runner", "build/compiler/compiler.ir", "-o", build_dir, "-n", "test", test_dir]
         if run(compiler_command, check=False).returncode != 0:
             trace(*compiler_command)
             exit(1)

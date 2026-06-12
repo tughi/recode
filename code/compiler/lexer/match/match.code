@@ -22,25 +22,25 @@ type Comment = struct {
     _empty_struct: u8
 }
 
-let comment = Comment()
+let comment: Comment
 
 type End_Of_File = struct {
     _empty_struct: u8
 }
 
-let end_of_file = End_Of_File()
+let end_of_file: End_Of_File
 
 type End_Of_Line = struct {
     _empty_struct: u8
 }
 
-let end_of_line = End_Of_Line()
+let end_of_line: End_Of_Line
 
 type Identifier = struct {
     _empty_struct: u8
 }
 
-let identifier = Identifier()
+let identifier: Identifier
 
 type Integer = struct {
     _empty_struct: u8
@@ -70,7 +70,7 @@ type Space = struct {
     required: bool
 }
 
-let space = Space(required: false)
+let space: Space
 
 type String = struct {
     _empty_struct: u8
