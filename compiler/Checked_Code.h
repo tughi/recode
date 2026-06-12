@@ -467,9 +467,10 @@ Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Package *packag
 
 typedef struct Checked_Variant_Alias_Symbol {
     Checked_Symbol super;
+    bool is_mutable;
 } Checked_Variant_Alias_Symbol;
 
-Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type);
+Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type, bool is_mutable);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;

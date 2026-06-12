@@ -668,6 +668,7 @@ Rules:
 - `else` must come last
 - Cases after `else` are an error
 - Duplicate cases are an error
+- A case alias follows the same aliasing rules as `is` aliases — it aliases the payload in place and is mutable exactly when the switched value is mutable
 
 ### Pattern Matching — `is`
 
@@ -705,6 +706,7 @@ Rules:
 - An alias can be declared only inside an `if` or `while` condition
 - The matched value must be addressable (a variable, member access, array item, or dereference) — the alias aliases the variant's payload in place, it is not a copy
 - An alias cannot be declared under `or` or `not`, where the match is not guaranteed
+- An alias is mutable exactly when the matched value is mutable — assigning to it writes the variant's payload in place
 
 ### Negated Check — `is not`
 

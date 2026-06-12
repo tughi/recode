@@ -1323,7 +1323,7 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
                         pWriter__end_location_message(stderr_writer);
                         panic();
                     }
-                    alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_expression->alias->super.location, parsed_expression->alias->super.lexeme, variant_case->type);
+                    alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_expression->alias->super.location, parsed_expression->alias->super.lexeme, variant_case->type, Checked_Expression__is_mutable(value_expression));
                     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
                 }
                 return (Checked_Expression *)Checked_Is_Variant_Case_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->bool_type, value_expression, variant_case, alias_symbol, parsed_expression->is_not);
@@ -2581,7 +2581,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
             Checked_Variant_Alias_Symbol *alias_symbol = NULL;
             if (parsed_switch_case->variant.alias != NULL) {
                 // Create a symbol for the variant case
-                alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, variant_case->type);
+                alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, variant_case->type, Checked_Expression__is_mutable(variant_expression));
                 Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
             }
 

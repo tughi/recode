@@ -1,0 +1,53 @@
+type test.Value = struct {
+  tag: i32
+  value: [1]u32
+}
+
+$test.main(): i32 {
+@1:
+  %value.ptr: [test.Value] = alloc test.Value
+  %1.ptr: [test.Value] = alloc test.Value
+  %2: [i32] = offset %1.ptr .tag
+  %3: i32 = const 2
+  store %2 %3
+  %4: i32 = const 42
+  %5: [[1]u32] = offset %1.ptr .value
+  %6: [i32] = cast %5
+  store %6 %4
+  %7: test.Value = load %1.ptr
+  store %value.ptr %7
+  %8: [i32] = offset %value.ptr .tag
+  %9: i32 = load %8
+  %10: i32 = const 2
+  %11: bool = cmp_eq %9 %10
+  br %11 @3 @4
+@3:
+  %12: [[1]u32] = offset %value.ptr .value
+  %number.ptr: [i32] = cast %12
+  %14: i32 = const 0
+  store %number.ptr %14
+  jmp @2
+@4:
+  %15: i32 = const 1
+  ret %15
+@2:
+  %16: [i32] = offset %value.ptr .tag
+  %17: i32 = load %16
+  %18: i32 = const 2
+  %19: bool = cmp_eq %17 %18
+  %20: [[1]u32] = offset %value.ptr .value
+  %number.2.ptr: [i32] = cast %20
+  br %19 @5 @6
+@5:
+  %number.2.1: i32 = load %number.2.ptr
+  ret %number.2.1
+@6:
+  %22: i32 = const 2
+  ret %22
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

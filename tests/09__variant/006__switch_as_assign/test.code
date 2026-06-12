@@ -19,5 +19,5 @@ proc main() -> i32 {
         return number
     }
 
-    return 1
+    return 2
 }

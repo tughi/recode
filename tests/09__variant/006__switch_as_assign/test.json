@@ -1,8 +1,0 @@
-{
-    "compile": {
-        "error": 1,
-        "stderr": [
-            "tests/09__variant/006__switch_as_assign/test.code:11:13-19: Cannot assign to immutable expression"
-        ]
-    }
-}

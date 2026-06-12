@@ -608,8 +608,10 @@ Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Package *packag
     return variable;
 }
 
-Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type) {
-    return (Checked_Variant_Alias_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIANT_ALIAS, sizeof(Checked_Variant_Alias_Symbol), package, location, name, type, true);
+Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type, bool is_mutable) {
+    Checked_Variant_Alias_Symbol *symbol = (Checked_Variant_Alias_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIANT_ALIAS, sizeof(Checked_Variant_Alias_Symbol), package, location, name, type, false);
+    symbol->is_mutable = is_mutable;
+    return symbol;
 }
 
 Checked_Symbols *Checked_Symbols__create(Checked_Symbols *parent) {
@@ -693,6 +695,9 @@ bool Checked_Expression__is_mutable(Checked_Expression *self) {
     case CHECKED_EXPRESSION_KIND__SYMBOL: {
         Checked_Symbol_Expression *symbol_expression = (Checked_Symbol_Expression *)self;
         Checked_Symbol *symbol = symbol_expression->symbol;
+        if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_ALIAS) {
+            return ((Checked_Variant_Alias_Symbol *)symbol)->is_mutable;
+        }
         return symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE;
     }
     default:
