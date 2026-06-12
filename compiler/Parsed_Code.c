@@ -381,6 +381,12 @@ Parsed_Statement *Parsed_Loop_Statement__create(Source_Location location, Parsed
     return (Parsed_Statement *)statement;
 }
 
+Parsed_Statement *Parsed_Panic_Statement__create(Source_Location location, String_Token *message) {
+    Parsed_Panic_Statement *statement = (Parsed_Panic_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__PANIC, sizeof(Parsed_Panic_Statement), location);
+    statement->message = message;
+    return (Parsed_Statement *)statement;
+}
+
 Parsed_Raise_Statement *Parsed_Raise_Statement__create(Source_Location location, Parsed_Expression *expression) {
     Parsed_Raise_Statement *statement = (Parsed_Raise_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__RAISE, sizeof(Parsed_Raise_Statement), location);
     statement->expression = expression;

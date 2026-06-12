@@ -379,6 +379,7 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__EXPRESSION,
     CHECKED_STATEMENT_KIND__IF,
     CHECKED_STATEMENT_KIND__LOOP,
+    CHECKED_STATEMENT_KIND__PANIC,
     CHECKED_STATEMENT_KIND__RAISE,
     CHECKED_STATEMENT_KIND__RETURN,
     CHECKED_STATEMENT_KIND__VARIABLE,
@@ -906,6 +907,13 @@ typedef struct Checked_Loop_Statement {
 } Checked_Loop_Statement;
 
 Checked_Loop_Statement *Checked_Loop_Statement__create(Source_Location location, Checked_Statement *body_statement);
+
+typedef struct Checked_Panic_Statement {
+    Checked_Statement super;
+    String *message;
+} Checked_Panic_Statement;
+
+Checked_Panic_Statement *Checked_Panic_Statement__create(Source_Location location, String *message);
 
 typedef struct Checked_Raise_Statement {
     Checked_Statement super;

@@ -1296,6 +1296,21 @@ Parsed_Statement *Parser__parse_loop_statement(Parser *self) {
 }
 
 /*
+panic
+    | "panic" STRING?
+*/
+Parsed_Statement *Parser__parse_panic_statement(Parser *self) {
+    Source_Location location = Parser__consume_token(self, Token__is_panic)->location;
+    String_Token *message = NULL;
+    if (!Parser__matches_end_of_line(self)) {
+        Parser__consume_space(self, 1);
+        message = (String_Token *)Parser__consume_token(self, Token__is_string);
+        location = Source_Location__merge(location, message->super.location);
+    }
+    return Parsed_Panic_Statement__create(location, message);
+}
+
+/*
 while
     | "while" expression block
 */
@@ -1382,6 +1397,7 @@ statement
     | if
     | import
     | loop
+    | panic
     | procedure
     | raise
     | return
@@ -1449,6 +1465,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_one(self, Token__is_const)) {
         return Parser__parse_constant_statement(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_panic)) {
+        return Parser__parse_panic_statement(self);
     }
 
     Parsed_Expression *expression = Parser__parse_expression(self);

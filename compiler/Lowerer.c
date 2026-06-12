@@ -469,6 +469,20 @@ IR_Value *Lowerer__build_result(Lowerer *self, IR_Type *result_type, bool succes
     return &load->super.result;
 }
 
+IR_Value *Lowerer__string_global(Lowerer *self, String *value) {
+    for (IR_Global *global = self->program->first_global; global != NULL; global = global->next_global) {
+        if (global->literal != NULL && String__equals_string(global->literal, value)) {
+            return &global->super.value;
+        }
+    }
+    self->string_counter++;
+    String *global_name = String__create_from("str_");
+    String__append_int16_t(global_name, self->string_counter);
+    IR_Global *global = IR_String_Global__create(global_name, (IR_Type *)IR_Multi_Pointer_Type__create(IR_Type__get(IR_TYPE_KIND__U8)), value);
+    IR_Program__append_global(self->program, global);
+    return &global->super.value;
+}
+
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__CALL: {
@@ -708,21 +722,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             IR_Block__append_instruction(self->block, (IR_Instruction *)null);
             data = &null->super.result;
         } else {
-            data = NULL;
-            for (IR_Global *global = self->program->first_global; global != NULL; global = global->next_global) {
-                if (global->literal != NULL && String__equals_string(global->literal, string_expression->value)) {
-                    data = &global->super.value;
-                    break;
-                }
-            }
-            if (data == NULL) {
-                self->string_counter++;
-                String *global_name = String__create_from("str_");
-                String__append_int16_t(global_name, self->string_counter);
-                IR_Global *global = IR_String_Global__create(global_name, Lowerer__lower_type(self, data_member->type), string_expression->value);
-                IR_Program__append_global(self->program, global);
-                data = &global->super.value;
-            }
+            data = Lowerer__string_global(self, string_expression->value);
         }
 
         IR_Const_Instruction *length = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, length_member->type), string_expression->value->length, NULL);
@@ -860,6 +860,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Value *else_value = Lowerer__lower_expression(self, try_expression->else_expression);
         IR_Block *else_end_block = self->block;
         bool else_terminated = IR_Block__is_terminated(self->block);
+        if (!else_terminated && try_expression->else_expression->kind == CHECKED_EXPRESSION_KIND__BLOCK) {
+            else_terminated = Checked_Statement__is_terminal(((Checked_Block_Expression *)try_expression->else_expression)->block_statement);
+        }
         if (!else_terminated) {
             IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Jmp_Instruction__create(end_block));
         }
@@ -1094,6 +1097,50 @@ void Lowerer__lower_statement(Lowerer *self, Checked_Statement *statement) {
         }
         IR_Procedure__append_block(self->procedure, end_block);
         self->block = end_block;
+        break;
+    }
+    case CHECKED_STATEMENT_KIND__PANIC: {
+        Checked_Panic_Statement *panic_statement = (Checked_Panic_Statement *)statement;
+
+        String *message = String__create();
+        Writer writer = String__create_writer(message);
+        pWriter__write__string(&writer, statement->location.source->file_path);
+        pWriter__write__char(&writer, ':');
+        pWriter__write__uint64(&writer, statement->location.start_line);
+        pWriter__write__cstring(&writer, ": Panic!");
+        if (panic_statement->message != NULL) {
+            pWriter__write__char(&writer, ' ');
+            pWriter__write__string(&writer, panic_statement->message);
+        }
+        pWriter__end_line(&writer);
+
+        IR_Value *data = Lowerer__string_global(self, message);
+        IR_Cast_Instruction *buffer = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(IR_Type__get(IR_TYPE_KIND__ANY)), data);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)buffer);
+        IR_Const_Instruction *size = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__USIZE), 1, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)size);
+        IR_Const_Instruction *count = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__USIZE), message->length, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)count);
+        IR_Value *stderr_global = Lowerer__find_global(self, String__create_from("stderr"));
+        IR_Load_Instruction *file = IR_Load_Instruction__create(Lowerer__fresh_name(self), ((IR_Pointer_Type *)stderr_global->type)->pointee, stderr_global);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)file);
+
+        IR_Value *fwrite_callee = Lowerer__find_global(self, String__create_from("fwrite"));
+        IR_Type *fwrite_return_type = ((IR_Procedure_Type *)((IR_Pointer_Type *)fwrite_callee->type)->pointee)->return_type;
+        IR_Call_Instruction *fwrite_call = IR_Call_Instruction__create(fwrite_return_type->kind != IR_TYPE_KIND__NOTHING ? Lowerer__fresh_name(self) : NULL, fwrite_return_type, fwrite_callee);
+        IR_Value_List__append(&fwrite_call->super.operands, &buffer->super.result);
+        IR_Value_List__append(&fwrite_call->super.operands, &size->super.result);
+        IR_Value_List__append(&fwrite_call->super.operands, &count->super.result);
+        IR_Value_List__append(&fwrite_call->super.operands, &file->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)fwrite_call);
+
+        IR_Const_Instruction *status = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__I32), 1, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)status);
+        IR_Value *exit_callee = Lowerer__find_global(self, String__create_from("exit"));
+        IR_Type *exit_return_type = ((IR_Procedure_Type *)((IR_Pointer_Type *)exit_callee->type)->pointee)->return_type;
+        IR_Call_Instruction *exit_call = IR_Call_Instruction__create(exit_return_type->kind != IR_TYPE_KIND__NOTHING ? Lowerer__fresh_name(self) : NULL, exit_return_type, exit_callee);
+        IR_Value_List__append(&exit_call->super.operands, &status->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)exit_call);
         break;
     }
     case CHECKED_STATEMENT_KIND__RAISE: {

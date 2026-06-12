@@ -109,7 +109,7 @@ proc (^Lowerer).lower_type(self, anon type: ^checked.Type) -> ^ir.Type {
             return self.alloc_type(ir.Primitive_Type(name: builtin_type.name))
         }
         is checked.Procedure_Type as _ignored {
-            self.panic("Lowering not supported yet: checked.Procedure_Type")
+            panic "Lowering not supported yet: checked.Procedure_Type"
         }
         is nil {
         }
@@ -130,8 +130,8 @@ proc (^Lowerer).append_instruction(self, anon instruction: ^ir.Instruction) {
 
 proc (^Lowerer).allocate(self, size: usize, alignment: usize) -> ^Any {
     return try allocator.alloc(size: size, alignment: alignment) else {
-        self.panic(error.message)
-        yield null
+        libc.stderr.write(error.message).end_line()
+        panic "Allocation failed"
     }
 }
 
@@ -163,9 +163,4 @@ proc (^Lowerer).alloc_type(self, anon type: ir.Type) -> ^ir.Type {
     let typed_result = self.allocate(size: type_size(ir.Type), alignment: type_alignment(ir.Type)).as(^ir.Type)
     typed_result.^ = type
     return typed_result
-}
-
-proc (^Lowerer).panic(self, anon message: str) {
-    libc.stderr.write("Lowerer panic: ").write(message).end_line()
-    libc.exit(1)
 }

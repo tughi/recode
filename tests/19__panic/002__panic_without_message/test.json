@@ -1,0 +1,8 @@
+{
+    "execute": {
+        "error": 1,
+        "stderr": [
+            "tests/19__panic/002__panic_without_message/test.code:10: Panic!"
+        ]
+    }
+}

@@ -2458,6 +2458,11 @@ Checked_Statement *Checker__check_loop_statement(Checker *self, Checker_Context 
     return (Checked_Statement *)loop_statement;
 }
 
+Checked_Statement *Checker__check_panic_statement(Checker *self, Checker_Context *context, Parsed_Panic_Statement *parsed_statement) {
+    context->is_unreachable_statement = true;
+    return (Checked_Statement *)Checked_Panic_Statement__create(parsed_statement->super.location, parsed_statement->message != NULL ? parsed_statement->message->value : NULL);
+}
+
 Checked_Statement *Checker__check_raise_statement(Checker *self, Checker_Context *context, Parsed_Raise_Statement *parsed_statement) {
     if (context->return_type->kind != CHECKED_TYPE_KIND__RESULT) {
         pWriter__begin_location_message(stderr_writer, parsed_statement->super.location, WRITER_STYLE__ERROR);
@@ -2868,6 +2873,8 @@ Checked_Statement *Checker__check_statement(Checker *self, Checker_Context *cont
         return Checker__check_if_statement(self, context, (Parsed_If_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__LOOP:
         return Checker__check_loop_statement(self, context, (Parsed_Loop_Statement *)parsed_statement);
+    case PARSED_STATEMENT_KIND__PANIC:
+        return Checker__check_panic_statement(self, context, (Parsed_Panic_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RAISE:
         return Checker__check_raise_statement(self, context, (Parsed_Raise_Statement *)parsed_statement);
     case PARSED_STATEMENT_KIND__RETURN:

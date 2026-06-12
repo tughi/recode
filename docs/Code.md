@@ -351,6 +351,15 @@ return value   // return with a value
 return         // return from a void procedure
 ```
 
+### panic
+
+```code
+panic "Not supported yet"   // with a message
+panic                       // without a message
+```
+
+Terminates the program immediately: writes `<file>:<line>: Panic! <message>` to `stderr` and exits with status 1, where `<file>:<line>` is the location of the `panic` statement itself. The message must be a string literal. Like `return`, `panic` ends the control flow path it is on, so it satisfies the "missing return statement" check.
+
 ---
 
 ## Struct Types
