@@ -45,8 +45,8 @@ $test.main(): i32 {
   br %20 @7 @8
 @7:
   %21: [[2]u32] = offset %value.ptr .value
-  %22: [test.Integer] = cast %21
-  %23: [i32] = offset %22 .tag
+  %integer.ptr: [test.Integer] = cast %21
+  %23: [i32] = offset %integer.ptr .tag
   %24: i32 = load %23
   %25: i32 = const 1
   %26: bool = cmp_eq %24 %25
@@ -59,45 +59,43 @@ $test.main(): i32 {
   %29: bool = cmp_eq %24 %28
   br %29 @12 @13
 @12:
-  %30: [[2]u32] = offset %value.ptr .value
-  %31: [test.Integer] = cast %30
-  %32: [[1]u32] = offset %31 .value
-  %33: [i32] = cast %32
-  %34: i32 = load %33
-  %35: i32 = const 42
-  %36: bool = cmp_ne %34 %35
-  br %36 @14 @15
+  %30: [[1]u32] = offset %integer.ptr .value
+  %integer_value.ptr: [i32] = cast %30
+  %integer_value.1: i32 = load %integer_value.ptr
+  %32: i32 = const 42
+  %33: bool = cmp_ne %integer_value.1 %32
+  br %33 @14 @15
 @14:
-  %37: i32 = const 3
-  ret %37
+  %34: i32 = const 3
+  ret %34
 @15:
   jmp @3
 @13:
-  %38: i32 = const 0
-  %39: bool = cmp_eq %24 %38
-  br %39 @16 @17
+  %35: i32 = const 0
+  %36: bool = cmp_eq %24 %35
+  br %36 @16 @17
 @16:
-  %40: i32 = const 4
-  ret %40
+  %37: i32 = const 4
+  ret %37
 @17:
   jmp @9
 @9:
   jmp @4
 @8:
-  %41: i32 = const 0
-  %42: bool = cmp_eq %15 %41
-  br %42 @18 @19
+  %38: i32 = const 0
+  %39: bool = cmp_eq %15 %38
+  br %39 @18 @19
 @18:
-  %43: i32 = const 5
-  ret %43
+  %40: i32 = const 5
+  ret %40
 @19:
   jmp @4
 @4:
-  %44: i32 = const 6
-  ret %44
+  %41: i32 = const 6
+  ret %41
 @3:
-  %45: i32 = const 0
-  ret %45
+  %42: i32 = const 0
+  ret %42
 }
 
 $main(): i32 {

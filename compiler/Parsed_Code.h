@@ -273,9 +273,10 @@ typedef struct Parsed_Is_Expression {
     Parsed_Expression *value_expression;
     Parsed_Type *runtime_type;
     bool is_not;
+    Identifier_Token *alias;
 } Parsed_Is_Expression;
 
-Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *object_expression, Parsed_Type *runtime_type, bool is_not);
+Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *object_expression, Parsed_Type *runtime_type, bool is_not, Identifier_Token *alias);
 
 typedef struct Parsed_Less_Expression {
     Parsed_Binary_Expression super;
@@ -521,12 +522,11 @@ Parsed_Statement *Parsed_Procedure_Statement__create(Source_Location location, T
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
     Parsed_Expression *condition_expression;
-    Identifier_Token *variant_alias;
     Parsed_Statement *true_statement;
     Parsed_Statement *false_statement;
 } Parsed_If_Statement;
 
-Parsed_Statement *Parsed_If_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Identifier_Token *variant_alias, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
+Parsed_Statement *Parsed_If_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Parsed_Statement *true_statement, Parsed_Statement *false_statement);
 
 typedef struct Parsed_Loop_Statement {
     Parsed_Statement super;

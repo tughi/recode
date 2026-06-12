@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/008__is_as_outside_condition/test.code:8:35-41: Variant aliases can be declared only in if and while conditions"
+        ]
+    }
+}

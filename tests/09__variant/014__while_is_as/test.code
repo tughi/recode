@@ -1,0 +1,16 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 3
+    let total = 0
+
+    while value is i32 as number and number > 0 {
+        total = total + number
+        value = number - 1
+    }
+
+    return total - 6
+}

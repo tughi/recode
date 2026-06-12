@@ -11,8 +11,8 @@ proc main() -> i32 {
     let item = Item(value: Value(42))
 
     if item.value is i32 as integer {
-        return 1
+        return integer - 42
     }
 
-    return 0
+    return 1
 }

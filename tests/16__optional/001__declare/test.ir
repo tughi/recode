@@ -27,25 +27,25 @@ $test.main(): i32 {
   %13: i32 = load %12
   %14: i32 = const 1
   %15: bool = cmp_eq %13 %14
+  %16: [[1]u32] = offset %has_value.ptr .value
+  %value.ptr: [i32] = cast %16
   br %15 @2 @3
 @2:
-  %16: [i32] = offset %no_value.ptr .tag
-  %17: i32 = load %16
-  %18: i32 = const 0
-  %19: bool = cmp_eq %17 %18
-  br %19 @4 @5
+  %18: [i32] = offset %no_value.ptr .tag
+  %19: i32 = load %18
+  %20: i32 = const 0
+  %21: bool = cmp_eq %19 %20
+  br %21 @4 @5
 @4:
-  %20: [[1]u32] = offset %has_value.ptr .value
-  %21: [i32] = cast %20
-  %22: i32 = load %21
-  %23: i32 = const 42
-  %24: i32 = sub %22 %23
-  ret %24
+  %value.1: i32 = load %value.ptr
+  %22: i32 = const 42
+  %23: i32 = sub %value.1 %22
+  ret %23
 @5:
   jmp @3
 @3:
-  %25: i32 = const 1
-  ret %25
+  %24: i32 = const 1
+  ret %24
 }
 
 $main(): i32 {

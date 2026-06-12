@@ -187,11 +187,12 @@ Parsed_Integer_Expression *Parsed_Integer_Expression__create(Integer_Token *lite
     return expression;
 }
 
-Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *value_expression, Parsed_Type *runtime_type, bool is_not) {
+Parsed_Is_Expression *Parsed_Is_Expression__create(Parsed_Expression *value_expression, Parsed_Type *runtime_type, bool is_not, Identifier_Token *alias) {
     Parsed_Is_Expression *expression = (Parsed_Is_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__IS, sizeof(Parsed_Is_Expression), Source_Location__merge(value_expression->location, runtime_type->location));
     expression->value_expression = value_expression;
     expression->runtime_type = runtime_type;
     expression->is_not = is_not;
+    expression->alias = alias;
     return expression;
 }
 
@@ -366,10 +367,9 @@ Parsed_Statement *Parsed_Import_Statement__create(Source_Location location, Stri
     return (Parsed_Statement *)statement;
 }
 
-Parsed_Statement *Parsed_If_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Identifier_Token *variant_alias, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
+Parsed_Statement *Parsed_If_Statement__create(Source_Location location, Parsed_Expression *condition_expression, Parsed_Statement *true_statement, Parsed_Statement *false_statement) {
     Parsed_If_Statement *statement = (Parsed_If_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IF, sizeof(Parsed_If_Statement), location);
     statement->condition_expression = condition_expression;
-    statement->variant_alias = variant_alias;
     statement->true_statement = true_statement;
     statement->false_statement = false_statement;
     return (Parsed_Statement *)statement;

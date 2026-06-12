@@ -114,6 +114,7 @@ typedef struct Checker_Context {
 
     Checked_Type *receiver_type;
 
+    bool allows_is_alias;
     bool is_deferred_statement;
     bool is_unreachable_statement;
 } Checker_Context;
@@ -122,6 +123,7 @@ Checker_Context Checker_Context__make(Checker *checker, Checked_Package *package
     return (Checker_Context){
         .checked_package = package,
         .receiver_type = NULL,
+        .allows_is_alias = false,
         .is_deferred_statement = false,
         .is_unreachable_statement = false,
     };
@@ -1295,7 +1297,36 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
         Checked_Variant_Case *variant_case = variant_type->first_variant_case;
         for (; variant_case != NULL; variant_case = variant_case->next_variant) {
             if (Checked_Type__equals(variant_case->type, runtime_type)) {
-                return (Checked_Expression *)Checked_Is_Variant_Case_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->bool_type, value_expression, variant_case, parsed_expression->is_not);
+                Checked_Variant_Alias_Symbol *alias_symbol = NULL;
+                if (parsed_expression->alias != NULL) {
+                    if (parsed_expression->is_not) {
+                        pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+                        pWriter__write__cstring(stderr_writer, "An 'is not' expression cannot declare an alias");
+                        pWriter__end_location_message(stderr_writer);
+                        panic();
+                    }
+                    if (!context->allows_is_alias) {
+                        pWriter__begin_location_message(stderr_writer, parsed_expression->alias->super.location, WRITER_STYLE__ERROR);
+                        pWriter__write__cstring(stderr_writer, "Variant aliases can be declared only in if and while conditions");
+                        pWriter__end_location_message(stderr_writer);
+                        panic();
+                    }
+                    switch (value_expression->kind) {
+                    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+                    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
+                    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
+                    case CHECKED_EXPRESSION_KIND__SYMBOL:
+                        break;
+                    default:
+                        pWriter__begin_location_message(stderr_writer, value_expression->location, WRITER_STYLE__ERROR);
+                        pWriter__write__cstring(stderr_writer, "Variant aliases require an addressable expression");
+                        pWriter__end_location_message(stderr_writer);
+                        panic();
+                    }
+                    alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_expression->alias->super.location, parsed_expression->alias->super.lexeme, variant_case->type);
+                    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
+                }
+                return (Checked_Expression *)Checked_Is_Variant_Case_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->bool_type, value_expression, variant_case, alias_symbol, parsed_expression->is_not);
             }
         }
         pWriter__begin_location_message(stderr_writer, parsed_expression->value_expression->location, WRITER_STYLE__ERROR);
@@ -1720,6 +1751,16 @@ Checked_Expression *Checker__check_type_specialization_expression(Checker *self,
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *context, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
+    bool allows_is_alias = context->allows_is_alias;
+    switch (parsed_expression->kind) {
+    case PARSED_EXPRESSION_KIND__GROUP:
+    case PARSED_EXPRESSION_KIND__IS:
+    case PARSED_EXPRESSION_KIND__LOGIC_AND:
+        break;
+    default:
+        context->allows_is_alias = false;
+        break;
+    }
     Checked_Expression *expression;
     switch (parsed_expression->kind) {
     case PARSED_EXPRESSION_KIND__ADD:
@@ -1836,6 +1877,7 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+    context->allows_is_alias = allows_is_alias;
 
     if (expected_type != NULL) {
         switch (expected_type->kind) {
@@ -2391,36 +2433,13 @@ Checked_Statement *Checker__check_expression_statement(Checker *self, Checker_Co
 }
 
 Checked_Statement *Checker__check_if_statement(Checker *self, Checker_Context *context, Parsed_If_Statement *parsed_statement) {
+    self->symbols = Checked_Symbols__create(self->symbols);
+    bool allows_is_alias = context->allows_is_alias;
+    context->allows_is_alias = true;
     Checked_Expression *condition_expression = Checker__check_expression(self, context, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type);
-    Checked_Statement *true_statement;
-    if (parsed_statement->variant_alias) {
-        if (condition_expression->kind != CHECKED_EXPRESSION_KIND__IS_VARIANT_CASE) {
-            pWriter__begin_location_message(stderr_writer, condition_expression->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        Checked_Is_Variant_Case_Expression *is_variant_case_expression = (Checked_Is_Variant_Case_Expression *)condition_expression;
-        if (is_variant_case_expression->is_not) {
-            pWriter__begin_location_message(stderr_writer, is_variant_case_expression->super.location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "If condition cannot have a variant alias");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        if (is_variant_case_expression->variant_expression->kind != CHECKED_EXPRESSION_KIND__SYMBOL) {
-            pWriter__begin_location_message(stderr_writer, is_variant_case_expression->variant_expression->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Only symbol expressions are currently supported in if-is-as statements");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-        self->symbols = Checked_Symbols__create(self->symbols);
-        Checked_Variant_Switch_Case_Symbol *variant_switch_case_symbol = Checked_Variant_Switch_Case_Symbol__create(context->checked_package, parsed_statement->variant_alias->super.location, parsed_statement->variant_alias->super.lexeme, is_variant_case_expression->variant_expression, is_variant_case_expression->variant_case);
-        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_switch_case_symbol);
-        true_statement = Checker__check_statement(self, context, parsed_statement->true_statement, NULL);
-        self->symbols = self->symbols->parent;
-    } else {
-        true_statement = Checker__check_statement(self, context, parsed_statement->true_statement, NULL);
-    }
+    context->allows_is_alias = allows_is_alias;
+    Checked_Statement *true_statement = Checker__check_statement(self, context, parsed_statement->true_statement, NULL);
+    self->symbols = self->symbols->parent;
     Checked_Statement *false_statement = NULL;
     if (parsed_statement->false_statement != NULL) {
         false_statement = Checker__check_statement(self, context, parsed_statement->false_statement, NULL);
@@ -2559,10 +2578,11 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
             // Create and push switch case symbols
             self->symbols = Checked_Symbols__create(self->symbols);
 
+            Checked_Variant_Alias_Symbol *alias_symbol = NULL;
             if (parsed_switch_case->variant.alias != NULL) {
                 // Create a symbol for the variant case
-                Checked_Variant_Switch_Case_Symbol *variant_symbol = Checked_Variant_Switch_Case_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, variant_expression, variant_case);
-                Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)variant_symbol);
+                alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, variant_case->type);
+                Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
             }
 
             Checked_Statement *variant_switch_case_statement = Checker__check_statement(self, context, parsed_switch_case->statement, NULL);
@@ -2570,7 +2590,7 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
             // Pop switch case symbols
             self->symbols = self->symbols->parent;
 
-            Checked_Variant_Switch_Case *variant_switch_case = Checked_Variant_Switch_Case__create(parsed_switch_case->variant.type->location, variant_type, variant_case, variant_switch_case_statement);
+            Checked_Variant_Switch_Case *variant_switch_case = Checked_Variant_Switch_Case__create(parsed_switch_case->variant.type->location, variant_type, variant_case, alias_symbol, variant_switch_case_statement);
             if (first_variant_switch_case == NULL) {
                 first_variant_switch_case = variant_switch_case;
             } else {
@@ -2654,8 +2674,13 @@ Checked_Statement *Checker__check_variable_statement(Checker *self, Checker_Cont
 }
 
 Checked_Statement *Checker__check_while_statement(Checker *self, Checker_Context *context, Parsed_While_Statement *parsed_statement) {
+    self->symbols = Checked_Symbols__create(self->symbols);
+    bool allows_is_alias = context->allows_is_alias;
+    context->allows_is_alias = true;
     Checked_Expression *condition_expression = Checker__check_expression(self, context, parsed_statement->condition_expression, (Checked_Type *)self->builtin_types->bool_type);
+    context->allows_is_alias = allows_is_alias;
     Checked_Statement *body_statement = Checker__check_statement(self, context, parsed_statement->body_statement, NULL);
+    self->symbols = self->symbols->parent;
     return (Checked_Statement *)Checked_While_Statement__create(parsed_statement->super.location, condition_expression, body_statement);
 }
 

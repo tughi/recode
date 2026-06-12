@@ -226,8 +226,8 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %expression .value
-  %6: [calculator.expression.Number] = cast %5
-  %7: [i32] = offset %6 .value
+  %number.ptr: [calculator.expression.Number] = cast %5
+  %7: [i32] = offset %number.ptr .value
   %8: i32 = load %7
   ret %8
 @4:
@@ -236,73 +236,65 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %expression .value
-  %12: [calculator.expression.Addition] = cast %11
-  %13: [[calculator.expression.Expression]] = offset %12 .left
+  %addition.ptr: [calculator.expression.Addition] = cast %11
+  %13: [[calculator.expression.Expression]] = offset %addition.ptr .left
   %14: [calculator.expression.Expression] = load %13
   %15: i32 = call $test.evaluate+expression %14
-  %16: [[3]u64] = offset %expression .value
-  %17: [calculator.expression.Addition] = cast %16
-  %18: [[calculator.expression.Expression]] = offset %17 .right
-  %19: [calculator.expression.Expression] = load %18
-  %20: i32 = call $test.evaluate+expression %19
-  %21: i32 = add %15 %20
-  ret %21
+  %16: [[calculator.expression.Expression]] = offset %addition.ptr .right
+  %17: [calculator.expression.Expression] = load %16
+  %18: i32 = call $test.evaluate+expression %17
+  %19: i32 = add %15 %18
+  ret %19
 @6:
-  %22: i32 = const 3
-  %23: bool = cmp_eq %2 %22
-  br %23 @7 @8
+  %20: i32 = const 3
+  %21: bool = cmp_eq %2 %20
+  br %21 @7 @8
 @7:
-  %24: [[3]u64] = offset %expression .value
-  %25: [calculator.expression.Division] = cast %24
-  %26: [[calculator.expression.Expression]] = offset %25 .left
-  %27: [calculator.expression.Expression] = load %26
-  %28: i32 = call $test.evaluate+expression %27
-  %29: [[3]u64] = offset %expression .value
-  %30: [calculator.expression.Division] = cast %29
-  %31: [[calculator.expression.Expression]] = offset %30 .right
-  %32: [calculator.expression.Expression] = load %31
-  %33: i32 = call $test.evaluate+expression %32
-  %34: i32 = div %28 %33
-  ret %34
+  %22: [[3]u64] = offset %expression .value
+  %division.ptr: [calculator.expression.Division] = cast %22
+  %24: [[calculator.expression.Expression]] = offset %division.ptr .left
+  %25: [calculator.expression.Expression] = load %24
+  %26: i32 = call $test.evaluate+expression %25
+  %27: [[calculator.expression.Expression]] = offset %division.ptr .right
+  %28: [calculator.expression.Expression] = load %27
+  %29: i32 = call $test.evaluate+expression %28
+  %30: i32 = div %26 %29
+  ret %30
 @8:
-  %35: i32 = const 4
-  %36: bool = cmp_eq %2 %35
-  br %36 @9 @10
+  %31: i32 = const 4
+  %32: bool = cmp_eq %2 %31
+  br %32 @9 @10
 @9:
-  %37: [[3]u64] = offset %expression .value
-  %38: [calculator.expression.Multiplication] = cast %37
-  %39: [[calculator.expression.Expression]] = offset %38 .left
-  %40: [calculator.expression.Expression] = load %39
-  %41: i32 = call $test.evaluate+expression %40
-  %42: [[3]u64] = offset %expression .value
-  %43: [calculator.expression.Multiplication] = cast %42
-  %44: [[calculator.expression.Expression]] = offset %43 .right
-  %45: [calculator.expression.Expression] = load %44
-  %46: i32 = call $test.evaluate+expression %45
-  %47: i32 = mul %41 %46
-  ret %47
+  %33: [[3]u64] = offset %expression .value
+  %multiplication.ptr: [calculator.expression.Multiplication] = cast %33
+  %35: [[calculator.expression.Expression]] = offset %multiplication.ptr .left
+  %36: [calculator.expression.Expression] = load %35
+  %37: i32 = call $test.evaluate+expression %36
+  %38: [[calculator.expression.Expression]] = offset %multiplication.ptr .right
+  %39: [calculator.expression.Expression] = load %38
+  %40: i32 = call $test.evaluate+expression %39
+  %41: i32 = mul %37 %40
+  ret %41
 @10:
-  %48: i32 = const 5
-  %49: bool = cmp_eq %2 %48
-  br %49 @11 @12
+  %42: i32 = const 5
+  %43: bool = cmp_eq %2 %42
+  br %43 @11 @12
 @11:
-  %50: [[3]u64] = offset %expression .value
-  %51: [calculator.expression.Subtraction] = cast %50
-  %52: [[calculator.expression.Expression]] = offset %51 .left
-  %53: [calculator.expression.Expression] = load %52
-  %54: i32 = call $test.evaluate+expression %53
-  %55: [[3]u64] = offset %expression .value
-  %56: [calculator.expression.Subtraction] = cast %55
-  %57: [[calculator.expression.Expression]] = offset %56 .right
-  %58: [calculator.expression.Expression] = load %57
-  %59: i32 = call $test.evaluate+expression %58
-  %60: i32 = sub %54 %59
-  ret %60
+  %44: [[3]u64] = offset %expression .value
+  %subtraction.ptr: [calculator.expression.Subtraction] = cast %44
+  %46: [[calculator.expression.Expression]] = offset %subtraction.ptr .left
+  %47: [calculator.expression.Expression] = load %46
+  %48: i32 = call $test.evaluate+expression %47
+  %49: [[calculator.expression.Expression]] = offset %subtraction.ptr .right
+  %50: [calculator.expression.Expression] = load %49
+  %51: i32 = call $test.evaluate+expression %50
+  %52: i32 = sub %48 %51
+  ret %52
 @12:
   jmp @2
 @2:
-  %61: i32 = const 1
-  call $exit %61
+  %53: i32 = const 1
+  call $exit %53
 }
 
 $([calculator.expression.Expression]).span(%self): calculator.source.Span {
@@ -314,8 +306,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %self .value
-  %6: [calculator.expression.Number] = cast %5
-  %7: [calculator.source.Span] = offset %6 .span
+  %variant.ptr: [calculator.expression.Number] = cast %5
+  %7: [calculator.source.Span] = offset %variant.ptr .span
   %8: calculator.source.Span = load %7
   ret %8
 @4:
@@ -324,8 +316,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %self .value
-  %12: [calculator.expression.Addition] = cast %11
-  %13: [calculator.source.Span] = offset %12 .span
+  %variant.2.ptr: [calculator.expression.Addition] = cast %11
+  %13: [calculator.source.Span] = offset %variant.2.ptr .span
   %14: calculator.source.Span = load %13
   ret %14
 @6:
@@ -334,8 +326,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %16 @7 @8
 @7:
   %17: [[3]u64] = offset %self .value
-  %18: [calculator.expression.Division] = cast %17
-  %19: [calculator.source.Span] = offset %18 .span
+  %variant.3.ptr: [calculator.expression.Division] = cast %17
+  %19: [calculator.source.Span] = offset %variant.3.ptr .span
   %20: calculator.source.Span = load %19
   ret %20
 @8:
@@ -344,8 +336,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %22 @9 @10
 @9:
   %23: [[3]u64] = offset %self .value
-  %24: [calculator.expression.Multiplication] = cast %23
-  %25: [calculator.source.Span] = offset %24 .span
+  %variant.4.ptr: [calculator.expression.Multiplication] = cast %23
+  %25: [calculator.source.Span] = offset %variant.4.ptr .span
   %26: calculator.source.Span = load %25
   ret %26
 @10:
@@ -354,8 +346,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %28 @11 @12
 @11:
   %29: [[3]u64] = offset %self .value
-  %30: [calculator.expression.Subtraction] = cast %29
-  %31: [calculator.source.Span] = offset %30 .span
+  %variant.5.ptr: [calculator.expression.Subtraction] = cast %29
+  %31: [calculator.source.Span] = offset %variant.5.ptr .span
   %32: calculator.source.Span = load %31
   ret %32
 @12:
@@ -364,8 +356,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %34 @13 @14
 @13:
   %35: [[3]u64] = offset %self .value
-  %36: [calculator.source.Error] = cast %35
-  %37: [calculator.source.Span] = offset %36 .span
+  %variant.6.ptr: [calculator.source.Error] = cast %35
+  %37: [calculator.source.Span] = offset %variant.6.ptr .span
   %38: calculator.source.Span = load %37
   ret %38
 @14:
@@ -384,8 +376,8 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %expression .value
-  %6: [calculator.expression.Number] = cast %5
-  %7: [i32] = offset %6 .value
+  %number.ptr: [calculator.expression.Number] = cast %5
+  %7: [i32] = offset %number.ptr .value
   %8: i32 = load %7
   %9: [io.Writer] = call $([io.Writer]).write_signed+signed %self %8
   ret %9
@@ -394,124 +386,116 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   %11: bool = cmp_eq %2 %10
   br %11 @5 @6
 @5:
-  %12: usize = const 1
-  %13: String = struct .data $str_3 .length %12
-  %14: [io.Writer] = call $([io.Writer]).write_string+anon %self %13
-  %15: [[3]u64] = offset %expression .value
-  %16: [calculator.expression.Addition] = cast %15
-  %17: [[calculator.expression.Expression]] = offset %16 .left
+  %12: [[3]u64] = offset %expression .value
+  %addition.ptr: [calculator.expression.Addition] = cast %12
+  %14: usize = const 1
+  %15: String = struct .data $str_3 .length %14
+  %16: [io.Writer] = call $([io.Writer]).write_string+anon %self %15
+  %17: [[calculator.expression.Expression]] = offset %addition.ptr .left
   %18: [calculator.expression.Expression] = load %17
-  %19: [io.Writer] = call $([io.Writer]).write_expression+anon %14 %18
+  %19: [io.Writer] = call $([io.Writer]).write_expression+anon %16 %18
   %20: usize = const 3
   %21: String = struct .data $str_4 .length %20
   %22: [io.Writer] = call $([io.Writer]).write_string+anon %19 %21
-  %23: [[3]u64] = offset %expression .value
-  %24: [calculator.expression.Addition] = cast %23
-  %25: [[calculator.expression.Expression]] = offset %24 .right
-  %26: [calculator.expression.Expression] = load %25
-  %27: [io.Writer] = call $([io.Writer]).write_expression+anon %22 %26
-  %28: usize = const 1
-  %29: String = struct .data $str_5 .length %28
-  %30: [io.Writer] = call $([io.Writer]).write_string+anon %27 %29
-  ret %30
+  %23: [[calculator.expression.Expression]] = offset %addition.ptr .right
+  %24: [calculator.expression.Expression] = load %23
+  %25: [io.Writer] = call $([io.Writer]).write_expression+anon %22 %24
+  %26: usize = const 1
+  %27: String = struct .data $str_5 .length %26
+  %28: [io.Writer] = call $([io.Writer]).write_string+anon %25 %27
+  ret %28
 @6:
-  %31: i32 = const 3
-  %32: bool = cmp_eq %2 %31
-  br %32 @7 @8
+  %29: i32 = const 3
+  %30: bool = cmp_eq %2 %29
+  br %30 @7 @8
 @7:
+  %31: [[3]u64] = offset %expression .value
+  %division.ptr: [calculator.expression.Division] = cast %31
   %33: usize = const 1
   %34: String = struct .data $str_3 .length %33
   %35: [io.Writer] = call $([io.Writer]).write_string+anon %self %34
-  %36: [[3]u64] = offset %expression .value
-  %37: [calculator.expression.Division] = cast %36
-  %38: [[calculator.expression.Expression]] = offset %37 .left
-  %39: [calculator.expression.Expression] = load %38
-  %40: [io.Writer] = call $([io.Writer]).write_expression+anon %35 %39
-  %41: usize = const 3
-  %42: String = struct .data $str_6 .length %41
-  %43: [io.Writer] = call $([io.Writer]).write_string+anon %40 %42
-  %44: [[3]u64] = offset %expression .value
-  %45: [calculator.expression.Division] = cast %44
-  %46: [[calculator.expression.Expression]] = offset %45 .right
-  %47: [calculator.expression.Expression] = load %46
-  %48: [io.Writer] = call $([io.Writer]).write_expression+anon %43 %47
-  %49: usize = const 1
-  %50: String = struct .data $str_5 .length %49
-  %51: [io.Writer] = call $([io.Writer]).write_string+anon %48 %50
-  ret %51
+  %36: [[calculator.expression.Expression]] = offset %division.ptr .left
+  %37: [calculator.expression.Expression] = load %36
+  %38: [io.Writer] = call $([io.Writer]).write_expression+anon %35 %37
+  %39: usize = const 3
+  %40: String = struct .data $str_6 .length %39
+  %41: [io.Writer] = call $([io.Writer]).write_string+anon %38 %40
+  %42: [[calculator.expression.Expression]] = offset %division.ptr .right
+  %43: [calculator.expression.Expression] = load %42
+  %44: [io.Writer] = call $([io.Writer]).write_expression+anon %41 %43
+  %45: usize = const 1
+  %46: String = struct .data $str_5 .length %45
+  %47: [io.Writer] = call $([io.Writer]).write_string+anon %44 %46
+  ret %47
 @8:
-  %52: i32 = const 4
-  %53: bool = cmp_eq %2 %52
-  br %53 @9 @10
+  %48: i32 = const 4
+  %49: bool = cmp_eq %2 %48
+  br %49 @9 @10
 @9:
-  %54: usize = const 1
-  %55: String = struct .data $str_3 .length %54
-  %56: [io.Writer] = call $([io.Writer]).write_string+anon %self %55
-  %57: [[3]u64] = offset %expression .value
-  %58: [calculator.expression.Multiplication] = cast %57
-  %59: [[calculator.expression.Expression]] = offset %58 .left
-  %60: [calculator.expression.Expression] = load %59
-  %61: [io.Writer] = call $([io.Writer]).write_expression+anon %56 %60
-  %62: usize = const 3
-  %63: String = struct .data $str_7 .length %62
-  %64: [io.Writer] = call $([io.Writer]).write_string+anon %61 %63
-  %65: [[3]u64] = offset %expression .value
-  %66: [calculator.expression.Multiplication] = cast %65
-  %67: [[calculator.expression.Expression]] = offset %66 .right
-  %68: [calculator.expression.Expression] = load %67
-  %69: [io.Writer] = call $([io.Writer]).write_expression+anon %64 %68
-  %70: usize = const 1
-  %71: String = struct .data $str_5 .length %70
-  %72: [io.Writer] = call $([io.Writer]).write_string+anon %69 %71
-  ret %72
+  %50: [[3]u64] = offset %expression .value
+  %multiplication.ptr: [calculator.expression.Multiplication] = cast %50
+  %52: usize = const 1
+  %53: String = struct .data $str_3 .length %52
+  %54: [io.Writer] = call $([io.Writer]).write_string+anon %self %53
+  %55: [[calculator.expression.Expression]] = offset %multiplication.ptr .left
+  %56: [calculator.expression.Expression] = load %55
+  %57: [io.Writer] = call $([io.Writer]).write_expression+anon %54 %56
+  %58: usize = const 3
+  %59: String = struct .data $str_7 .length %58
+  %60: [io.Writer] = call $([io.Writer]).write_string+anon %57 %59
+  %61: [[calculator.expression.Expression]] = offset %multiplication.ptr .right
+  %62: [calculator.expression.Expression] = load %61
+  %63: [io.Writer] = call $([io.Writer]).write_expression+anon %60 %62
+  %64: usize = const 1
+  %65: String = struct .data $str_5 .length %64
+  %66: [io.Writer] = call $([io.Writer]).write_string+anon %63 %65
+  ret %66
 @10:
-  %73: i32 = const 5
-  %74: bool = cmp_eq %2 %73
-  br %74 @11 @12
+  %67: i32 = const 5
+  %68: bool = cmp_eq %2 %67
+  br %68 @11 @12
 @11:
-  %75: usize = const 1
-  %76: String = struct .data $str_3 .length %75
-  %77: [io.Writer] = call $([io.Writer]).write_string+anon %self %76
-  %78: [[3]u64] = offset %expression .value
-  %79: [calculator.expression.Subtraction] = cast %78
-  %80: [[calculator.expression.Expression]] = offset %79 .left
+  %69: [[3]u64] = offset %expression .value
+  %subtraction.ptr: [calculator.expression.Subtraction] = cast %69
+  %71: usize = const 1
+  %72: String = struct .data $str_3 .length %71
+  %73: [io.Writer] = call $([io.Writer]).write_string+anon %self %72
+  %74: [[calculator.expression.Expression]] = offset %subtraction.ptr .left
+  %75: [calculator.expression.Expression] = load %74
+  %76: [io.Writer] = call $([io.Writer]).write_expression+anon %73 %75
+  %77: usize = const 3
+  %78: String = struct .data $str_8 .length %77
+  %79: [io.Writer] = call $([io.Writer]).write_string+anon %76 %78
+  %80: [[calculator.expression.Expression]] = offset %subtraction.ptr .right
   %81: [calculator.expression.Expression] = load %80
-  %82: [io.Writer] = call $([io.Writer]).write_expression+anon %77 %81
-  %83: usize = const 3
-  %84: String = struct .data $str_8 .length %83
+  %82: [io.Writer] = call $([io.Writer]).write_expression+anon %79 %81
+  %83: usize = const 1
+  %84: String = struct .data $str_5 .length %83
   %85: [io.Writer] = call $([io.Writer]).write_string+anon %82 %84
-  %86: [[3]u64] = offset %expression .value
-  %87: [calculator.expression.Subtraction] = cast %86
-  %88: [[calculator.expression.Expression]] = offset %87 .right
-  %89: [calculator.expression.Expression] = load %88
-  %90: [io.Writer] = call $([io.Writer]).write_expression+anon %85 %89
-  %91: usize = const 1
-  %92: String = struct .data $str_5 .length %91
-  %93: [io.Writer] = call $([io.Writer]).write_string+anon %90 %92
-  ret %93
+  ret %85
 @12:
-  %94: i32 = const 6
-  %95: bool = cmp_eq %2 %94
-  br %95 @13 @14
+  %86: i32 = const 6
+  %87: bool = cmp_eq %2 %86
+  br %87 @13 @14
 @13:
-  %96: usize = const 7
-  %97: String = struct .data $str_9 .length %96
-  %98: [io.Writer] = call $([io.Writer]).write_string+anon %self %97
-  %99: [[3]u64] = offset %expression .value
-  %100: [calculator.source.Error] = cast %99
-  %101: [String] = offset %100 .message
-  %102: String = load %101
-  %103: [io.Writer] = call $([io.Writer]).write_string+anon %98 %102
-  ret %103
+  %88: [[3]u64] = offset %expression .value
+  %error.ptr: [calculator.source.Error] = cast %88
+  %90: usize = const 7
+  %91: String = struct .data $str_9 .length %90
+  %92: [io.Writer] = call $([io.Writer]).write_string+anon %self %91
+  %93: [String] = offset %error.ptr .message
+  %94: String = load %93
+  %95: [io.Writer] = call $([io.Writer]).write_string+anon %92 %94
+  ret %95
 @14:
-  %104: i32 = const 0
-  %105: bool = cmp_eq %2 %104
-  br %105 @15 @16
+  %96: i32 = const 0
+  %97: bool = cmp_eq %2 %96
+  br %97 @15 @16
 @15:
-  %106: usize = const 4
-  %107: String = struct .data $str_10 .length %106
-  %108: [io.Writer] = call $([io.Writer]).write_string+anon %self %107
-  ret %108
+  %98: usize = const 4
+  %99: String = struct .data $str_10 .length %98
+  %100: [io.Writer] = call $([io.Writer]).write_string+anon %self %99
+  ret %100
 @16:
   jmp @2
 @2:
@@ -541,84 +525,88 @@ $([calculator.parser.Parser]).parse_additive_expression(%self): calculator.expre
   %8: bool = cmp_eq %6 %7
   br %8 @5 @6
 @5:
-  %9: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
-  %10: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %9
+  %9: [[3]u64] = offset %4.ptr .value
+  %plus.ptr: [calculator.tokenizer.Plus] = cast %9
+  %11: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %12: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %11
   %other_expression.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %11: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
-  store %other_expression.ptr %11
-  %12.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %13: [i32] = offset %12.ptr .tag
-  %14: i32 = const 2
-  store %13 %14
-  %15: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
-  %16.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %16.ptr %15
-  %17: [i32] = offset %16.ptr .start
-  %18: i32 = load %17
-  %19: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.ptr
-  %20.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %20.ptr %19
-  %21: [i32] = offset %20.ptr .end
-  %22: i32 = load %21
-  %23: calculator.source.Span = struct .start %18 .end %22
-  %24: usize = const 32
-  %25: [Any] = call $malloc %24
-  %26: [calculator.expression.Expression] = cast %25
+  %13: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
+  store %other_expression.ptr %13
+  %14.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %15: [i32] = offset %14.ptr .tag
+  %16: i32 = const 2
+  store %15 %16
+  %17: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
+  %18.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %18.ptr %17
+  %19: [i32] = offset %18.ptr .start
+  %20: i32 = load %19
+  %21: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.ptr
+  %22.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %22.ptr %21
+  %23: [i32] = offset %22.ptr .end
+  %24: i32 = load %23
+  %25: calculator.source.Span = struct .start %20 .end %24
+  %26: usize = const 32
+  %27: [Any] = call $malloc %26
+  %28: [calculator.expression.Expression] = cast %27
   %parsed_expression.1: calculator.expression.Expression = load %parsed_expression.ptr
-  store %26 %parsed_expression.1
-  %27: usize = const 32
-  %28: [Any] = call $malloc %27
-  %29: [calculator.expression.Expression] = cast %28
+  store %28 %parsed_expression.1
+  %29: usize = const 32
+  %30: [Any] = call $malloc %29
+  %31: [calculator.expression.Expression] = cast %30
   %other_expression.1: calculator.expression.Expression = load %other_expression.ptr
-  store %29 %other_expression.1
-  %30: calculator.expression.Addition = struct .span %23 .left %26 .right %29
-  %31: [[3]u64] = offset %12.ptr .value
-  %32: [calculator.expression.Addition] = cast %31
-  store %32 %30
-  %33: calculator.expression.Expression = load %12.ptr
-  store %parsed_expression.ptr %33
+  store %31 %other_expression.1
+  %32: calculator.expression.Addition = struct .span %25 .left %28 .right %31
+  %33: [[3]u64] = offset %14.ptr .value
+  %34: [calculator.expression.Addition] = cast %33
+  store %34 %32
+  %35: calculator.expression.Expression = load %14.ptr
+  store %parsed_expression.ptr %35
   jmp @4
 @6:
-  %34: i32 = const 3
-  %35: bool = cmp_eq %6 %34
-  br %35 @7 @8
+  %36: i32 = const 3
+  %37: bool = cmp_eq %6 %36
+  br %37 @7 @8
 @7:
-  %36: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
-  %37: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %36
+  %38: [[3]u64] = offset %4.ptr .value
+  %minus.ptr: [calculator.tokenizer.Minus] = cast %38
+  %40: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %41: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %40
   %other_expression.2.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %38: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
-  store %other_expression.2.ptr %38
-  %39.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %40: [i32] = offset %39.ptr .tag
-  %41: i32 = const 5
-  store %40 %41
-  %42: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
-  %43.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %43.ptr %42
-  %44: [i32] = offset %43.ptr .start
-  %45: i32 = load %44
-  %46: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.2.ptr
+  %42: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
+  store %other_expression.2.ptr %42
+  %43.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %44: [i32] = offset %43.ptr .tag
+  %45: i32 = const 5
+  store %44 %45
+  %46: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
   %47.ptr: [calculator.source.Span] = alloc calculator.source.Span
   store %47.ptr %46
-  %48: [i32] = offset %47.ptr .end
+  %48: [i32] = offset %47.ptr .start
   %49: i32 = load %48
-  %50: calculator.source.Span = struct .start %45 .end %49
-  %51: usize = const 32
-  %52: [Any] = call $malloc %51
-  %53: [calculator.expression.Expression] = cast %52
+  %50: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.2.ptr
+  %51.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %51.ptr %50
+  %52: [i32] = offset %51.ptr .end
+  %53: i32 = load %52
+  %54: calculator.source.Span = struct .start %49 .end %53
+  %55: usize = const 32
+  %56: [Any] = call $malloc %55
+  %57: [calculator.expression.Expression] = cast %56
   %parsed_expression.2: calculator.expression.Expression = load %parsed_expression.ptr
-  store %53 %parsed_expression.2
-  %54: usize = const 32
-  %55: [Any] = call $malloc %54
-  %56: [calculator.expression.Expression] = cast %55
+  store %57 %parsed_expression.2
+  %58: usize = const 32
+  %59: [Any] = call $malloc %58
+  %60: [calculator.expression.Expression] = cast %59
   %other_expression.2.1: calculator.expression.Expression = load %other_expression.2.ptr
-  store %56 %other_expression.2.1
-  %57: calculator.expression.Subtraction = struct .span %50 .left %53 .right %56
-  %58: [[3]u64] = offset %39.ptr .value
-  %59: [calculator.expression.Subtraction] = cast %58
-  store %59 %57
-  %60: calculator.expression.Expression = load %39.ptr
-  store %parsed_expression.ptr %60
+  store %60 %other_expression.2.1
+  %61: calculator.expression.Subtraction = struct .span %54 .left %57 .right %60
+  %62: [[3]u64] = offset %43.ptr .value
+  %63: [calculator.expression.Subtraction] = cast %62
+  store %63 %61
+  %64: calculator.expression.Expression = load %43.ptr
+  store %parsed_expression.ptr %64
   jmp @4
 @8:
   jmp @3
@@ -644,88 +632,92 @@ $([calculator.parser.Parser]).parse_multiplicative_expression(%self): calculator
   %5: i32 = load %4
   %6: i32 = const 4
   %7: bool = cmp_eq %5 %6
+  %8: [[3]u64] = offset %token.ptr .value
+  %multiply.ptr: [calculator.tokenizer.Multiply] = cast %8
   br %7 @4 @5
 @4:
-  %8: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
-  %9: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %8
+  %10: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %11: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %10
   %other_expression.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %10: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_primary_expression %self
-  store %other_expression.ptr %10
-  %11.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %12: [i32] = offset %11.ptr .tag
-  %13: i32 = const 4
-  store %12 %13
-  %14: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
-  %15.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %15.ptr %14
-  %16: [i32] = offset %15.ptr .start
-  %17: i32 = load %16
-  %18: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.ptr
-  %19.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %19.ptr %18
-  %20: [i32] = offset %19.ptr .end
-  %21: i32 = load %20
-  %22: calculator.source.Span = struct .start %17 .end %21
-  %23: usize = const 32
-  %24: [Any] = call $malloc %23
-  %25: [calculator.expression.Expression] = cast %24
+  %12: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_primary_expression %self
+  store %other_expression.ptr %12
+  %13.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %14: [i32] = offset %13.ptr .tag
+  %15: i32 = const 4
+  store %14 %15
+  %16: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
+  %17.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %17.ptr %16
+  %18: [i32] = offset %17.ptr .start
+  %19: i32 = load %18
+  %20: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.ptr
+  %21.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %21.ptr %20
+  %22: [i32] = offset %21.ptr .end
+  %23: i32 = load %22
+  %24: calculator.source.Span = struct .start %19 .end %23
+  %25: usize = const 32
+  %26: [Any] = call $malloc %25
+  %27: [calculator.expression.Expression] = cast %26
   %parsed_expression.1: calculator.expression.Expression = load %parsed_expression.ptr
-  store %25 %parsed_expression.1
-  %26: usize = const 32
-  %27: [Any] = call $malloc %26
-  %28: [calculator.expression.Expression] = cast %27
+  store %27 %parsed_expression.1
+  %28: usize = const 32
+  %29: [Any] = call $malloc %28
+  %30: [calculator.expression.Expression] = cast %29
   %other_expression.1: calculator.expression.Expression = load %other_expression.ptr
-  store %28 %other_expression.1
-  %29: calculator.expression.Multiplication = struct .span %22 .left %25 .right %28
-  %30: [[3]u64] = offset %11.ptr .value
-  %31: [calculator.expression.Multiplication] = cast %30
-  store %31 %29
-  %32: calculator.expression.Expression = load %11.ptr
-  store %parsed_expression.ptr %32
+  store %30 %other_expression.1
+  %31: calculator.expression.Multiplication = struct .span %24 .left %27 .right %30
+  %32: [[3]u64] = offset %13.ptr .value
+  %33: [calculator.expression.Multiplication] = cast %32
+  store %33 %31
+  %34: calculator.expression.Expression = load %13.ptr
+  store %parsed_expression.ptr %34
   jmp @6
 @5:
-  %33: [i32] = offset %token.ptr .tag
-  %34: i32 = load %33
-  %35: i32 = const 5
-  %36: bool = cmp_eq %34 %35
-  br %36 @7 @8
+  %35: [i32] = offset %token.ptr .tag
+  %36: i32 = load %35
+  %37: i32 = const 5
+  %38: bool = cmp_eq %36 %37
+  %39: [[3]u64] = offset %token.ptr .value
+  %divide.ptr: [calculator.tokenizer.Divide] = cast %39
+  br %38 @7 @8
 @7:
-  %37: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
-  %38: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %37
+  %41: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %42: calculator.tokenizer.Token = call $([calculator.tokenizer.Tokenizer]).next_token %41
   %other_expression.2.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %39: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_primary_expression %self
-  store %other_expression.2.ptr %39
-  %40.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %41: [i32] = offset %40.ptr .tag
-  %42: i32 = const 3
-  store %41 %42
-  %43: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
-  %44.ptr: [calculator.source.Span] = alloc calculator.source.Span
-  store %44.ptr %43
-  %45: [i32] = offset %44.ptr .start
-  %46: i32 = load %45
-  %47: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.2.ptr
+  %43: calculator.expression.Expression = call $([calculator.parser.Parser]).parse_primary_expression %self
+  store %other_expression.2.ptr %43
+  %44.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %45: [i32] = offset %44.ptr .tag
+  %46: i32 = const 3
+  store %45 %46
+  %47: calculator.source.Span = call $([calculator.expression.Expression]).span %parsed_expression.ptr
   %48.ptr: [calculator.source.Span] = alloc calculator.source.Span
   store %48.ptr %47
-  %49: [i32] = offset %48.ptr .end
+  %49: [i32] = offset %48.ptr .start
   %50: i32 = load %49
-  %51: calculator.source.Span = struct .start %46 .end %50
-  %52: usize = const 32
-  %53: [Any] = call $malloc %52
-  %54: [calculator.expression.Expression] = cast %53
+  %51: calculator.source.Span = call $([calculator.expression.Expression]).span %other_expression.2.ptr
+  %52.ptr: [calculator.source.Span] = alloc calculator.source.Span
+  store %52.ptr %51
+  %53: [i32] = offset %52.ptr .end
+  %54: i32 = load %53
+  %55: calculator.source.Span = struct .start %50 .end %54
+  %56: usize = const 32
+  %57: [Any] = call $malloc %56
+  %58: [calculator.expression.Expression] = cast %57
   %parsed_expression.2: calculator.expression.Expression = load %parsed_expression.ptr
-  store %54 %parsed_expression.2
-  %55: usize = const 32
-  %56: [Any] = call $malloc %55
-  %57: [calculator.expression.Expression] = cast %56
+  store %58 %parsed_expression.2
+  %59: usize = const 32
+  %60: [Any] = call $malloc %59
+  %61: [calculator.expression.Expression] = cast %60
   %other_expression.2.1: calculator.expression.Expression = load %other_expression.2.ptr
-  store %57 %other_expression.2.1
-  %58: calculator.expression.Division = struct .span %51 .left %54 .right %57
-  %59: [[3]u64] = offset %40.ptr .value
-  %60: [calculator.expression.Division] = cast %59
-  store %60 %58
-  %61: calculator.expression.Expression = load %40.ptr
-  store %parsed_expression.ptr %61
+  store %61 %other_expression.2.1
+  %62: calculator.expression.Division = struct .span %55 .left %58 .right %61
+  %63: [[3]u64] = offset %44.ptr .value
+  %64: [calculator.expression.Division] = cast %63
+  store %64 %62
+  %65: calculator.expression.Expression = load %44.ptr
+  store %parsed_expression.ptr %65
   jmp @9
 @8:
   jmp @3
@@ -748,34 +740,34 @@ $([calculator.parser.Parser]).parse_primary_expression(%self): calculator.expres
   %4: i32 = load %3
   %5: i32 = const 1
   %6: bool = cmp_eq %4 %5
+  %7: [[3]u64] = offset %token.ptr .value
+  %number.ptr: [calculator.expression.Number] = cast %7
   br %6 @2 @3
 @2:
-  %7.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %8: [i32] = offset %7.ptr .tag
-  %9: i32 = const 1
-  store %8 %9
-  %10: [[3]u64] = offset %token.ptr .value
-  %11: [calculator.expression.Number] = cast %10
-  %12: calculator.expression.Number = load %11
-  %13: [[3]u64] = offset %7.ptr .value
-  %14: [calculator.expression.Number] = cast %13
-  store %14 %12
-  %15: calculator.expression.Expression = load %7.ptr
-  ret %15
+  %9.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %10: [i32] = offset %9.ptr .tag
+  %11: i32 = const 1
+  store %10 %11
+  %number.1: calculator.expression.Number = load %number.ptr
+  %12: [[3]u64] = offset %9.ptr .value
+  %13: [calculator.expression.Number] = cast %12
+  store %13 %number.1
+  %14: calculator.expression.Expression = load %9.ptr
+  ret %14
 @3:
-  %16.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
-  %17: [i32] = offset %16.ptr .tag
-  %18: i32 = const 6
-  store %17 %18
-  %19: calculator.source.Span = call $([calculator.tokenizer.Token]).span %token.ptr
-  %20: usize = const 15
-  %21: String = struct .data $str_11 .length %20
-  %22: calculator.source.Error = struct .span %19 .message %21
-  %23: [[3]u64] = offset %16.ptr .value
-  %24: [calculator.source.Error] = cast %23
-  store %24 %22
-  %25: calculator.expression.Expression = load %16.ptr
-  ret %25
+  %15.ptr: [calculator.expression.Expression] = alloc calculator.expression.Expression
+  %16: [i32] = offset %15.ptr .tag
+  %17: i32 = const 6
+  store %16 %17
+  %18: calculator.source.Span = call $([calculator.tokenizer.Token]).span %token.ptr
+  %19: usize = const 15
+  %20: String = struct .data $str_11 .length %19
+  %21: calculator.source.Error = struct .span %18 .message %20
+  %22: [[3]u64] = offset %15.ptr .value
+  %23: [calculator.source.Error] = cast %22
+  store %23 %21
+  %24: calculator.expression.Expression = load %15.ptr
+  ret %24
 }
 
 $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
@@ -787,8 +779,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %self .value
-  %6: [calculator.expression.Number] = cast %5
-  %7: [calculator.source.Span] = offset %6 .span
+  %variant.ptr: [calculator.expression.Number] = cast %5
+  %7: [calculator.source.Span] = offset %variant.ptr .span
   %8: calculator.source.Span = load %7
   ret %8
 @4:
@@ -797,8 +789,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %self .value
-  %12: [calculator.tokenizer.Plus] = cast %11
-  %13: [calculator.source.Span] = offset %12 .span
+  %variant.2.ptr: [calculator.tokenizer.Plus] = cast %11
+  %13: [calculator.source.Span] = offset %variant.2.ptr .span
   %14: calculator.source.Span = load %13
   ret %14
 @6:
@@ -807,8 +799,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %16 @7 @8
 @7:
   %17: [[3]u64] = offset %self .value
-  %18: [calculator.tokenizer.Minus] = cast %17
-  %19: [calculator.source.Span] = offset %18 .span
+  %variant.3.ptr: [calculator.tokenizer.Minus] = cast %17
+  %19: [calculator.source.Span] = offset %variant.3.ptr .span
   %20: calculator.source.Span = load %19
   ret %20
 @8:
@@ -817,8 +809,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %22 @9 @10
 @9:
   %23: [[3]u64] = offset %self .value
-  %24: [calculator.tokenizer.Multiply] = cast %23
-  %25: [calculator.source.Span] = offset %24 .span
+  %variant.4.ptr: [calculator.tokenizer.Multiply] = cast %23
+  %25: [calculator.source.Span] = offset %variant.4.ptr .span
   %26: calculator.source.Span = load %25
   ret %26
 @10:
@@ -827,8 +819,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %28 @11 @12
 @11:
   %29: [[3]u64] = offset %self .value
-  %30: [calculator.tokenizer.Divide] = cast %29
-  %31: [calculator.source.Span] = offset %30 .span
+  %variant.5.ptr: [calculator.tokenizer.Divide] = cast %29
+  %31: [calculator.source.Span] = offset %variant.5.ptr .span
   %32: calculator.source.Span = load %31
   ret %32
 @12:
@@ -837,8 +829,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %34 @13 @14
 @13:
   %35: [[3]u64] = offset %self .value
-  %36: [calculator.tokenizer.Stop] = cast %35
-  %37: [calculator.source.Span] = offset %36 .span
+  %variant.6.ptr: [calculator.tokenizer.Stop] = cast %35
+  %37: [calculator.source.Span] = offset %variant.6.ptr .span
   %38: calculator.source.Span = load %37
   ret %38
 @14:
@@ -847,8 +839,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %40 @15 @16
 @15:
   %41: [[3]u64] = offset %self .value
-  %42: [calculator.source.Error] = cast %41
-  %43: [calculator.source.Span] = offset %42 .span
+  %variant.7.ptr: [calculator.source.Error] = cast %41
+  %43: [calculator.source.Span] = offset %variant.7.ptr .span
   %44: calculator.source.Span = load %43
   ret %44
 @16:
@@ -866,14 +858,14 @@ $([io.Writer]).write_token+anon(%self, %token: [calculator.tokenizer.Token]): [i
   %4: bool = cmp_eq %2 %3
   br %4 @3 @4
 @3:
-  %5: usize = const 8
-  %6: String = struct .data $str_12 .length %5
-  %7: [io.Writer] = call $([io.Writer]).write_string+anon %self %6
-  %8: [[3]u64] = offset %token .value
-  %9: [calculator.expression.Number] = cast %8
-  %10: [i32] = offset %9 .value
+  %5: [[3]u64] = offset %token .value
+  %number.ptr: [calculator.expression.Number] = cast %5
+  %7: usize = const 8
+  %8: String = struct .data $str_12 .length %7
+  %9: [io.Writer] = call $([io.Writer]).write_string+anon %self %8
+  %10: [i32] = offset %number.ptr .value
   %11: i32 = load %10
-  %12: [io.Writer] = call $([io.Writer]).write_signed+signed %7 %11
+  %12: [io.Writer] = call $([io.Writer]).write_signed+signed %9 %11
   ret %12
 @4:
   %13: i32 = const 2
@@ -925,14 +917,14 @@ $([io.Writer]).write_token+anon(%self, %token: [calculator.tokenizer.Token]): [i
   %39: bool = cmp_eq %2 %38
   br %39 @15 @16
 @15:
-  %40: usize = const 7
-  %41: String = struct .data $str_9 .length %40
-  %42: [io.Writer] = call $([io.Writer]).write_string+anon %self %41
-  %43: [[3]u64] = offset %token .value
-  %44: [calculator.source.Error] = cast %43
-  %45: [String] = offset %44 .message
+  %40: [[3]u64] = offset %token .value
+  %error.ptr: [calculator.source.Error] = cast %40
+  %42: usize = const 7
+  %43: String = struct .data $str_9 .length %42
+  %44: [io.Writer] = call $([io.Writer]).write_string+anon %self %43
+  %45: [String] = offset %error.ptr .message
   %46: String = load %45
-  %47: [io.Writer] = call $([io.Writer]).write_string+anon %42 %46
+  %47: [io.Writer] = call $([io.Writer]).write_string+anon %44 %46
   ret %47
 @16:
   %48: i32 = const 0

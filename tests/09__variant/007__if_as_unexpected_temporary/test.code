@@ -1,0 +1,12 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    if Value(42) is i32 as number {
+        return number - 42
+    }
+
+    return 1
+}

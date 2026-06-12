@@ -608,11 +608,8 @@ Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Package *packag
     return variable;
 }
 
-Checked_Variant_Switch_Case_Symbol *Checked_Variant_Switch_Case_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case) {
-    Checked_Variant_Switch_Case_Symbol *symbol = (Checked_Variant_Switch_Case_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE, sizeof(Checked_Variant_Switch_Case_Symbol), package, location, name, variant_case->type, true);
-    symbol->variant_expression = variant_expression;
-    symbol->variant_case = variant_case;
-    return symbol;
+Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type) {
+    return (Checked_Variant_Alias_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIANT_ALIAS, sizeof(Checked_Variant_Alias_Symbol), package, location, name, type, true);
 }
 
 Checked_Symbols *Checked_Symbols__create(Checked_Symbols *parent) {
@@ -811,10 +808,11 @@ Checked_Integer_Expression *Checked_Integer_Expression__create(Source_Location l
     return expression;
 }
 
-Checked_Is_Variant_Case_Expression *Checked_Is_Variant_Case_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, bool is_not) {
+Checked_Is_Variant_Case_Expression *Checked_Is_Variant_Case_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, Checked_Variant_Alias_Symbol *alias, bool is_not) {
     Checked_Is_Variant_Case_Expression *expression = (Checked_Is_Variant_Case_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__IS_VARIANT_CASE, sizeof(Checked_Is_Variant_Case_Expression), location, type);
     expression->variant_expression = variant_expression;
     expression->variant_case = variant_case;
+    expression->alias = alias;
     expression->is_not = is_not;
     return expression;
 }
@@ -1150,11 +1148,12 @@ Checked_Switch_Else *Checked_Switch_Else__create(Source_Location location, Check
     return switch_else;
 }
 
-Checked_Variant_Switch_Case *Checked_Variant_Switch_Case__create(Source_Location location, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_case, Checked_Statement *statement) {
+Checked_Variant_Switch_Case *Checked_Variant_Switch_Case__create(Source_Location location, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_case, Checked_Variant_Alias_Symbol *alias, Checked_Statement *statement) {
     Checked_Variant_Switch_Case *switch_variant_case = (Checked_Variant_Switch_Case *)malloc(sizeof(Checked_Variant_Switch_Case));
     switch_variant_case->location = location;
     switch_variant_case->variant_type = variant_type;
     switch_variant_case->variant_case = variant_case;
+    switch_variant_case->alias = alias;
     switch_variant_case->statement = statement;
     switch_variant_case->next_switch_variant_case = NULL;
     return switch_variant_case;

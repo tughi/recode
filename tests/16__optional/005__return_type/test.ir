@@ -42,36 +42,36 @@ $test.main(): i32 {
   %8: i32 = load %7
   %9: i32 = const 1
   %10: bool = cmp_eq %8 %9
+  %11: [[1]u32] = offset %found.ptr .value
+  %value.ptr: [i32] = cast %11
   br %10 @2 @3
 @2:
-  %11: [[1]u32] = offset %found.ptr .value
-  %12: [i32] = cast %11
-  %13: i32 = load %12
-  %14: i32 = const 42
-  %15: bool = cmp_ne %13 %14
-  br %15 @5 @6
+  %value.1: i32 = load %value.ptr
+  %13: i32 = const 42
+  %14: bool = cmp_ne %value.1 %13
+  br %14 @5 @6
 @5:
-  %16: i32 = const 1
-  ret %16
+  %15: i32 = const 1
+  ret %15
 @6:
   jmp @4
 @3:
-  %17: i32 = const 2
-  ret %17
+  %16: i32 = const 2
+  ret %16
 @4:
-  %18: [i32] = offset %not_found.ptr .tag
-  %19: i32 = load %18
-  %20: i32 = const 0
-  %21: bool = cmp_eq %19 %20
-  br %21 @7 @8
+  %17: [i32] = offset %not_found.ptr .tag
+  %18: i32 = load %17
+  %19: i32 = const 0
+  %20: bool = cmp_eq %18 %19
+  br %20 @7 @8
 @7:
   jmp @9
 @8:
-  %22: i32 = const 3
-  ret %22
+  %21: i32 = const 3
+  ret %21
 @9:
-  %23: i32 = const 0
-  ret %23
+  %22: i32 = const 0
+  ret %22
 }
 
 $main(): i32 {

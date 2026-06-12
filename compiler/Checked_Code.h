@@ -318,7 +318,7 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__TYPE_ARGUMENT,
     CHECKED_SYMBOL_KIND__TYPE,
     CHECKED_SYMBOL_KIND__VARIABLE,
-    CHECKED_SYMBOL_KIND__VARIANT_SWITCH_CASE,
+    CHECKED_SYMBOL_KIND__VARIANT_ALIAS,
 } Checked_Symbol_Kind;
 
 typedef struct Checked_Symbol {
@@ -465,13 +465,11 @@ typedef struct Checked_Variable_Symbol {
 
 Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type, bool is_global);
 
-typedef struct Checked_Variant_Switch_Case_Symbol {
+typedef struct Checked_Variant_Alias_Symbol {
     Checked_Symbol super;
-    Checked_Expression *variant_expression;
-    Checked_Variant_Case *variant_case;
-} Checked_Variant_Switch_Case_Symbol;
+} Checked_Variant_Alias_Symbol;
 
-Checked_Variant_Switch_Case_Symbol *Checked_Variant_Switch_Case_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case);
+Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -626,10 +624,11 @@ typedef struct Checked_Is_Variant_Case_Expression {
     Checked_Expression super;
     Checked_Expression *variant_expression;
     Checked_Variant_Case *variant_case;
+    Checked_Variant_Alias_Symbol *alias;
     bool is_not;
 } Checked_Is_Variant_Case_Expression;
 
-Checked_Is_Variant_Case_Expression *Checked_Is_Variant_Case_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, bool is_not);
+Checked_Is_Variant_Case_Expression *Checked_Is_Variant_Case_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *variant_expression, Checked_Variant_Case *variant_case, Checked_Variant_Alias_Symbol *alias, bool is_not);
 
 typedef struct Checked_Less_Expression {
     Checked_Binary_Expression super;
@@ -942,11 +941,12 @@ typedef struct Checked_Variant_Switch_Case {
     Source_Location location;
     Checked_Variant_Type *variant_type;
     Checked_Variant_Case *variant_case;
+    Checked_Variant_Alias_Symbol *alias;
     Checked_Statement *statement;
     struct Checked_Variant_Switch_Case *next_switch_variant_case;
 } Checked_Variant_Switch_Case;
 
-Checked_Variant_Switch_Case *Checked_Variant_Switch_Case__create(Source_Location location, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_case, Checked_Statement *statement);
+Checked_Variant_Switch_Case *Checked_Variant_Switch_Case__create(Source_Location location, Checked_Variant_Type *variant_type, Checked_Variant_Case *variant_case, Checked_Variant_Alias_Symbol *alias, Checked_Statement *statement);
 
 typedef struct Checked_Variant_Switch_Statement {
     Checked_Statement super;

@@ -1,4 +1,4 @@
-type test.Literal = struct {
+type test.Item = struct {
   value: test.Value
 }
 
@@ -9,37 +9,34 @@ type test.Value = struct {
 
 $test.main(): i32 {
 @1:
-  %literal.ptr: [test.Literal] = alloc test.Literal
+  %item.ptr: [test.Item] = alloc test.Item
   %1.ptr: [test.Value] = alloc test.Value
   %2: [i32] = offset %1.ptr .tag
-  %3: i32 = const 3
+  %3: i32 = const 2
   store %2 %3
   %4: i32 = const 42
   %5: [[1]u32] = offset %1.ptr .value
   %6: [i32] = cast %5
   store %6 %4
   %7: test.Value = load %1.ptr
-  %8: test.Literal = struct .value %7
-  store %literal.ptr %8
-  %9: [test.Value] = offset %literal.ptr .value
+  %8: test.Item = struct .value %7
+  store %item.ptr %8
+  %9: [test.Value] = offset %item.ptr .value
   %10: [i32] = offset %9 .tag
   %11: i32 = load %10
-  %12: i32 = const 3
+  %12: i32 = const 2
   %13: bool = cmp_eq %11 %12
-  br %13 @3 @4
-@3:
   %14: [[1]u32] = offset %9 .value
-  %value.ptr: [i32] = cast %14
-  %value.1: i32 = load %value.ptr
+  %integer.ptr: [i32] = cast %14
+  br %13 @2 @3
+@2:
+  %integer.1: i32 = load %integer.ptr
   %16: i32 = const 42
-  %17: i32 = sub %value.1 %16
+  %17: i32 = sub %integer.1 %16
   ret %17
-@4:
+@3:
   %18: i32 = const 1
   ret %18
-@2:
-  %19: i32 = const 2
-  ret %19
 }
 
 $main(): i32 {

@@ -1,0 +1,14 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 42
+
+    if value is i32 as number and number > 0 {
+        return number - 42
+    }
+
+    return 1
+}

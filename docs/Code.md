@@ -669,9 +669,9 @@ Rules:
 - Cases after `else` are an error
 - Duplicate cases are an error
 
-### Pattern Matching — `if is`
+### Pattern Matching — `is`
 
-`as name` gives access to the inner value typed as the matched case:
+`value is T` is an ordinary boolean expression. The optional `as name` is part of the `is` expression and declares an alias for the inner value, typed as the matched case:
 
 ```code
 if value is i32 as integer {
@@ -685,19 +685,38 @@ if value is i32 as integer {
 }
 ```
 
+The alias is in scope wherever the test is guaranteed to have succeeded — the rest of an `and` chain and the body of the `if` or `while`:
+
+```code
+if value is i32 as number and number > 0 {
+    // number has type i32
+}
+
+while value is i32 as number and number > 0 {
+    // runs as long as value holds a positive i32
+}
+
+if item.value is i32 as integer {
+    // any addressable expression can be matched
+}
+```
+
+Rules:
+- An alias can be declared only inside an `if` or `while` condition
+- The matched value must be addressable (a variable, member access, array item, or dereference) — the alias aliases the variant's payload in place, it is not a copy
+- An alias cannot be declared under `or` or `not`, where the match is not guaranteed
+
 ### Negated Check — `is not`
 
-`is not` checks that the variant does not hold the specified type. With `as`, the alias is typed as the actual case currently held:
+`is not` checks that the variant does not hold the specified type:
 
 ```code
 if value is not bool {
     // value holds something other than bool
 }
-
-if value is not bool as other {
-    // other gives access to the actual inner value typed as the case held (e.g. i32)
-}
 ```
+
+`is not` cannot declare an alias — there is no single case the alias could be typed as.
 
 ---
 

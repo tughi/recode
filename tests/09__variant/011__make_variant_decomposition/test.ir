@@ -27,63 +27,49 @@ $test.evaluate+expression(%expression: test.Expression): i32 {
   %5: bool = cmp_eq %3 %4
   br %5 @3 @4
 @3:
-  %6.ptr: [test.Expression] = alloc test.Expression
-  store %6.ptr %expression
-  %7: [[1]u64] = offset %6.ptr .value
-  %8: [i32] = cast %7
-  %9: i32 = load %8
-  ret %9
+  %6: [[1]u64] = offset %1.ptr .value
+  %value.ptr: [i32] = cast %6
+  %value.1: i32 = load %value.ptr
+  ret %value.1
 @4:
-  %10: i32 = const 2
-  %11: bool = cmp_eq %3 %10
-  br %11 @5 @6
+  %8: i32 = const 2
+  %9: bool = cmp_eq %3 %8
+  br %9 @5 @6
 @5:
-  %12.ptr: [test.Expression] = alloc test.Expression
-  store %12.ptr %expression
-  %13: [[1]u64] = offset %12.ptr .value
-  %14: [[test.Addition]] = cast %13
-  %15: [test.Addition] = load %14
-  %16: [test.Expression] = offset %15 .left
-  %17: test.Expression = load %16
-  %18: i32 = call $test.evaluate+expression %17
-  %19.ptr: [test.Expression] = alloc test.Expression
-  store %19.ptr %expression
-  %20: [[1]u64] = offset %19.ptr .value
-  %21: [[test.Addition]] = cast %20
-  %22: [test.Addition] = load %21
-  %23: [test.Expression] = offset %22 .right
+  %10: [[1]u64] = offset %1.ptr .value
+  %addition.ptr: [[test.Addition]] = cast %10
+  %addition.1: [test.Addition] = load %addition.ptr
+  %12: [test.Expression] = offset %addition.1 .left
+  %13: test.Expression = load %12
+  %14: i32 = call $test.evaluate+expression %13
+  %addition.2: [test.Addition] = load %addition.ptr
+  %15: [test.Expression] = offset %addition.2 .right
+  %16: test.Expression = load %15
+  %17: i32 = call $test.evaluate+expression %16
+  %18: i32 = add %14 %17
+  ret %18
+@6:
+  %19: i32 = const 3
+  %20: bool = cmp_eq %3 %19
+  br %20 @7 @8
+@7:
+  %21: [[1]u64] = offset %1.ptr .value
+  %subtraction.ptr: [[test.Subtraction]] = cast %21
+  %subtraction.1: [test.Subtraction] = load %subtraction.ptr
+  %23: [test.Expression] = offset %subtraction.1 .left
   %24: test.Expression = load %23
   %25: i32 = call $test.evaluate+expression %24
-  %26: i32 = add %18 %25
-  ret %26
-@6:
-  %27: i32 = const 3
-  %28: bool = cmp_eq %3 %27
-  br %28 @7 @8
-@7:
-  %29.ptr: [test.Expression] = alloc test.Expression
-  store %29.ptr %expression
-  %30: [[1]u64] = offset %29.ptr .value
-  %31: [[test.Subtraction]] = cast %30
-  %32: [test.Subtraction] = load %31
-  %33: [test.Expression] = offset %32 .left
-  %34: test.Expression = load %33
-  %35: i32 = call $test.evaluate+expression %34
-  %36.ptr: [test.Expression] = alloc test.Expression
-  store %36.ptr %expression
-  %37: [[1]u64] = offset %36.ptr .value
-  %38: [[test.Subtraction]] = cast %37
-  %39: [test.Subtraction] = load %38
-  %40: [test.Expression] = offset %39 .right
-  %41: test.Expression = load %40
-  %42: i32 = call $test.evaluate+expression %41
-  %43: i32 = sub %35 %42
-  ret %43
+  %subtraction.2: [test.Subtraction] = load %subtraction.ptr
+  %26: [test.Expression] = offset %subtraction.2 .right
+  %27: test.Expression = load %26
+  %28: i32 = call $test.evaluate+expression %27
+  %29: i32 = sub %25 %28
+  ret %29
 @8:
   jmp @2
 @2:
-  %44: i32 = const 1
-  call $exit %44
+  %30: i32 = const 1
+  call $exit %30
 }
 
 $test.main(): i32 {

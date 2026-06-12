@@ -495,7 +495,7 @@ Parsed_Expression *Parser__parse_additive_expression(Parser *self) {
 
 // comparison_expression
 //  | additive_expression ( ( "<=" | "<" | ">" | ">=") additive_expression )*
-//  | additive_expression ( "is" "not"? type )*
+//  | additive_expression ( "is" "not"? type ( "as" IDENTIFIER )? )*
 Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_additive_expression(self);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
@@ -535,7 +535,14 @@ Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
             is_not = true;
         }
         Parsed_Type *type = Parser__parse_type(self);
-        expression = (Parsed_Expression *)Parsed_Is_Expression__create(expression, type, is_not);
+        Identifier_Token *alias = NULL;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_as)) {
+            Parser__consume_space(self, 1);
+            Parser__consume_token(self, Token__is_as);
+            Parser__consume_space(self, 1);
+            alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
+        }
+        expression = (Parsed_Expression *)Parsed_Is_Expression__create(expression, type, is_not, alias);
     }
     return expression;
 }
@@ -1253,19 +1260,12 @@ Parsed_Statement *Parser__parse_defer_statement(Parser *self) {
 }
 
 // if
-//  | "if" expression ( "as" IDENTIFIER )? block ( "else" ( if |  block ) )?
+//  | "if" expression block ( "else" ( if |  block ) )?
 Parsed_Statement *Parser__parse_if_statement(Parser *self) {
     Source_Location location = Parser__consume_token(self, Token__is_if)->location;
     Parser__consume_space(self, 1);
     Parsed_Expression *condition_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 1);
-    Identifier_Token *variant_alias = NULL;
-    if (Parser__matches_one(self, Token__is_as)) {
-        Parser__consume_token(self, Token__is_as);
-        Parser__consume_space(self, 1);
-        variant_alias = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
-        Parser__consume_space(self, 1);
-    }
     Parsed_Statement *true_statement = (Parsed_Statement *)Parser__parse_block_statement(self);
     Parsed_Statement *false_statement = NULL;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
@@ -1281,7 +1281,7 @@ Parsed_Statement *Parser__parse_if_statement(Parser *self) {
     } else {
         location = Source_Location__merge(location, true_statement->location);
     }
-    return Parsed_If_Statement__create(location, condition_expression, variant_alias, true_statement, false_statement);
+    return Parsed_If_Statement__create(location, condition_expression, true_statement, false_statement);
 }
 
 /*

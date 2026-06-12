@@ -51,40 +51,40 @@ $test.main(): i32 {
   %21: i32 = load %20
   %22: i32 = const 1
   %23: bool = cmp_eq %21 %22
+  %24: [[1]u32] = offset %p_age.ptr .value
+  %age.ptr: [i32] = cast %24
   br %23 @2 @3
 @2:
-  %24: [[1]u32] = offset %p_age.ptr .value
-  %25: [i32] = cast %24
-  %26: i32 = load %25
-  %27: i32 = const 30
-  %28: bool = cmp_ne %26 %27
-  br %28 @5 @6
+  %age.1: i32 = load %age.ptr
+  %26: i32 = const 30
+  %27: bool = cmp_ne %age.1 %26
+  br %27 @5 @6
 @5:
-  %29: i32 = const 1
-  ret %29
+  %28: i32 = const 1
+  ret %28
 @6:
   jmp @4
 @3:
-  %30: i32 = const 2
-  ret %30
+  %29: i32 = const 2
+  ret %29
 @4:
   %q_age.ptr: [i32__opt] = alloc i32__opt
-  %31: [i32__opt] = offset %q.ptr .age
-  %32: i32__opt = load %31
-  store %q_age.ptr %32
-  %33: [i32] = offset %q_age.ptr .tag
-  %34: i32 = load %33
-  %35: i32 = const 0
-  %36: bool = cmp_eq %34 %35
-  br %36 @7 @8
+  %30: [i32__opt] = offset %q.ptr .age
+  %31: i32__opt = load %30
+  store %q_age.ptr %31
+  %32: [i32] = offset %q_age.ptr .tag
+  %33: i32 = load %32
+  %34: i32 = const 0
+  %35: bool = cmp_eq %33 %34
+  br %35 @7 @8
 @7:
   jmp @9
 @8:
-  %37: i32 = const 3
-  ret %37
+  %36: i32 = const 3
+  ret %36
 @9:
-  %38: i32 = const 0
-  ret %38
+  %37: i32 = const 0
+  ret %37
 }
 
 $main(): i32 {

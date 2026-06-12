@@ -1,0 +1,15 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 42
+    let matched = value is i32 as number
+
+    if matched {
+        return 0
+    }
+
+    return 1
+}

@@ -124,7 +124,7 @@ typedef struct IR_Symbol {
 
 typedef struct IR_Variable {
     IR_Symbol super;
-    struct Checked_Variable_Symbol *symbol;
+    struct Checked_Symbol *symbol;
     int32_t version;
 } IR_Variable;
 

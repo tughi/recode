@@ -32,17 +32,17 @@ $test.main(): i32 {
   %14: i32 = load %13
   %15: i32 = const 1
   %16: bool = cmp_eq %14 %15
+  %17: [[1]u32] = offset %has_item.ptr .value
+  %item.ptr: [source.Item] = cast %17
   br %16 @2 @3
 @2:
-  %17: [i32] = offset %no_item.ptr .tag
-  %18: i32 = load %17
-  %19: i32 = const 0
-  %20: bool = cmp_eq %18 %19
-  br %20 @4 @5
+  %19: [i32] = offset %no_item.ptr .tag
+  %20: i32 = load %19
+  %21: i32 = const 0
+  %22: bool = cmp_eq %20 %21
+  br %22 @4 @5
 @4:
-  %21: [[1]u32] = offset %has_item.ptr .value
-  %22: [source.Item] = cast %21
-  %23: [i32] = offset %22 .value
+  %23: [i32] = offset %item.ptr .value
   %24: i32 = load %23
   %25: i32 = const 42
   %26: i32 = sub %24 %25

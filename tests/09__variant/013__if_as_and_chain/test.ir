@@ -21,16 +21,24 @@ $test.main(): i32 {
   %10: i32 = const 2
   %11: bool = cmp_eq %9 %10
   %12: [[1]u32] = offset %value.ptr .value
-  %integer.ptr: [i32] = cast %12
+  %number.ptr: [i32] = cast %12
   br %11 @2 @3
 @2:
-  %integer.1: i32 = load %integer.ptr
-  %14: i32 = const 42
-  %15: i32 = sub %integer.1 %14
-  ret %15
+  %number.1: i32 = load %number.ptr
+  %14: i32 = const 0
+  %15: bool = cmp_gt %number.1 %14
+  jmp @3
 @3:
-  %16: i32 = const 1
-  ret %16
+  %16: bool = phi @1 %11 @2 %15
+  br %16 @4 @5
+@4:
+  %number.2: i32 = load %number.ptr
+  %17: i32 = const 42
+  %18: i32 = sub %number.2 %17
+  ret %18
+@5:
+  %19: i32 = const 1
+  ret %19
 }
 
 $main(): i32 {
