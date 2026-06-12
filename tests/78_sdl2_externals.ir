@@ -1,0 +1,33 @@
+; exit: 0
+
+type SDL_Event = opaque
+type SDL_Rect = opaque
+type SDL_Renderer = opaque
+type SDL_Window = opaque
+
+$SDL_CreateRenderer: [proc ([SDL_Window], i32, u32): [SDL_Renderer]] = external
+$SDL_CreateWindow: [proc ([*]u8, i32, i32, i32, i32, u32): [SDL_Window]] = external
+$SDL_Delay: [proc (u32): void] = external
+$SDL_DestroyRenderer: [proc ([SDL_Renderer]): void] = external
+$SDL_DestroyWindow: [proc ([SDL_Window]): void] = external
+$SDL_GetError: [proc (): [u8]] = external
+$SDL_GetWindowID: [proc ([SDL_Window]): u32] = external
+$SDL_GetWindowSize: [proc ([SDL_Window], [i32], [i32]): void] = external
+$SDL_Init: [proc (u32): i32] = external
+$SDL_PollEvent: [proc ([SDL_Event]): i32] = external
+$SDL_Quit: [proc (): void] = external
+$SDL_RenderClear: [proc ([SDL_Renderer]): void] = external
+$SDL_RenderDrawLine: [proc ([SDL_Renderer], i32, i32, i32, i32): void] = external
+$SDL_RenderDrawPoint: [proc ([SDL_Renderer], i32, i32): void] = external
+$SDL_RenderDrawRect: [proc ([SDL_Renderer], [SDL_Rect]): void] = external
+$SDL_RenderFillRect: [proc ([SDL_Renderer], [SDL_Rect]): void] = external
+$SDL_RenderPresent: [proc ([SDL_Renderer]): void] = external
+$SDL_RenderSetClipRect: [proc ([SDL_Renderer], [SDL_Rect]): void] = external
+$SDL_SetRenderDrawColor: [proc ([SDL_Renderer], u8, u8, u8, u8): void] = external
+$SDL_WaitEvent: [proc ([SDL_Event]): i32] = external
+
+$main(): i32 {
+@0:
+  %0: i32 = const 0
+  ret %0
+}

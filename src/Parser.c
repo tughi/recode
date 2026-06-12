@@ -1223,6 +1223,7 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
     IR_Value **parameters = function->parameters.items;
     IR_Type *void_type = ir_type_void();
     IR_Type *i32_type = ir_type_i32();
+    IR_Type *i64_type = ir_type_i64();
     IR_Type *u32_type = ir_type_u32();
     IR_Type *u8_type = ir_type_u8();
     IR_Type *usize_type = ir_type_usize();
@@ -1310,6 +1311,10 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
         if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
             return IR_EXTERNAL_FUNCTION__SDL_WaitEvent;
         }
+    } else if (string_equals_cstr(name, "$closedir")) {
+        if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__closedir;
+        }
     } else if (string_equals_cstr(name, "$exit")) {
         if (return_type == void_type && parameter_count == 1 && parameters[0]->type == i32_type) {
             return IR_EXTERNAL_FUNCTION__exit;
@@ -1317,6 +1322,10 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
     } else if (string_equals_cstr(name, "$fclose")) {
         if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
             return IR_EXTERNAL_FUNCTION__fclose;
+        }
+    } else if (string_equals_cstr(name, "$fflush")) {
+        if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__fflush;
         }
     } else if (string_equals_cstr(name, "$fopen")) {
         if (is_named_pointer(return_type) && parameter_count == 2 && parameters[0]->type == u8_multi_ptr_type && parameters[1]->type == u8_multi_ptr_type) {
@@ -1326,17 +1335,53 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
         if (return_type == i32_type && parameter_count == 2 && parameters[0]->type == i32_type && is_named_pointer(parameters[1]->type)) {
             return IR_EXTERNAL_FUNCTION__fputc;
         }
+    } else if (string_equals_cstr(name, "$fputs")) {
+        if (return_type == i32_type && parameter_count == 2 && parameters[0]->type == u8_multi_ptr_type && is_named_pointer(parameters[1]->type)) {
+            return IR_EXTERNAL_FUNCTION__fputs;
+        }
+    } else if (string_equals_cstr(name, "$fread")) {
+        if (return_type == usize_type && parameter_count == 4 && parameters[0]->type == u8_multi_ptr_type && parameters[1]->type == usize_type && parameters[2]->type == usize_type && is_named_pointer(parameters[3]->type)) {
+            return IR_EXTERNAL_FUNCTION__fread;
+        }
     } else if (string_equals_cstr(name, "$free")) {
         if (return_type == void_type && parameter_count == 1 && parameters[0]->type == any_ptr_type) {
             return IR_EXTERNAL_FUNCTION__free;
+        }
+    } else if (string_equals_cstr(name, "$fseek")) {
+        if (return_type == i32_type && parameter_count == 3 && is_named_pointer(parameters[0]->type) && parameters[1]->type == i64_type && parameters[2]->type == i32_type) {
+            return IR_EXTERNAL_FUNCTION__fseek;
+        }
+    } else if (string_equals_cstr(name, "$ftell")) {
+        if (return_type == i64_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__ftell;
+        }
+    } else if (string_equals_cstr(name, "$fwrite")) {
+        if (return_type == usize_type && parameter_count == 4 && parameters[0]->type == any_ptr_type && parameters[1]->type == usize_type && parameters[2]->type == usize_type && is_named_pointer(parameters[3]->type)) {
+            return IR_EXTERNAL_FUNCTION__fwrite;
+        }
+    } else if (string_equals_cstr(name, "$get_dirent_name")) {
+        if (return_type == u8_multi_ptr_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__get_dirent_name;
         }
     } else if (string_equals_cstr(name, "$malloc")) {
         if (return_type == any_ptr_type && parameter_count == 1 && parameters[0]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__malloc;
         }
+    } else if (string_equals_cstr(name, "$opendir")) {
+        if (is_named_pointer(return_type) && parameter_count == 1 && parameters[0]->type == u8_multi_ptr_type) {
+            return IR_EXTERNAL_FUNCTION__opendir;
+        }
+    } else if (string_equals_cstr(name, "$readdir")) {
+        if (is_named_pointer(return_type) && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
+            return IR_EXTERNAL_FUNCTION__readdir;
+        }
     } else if (string_equals_cstr(name, "$realloc")) {
         if (return_type == any_ptr_type && parameter_count == 2 && parameters[0]->type == any_ptr_type && parameters[1]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__realloc;
+        }
+    } else if (string_equals_cstr(name, "$strlen")) {
+        if (return_type == usize_type && parameter_count == 1 && parameters[0]->type == u8_multi_ptr_type) {
+            return IR_EXTERNAL_FUNCTION__strlen;
         }
     }
     parse_error(parser, function->location, "Unsupported external function");

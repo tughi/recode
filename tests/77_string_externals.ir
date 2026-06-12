@@ -1,0 +1,9 @@
+; exit: 0
+
+$strlen: [proc ([*]u8): usize] = external
+
+$main(): i32 {
+@0:
+  %0: i32 = const 0
+  ret %0
+}

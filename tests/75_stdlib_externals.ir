@@ -1,0 +1,12 @@
+; exit: 0
+
+$exit: [proc (i32): void] = external
+$free: [proc ([Any]): void] = external
+$malloc: [proc (usize): [Any]] = external
+$realloc: [proc ([Any], usize): [Any]] = external
+
+$main(): i32 {
+@0:
+  %0: i32 = const 0
+  ret %0
+}

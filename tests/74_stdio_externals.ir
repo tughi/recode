@@ -1,0 +1,19 @@
+; exit: 0
+
+type File = opaque
+
+$fclose: [proc ([File]): i32] = external
+$fflush: [proc ([File]): i32] = external
+$fopen: [proc ([*]u8, [*]u8): [File]] = external
+$fputc: [proc (i32, [File]): i32] = external
+$fputs: [proc ([*]u8, [File]): i32] = external
+$fread: [proc ([*]u8, usize, usize, [File]): usize] = external
+$fseek: [proc ([File], i64, i32): i32] = external
+$ftell: [proc ([File]): i64] = external
+$fwrite: [proc ([Any], usize, usize, [File]): usize] = external
+
+$main(): i32 {
+@0:
+  %0: i32 = const 0
+  ret %0
+}

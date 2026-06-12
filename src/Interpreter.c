@@ -2,6 +2,7 @@
 #include "Panic.h"
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <dirent.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -939,6 +940,14 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(int32_t *)return_address = (int32_t)result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__closedir: {
+        DIR *dir = (DIR *)*(uint8_t **)argument_addresses[0];
+        int result = closedir(dir);
+        if (return_address != NULL) {
+            *(int32_t *)return_address = (int32_t)result;
+        }
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__exit:
         exit((int)*(int32_t *)argument_addresses[0]);
         break;
@@ -957,6 +966,14 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(uint8_t **)return_address = (uint8_t *)result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__fflush: {
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[0];
+        int result = fflush(stream);
+        if (return_address != NULL) {
+            *(int32_t *)return_address = (int32_t)result;
+        }
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__fputc: {
         int32_t c = *(int32_t *)argument_addresses[0];
         FILE *stream = (FILE *)*(uint8_t **)argument_addresses[1];
@@ -966,9 +983,56 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         }
         break;
     }
+    case IR_EXTERNAL_FUNCTION__fputs: {
+        const char *s = (const char *)*(uint8_t **)argument_addresses[0];
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[1];
+        int result = fputs(s, stream);
+        if (return_address != NULL) {
+            *(int32_t *)return_address = (int32_t)result;
+        }
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__fread: {
+        void *ptr = (void *)*(uint8_t **)argument_addresses[0];
+        size_t size = *(size_t *)argument_addresses[1];
+        size_t nmemb = *(size_t *)argument_addresses[2];
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[3];
+        size_t result = fread(ptr, size, nmemb, stream);
+        *(size_t *)return_address = result;
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__free: {
         void *ptr = (void *)*(uint8_t **)argument_addresses[0];
         free(ptr);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__fseek: {
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[0];
+        long offset = (long)*(int64_t *)argument_addresses[1];
+        int whence = *(int32_t *)argument_addresses[2];
+        int result = fseek(stream, offset, whence);
+        *(int32_t *)return_address = (int32_t)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__ftell: {
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[0];
+        long result = ftell(stream);
+        *(int64_t *)return_address = (int64_t)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__fwrite: {
+        void *ptr = (void *)*(uint8_t **)argument_addresses[0];
+        size_t size = *(size_t *)argument_addresses[1];
+        size_t nmemb = *(size_t *)argument_addresses[2];
+        FILE *stream = (FILE *)*(uint8_t **)argument_addresses[3];
+        size_t result = fwrite(ptr, size, nmemb, stream);
+        *(size_t *)return_address = result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__get_dirent_name: {
+        struct dirent *entry = (struct dirent *)*(uint8_t **)argument_addresses[0];
+        const char *result = entry->d_name;
+        *(uint8_t **)return_address = (uint8_t *)result;
         break;
     }
     case IR_EXTERNAL_FUNCTION__malloc: {
@@ -977,11 +1041,28 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(uint8_t **)return_address = result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__opendir: {
+        const char *name = (const char *)*(uint8_t **)argument_addresses[0];
+        DIR *result = opendir(name);
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__readdir: {
+        DIR *dir = (DIR *)*(uint8_t **)argument_addresses[0];
+        struct dirent *result = readdir(dir);
+        *(uint8_t **)return_address = (uint8_t *)result;
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__realloc: {
         void *ptr = (void *)*(uint8_t **)argument_addresses[0];
         size_t size = *(size_t *)argument_addresses[1];
         uint8_t *result = realloc(ptr, size);
         *(uint8_t **)return_address = result;
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__strlen: {
+        const char *s = (const char *)*(uint8_t **)argument_addresses[0];
+        *(size_t *)return_address = strlen(s);
         break;
     }
     default:
