@@ -609,6 +609,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
             if (symbol->kind == CHECKED_SYMBOL_KIND__VARIABLE) {
                 return symbol->is_global ? Lowerer__find_global(self, Lowerer__variable_name((Checked_Variable_Symbol *)symbol)) : Lowerer__find_scope(self, symbol);
             }
+            if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_ALIAS) {
+                return Lowerer__find_scope(self, symbol);
+            }
         }
         if (operand->kind == CHECKED_EXPRESSION_KIND__ARRAY_ACCESS) {
             return Lowerer__lower_array_offset(self, (Checked_Array_Access_Expression *)operand);
