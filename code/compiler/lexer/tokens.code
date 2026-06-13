@@ -16,37 +16,37 @@ type Token = variant {
 
 proc (^Token).end_position(self) -> usize {
     switch self {
-        is Character as token {
+        is ^Character as token {
             return token.end_position()
         }
-        is Comment as token {
+        is ^Comment as token {
             return token.end_position()
         }
-        is End_Of_File as token {
+        is ^End_Of_File as token {
             return token.end_position()
         }
-        is End_Of_Line as token {
+        is ^End_Of_Line as token {
             return token.end_position()
         }
-        is Error as token {
+        is ^Error as token {
             return token.end_position()
         }
-        is Identifier as token {
+        is ^Identifier as token {
             return token.end_position()
         }
-        is Integer as token {
+        is ^Integer as token {
             return token.end_position()
         }
-        is Other as token {
+        is ^Other as token {
             return token.end_position()
         }
-        is Space as token {
+        is ^Space as token {
             return token.end_position()
         }
-        is String as token {
+        is ^String as token {
             return token.end_position()
         }
-        is nil {
+        is ^nil {
             return 0
         }
     }

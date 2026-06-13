@@ -27,15 +27,15 @@ proc lower(anon checked_package: ^checked.Package) -> ^ir.Program {
     let entry = checked_package.symbols.first
     while entry != null {
         switch entry.symbol {
-            is checked.Procedure_Symbol as procedure_symbol {
+            is ^checked.Procedure_Symbol as procedure_symbol {
                 let procedure = lowerer.lower_procedure(procedure_symbol)
                 if procedure_symbol.name.equals("main") {
                     main_procedure = procedure
                 }
             }
-            is checked.Type_Symbol as _ignored {
+            is ^checked.Type_Symbol {
             }
-            is nil {
+            is ^nil {
             }
         }
         entry = entry.next
@@ -48,7 +48,7 @@ proc lower(anon checked_package: ^checked.Package) -> ^ir.Program {
     return lowerer.program
 }
 
-proc (^Lowerer).lower_procedure(self, anon procedure_symbol: checked.Procedure_Symbol) -> ^ir.Procedure {
+proc (^Lowerer).lower_procedure(self, anon procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
     let name_builder = string.new_builder()
     let name = name_builder.append(self.package_name).append_char('.').append(procedure_symbol.name).build()
 
@@ -104,28 +104,28 @@ proc (^Lowerer).lower_main_wrapper(self, anon main_procedure: ^ir.Procedure) {
 
 proc (^Lowerer).lower_statement(self, anon statement: ^checked.Statement) {
     switch statement {
-        is checked.Block_Statement as block_statement {
+        is ^checked.Block_Statement as block_statement {
             let item = block_statement.statements.first
             while item != null {
                 self.lower_statement(item.value)
                 item = item.next
             }
         }
-        is checked.Return_Statement as return_statement {
+        is ^checked.Return_Statement as return_statement {
             let value: ^ir.Value = null
             if return_statement.expression != null {
                 value = self.lower_expression(return_statement.expression)
             }
             self.append_instruction(self.alloc_instruction(ir.Ret_Instruction(value: value)))
         }
-        is nil {
+        is ^nil {
         }
     }
 }
 
 proc (^Lowerer).lower_expression(self, anon expression: ^checked.Expression) -> ^ir.Value {
     switch expression {
-        is checked.Integer_Expression as integer_expression {
+        is ^checked.Integer_Expression as integer_expression {
             let result = self.alloc_value(ir.Value(name: self.fresh_name(), type: self.lower_type(integer_expression.type)))
             let instruction = self.alloc_instruction(ir.Const_Instruction(
                 result: result
@@ -134,7 +134,7 @@ proc (^Lowerer).lower_expression(self, anon expression: ^checked.Expression) -> 
             self.append_instruction(instruction)
             return result
         }
-        is nil {
+        is ^nil {
         }
     }
     return null
@@ -145,13 +145,13 @@ proc (^Lowerer).lower_type(self, anon type: ^checked.Type) -> ^ir.Type {
         return null
     }
     switch type {
-        is checked.Builtin_Type as builtin_type {
+        is ^checked.Builtin_Type as builtin_type {
             return self.alloc_type(ir.Primitive_Type(name: builtin_type.name))
         }
-        is checked.Procedure_Type as _ignored {
+        is ^checked.Procedure_Type {
             panic "Lowering not supported yet: checked.Procedure_Type"
         }
-        is nil {
+        is ^nil {
         }
     }
     return null

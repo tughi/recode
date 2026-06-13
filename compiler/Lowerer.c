@@ -403,6 +403,13 @@ IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, IR_Value *variant_p
 
 void Lowerer__bind_variant_alias(Lowerer *self, Checked_Variant_Alias_Symbol *alias_symbol, IR_Value *variant_pointer, Checked_Variant_Case *variant_case) {
     IR_Value *case_pointer = Lowerer__lower_variant_case_pointer(self, variant_pointer, variant_case);
+    if (alias_symbol->by_pointer) {
+        IR_Variable *variable = Lowerer__declare_variable(self, (Checked_Symbol *)alias_symbol, case_pointer->type);
+        case_pointer->name = String__create_copy(variable->super.value.name);
+        case_pointer->variable = variable;
+        IR_Value_List__append(&self->scope, case_pointer);
+        return;
+    }
     IR_Variable *variable = Lowerer__declare_variable(self, (Checked_Symbol *)alias_symbol, ((IR_Pointer_Type *)case_pointer->type)->pointee);
     String *pointer_name = String__create_copy(variable->super.value.name);
     String__append_cstring(pointer_name, ".ptr");
@@ -976,6 +983,9 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         }
         if (symbol->kind == CHECKED_SYMBOL_KIND__VARIANT_ALIAS) {
             IR_Value *value_pointer = Lowerer__find_scope(self, symbol);
+            if (((Checked_Variant_Alias_Symbol *)symbol)->by_pointer) {
+                return value_pointer;
+            }
             IR_Variable *variable = value_pointer->variable;
             variable->version++;
             String *result_name = String__create_copy(variable->super.value.name);

@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/09__variant/020__is_pointer_value_case_type/test.code:10:19-22: A pointer-to-variant case must be a pointer type, such as ^i32"
+        ]
+    }
+}

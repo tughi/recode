@@ -35,25 +35,25 @@ type Token = variant {
 
 proc (^Token).span(self) -> source.Span {
     switch self {
-        is expression.Number as variant {
+        is ^expression.Number as variant {
             return variant.span
         }
-        is Plus as variant {
+        is ^Plus as variant {
             return variant.span
         }
-        is Minus as variant {
+        is ^Minus as variant {
             return variant.span
         }
-        is Multiply as variant {
+        is ^Multiply as variant {
             return variant.span
         }
-        is Divide as variant {
+        is ^Divide as variant {
             return variant.span
         }
-        is Stop as variant {
+        is ^Stop as variant {
             return variant.span
         }
-        is source.Error as variant {
+        is ^source.Error as variant {
             return variant.span
         }
         else {
@@ -65,28 +65,28 @@ proc (^Token).span(self) -> source.Span {
 
 proc (^io.Writer).write_token(self, anon token: ^Token) -> ^io.Writer {
     switch token {
-        is expression.Number as number {
+        is ^expression.Number as number {
             return self.write_string("Number: ").write_signed(signed: number.value)
         }
-        is Plus {
+        is ^Plus {
             return self.write_string("Plus")
         }
-        is Minus {
+        is ^Minus {
             return self.write_string("Minus")
         }
-        is Multiply {
+        is ^Multiply {
             return self.write_string("Multiply")
         }
-        is Divide {
+        is ^Divide {
             return self.write_string("Divide")
         }
-        is Stop {
+        is ^Stop {
             return self.write_string("Stop")
         }
-        is source.Error as error {
+        is ^source.Error as error {
             return self.write_string("Error: ").write_string(error.message)
         }
-        is nil {
+        is ^nil {
             return self.write_string("Nil!")
         }
     }
