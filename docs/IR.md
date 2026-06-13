@@ -87,6 +87,15 @@ Defines a named struct type or declares an opaque (externally defined) type. Typ
 
 Type names may also carry generic type parameters, written as `Name<T1, T2, ...>` (e.g. `Map<i32, str>`). The IR has no generics of its own — the parameter list is parsed only to validate that each argument is a well-formed type and is then folded into the type's nominal name. As with namespaced names, the full spelling including the parameters is what identifies the type, so it must match byte-for-byte (including spacing: one space after each comma, none before) at the declaration and every use.
 
+A struct may declare no fields:
+
+```
+type Empty = struct {
+}
+```
+
+An empty struct has a size of 1 byte (so distinct instances occupy distinct addresses) and an alignment of 1.
+
 ### External global variable
 
 ```

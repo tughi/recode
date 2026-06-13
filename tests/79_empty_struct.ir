@@ -1,0 +1,29 @@
+; exit: 7
+
+; empty structs are allowed and have size 1, so the field after one is distinct
+
+type Empty = struct {
+}
+
+type Wrapper = struct {
+  before: u8
+  gap: Empty
+  after: u8
+}
+
+$main(): i32 {
+@1:
+  %e.ptr: [Empty] = alloc Empty
+  %w.ptr: [Wrapper] = alloc Wrapper
+  %before.ptr: [u8] = offset %w.ptr .before
+  %after.ptr: [u8] = offset %w.ptr .after
+  %0: u8 = const 3
+  %1: u8 = const 4
+  store %before.ptr %0
+  store %after.ptr %1
+  %before: u8 = load %before.ptr
+  %after: u8 = load %after.ptr
+  %2: u8 = add %before %after
+  %result: i32 = cast %2
+  ret %result
+}

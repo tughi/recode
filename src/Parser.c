@@ -1204,9 +1204,6 @@ static void parse_type_declaration(Parser *parser) {
         fields[field_count++] = field;
     }
 
-    if (field_count == 0) {
-        parse_error(parser, name.location, "Struct '%.*s' must declare at least one field", STRING(name.lexeme));
-    }
     type->kind = IR_TYPE__STRUCT;
     type->struct_fields = fields;
     type->struct_field_count = field_count;

@@ -226,7 +226,7 @@ size_t ir_type_size(IR_Type *type) {
         return type->item_count * ir_type_size(type->item_type);
     case IR_TYPE__STRUCT: {
         if (type->struct_field_count == 0) {
-            return 0;
+            return 1;
         }
         size_t last = type->struct_field_count - 1;
         size_t size = ir_struct_field_offset(type, last) + ir_type_size(type->struct_fields[last]->type);
