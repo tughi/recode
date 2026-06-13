@@ -27,7 +27,7 @@ proc print_procedure(anon procedure: ^ir.Procedure, file: ^libc.FILE) {
         parameter_item = parameter_item.next
     }
     file.write(char: ')')
-    if procedure.return_type != null {
+    if procedure.return_type is not ^ir.Nothing_Type {
         file.write(": ")
         print_type(procedure.return_type, file: file)
     }
@@ -56,14 +56,14 @@ proc print_block(anon block: ^ir.Block, file: ^libc.FILE) {
 proc print_instruction(anon instruction: ^ir.Instruction, file: ^libc.FILE) {
     switch instruction {
         is ^ir.Call_Instruction as call_instruction {
-            if call_instruction.result != null {
-                print_value_definition(call_instruction.result, file: file)
+            if call_instruction.result.type is not ^ir.Nothing_Type {
+                print_value_definition(^call_instruction.result, file: file)
                 file.write(" = ")
             }
             file.write("call $").write(call_instruction.callee.name)
         }
         is ^ir.Const_Instruction as const_instruction {
-            print_value_definition(const_instruction.result, file: file)
+            print_value_definition(^const_instruction.result, file: file)
             file.write(" = const ").write(u64: const_instruction.literal.value)
         }
         is ^ir.Ret_Instruction as ret_instruction {
@@ -90,6 +90,9 @@ proc print_value_reference(anon value: ^ir.Value, file: ^libc.FILE) {
 
 proc print_type(anon type: ^ir.Type, file: ^libc.FILE) {
     switch type {
+        is ^ir.Nothing_Type {
+            panic
+        }
         is ^ir.Primitive_Type as primitive_type {
             file.write(primitive_type.name)
         }
