@@ -83,37 +83,37 @@ type No_Match = struct {
 proc (^Match).check(self, lexer: ^lexer.Lexer, at index: usize) -> bool !> No_Match {
     let token = lexer.peek_token(offset: index)
     switch self {
-        is Character {
+        is ^Character {
             if token is lexer.Character {
                 return true
             }
         }
-        is Comment {
+        is ^Comment {
             if token is lexer.Comment {
                 return true
             }
         }
-        is End_Of_File {
+        is ^End_Of_File {
             if token is lexer.End_Of_File {
                 return true
             }
         }
-        is End_Of_Line {
+        is ^End_Of_Line {
             if token is lexer.End_Of_Line or token is lexer.End_Of_File {
                 return true
             }
         }
-        is Identifier {
+        is ^Identifier {
             if token is lexer.Identifier {
                 return true
             }
         }
-        is Integer {
+        is ^Integer {
             if token is lexer.Integer {
                 return true
             }
         }
-        is Integer_Type {
+        is ^Integer_Type {
             if token is lexer.Identifier as identifier {
                 let lexeme = identifier.lexeme
                 if lexeme.char_at(0) == 'i' and (lexeme.equals("i8") or lexeme.equals("i16") or lexeme.equals("i32") or lexeme.equals("i64") or lexeme.equals("isize")) {
@@ -124,33 +124,33 @@ proc (^Match).check(self, lexer: ^lexer.Lexer, at index: usize) -> bool !> No_Ma
                 }
             }
         }
-        is Keyword as match {
+        is ^Keyword as match {
             if token is lexer.Identifier as identifier {
                 if identifier.lexeme.equals(match.lexeme) {
                     return true
                 }
             }
         }
-        is Other as other {
+        is ^Other as other {
             if token is lexer.Other as token_other {
                 if token_other.lexeme.char_at(0) == other.lexeme {
                     return true
                 }
             }
         }
-        is Space as match {
+        is ^Space as match {
             if not match.required {
                 return token is lexer.Space
             } else if token is lexer.Space {
                 return true
             }
         }
-        is String {
+        is ^String {
             if token is lexer.String {
                 return true
             }
         }
-        is nil {
+        is ^nil {
         }
     }
     raise No_Match()

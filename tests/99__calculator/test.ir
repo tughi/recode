@@ -226,8 +226,8 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %expression .value
-  %number.ptr: [calculator.expression.Number] = cast %5
-  %7: [i32] = offset %number.ptr .value
+  %number: [calculator.expression.Number] = cast %5
+  %7: [i32] = offset %number .value
   %8: i32 = load %7
   ret %8
 @4:
@@ -236,11 +236,11 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %expression .value
-  %addition.ptr: [calculator.expression.Addition] = cast %11
-  %13: [[calculator.expression.Expression]] = offset %addition.ptr .left
+  %addition: [calculator.expression.Addition] = cast %11
+  %13: [[calculator.expression.Expression]] = offset %addition .left
   %14: [calculator.expression.Expression] = load %13
   %15: i32 = call $test.evaluate+expression %14
-  %16: [[calculator.expression.Expression]] = offset %addition.ptr .right
+  %16: [[calculator.expression.Expression]] = offset %addition .right
   %17: [calculator.expression.Expression] = load %16
   %18: i32 = call $test.evaluate+expression %17
   %19: i32 = add %15 %18
@@ -251,11 +251,11 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %21 @7 @8
 @7:
   %22: [[3]u64] = offset %expression .value
-  %division.ptr: [calculator.expression.Division] = cast %22
-  %24: [[calculator.expression.Expression]] = offset %division.ptr .left
+  %division: [calculator.expression.Division] = cast %22
+  %24: [[calculator.expression.Expression]] = offset %division .left
   %25: [calculator.expression.Expression] = load %24
   %26: i32 = call $test.evaluate+expression %25
-  %27: [[calculator.expression.Expression]] = offset %division.ptr .right
+  %27: [[calculator.expression.Expression]] = offset %division .right
   %28: [calculator.expression.Expression] = load %27
   %29: i32 = call $test.evaluate+expression %28
   %30: i32 = div %26 %29
@@ -266,11 +266,11 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %32 @9 @10
 @9:
   %33: [[3]u64] = offset %expression .value
-  %multiplication.ptr: [calculator.expression.Multiplication] = cast %33
-  %35: [[calculator.expression.Expression]] = offset %multiplication.ptr .left
+  %multiplication: [calculator.expression.Multiplication] = cast %33
+  %35: [[calculator.expression.Expression]] = offset %multiplication .left
   %36: [calculator.expression.Expression] = load %35
   %37: i32 = call $test.evaluate+expression %36
-  %38: [[calculator.expression.Expression]] = offset %multiplication.ptr .right
+  %38: [[calculator.expression.Expression]] = offset %multiplication .right
   %39: [calculator.expression.Expression] = load %38
   %40: i32 = call $test.evaluate+expression %39
   %41: i32 = mul %37 %40
@@ -281,11 +281,11 @@ $test.evaluate+expression(%expression: [calculator.expression.Expression]): i32 
   br %43 @11 @12
 @11:
   %44: [[3]u64] = offset %expression .value
-  %subtraction.ptr: [calculator.expression.Subtraction] = cast %44
-  %46: [[calculator.expression.Expression]] = offset %subtraction.ptr .left
+  %subtraction: [calculator.expression.Subtraction] = cast %44
+  %46: [[calculator.expression.Expression]] = offset %subtraction .left
   %47: [calculator.expression.Expression] = load %46
   %48: i32 = call $test.evaluate+expression %47
-  %49: [[calculator.expression.Expression]] = offset %subtraction.ptr .right
+  %49: [[calculator.expression.Expression]] = offset %subtraction .right
   %50: [calculator.expression.Expression] = load %49
   %51: i32 = call $test.evaluate+expression %50
   %52: i32 = sub %48 %51
@@ -306,8 +306,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %self .value
-  %variant.ptr: [calculator.expression.Number] = cast %5
-  %7: [calculator.source.Span] = offset %variant.ptr .span
+  %variant: [calculator.expression.Number] = cast %5
+  %7: [calculator.source.Span] = offset %variant .span
   %8: calculator.source.Span = load %7
   ret %8
 @4:
@@ -316,8 +316,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %self .value
-  %variant.2.ptr: [calculator.expression.Addition] = cast %11
-  %13: [calculator.source.Span] = offset %variant.2.ptr .span
+  %variant.2: [calculator.expression.Addition] = cast %11
+  %13: [calculator.source.Span] = offset %variant.2 .span
   %14: calculator.source.Span = load %13
   ret %14
 @6:
@@ -326,8 +326,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %16 @7 @8
 @7:
   %17: [[3]u64] = offset %self .value
-  %variant.3.ptr: [calculator.expression.Division] = cast %17
-  %19: [calculator.source.Span] = offset %variant.3.ptr .span
+  %variant.3: [calculator.expression.Division] = cast %17
+  %19: [calculator.source.Span] = offset %variant.3 .span
   %20: calculator.source.Span = load %19
   ret %20
 @8:
@@ -336,8 +336,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %22 @9 @10
 @9:
   %23: [[3]u64] = offset %self .value
-  %variant.4.ptr: [calculator.expression.Multiplication] = cast %23
-  %25: [calculator.source.Span] = offset %variant.4.ptr .span
+  %variant.4: [calculator.expression.Multiplication] = cast %23
+  %25: [calculator.source.Span] = offset %variant.4 .span
   %26: calculator.source.Span = load %25
   ret %26
 @10:
@@ -346,8 +346,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %28 @11 @12
 @11:
   %29: [[3]u64] = offset %self .value
-  %variant.5.ptr: [calculator.expression.Subtraction] = cast %29
-  %31: [calculator.source.Span] = offset %variant.5.ptr .span
+  %variant.5: [calculator.expression.Subtraction] = cast %29
+  %31: [calculator.source.Span] = offset %variant.5 .span
   %32: calculator.source.Span = load %31
   ret %32
 @12:
@@ -356,8 +356,8 @@ $([calculator.expression.Expression]).span(%self): calculator.source.Span {
   br %34 @13 @14
 @13:
   %35: [[3]u64] = offset %self .value
-  %variant.6.ptr: [calculator.source.Error] = cast %35
-  %37: [calculator.source.Span] = offset %variant.6.ptr .span
+  %variant.6: [calculator.source.Error] = cast %35
+  %37: [calculator.source.Span] = offset %variant.6 .span
   %38: calculator.source.Span = load %37
   ret %38
 @14:
@@ -376,8 +376,8 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %expression .value
-  %number.ptr: [calculator.expression.Number] = cast %5
-  %7: [i32] = offset %number.ptr .value
+  %number: [calculator.expression.Number] = cast %5
+  %7: [i32] = offset %number .value
   %8: i32 = load %7
   %9: [io.Writer] = call $([io.Writer]).write_signed+signed %self %8
   ret %9
@@ -387,17 +387,17 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %11 @5 @6
 @5:
   %12: [[3]u64] = offset %expression .value
-  %addition.ptr: [calculator.expression.Addition] = cast %12
+  %addition: [calculator.expression.Addition] = cast %12
   %14: usize = const 1
   %15: String = struct .data $str_3 .length %14
   %16: [io.Writer] = call $([io.Writer]).write_string+anon %self %15
-  %17: [[calculator.expression.Expression]] = offset %addition.ptr .left
+  %17: [[calculator.expression.Expression]] = offset %addition .left
   %18: [calculator.expression.Expression] = load %17
   %19: [io.Writer] = call $([io.Writer]).write_expression+anon %16 %18
   %20: usize = const 3
   %21: String = struct .data $str_4 .length %20
   %22: [io.Writer] = call $([io.Writer]).write_string+anon %19 %21
-  %23: [[calculator.expression.Expression]] = offset %addition.ptr .right
+  %23: [[calculator.expression.Expression]] = offset %addition .right
   %24: [calculator.expression.Expression] = load %23
   %25: [io.Writer] = call $([io.Writer]).write_expression+anon %22 %24
   %26: usize = const 1
@@ -410,17 +410,17 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %30 @7 @8
 @7:
   %31: [[3]u64] = offset %expression .value
-  %division.ptr: [calculator.expression.Division] = cast %31
+  %division: [calculator.expression.Division] = cast %31
   %33: usize = const 1
   %34: String = struct .data $str_3 .length %33
   %35: [io.Writer] = call $([io.Writer]).write_string+anon %self %34
-  %36: [[calculator.expression.Expression]] = offset %division.ptr .left
+  %36: [[calculator.expression.Expression]] = offset %division .left
   %37: [calculator.expression.Expression] = load %36
   %38: [io.Writer] = call $([io.Writer]).write_expression+anon %35 %37
   %39: usize = const 3
   %40: String = struct .data $str_6 .length %39
   %41: [io.Writer] = call $([io.Writer]).write_string+anon %38 %40
-  %42: [[calculator.expression.Expression]] = offset %division.ptr .right
+  %42: [[calculator.expression.Expression]] = offset %division .right
   %43: [calculator.expression.Expression] = load %42
   %44: [io.Writer] = call $([io.Writer]).write_expression+anon %41 %43
   %45: usize = const 1
@@ -433,17 +433,17 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %49 @9 @10
 @9:
   %50: [[3]u64] = offset %expression .value
-  %multiplication.ptr: [calculator.expression.Multiplication] = cast %50
+  %multiplication: [calculator.expression.Multiplication] = cast %50
   %52: usize = const 1
   %53: String = struct .data $str_3 .length %52
   %54: [io.Writer] = call $([io.Writer]).write_string+anon %self %53
-  %55: [[calculator.expression.Expression]] = offset %multiplication.ptr .left
+  %55: [[calculator.expression.Expression]] = offset %multiplication .left
   %56: [calculator.expression.Expression] = load %55
   %57: [io.Writer] = call $([io.Writer]).write_expression+anon %54 %56
   %58: usize = const 3
   %59: String = struct .data $str_7 .length %58
   %60: [io.Writer] = call $([io.Writer]).write_string+anon %57 %59
-  %61: [[calculator.expression.Expression]] = offset %multiplication.ptr .right
+  %61: [[calculator.expression.Expression]] = offset %multiplication .right
   %62: [calculator.expression.Expression] = load %61
   %63: [io.Writer] = call $([io.Writer]).write_expression+anon %60 %62
   %64: usize = const 1
@@ -456,17 +456,17 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %68 @11 @12
 @11:
   %69: [[3]u64] = offset %expression .value
-  %subtraction.ptr: [calculator.expression.Subtraction] = cast %69
+  %subtraction: [calculator.expression.Subtraction] = cast %69
   %71: usize = const 1
   %72: String = struct .data $str_3 .length %71
   %73: [io.Writer] = call $([io.Writer]).write_string+anon %self %72
-  %74: [[calculator.expression.Expression]] = offset %subtraction.ptr .left
+  %74: [[calculator.expression.Expression]] = offset %subtraction .left
   %75: [calculator.expression.Expression] = load %74
   %76: [io.Writer] = call $([io.Writer]).write_expression+anon %73 %75
   %77: usize = const 3
   %78: String = struct .data $str_8 .length %77
   %79: [io.Writer] = call $([io.Writer]).write_string+anon %76 %78
-  %80: [[calculator.expression.Expression]] = offset %subtraction.ptr .right
+  %80: [[calculator.expression.Expression]] = offset %subtraction .right
   %81: [calculator.expression.Expression] = load %80
   %82: [io.Writer] = call $([io.Writer]).write_expression+anon %79 %81
   %83: usize = const 1
@@ -479,11 +479,11 @@ $([io.Writer]).write_expression+anon(%self, %expression: [calculator.expression.
   br %87 @13 @14
 @13:
   %88: [[3]u64] = offset %expression .value
-  %error.ptr: [calculator.source.Error] = cast %88
+  %error: [calculator.source.Error] = cast %88
   %90: usize = const 7
   %91: String = struct .data $str_9 .length %90
   %92: [io.Writer] = call $([io.Writer]).write_string+anon %self %91
-  %93: [String] = offset %error.ptr .message
+  %93: [String] = offset %error .message
   %94: String = load %93
   %95: [io.Writer] = call $([io.Writer]).write_string+anon %92 %94
   ret %95
@@ -779,8 +779,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %self .value
-  %variant.ptr: [calculator.expression.Number] = cast %5
-  %7: [calculator.source.Span] = offset %variant.ptr .span
+  %variant: [calculator.expression.Number] = cast %5
+  %7: [calculator.source.Span] = offset %variant .span
   %8: calculator.source.Span = load %7
   ret %8
 @4:
@@ -789,8 +789,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %10 @5 @6
 @5:
   %11: [[3]u64] = offset %self .value
-  %variant.2.ptr: [calculator.tokenizer.Plus] = cast %11
-  %13: [calculator.source.Span] = offset %variant.2.ptr .span
+  %variant.2: [calculator.tokenizer.Plus] = cast %11
+  %13: [calculator.source.Span] = offset %variant.2 .span
   %14: calculator.source.Span = load %13
   ret %14
 @6:
@@ -799,8 +799,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %16 @7 @8
 @7:
   %17: [[3]u64] = offset %self .value
-  %variant.3.ptr: [calculator.tokenizer.Minus] = cast %17
-  %19: [calculator.source.Span] = offset %variant.3.ptr .span
+  %variant.3: [calculator.tokenizer.Minus] = cast %17
+  %19: [calculator.source.Span] = offset %variant.3 .span
   %20: calculator.source.Span = load %19
   ret %20
 @8:
@@ -809,8 +809,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %22 @9 @10
 @9:
   %23: [[3]u64] = offset %self .value
-  %variant.4.ptr: [calculator.tokenizer.Multiply] = cast %23
-  %25: [calculator.source.Span] = offset %variant.4.ptr .span
+  %variant.4: [calculator.tokenizer.Multiply] = cast %23
+  %25: [calculator.source.Span] = offset %variant.4 .span
   %26: calculator.source.Span = load %25
   ret %26
 @10:
@@ -819,8 +819,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %28 @11 @12
 @11:
   %29: [[3]u64] = offset %self .value
-  %variant.5.ptr: [calculator.tokenizer.Divide] = cast %29
-  %31: [calculator.source.Span] = offset %variant.5.ptr .span
+  %variant.5: [calculator.tokenizer.Divide] = cast %29
+  %31: [calculator.source.Span] = offset %variant.5 .span
   %32: calculator.source.Span = load %31
   ret %32
 @12:
@@ -829,8 +829,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %34 @13 @14
 @13:
   %35: [[3]u64] = offset %self .value
-  %variant.6.ptr: [calculator.tokenizer.Stop] = cast %35
-  %37: [calculator.source.Span] = offset %variant.6.ptr .span
+  %variant.6: [calculator.tokenizer.Stop] = cast %35
+  %37: [calculator.source.Span] = offset %variant.6 .span
   %38: calculator.source.Span = load %37
   ret %38
 @14:
@@ -839,8 +839,8 @@ $([calculator.tokenizer.Token]).span(%self): calculator.source.Span {
   br %40 @15 @16
 @15:
   %41: [[3]u64] = offset %self .value
-  %variant.7.ptr: [calculator.source.Error] = cast %41
-  %43: [calculator.source.Span] = offset %variant.7.ptr .span
+  %variant.7: [calculator.source.Error] = cast %41
+  %43: [calculator.source.Span] = offset %variant.7 .span
   %44: calculator.source.Span = load %43
   ret %44
 @16:
@@ -859,11 +859,11 @@ $([io.Writer]).write_token+anon(%self, %token: [calculator.tokenizer.Token]): [i
   br %4 @3 @4
 @3:
   %5: [[3]u64] = offset %token .value
-  %number.ptr: [calculator.expression.Number] = cast %5
+  %number: [calculator.expression.Number] = cast %5
   %7: usize = const 8
   %8: String = struct .data $str_12 .length %7
   %9: [io.Writer] = call $([io.Writer]).write_string+anon %self %8
-  %10: [i32] = offset %number.ptr .value
+  %10: [i32] = offset %number .value
   %11: i32 = load %10
   %12: [io.Writer] = call $([io.Writer]).write_signed+signed %9 %11
   ret %12
@@ -918,11 +918,11 @@ $([io.Writer]).write_token+anon(%self, %token: [calculator.tokenizer.Token]): [i
   br %39 @15 @16
 @15:
   %40: [[3]u64] = offset %token .value
-  %error.ptr: [calculator.source.Error] = cast %40
+  %error: [calculator.source.Error] = cast %40
   %42: usize = const 7
   %43: String = struct .data $str_9 .length %42
   %44: [io.Writer] = call $([io.Writer]).write_string+anon %self %43
-  %45: [String] = offset %error.ptr .message
+  %45: [String] = offset %error .message
   %46: String = load %45
   %47: [io.Writer] = call $([io.Writer]).write_string+anon %44 %46
   ret %47

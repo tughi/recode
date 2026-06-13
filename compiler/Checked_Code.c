@@ -608,9 +608,10 @@ Checked_Variable_Symbol *Checked_Variable_Symbol__create(Checked_Package *packag
     return variable;
 }
 
-Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type, bool is_mutable) {
+Checked_Variant_Alias_Symbol *Checked_Variant_Alias_Symbol__create(Checked_Package *package, Source_Location location, String *name, Checked_Type *type, bool is_mutable, bool by_pointer) {
     Checked_Variant_Alias_Symbol *symbol = (Checked_Variant_Alias_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIANT_ALIAS, sizeof(Checked_Variant_Alias_Symbol), package, location, name, type, false);
     symbol->is_mutable = is_mutable;
+    symbol->by_pointer = by_pointer;
     return symbol;
 }
 

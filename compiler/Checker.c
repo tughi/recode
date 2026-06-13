@@ -1286,17 +1286,46 @@ Checked_Expression *Checker__check_integer_expression(Checker *self, Checker_Con
     return (Checked_Expression *)Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, expression_value, expression_base, parsed_expression->super.literal);
 }
 
+Checked_Type *Checker__resolve_match_case_type(Checker *self, Checker_Context *context, Parsed_Type *parsed_type, bool through_pointer, Checked_Type **alias_type, bool *by_pointer) {
+    Checked_Type *runtime_type = Checker__resolve_type(self, context, parsed_type);
+    *alias_type = runtime_type;
+    *by_pointer = false;
+    if (through_pointer) {
+        if (runtime_type->kind != CHECKED_TYPE_KIND__POINTER) {
+            pWriter__begin_location_message(stderr_writer, parsed_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "A pointer-to-variant case must be a pointer type, such as ^");
+            pWriter__write__checked_type(stderr_writer, runtime_type);
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        *by_pointer = true;
+        return ((Checked_Pointer_Type *)runtime_type)->other_type;
+    }
+    return runtime_type;
+}
+
 Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context *context, Parsed_Is_Expression *parsed_expression) {
     Checked_Expression *value_expression = Checker__check_expression(self, context, parsed_expression->value_expression, NULL);
     Checked_Type *value_type = value_expression->type;
-    Checked_Type *runtime_type = Checker__resolve_type(self, context, parsed_expression->runtime_type);
-    switch (value_type->kind) {
+    Checked_Type *matched_type = value_type;
+    bool through_pointer = false;
+    if (value_type->kind == CHECKED_TYPE_KIND__POINTER) {
+        Checked_Type *pointed_type = ((Checked_Pointer_Type *)value_type)->other_type;
+        if (pointed_type->kind == CHECKED_TYPE_KIND__OPTIONAL || pointed_type->kind == CHECKED_TYPE_KIND__VARIANT) {
+            matched_type = pointed_type;
+            through_pointer = true;
+        }
+    }
+    Checked_Type *alias_type;
+    bool case_by_pointer;
+    Checked_Type *case_type = Checker__resolve_match_case_type(self, context, parsed_expression->runtime_type, through_pointer, &alias_type, &case_by_pointer);
+    switch (matched_type->kind) {
     case CHECKED_TYPE_KIND__OPTIONAL:
     case CHECKED_TYPE_KIND__VARIANT: {
-        Checked_Variant_Type *variant_type = (Checked_Variant_Type *)value_type;
+        Checked_Variant_Type *variant_type = (Checked_Variant_Type *)matched_type;
         Checked_Variant_Case *variant_case = variant_type->first_variant_case;
         for (; variant_case != NULL; variant_case = variant_case->next_variant) {
-            if (Checked_Type__equals(variant_case->type, runtime_type)) {
+            if (Checked_Type__equals(variant_case->type, case_type)) {
                 Checked_Variant_Alias_Symbol *alias_symbol = NULL;
                 if (parsed_expression->alias != NULL) {
                     if (parsed_expression->is_not) {
@@ -1311,19 +1340,22 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
                         pWriter__end_location_message(stderr_writer);
                         panic();
                     }
-                    switch (value_expression->kind) {
-                    case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
-                    case CHECKED_EXPRESSION_KIND__DEREFERENCE:
-                    case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
-                    case CHECKED_EXPRESSION_KIND__SYMBOL:
-                        break;
-                    default:
-                        pWriter__begin_location_message(stderr_writer, value_expression->location, WRITER_STYLE__ERROR);
-                        pWriter__write__cstring(stderr_writer, "Variant aliases require an addressable expression");
-                        pWriter__end_location_message(stderr_writer);
-                        panic();
+                    if (!through_pointer) {
+                        switch (value_expression->kind) {
+                        case CHECKED_EXPRESSION_KIND__ARRAY_ACCESS:
+                        case CHECKED_EXPRESSION_KIND__DEREFERENCE:
+                        case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS:
+                        case CHECKED_EXPRESSION_KIND__SYMBOL:
+                            break;
+                        default:
+                            pWriter__begin_location_message(stderr_writer, value_expression->location, WRITER_STYLE__ERROR);
+                            pWriter__write__cstring(stderr_writer, "Variant aliases require an addressable expression");
+                            pWriter__end_location_message(stderr_writer);
+                            panic();
+                        }
                     }
-                    alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_expression->alias->super.location, parsed_expression->alias->super.lexeme, variant_case->type, Checked_Expression__is_mutable(value_expression));
+                    bool alias_is_mutable = case_by_pointer ? false : Checked_Expression__is_mutable(value_expression);
+                    alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_expression->alias->super.location, parsed_expression->alias->super.lexeme, alias_type, alias_is_mutable, case_by_pointer);
                     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
                 }
                 return (Checked_Expression *)Checked_Is_Variant_Case_Expression__create(parsed_expression->super.location, (Checked_Type *)self->builtin_types->bool_type, value_expression, variant_case, alias_symbol, parsed_expression->is_not);
@@ -1333,7 +1365,7 @@ Checked_Expression *Checker__check_is_expression(Checker *self, Checker_Context 
         pWriter__write__cstring(stderr_writer, value_type->kind == CHECKED_TYPE_KIND__OPTIONAL ? "Optional type " : "Variant type ");
         pWriter__write__checked_type(stderr_writer, value_type);
         pWriter__write__cstring(stderr_writer, " doesn't have ");
-        pWriter__write__checked_type(stderr_writer, runtime_type);
+        pWriter__write__checked_type(stderr_writer, case_type);
         pWriter__write__cstring(stderr_writer, " case");
         pWriter__end_location_message(stderr_writer);
         panic();
@@ -2515,17 +2547,17 @@ Checked_Statement *Checker__check_return_statement(Checker *self, Checker_Contex
     return (Checked_Statement *)Checked_Return_Statement__create(parsed_statement->super.location, result_expression);
 }
 
-Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement, Checked_Expression *variant_expression, Checked_Variant_Type *variant_type);
+Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement, Checked_Expression *variant_expression, Checked_Variant_Type *variant_type, bool through_pointer);
 
 Checked_Statement *Checker__check_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement) {
     Checked_Expression *expression = Checker__check_expression(self, context, parsed_statement->expression, NULL);
     if (expression->type->kind == CHECKED_TYPE_KIND__OPTIONAL || expression->type->kind == CHECKED_TYPE_KIND__VARIANT) {
-        return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)expression->type);
+        return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)expression->type, false);
     }
     if (expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
         Checked_Type *pointed_type = ((Checked_Pointer_Type *)expression->type)->other_type;
         if (pointed_type->kind == CHECKED_TYPE_KIND__OPTIONAL || pointed_type->kind == CHECKED_TYPE_KIND__VARIANT) {
-            return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)pointed_type);
+            return (Checked_Statement *)Checker__check_variant_switch_statement(self, context, parsed_statement, expression, (Checked_Variant_Type *)pointed_type, true);
         }
     }
     pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
@@ -2536,7 +2568,7 @@ Checked_Statement *Checker__check_switch_statement(Checker *self, Checker_Contex
     panic();
 }
 
-Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement, Checked_Expression *variant_expression, Checked_Variant_Type *variant_type) {
+Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checker *self, Checker_Context *context, Parsed_Switch_Statement *parsed_statement, Checked_Expression *variant_expression, Checked_Variant_Type *variant_type, bool through_pointer) {
     bool *variants_with_case = malloc(variant_type->variant_count * sizeof(bool));
     Parsed_Switch_Case *parsed_switch_case = parsed_statement->first_case;
     Checked_Variant_Switch_Case *first_variant_switch_case = NULL;
@@ -2561,7 +2593,9 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            Checked_Type *variant_case_type = Checker__resolve_type(self, context, parsed_switch_case->variant.type);
+            Checked_Type *alias_type;
+            bool case_by_pointer;
+            Checked_Type *variant_case_type = Checker__resolve_match_case_type(self, context, parsed_switch_case->variant.type, through_pointer, &alias_type, &case_by_pointer);
             Checked_Variant_Case *variant_case = variant_type->first_variant_case;
             for (; variant_case != NULL; variant_case = variant_case->next_variant) {
                 if (Checked_Type__equals(variant_case->type, variant_case_type)) {
@@ -2591,7 +2625,8 @@ Checked_Variant_Switch_Statement *Checker__check_variant_switch_statement(Checke
             Checked_Variant_Alias_Symbol *alias_symbol = NULL;
             if (parsed_switch_case->variant.alias != NULL) {
                 // Create a symbol for the variant case
-                alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, variant_case->type, Checked_Expression__is_mutable(variant_expression));
+                bool alias_is_mutable = case_by_pointer ? false : Checked_Expression__is_mutable(variant_expression);
+                alias_symbol = Checked_Variant_Alias_Symbol__create(context->checked_package, parsed_switch_case->variant.alias->super.location, parsed_switch_case->variant.alias->super.lexeme, alias_type, alias_is_mutable, case_by_pointer);
                 Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)alias_symbol);
             }
 

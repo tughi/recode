@@ -42,22 +42,22 @@ type Subtraction = struct {
 
 proc (^Expression).span(self) -> source.Span {
     switch self {
-        is Number as variant {
+        is ^Number as variant {
             return variant.span
         }
-        is Addition as variant {
+        is ^Addition as variant {
             return variant.span
         }
-        is Division as variant {
+        is ^Division as variant {
             return variant.span
         }
-        is Multiplication as variant {
+        is ^Multiplication as variant {
             return variant.span
         }
-        is Subtraction as variant {
+        is ^Subtraction as variant {
             return variant.span
         }
-        is source.Error as variant {
+        is ^source.Error as variant {
             return variant.span
         }
         else {
@@ -69,25 +69,25 @@ proc (^Expression).span(self) -> source.Span {
 
 proc (^io.Writer).write_expression(self, anon expression: ^Expression) -> ^io.Writer {
     switch expression {
-        is Number as number {
+        is ^Number as number {
             return self.write_signed(signed: number.value)
         }
-        is Addition as addition {
+        is ^Addition as addition {
             return self.write_string("(").write_expression(addition.left).write_string(" + ").write_expression(addition.right).write_string(")")
         }
-        is Division as division {
+        is ^Division as division {
             return self.write_string("(").write_expression(division.left).write_string(" / ").write_expression(division.right).write_string(")")
         }
-        is Multiplication as multiplication {
+        is ^Multiplication as multiplication {
             return self.write_string("(").write_expression(multiplication.left).write_string(" * ").write_expression(multiplication.right).write_string(")")
         }
-        is Subtraction as subtraction {
+        is ^Subtraction as subtraction {
             return self.write_string("(").write_expression(subtraction.left).write_string(" - ").write_expression(subtraction.right).write_string(")")
         }
-        is source.Error as error {
+        is ^source.Error as error {
             return self.write_string("Error: ").write_string(error.message)
         }
-        is nil {
+        is ^nil {
             return self.write_string("Nil!")
         }
     }

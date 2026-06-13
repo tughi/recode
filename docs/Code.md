@@ -678,6 +678,7 @@ Rules:
 - Cases after `else` are an error
 - Duplicate cases are an error
 - A case alias follows the same aliasing rules as `is` aliases — it aliases the payload in place and is mutable exactly when the switched value is mutable
+- Over a `^Variant`, cases use the pointer form — see [Matching Through a Pointer](#matching-through-a-pointer)
 
 ### Pattern Matching — `is`
 
@@ -716,6 +717,36 @@ Rules:
 - The matched value must be addressable (a variable, member access, array item, or dereference) — the alias aliases the variant's payload in place, it is not a copy
 - An alias cannot be declared under `or` or `not`, where the match is not guaranteed
 - An alias is mutable exactly when the matched value is mutable — assigning to it writes the variant's payload in place
+
+### Matching Through a Pointer
+
+When the matched value is a pointer to a variant (`^Variant`) — in either a `switch` or an `is` — *every* case is written as a pointer type. A payload case binds its alias as a pointer to the payload; the empty case is `^nil`:
+
+```code
+let pointer = ^value
+
+if pointer is ^i32 as number {
+    number.^ = number.^ + 1   // number has type ^i32
+}
+
+switch pointer {
+    is ^i32 as number {
+        number.^ = 0          // number has type ^i32
+    }
+    is ^bool as flag {
+        flag.^ = false        // flag has type ^bool
+    }
+    is ^nil {
+        // the variant holds no value
+    }
+}
+```
+
+Rules:
+- Every case carries the `^`, including the empty case (`^nil`) — the bare forms (`is i32`, `is nil`) are an error for a pointer-to-variant
+- A payload case selects that case and binds a `^T` pointing at the payload; read and write it through `.^`, and a write updates the variant's payload in place
+- The matched expression need not be addressable itself — a pointer already refers to stable storage
+- A null pointer is not a match case here; null handling is separate (planned null-safety)
 
 ### Negated Check — `is not`
 

@@ -35,60 +35,59 @@ proc (^Checker).check_builtin_package(self, anon parsed_package: ^parsed.Package
         self.current_source = module.source
         let item = module.statements.first
         while item != null {
-            let statement = item.value
-            switch statement {
-                is parsed.Type_Statement as type_statement {
+            switch item.value {
+                is ^parsed.Type_Statement as type_statement {
                     self.check_builtin_type_statement(type_statement)
                 }
-                is parsed.Assignment_Statement as _ignored {
+                is ^parsed.Assignment_Statement {
                     panic "Not supported yet: parsed.Assignment_Statement"
                 }
-                is parsed.Block_Statement as _ignored {
+                is ^parsed.Block_Statement {
                     panic "Not supported yet: parsed.Block_Statement"
                 }
-                is parsed.Break_Statement as _ignored {
+                is ^parsed.Break_Statement {
                     panic "Not supported yet: parsed.Break_Statement"
                 }
-                is parsed.Const_Statement as _ignored {
+                is ^parsed.Const_Statement {
                     panic "Not supported yet: parsed.Const_Statement"
                 }
-                is parsed.Defer_Statement as _ignored {
+                is ^parsed.Defer_Statement {
                     panic "Not supported yet: parsed.Defer_Statement"
                 }
-                is parsed.Expression_Statement as _ignored {
+                is ^parsed.Expression_Statement {
                     panic "Not supported yet: parsed.Expression_Statement"
                 }
-                is parsed.If_Statement as _ignored {
+                is ^parsed.If_Statement {
                     panic "Not supported yet: parsed.If_Statement"
                 }
-                is parsed.Import_Statement as _ignored {
+                is ^parsed.Import_Statement {
                     panic "Not supported yet: parsed.Import_Statement"
                 }
-                is parsed.Loop_Statement as _ignored {
+                is ^parsed.Loop_Statement {
                     panic "Not supported yet: parsed.Loop_Statement"
                 }
-                is parsed.Procedure_Statement as _ignored {
+                is ^parsed.Procedure_Statement {
                     panic "Not supported yet: parsed.Procedure_Statement"
                 }
-                is parsed.Raise_Statement as _ignored {
+                is ^parsed.Raise_Statement {
                     panic "Not supported yet: parsed.Raise_Statement"
                 }
-                is parsed.Return_Statement as _ignored {
+                is ^parsed.Return_Statement {
                     panic "Not supported yet: parsed.Return_Statement"
                 }
-                is parsed.Switch_Statement as _ignored {
+                is ^parsed.Switch_Statement {
                     panic "Not supported yet: parsed.Switch_Statement"
                 }
-                is parsed.Variable_Statement as _ignored {
+                is ^parsed.Variable_Statement {
                     panic "Not supported yet: parsed.Variable_Statement"
                 }
-                is parsed.While_Statement as _ignored {
+                is ^parsed.While_Statement {
                     panic "Not supported yet: parsed.While_Statement"
                 }
-                is parsed.Yield_Statement as _ignored {
+                is ^parsed.Yield_Statement {
                     panic "Not supported yet: parsed.Yield_Statement"
                 }
-                is nil {
+                is ^nil {
                 }
             }
             item = item.next
@@ -98,23 +97,22 @@ proc (^Checker).check_builtin_package(self, anon parsed_package: ^parsed.Package
     return
 }
 
-proc (^Checker).check_builtin_type_statement(self, anon type_statement: parsed.Type_Statement) !> error.Error {
+proc (^Checker).check_builtin_type_statement(self, anon type_statement: ^parsed.Type_Statement) !> error.Error {
     self.current_source_position = type_statement.super.source_position
-    let specifier = type_statement.specifier
     let is_builtin = false
-    switch specifier {
-        is parsed.Builtin_Type_Specifier as _ignored {
+    switch type_statement.specifier {
+        is ^parsed.Builtin_Type_Specifier {
             is_builtin = true
         }
-        is parsed.External_Type_Specifier as _ignored {
+        is ^parsed.External_Type_Specifier {
         }
-        is parsed.Struct_Type_Specifier as _ignored {
+        is ^parsed.Struct_Type_Specifier {
         }
-        is parsed.Trait_Type_Specifier as _ignored {
+        is ^parsed.Trait_Type_Specifier {
         }
-        is parsed.Variant_Type_Specifier as _ignored {
+        is ^parsed.Variant_Type_Specifier {
         }
-        is nil {
+        is ^nil {
         }
     }
     if not is_builtin {
@@ -152,60 +150,59 @@ proc (^Checker).check_package(self, anon parsed_package: ^parsed.Package) -> ^ch
 
         let item = module.statements.first
         while item != null {
-            let statement = item.value
-            switch statement {
-                is parsed.Procedure_Statement as procedure_statement {
+            switch item.value {
+                is ^parsed.Procedure_Statement as procedure_statement {
                     self.check_procedure_statement(procedure_statement)
                 }
-                is parsed.Assignment_Statement as _ignored {
+                is ^parsed.Assignment_Statement {
                     panic "Not supported yet: parsed.Assignment_Statement"
                 }
-                is parsed.Block_Statement as _ignored {
+                is ^parsed.Block_Statement {
                     panic "Not supported yet: parsed.Block_Statement"
                 }
-                is parsed.Break_Statement as _ignored {
+                is ^parsed.Break_Statement {
                     panic "Not supported yet: parsed.Break_Statement"
                 }
-                is parsed.Const_Statement as _ignored {
+                is ^parsed.Const_Statement {
                     panic "Not supported yet: parsed.Const_Statement"
                 }
-                is parsed.Defer_Statement as _ignored {
+                is ^parsed.Defer_Statement {
                     panic "Not supported yet: parsed.Defer_Statement"
                 }
-                is parsed.Expression_Statement as _ignored {
+                is ^parsed.Expression_Statement {
                     panic "Not supported yet: parsed.Expression_Statement"
                 }
-                is parsed.If_Statement as _ignored {
+                is ^parsed.If_Statement {
                     panic "Not supported yet: parsed.If_Statement"
                 }
-                is parsed.Import_Statement as _ignored {
+                is ^parsed.Import_Statement {
                     panic "Not supported yet: parsed.Import_Statement"
                 }
-                is parsed.Loop_Statement as _ignored {
+                is ^parsed.Loop_Statement {
                     panic "Not supported yet: parsed.Loop_Statement"
                 }
-                is parsed.Raise_Statement as _ignored {
+                is ^parsed.Raise_Statement {
                     panic "Not supported yet: parsed.Raise_Statement"
                 }
-                is parsed.Return_Statement as _ignored {
+                is ^parsed.Return_Statement {
                     panic "Not supported yet: parsed.Return_Statement"
                 }
-                is parsed.Switch_Statement as _ignored {
+                is ^parsed.Switch_Statement {
                     panic "Not supported yet: parsed.Switch_Statement"
                 }
-                is parsed.Type_Statement as _ignored {
+                is ^parsed.Type_Statement {
                     panic "Not supported yet: parsed.Type_Statement"
                 }
-                is parsed.Variable_Statement as _ignored {
+                is ^parsed.Variable_Statement {
                     panic "Not supported yet: parsed.Variable_Statement"
                 }
-                is parsed.While_Statement as _ignored {
+                is ^parsed.While_Statement {
                     panic "Not supported yet: parsed.While_Statement"
                 }
-                is parsed.Yield_Statement as _ignored {
+                is ^parsed.Yield_Statement {
                     panic "Not supported yet: parsed.Yield_Statement"
                 }
-                is nil {
+                is ^nil {
                 }
             }
             item = item.next
@@ -216,7 +213,7 @@ proc (^Checker).check_package(self, anon parsed_package: ^parsed.Package) -> ^ch
     return checked_package
 }
 
-proc (^Checker).check_procedure_statement(self, anon procedure_statement: parsed.Procedure_Statement) !> error.Error {
+proc (^Checker).check_procedure_statement(self, anon procedure_statement: ^parsed.Procedure_Statement) !> error.Error {
     self.current_source_position = procedure_statement.super.source_position
     let name = procedure_statement.name.super.lexeme
 
@@ -235,58 +232,58 @@ proc (^Checker).check_procedure_statement(self, anon procedure_statement: parsed
     if not procedure_statement.is_external and procedure_statement.body != null {
         self.return_type = return_type
         switch procedure_statement.body {
-            is parsed.Block_Statement as block_statement {
+            is ^parsed.Block_Statement as block_statement {
                 body = self.check_block_statement(block_statement)
             }
-            is parsed.Assignment_Statement as _ignored {
+            is ^parsed.Assignment_Statement {
                 panic "Not supported yet: parsed.Assignment_Statement"
             }
-            is parsed.Break_Statement as _ignored {
+            is ^parsed.Break_Statement {
                 panic "Not supported yet: parsed.Break_Statement"
             }
-            is parsed.Const_Statement as _ignored {
+            is ^parsed.Const_Statement {
                 panic "Not supported yet: parsed.Const_Statement"
             }
-            is parsed.Defer_Statement as _ignored {
+            is ^parsed.Defer_Statement {
                 panic "Not supported yet: parsed.Defer_Statement"
             }
-            is parsed.Expression_Statement as _ignored {
+            is ^parsed.Expression_Statement {
                 panic "Not supported yet: parsed.Expression_Statement"
             }
-            is parsed.If_Statement as _ignored {
+            is ^parsed.If_Statement {
                 panic "Not supported yet: parsed.If_Statement"
             }
-            is parsed.Import_Statement as _ignored {
+            is ^parsed.Import_Statement {
                 panic "Not supported yet: parsed.Import_Statement"
             }
-            is parsed.Loop_Statement as _ignored {
+            is ^parsed.Loop_Statement {
                 panic "Not supported yet: parsed.Loop_Statement"
             }
-            is parsed.Procedure_Statement as _ignored {
+            is ^parsed.Procedure_Statement {
                 panic "Not supported yet: parsed.Procedure_Statement"
             }
-            is parsed.Raise_Statement as _ignored {
+            is ^parsed.Raise_Statement {
                 panic "Not supported yet: parsed.Raise_Statement"
             }
-            is parsed.Return_Statement as _ignored {
+            is ^parsed.Return_Statement {
                 panic "Not supported yet: parsed.Return_Statement"
             }
-            is parsed.Switch_Statement as _ignored {
+            is ^parsed.Switch_Statement {
                 panic "Not supported yet: parsed.Switch_Statement"
             }
-            is parsed.Type_Statement as _ignored {
+            is ^parsed.Type_Statement {
                 panic "Not supported yet: parsed.Type_Statement"
             }
-            is parsed.Variable_Statement as _ignored {
+            is ^parsed.Variable_Statement {
                 panic "Not supported yet: parsed.Variable_Statement"
             }
-            is parsed.While_Statement as _ignored {
+            is ^parsed.While_Statement {
                 panic "Not supported yet: parsed.While_Statement"
             }
-            is parsed.Yield_Statement as _ignored {
+            is ^parsed.Yield_Statement {
                 panic "Not supported yet: parsed.Yield_Statement"
             }
-            is nil {
+            is ^nil {
             }
         }
     }
@@ -300,7 +297,7 @@ proc (^Checker).check_procedure_statement(self, anon procedure_statement: parsed
     return
 }
 
-proc (^Checker).check_block_statement(self, anon parsed_block: parsed.Block_Statement) -> ^checked.Statement !> error.Error {
+proc (^Checker).check_block_statement(self, anon parsed_block: ^parsed.Block_Statement) -> ^checked.Statement !> error.Error {
     let statements = collections.List<^checked.Statement>()
     let item = parsed_block.statements.first
     while item != null {
@@ -315,64 +312,64 @@ proc (^Checker).check_block_statement(self, anon parsed_block: parsed.Block_Stat
 
 proc (^Checker).check_statement(self, anon parsed_statement: ^parsed.Statement) -> ^checked.Statement !> error.Error {
     switch parsed_statement {
-        is parsed.Block_Statement as block_statement {
+        is ^parsed.Block_Statement as block_statement {
             return self.check_block_statement(block_statement)
         }
-        is parsed.Return_Statement as return_statement {
+        is ^parsed.Return_Statement as return_statement {
             return self.check_return_statement(return_statement)
         }
-        is parsed.Assignment_Statement as _ignored {
+        is ^parsed.Assignment_Statement {
             panic "Not supported yet: parsed.Assignment_Statement"
         }
-        is parsed.Break_Statement as _ignored {
+        is ^parsed.Break_Statement {
             panic "Not supported yet: parsed.Break_Statement"
         }
-        is parsed.Const_Statement as _ignored {
+        is ^parsed.Const_Statement {
             panic "Not supported yet: parsed.Const_Statement"
         }
-        is parsed.Defer_Statement as _ignored {
+        is ^parsed.Defer_Statement {
             panic "Not supported yet: parsed.Defer_Statement"
         }
-        is parsed.Expression_Statement as _ignored {
+        is ^parsed.Expression_Statement {
             panic "Not supported yet: parsed.Expression_Statement"
         }
-        is parsed.If_Statement as _ignored {
+        is ^parsed.If_Statement {
             panic "Not supported yet: parsed.If_Statement"
         }
-        is parsed.Import_Statement as _ignored {
+        is ^parsed.Import_Statement {
             panic "Not supported yet: parsed.Import_Statement"
         }
-        is parsed.Loop_Statement as _ignored {
+        is ^parsed.Loop_Statement {
             panic "Not supported yet: parsed.Loop_Statement"
         }
-        is parsed.Procedure_Statement as _ignored {
+        is ^parsed.Procedure_Statement {
             panic "Not supported yet: parsed.Procedure_Statement"
         }
-        is parsed.Raise_Statement as _ignored {
+        is ^parsed.Raise_Statement {
             panic "Not supported yet: parsed.Raise_Statement"
         }
-        is parsed.Switch_Statement as _ignored {
+        is ^parsed.Switch_Statement {
             panic "Not supported yet: parsed.Switch_Statement"
         }
-        is parsed.Type_Statement as _ignored {
+        is ^parsed.Type_Statement {
             panic "Not supported yet: parsed.Type_Statement"
         }
-        is parsed.Variable_Statement as _ignored {
+        is ^parsed.Variable_Statement {
             panic "Not supported yet: parsed.Variable_Statement"
         }
-        is parsed.While_Statement as _ignored {
+        is ^parsed.While_Statement {
             panic "Not supported yet: parsed.While_Statement"
         }
-        is parsed.Yield_Statement as _ignored {
+        is ^parsed.Yield_Statement {
             panic "Not supported yet: parsed.Yield_Statement"
         }
-        is nil {
+        is ^nil {
         }
     }
     raise self.error("Unsupported statement")
 }
 
-proc (^Checker).check_return_statement(self, anon return_statement: parsed.Return_Statement) -> ^checked.Statement !> error.Error {
+proc (^Checker).check_return_statement(self, anon return_statement: ^parsed.Return_Statement) -> ^checked.Statement !> error.Error {
     self.current_source_position = return_statement.super.source_position
     let expression: ^checked.Expression = null
     if return_statement.expression != null {
@@ -385,118 +382,118 @@ proc (^Checker).check_return_statement(self, anon return_statement: parsed.Retur
 
 proc (^Checker).check_expression(self, anon parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression !> error.Error {
     switch parsed_expression {
-        is parsed.Integer_Expression as integer_expression {
+        is ^parsed.Integer_Expression as integer_expression {
             return self.check_integer_expression(integer_expression, expected_type: expected_type)
         }
-        is parsed.Add_Expression as _ignored {
+        is ^parsed.Add_Expression {
             panic "Not supported yet: parsed.Add_Expression"
         }
-        is parsed.Address_Of_Expression as _ignored {
+        is ^parsed.Address_Of_Expression {
             panic "Not supported yet: parsed.Address_Of_Expression"
         }
-        is parsed.Alloc_Expression as _ignored {
+        is ^parsed.Alloc_Expression {
             panic "Not supported yet: parsed.Alloc_Expression"
         }
-        is parsed.Array_Access_Expression as _ignored {
+        is ^parsed.Array_Access_Expression {
             panic "Not supported yet: parsed.Array_Access_Expression"
         }
-        is parsed.Block_Expression as _ignored {
+        is ^parsed.Block_Expression {
             panic "Not supported yet: parsed.Block_Expression"
         }
-        is parsed.Call_Expression as _ignored {
+        is ^parsed.Call_Expression {
             panic "Not supported yet: parsed.Call_Expression"
         }
-        is parsed.Character_Expression as _ignored {
+        is ^parsed.Character_Expression {
             panic "Not supported yet: parsed.Character_Expression"
         }
-        is parsed.Dereference_Expression as _ignored {
+        is ^parsed.Dereference_Expression {
             panic "Not supported yet: parsed.Dereference_Expression"
         }
-        is parsed.Divide_Expression as _ignored {
+        is ^parsed.Divide_Expression {
             panic "Not supported yet: parsed.Divide_Expression"
         }
-        is parsed.Equals_Expression as _ignored {
+        is ^parsed.Equals_Expression {
             panic "Not supported yet: parsed.Equals_Expression"
         }
-        is parsed.Greater_Expression as _ignored {
+        is ^parsed.Greater_Expression {
             panic "Not supported yet: parsed.Greater_Expression"
         }
-        is parsed.Greater_Or_Equals_Expression as _ignored {
+        is ^parsed.Greater_Or_Equals_Expression {
             panic "Not supported yet: parsed.Greater_Or_Equals_Expression"
         }
-        is parsed.Identifier_Expression as _ignored {
+        is ^parsed.Identifier_Expression {
             panic "Not supported yet: parsed.Identifier_Expression"
         }
-        is parsed.Is_Expression as _ignored {
+        is ^parsed.Is_Expression {
             panic "Not supported yet: parsed.Is_Expression"
         }
-        is parsed.Less_Expression as _ignored {
+        is ^parsed.Less_Expression {
             panic "Not supported yet: parsed.Less_Expression"
         }
-        is parsed.Less_Or_Equals_Expression as _ignored {
+        is ^parsed.Less_Or_Equals_Expression {
             panic "Not supported yet: parsed.Less_Or_Equals_Expression"
         }
-        is parsed.Logic_And_Expression as _ignored {
+        is ^parsed.Logic_And_Expression {
             panic "Not supported yet: parsed.Logic_And_Expression"
         }
-        is parsed.Logic_Or_Expression as _ignored {
+        is ^parsed.Logic_Or_Expression {
             panic "Not supported yet: parsed.Logic_Or_Expression"
         }
-        is parsed.Member_Access_Expression as _ignored {
+        is ^parsed.Member_Access_Expression {
             panic "Not supported yet: parsed.Member_Access_Expression"
         }
-        is parsed.Modulo_Expression as _ignored {
+        is ^parsed.Modulo_Expression {
             panic "Not supported yet: parsed.Modulo_Expression"
         }
-        is parsed.Multiply_Expression as _ignored {
+        is ^parsed.Multiply_Expression {
             panic "Not supported yet: parsed.Multiply_Expression"
         }
-        is parsed.Negate_Expression as _ignored {
+        is ^parsed.Negate_Expression {
             panic "Not supported yet: parsed.Negate_Expression"
         }
-        is parsed.Not_Expression as _ignored {
+        is ^parsed.Not_Expression {
             panic "Not supported yet: parsed.Not_Expression"
         }
-        is parsed.Not_Equals_Expression as _ignored {
+        is ^parsed.Not_Equals_Expression {
             panic "Not supported yet: parsed.Not_Equals_Expression"
         }
-        is parsed.Subtract_Expression as _ignored {
+        is ^parsed.Subtract_Expression {
             panic "Not supported yet: parsed.Subtract_Expression"
         }
-        is parsed.String_Expression as _ignored {
+        is ^parsed.String_Expression {
             panic "Not supported yet: parsed.String_Expression"
         }
-        is parsed.Try_Expression as _ignored {
+        is ^parsed.Try_Expression {
             panic "Not supported yet: parsed.Try_Expression"
         }
-        is parsed.Type_Alignment_Expression as _ignored {
+        is ^parsed.Type_Alignment_Expression {
             panic "Not supported yet: parsed.Type_Alignment_Expression"
         }
-        is parsed.Type_Size_Expression as _ignored {
+        is ^parsed.Type_Size_Expression {
             panic "Not supported yet: parsed.Type_Size_Expression"
         }
-        is parsed.Type_Specialization_Expression as _ignored {
+        is ^parsed.Type_Specialization_Expression {
             panic "Not supported yet: parsed.Type_Specialization_Expression"
         }
-        is nil {
+        is ^nil {
         }
     }
     raise self.error("Unsupported expression")
 }
 
-proc (^Checker).check_integer_expression(self, anon integer_expression: parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression !> error.Error {
+proc (^Checker).check_integer_expression(self, anon integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression !> error.Error {
     self.current_source_position = integer_expression.source_position
     let expression_type = expected_type
     if expression_type == null {
         let i32_symbol = self.builtin_symbols.find("i32")
         switch i32_symbol {
-            is checked.Type_Symbol as type_symbol {
+            is ^checked.Type_Symbol as type_symbol {
                 expression_type = type_symbol.type
             }
-            is checked.Procedure_Symbol as _ignored {
+            is ^checked.Procedure_Symbol {
                 panic "Not supported yet: checked.Procedure_Symbol"
             }
-            is nil {
+            is ^nil {
             }
         }
     }
@@ -511,7 +508,7 @@ proc (^Checker).check_integer_expression(self, anon integer_expression: parsed.I
 
 proc (^Checker).resolve_type(self, anon parsed_type: ^parsed.Type) -> ^checked.Type !> error.Error {
     switch parsed_type {
-        is parsed.Named_Type as named_type {
+        is ^parsed.Named_Type as named_type {
             self.current_source_position = named_type.source_position
             let name = named_type.name.super.lexeme
             let symbol = self.global_symbols.find(name)
@@ -522,33 +519,33 @@ proc (^Checker).resolve_type(self, anon parsed_type: ^parsed.Type) -> ^checked.T
                 raise self.error("Unknown type")
             }
             switch symbol {
-                is checked.Type_Symbol as type_symbol {
+                is ^checked.Type_Symbol as type_symbol {
                     return type_symbol.type
                 }
-                is checked.Procedure_Symbol as _ignored {
+                is ^checked.Procedure_Symbol {
                     panic "Not supported yet: checked.Procedure_Symbol"
                 }
-                is nil {
+                is ^nil {
                 }
             }
             raise self.error("Symbol is not a type")
         }
-        is parsed.Multi_Pointer_Type as _ignored {
+        is ^parsed.Multi_Pointer_Type {
             panic "Not supported yet: parsed.Multi_Pointer_Type"
         }
-        is parsed.Optional_Type as _ignored {
+        is ^parsed.Optional_Type {
             panic "Not supported yet: parsed.Optional_Type"
         }
-        is parsed.Pointer_Type as _ignored {
+        is ^parsed.Pointer_Type {
             panic "Not supported yet: parsed.Pointer_Type"
         }
-        is parsed.Procedure_Type as _ignored {
+        is ^parsed.Procedure_Type {
             panic "Not supported yet: parsed.Procedure_Type"
         }
-        is parsed.Trait_Receiver_Type as _ignored {
+        is ^parsed.Trait_Receiver_Type {
             panic "Not supported yet: parsed.Trait_Receiver_Type"
         }
-        is nil {
+        is ^nil {
         }
     }
     raise self.error("Unsupported type")

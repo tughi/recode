@@ -55,25 +55,25 @@ proc print_block(anon block: ^ir.Block, file: ^libc.FILE) {
 
 proc print_instruction(anon instruction: ^ir.Instruction, file: ^libc.FILE) {
     switch instruction {
-        is ir.Call_Instruction as call_instruction {
+        is ^ir.Call_Instruction as call_instruction {
             if call_instruction.result != null {
                 print_value_definition(call_instruction.result, file: file)
                 file.write(" = ")
             }
             file.write("call $").write(call_instruction.callee.name)
         }
-        is ir.Const_Instruction as const_instruction {
+        is ^ir.Const_Instruction as const_instruction {
             print_value_definition(const_instruction.result, file: file)
             file.write(" = const ").write(u64: const_instruction.literal.value)
         }
-        is ir.Ret_Instruction as ret_instruction {
+        is ^ir.Ret_Instruction as ret_instruction {
             file.write("ret")
             if ret_instruction.value != null {
                 file.write(char: ' ')
                 print_value_reference(ret_instruction.value, file: file)
             }
         }
-        is nil {
+        is ^nil {
         }
     }
 }
@@ -90,10 +90,10 @@ proc print_value_reference(anon value: ^ir.Value, file: ^libc.FILE) {
 
 proc print_type(anon type: ^ir.Type, file: ^libc.FILE) {
     switch type {
-        is ir.Primitive_Type as primitive_type {
+        is ^ir.Primitive_Type as primitive_type {
             file.write(primitive_type.name)
         }
-        is nil {
+        is ^nil {
         }
     }
 }

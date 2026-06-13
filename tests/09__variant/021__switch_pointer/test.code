@@ -1,0 +1,27 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 42
+    let pointer = ^value
+
+    switch pointer {
+        is ^bool as flag {
+            return 1
+        }
+        is ^i32 as number {
+            number.^ = number.^ - 42
+        }
+        is ^nil {
+            return 2
+        }
+    }
+
+    if value is i32 as result {
+        return result
+    }
+
+    return 3
+}

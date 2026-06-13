@@ -39,19 +39,19 @@ proc main(anon argc: i32, anon argv: [^][^]u8) -> i32 {
 
 proc evaluate(expression: ^expression.Expression) -> i32 {
     switch expression {
-        is expression.Number as number {
+        is ^expression.Number as number {
             return number.value
         }
-        is expression.Addition as addition {
+        is ^expression.Addition as addition {
             return evaluate(expression: addition.left) + evaluate(expression: addition.right)
         }
-        is expression.Division as division {
+        is ^expression.Division as division {
             return evaluate(expression: division.left) / evaluate(expression: division.right)
         }
-        is expression.Multiplication as multiplication {
+        is ^expression.Multiplication as multiplication {
             return evaluate(expression: multiplication.left) * evaluate(expression: multiplication.right)
         }
-        is expression.Subtraction as subtraction {
+        is ^expression.Subtraction as subtraction {
             return evaluate(expression: subtraction.left) - evaluate(expression: subtraction.right)
         }
         else {

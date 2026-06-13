@@ -1,0 +1,15 @@
+type Value = variant {
+    bool
+    i32
+}
+
+proc main() -> i32 {
+    let value: Value = 42
+    let pointer = ^value
+
+    if pointer is i32 as number {
+        return number
+    }
+
+    return 1
+}
