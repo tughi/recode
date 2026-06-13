@@ -392,11 +392,15 @@ IR_Value *Lowerer__lower_variant_tag(Lowerer *self, IR_Value *variant_pointer) {
 
 IR_Value *Lowerer__lower_variant_case_pointer(Lowerer *self, IR_Value *variant_pointer, Checked_Variant_Case *variant_case) {
     IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)((IR_Pointer_Type *)variant_pointer->type)->pointee;
-    IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
-    IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, String__create_from("value"));
-    IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
+    IR_Value *value_pointer = variant_pointer;
+    if (variant_struct_type->first_field->next_field != NULL) {
+        IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
+        IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), variant_pointer, String__create_from("value"));
+        IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
+        value_pointer = &value_offset->super.result;
+    }
     IR_Type *case_type = Lowerer__lower_type(self, variant_case->type);
-    IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(case_type), &value_offset->super.result);
+    IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(case_type), value_pointer);
     IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
     return &cast->super.result;
 }
@@ -679,7 +683,6 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Type *variant_type = Lowerer__lower_type(self, expression->type);
         IR_Struct_Type *variant_struct_type = (IR_Struct_Type *)variant_type;
         IR_Type *tag_type = variant_struct_type->first_field->type;
-        IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
 
         self->value_counter++;
         String *temporary_name = String__create();
@@ -694,13 +697,16 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&tag_offset->super.result, &tag->super.result));
 
         if (make_variant_expression->variant_case->type->kind != CHECKED_TYPE_KIND__NIL) {
-            IR_Value *payload = Lowerer__lower_expression(self, make_variant_expression->expression);
             IR_Type *payload_type = Lowerer__lower_type(self, make_variant_expression->expression->type);
-            IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, String__create_from("value"));
-            IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
-            IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(payload_type), &value_offset->super.result);
-            IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
-            IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&cast->super.result, payload));
+            if (IR_Type__size(payload_type) > 0) {
+                IR_Type *value_field_type = variant_struct_type->first_field->next_field->type;
+                IR_Value *payload = Lowerer__lower_expression(self, make_variant_expression->expression);
+                IR_Struct_Offset_Instruction *value_offset = IR_Struct_Offset_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(value_field_type), &alloc->super.result, String__create_from("value"));
+                IR_Block__append_instruction(self->block, (IR_Instruction *)value_offset);
+                IR_Cast_Instruction *cast = IR_Cast_Instruction__create(Lowerer__fresh_name(self), (IR_Type *)IR_Pointer_Type__create(payload_type), &value_offset->super.result);
+                IR_Block__append_instruction(self->block, (IR_Instruction *)cast);
+                IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Store_Instruction__create(&cast->super.result, payload));
+            }
         }
 
         IR_Load_Instruction *load = IR_Load_Instruction__create(Lowerer__fresh_name(self), variant_type, &alloc->super.result);
