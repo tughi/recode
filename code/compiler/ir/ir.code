@@ -17,7 +17,11 @@ type Block = struct {
 }
 
 type Type = variant {
+    Nothing_Type
     Primitive_Type
+}
+
+type Nothing_Type = struct {
 }
 
 type Primitive_Type = struct {

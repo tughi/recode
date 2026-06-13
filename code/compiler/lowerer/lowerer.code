@@ -94,11 +94,16 @@ proc (^Lowerer).lower_main_wrapper(self, anon main_procedure: ^ir.Procedure) {
     wrapper.blocks.append(value: block)
     self.current_block = block
 
+    let call_instruction = self.alloc_instruction(ir.Call_Instruction(
+        result: ir.Value(name: self.fresh_name(), type: main_procedure.return_type)
+        callee: main_procedure
+    ))
+    self.append_instruction(call_instruction)
+
     let result: ^ir.Value = null
-    if main_procedure.return_type != null {
-        result = self.alloc_value(ir.Value(name: self.fresh_name(), type: main_procedure.return_type))
+    if call_instruction is ^ir.Call_Instruction as instruction and main_procedure.return_type is not ^ir.Nothing_Type {
+        result = ^instruction.result
     }
-    self.append_instruction(self.alloc_instruction(ir.Call_Instruction(result: result, callee: main_procedure)))
     self.append_instruction(self.alloc_instruction(ir.Ret_Instruction(value: result)))
 }
 
@@ -126,13 +131,14 @@ proc (^Lowerer).lower_statement(self, anon statement: ^checked.Statement) {
 proc (^Lowerer).lower_expression(self, anon expression: ^checked.Expression) -> ^ir.Value {
     switch expression {
         is ^checked.Integer_Expression as integer_expression {
-            let result = self.alloc_value(ir.Value(name: self.fresh_name(), type: self.lower_type(integer_expression.type)))
             let instruction = self.alloc_instruction(ir.Const_Instruction(
-                result: result
+                result: ir.Value(name: self.fresh_name(), type: self.lower_type(integer_expression.type))
                 literal: integer_expression.token
             ))
             self.append_instruction(instruction)
-            return result
+            if instruction is ^ir.Const_Instruction as const_instruction {
+                return ^const_instruction.result
+            }
         }
         is ^nil {
         }
@@ -142,7 +148,7 @@ proc (^Lowerer).lower_expression(self, anon expression: ^checked.Expression) -> 
 
 proc (^Lowerer).lower_type(self, anon type: ^checked.Type) -> ^ir.Type {
     if type == null {
-        return null
+        return self.alloc_type(ir.Nothing_Type()) // TODO: There should be only one instance of ir.Nothing_Type
     }
     switch type {
         is ^checked.Builtin_Type as builtin_type {
@@ -154,7 +160,7 @@ proc (^Lowerer).lower_type(self, anon type: ^checked.Type) -> ^ir.Type {
         is ^nil {
         }
     }
-    return null
+    return self.alloc_type(ir.Nothing_Type())
 }
 
 proc (^Lowerer).fresh_name(self) -> str {
@@ -190,12 +196,6 @@ proc (^Lowerer).alloc_block(self, anon block: ir.Block) -> ^ir.Block {
 proc (^Lowerer).alloc_instruction(self, anon instruction: ir.Instruction) -> ^ir.Instruction {
     let typed_result = self.allocate(size: type_size(ir.Instruction), alignment: type_alignment(ir.Instruction)).as(^ir.Instruction)
     typed_result.^ = instruction
-    return typed_result
-}
-
-proc (^Lowerer).alloc_value(self, anon value: ir.Value) -> ^ir.Value {
-    let typed_result = self.allocate(size: type_size(ir.Value), alignment: type_alignment(ir.Value)).as(^ir.Value)
-    typed_result.^ = value
     return typed_result
 }
 
