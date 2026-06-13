@@ -491,7 +491,7 @@ def compiler(skip_tests=False, save=False):
 
         compiler_command = ["Runner", "build/compiler/compiler.ir", "-o", build_dir, "-n", "test", test_dir]
         if run(compiler_command, check=False).returncode != 0:
-            trace(*compiler_command)
+            # trace(*compiler_command)
             exit(1)
 
         expected_execute = test_data.get("execute", {})
