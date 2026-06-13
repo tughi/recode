@@ -8,6 +8,7 @@ import string.builder
 
 type Lowerer = struct {
     program: ^ir.Program
+    package_name: str
     current_block: ^ir.Block
     next_value_id: usize
 }
@@ -15,17 +16,22 @@ type Lowerer = struct {
 proc lower(anon checked_package: ^checked.Package) -> ^ir.Program {
     let lowerer = Lowerer(
         program: null
+        package_name: checked_package.name
         current_block: null
         next_value_id: 0
     )
     lowerer.program = lowerer.allocate(size: type_size(ir.Program), alignment: type_alignment(ir.Program)).as(^ir.Program)
     lowerer.program.^ = ir.Program(procedures: collections.List<^ir.Procedure>())
 
+    let main_procedure: ^ir.Procedure = null
     let entry = checked_package.symbols.first
     while entry != null {
         switch entry.symbol {
             is checked.Procedure_Symbol as procedure_symbol {
-                lowerer.lower_procedure(procedure_symbol)
+                let procedure = lowerer.lower_procedure(procedure_symbol)
+                if procedure_symbol.name.equals("main") {
+                    main_procedure = procedure
+                }
             }
             is checked.Type_Symbol as _ignored {
             }
@@ -35,12 +41,19 @@ proc lower(anon checked_package: ^checked.Package) -> ^ir.Program {
         entry = entry.next
     }
 
+    if main_procedure != null {
+        lowerer.lower_main_wrapper(main_procedure)
+    }
+
     return lowerer.program
 }
 
-proc (^Lowerer).lower_procedure(self, anon procedure_symbol: checked.Procedure_Symbol) {
+proc (^Lowerer).lower_procedure(self, anon procedure_symbol: checked.Procedure_Symbol) -> ^ir.Procedure {
+    let name_builder = string.new_builder()
+    let name = name_builder.append(self.package_name).append_char('.').append(procedure_symbol.name).build()
+
     let procedure = self.alloc_procedure(ir.Procedure(
-        name: procedure_symbol.name
+        name: name
         parameters: collections.List<^ir.Value>()
         return_type: self.lower_type(procedure_symbol.procedure_type.return_type)
         blocks: collections.List<^ir.Block>()
@@ -48,7 +61,7 @@ proc (^Lowerer).lower_procedure(self, anon procedure_symbol: checked.Procedure_S
     self.program.procedures.append(value: procedure)
 
     if procedure_symbol.body == null {
-        return
+        return procedure
     }
 
     self.next_value_id = 0
@@ -60,6 +73,33 @@ proc (^Lowerer).lower_procedure(self, anon procedure_symbol: checked.Procedure_S
     self.current_block = block
 
     self.lower_statement(procedure_symbol.body)
+
+    return procedure
+}
+
+proc (^Lowerer).lower_main_wrapper(self, anon main_procedure: ^ir.Procedure) {
+    let wrapper = self.alloc_procedure(ir.Procedure(
+        name: "main"
+        parameters: collections.List<^ir.Value>()
+        return_type: main_procedure.return_type
+        blocks: collections.List<^ir.Block>()
+    ))
+    self.program.procedures.append(value: wrapper)
+
+    self.next_value_id = 0
+    let block = self.alloc_block(ir.Block(
+        label: 1
+        instructions: collections.List<^ir.Instruction>()
+    ))
+    wrapper.blocks.append(value: block)
+    self.current_block = block
+
+    let result: ^ir.Value = null
+    if main_procedure.return_type != null {
+        result = self.alloc_value(ir.Value(name: self.fresh_name(), type: main_procedure.return_type))
+    }
+    self.append_instruction(self.alloc_instruction(ir.Call_Instruction(result: result, callee: main_procedure)))
+    self.append_instruction(self.alloc_instruction(ir.Ret_Instruction(value: result)))
 }
 
 proc (^Lowerer).lower_statement(self, anon statement: ^checked.Statement) {

@@ -2,8 +2,14 @@ import collections
 import compiler.lexer
 
 type Instruction = variant {
+    Call_Instruction
     Const_Instruction
     Ret_Instruction
+}
+
+type Call_Instruction = struct {
+    result: ^Value
+    callee: ^Procedure
 }
 
 type Const_Instruction = struct {

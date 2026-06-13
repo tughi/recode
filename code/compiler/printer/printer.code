@@ -55,6 +55,13 @@ proc print_block(anon block: ^ir.Block, file: ^libc.FILE) {
 
 proc print_instruction(anon instruction: ^ir.Instruction, file: ^libc.FILE) {
     switch instruction {
+        is ir.Call_Instruction as call_instruction {
+            if call_instruction.result != null {
+                print_value_definition(call_instruction.result, file: file)
+                file.write(" = ")
+            }
+            file.write("call $").write(call_instruction.callee.name)
+        }
         is ir.Const_Instruction as const_instruction {
             print_value_definition(const_instruction.result, file: file)
             file.write(" = const ").write(u64: const_instruction.literal.value)
