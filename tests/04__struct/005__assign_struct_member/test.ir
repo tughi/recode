@@ -1,0 +1,30 @@
+type test.Line = struct {
+  p1: test.Point
+  p2: test.Point
+}
+
+type test.Point = struct {
+  x: i32
+  y: i32
+}
+
+$test.main(): i32 {
+@1:
+  %line.ptr: [test.Line] = alloc test.Line
+  %1: [test.Point] = offset %line.ptr .p2
+  %2: [i32] = offset %1 .y
+  %3: i32 = const 64
+  store %2 %3
+  %4: [test.Point] = offset %line.ptr .p2
+  %5: [i32] = offset %4 .y
+  %6: i32 = load %5
+  %7: i32 = const 64
+  %8: i32 = sub %6 %7
+  ret %8
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

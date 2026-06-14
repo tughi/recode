@@ -1,0 +1,4 @@
+type Value = external
+
+proc check(value: Value) -> i32 {
+}

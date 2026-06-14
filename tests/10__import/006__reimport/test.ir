@@ -1,0 +1,39 @@
+type io.Writer = struct {
+  file: [FILE]
+}
+
+type FILE = opaque
+
+$stdout: [[FILE]] = external
+
+$fputc: [proc (i32, [FILE]): i32] = external
+
+$test.main(): i32 {
+@1:
+  %stdout.ptr: [io.Writer] = alloc io.Writer
+  %1: [FILE] = load $stdout
+  %2: io.Writer = struct .file %1
+  store %stdout.ptr %2
+  %3: i32 = const 52
+  %4: [io.Writer] = call $([io.Writer]).write %stdout.ptr %3
+  %5: i32 = const 50
+  %6: [io.Writer] = call $([io.Writer]).write %4 %5
+  %7: i32 = const 10
+  %8: [io.Writer] = call $([io.Writer]).write %6 %7
+  %9: i32 = const 0
+  ret %9
+}
+
+$([io.Writer]).write(%writer, %char: i32): [io.Writer] {
+@1:
+  %1: [[FILE]] = offset %writer .file
+  %2: [FILE] = load %1
+  %3: i32 = call $fputc %char %2
+  ret %writer
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

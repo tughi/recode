@@ -1,0 +1,30 @@
+type test.Point = struct {
+  x: i32
+  y: i32
+}
+
+$test.main(): i32 {
+@1:
+  %point.ptr: [test.Point] = alloc test.Point
+  %1: i32 = const 16
+  %2: i32 = const 32
+  %3: test.Point = struct .x %1 .y %2
+  store %point.ptr %3
+  %4: i32 = call $test.get_y %point.ptr
+  %5: i32 = const 32
+  %6: i32 = sub %4 %5
+  ret %6
+}
+
+$test.get_y(%point: [test.Point]): i32 {
+@1:
+  %1: [i32] = offset %point .y
+  %2: i32 = load %1
+  ret %2
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

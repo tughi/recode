@@ -1,0 +1,10 @@
+import source
+
+type Token = struct {
+    span: source.Span
+}
+
+proc main() -> i32 {
+    let token = Token(span: source.Span(start: 0, end: 42))
+    return token.span.end - 42
+}

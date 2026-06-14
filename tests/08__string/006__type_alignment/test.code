@@ -1,0 +1,6 @@
+proc main() -> i32 {
+    if type_alignment(str) != type_alignment(String) {
+        return 1
+    }
+    return 0
+}

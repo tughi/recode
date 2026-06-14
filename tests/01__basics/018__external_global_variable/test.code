@@ -1,0 +1,5 @@
+let optind: i32 = external
+
+proc main() -> i32 {
+    return optind - 1
+}

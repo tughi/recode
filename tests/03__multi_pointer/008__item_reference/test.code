@@ -1,0 +1,13 @@
+proc main() -> i32 {
+    let number = 0u64
+    let bytes = (^number).as([^]u8) // treat number as an array of 8 bytes
+    let fourth_byte = ^bytes[3] // take the address of the 4th byte (index 3)
+    fourth_byte.^ = 42
+    if bytes[3] != 42 {
+        return 1
+    }
+    if number != 0x0000002A00000000 and number != 0x000000002A000000 { // support both endianness
+        return 2
+    }
+    return 0
+}

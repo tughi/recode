@@ -1,0 +1,22 @@
+type test.String = struct {
+  value: i32
+}
+
+$test.main(): i32 {
+@1:
+  %s.ptr: [test.String] = alloc test.String
+  %1: i32 = const 42
+  %2: test.String = struct .value %1
+  store %s.ptr %2
+  %3: [i32] = offset %s.ptr .value
+  %4: i32 = load %3
+  %5: i32 = const 42
+  %6: i32 = sub %4 %5
+  ret %6
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

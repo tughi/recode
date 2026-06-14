@@ -1,0 +1,8 @@
+type i32 = struct {
+    value: builtin.i32
+}
+
+proc main() -> builtin.i32 {
+    let wrapped = i32(value: 0)
+    return wrapped.value
+}

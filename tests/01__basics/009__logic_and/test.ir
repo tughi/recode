@@ -1,0 +1,98 @@
+$test.main(): i32 {
+@1:
+  %t.ptr: [bool] = alloc bool
+  %1: bool = const true
+  %2: bool = call $test.echo %1
+  store %t.ptr %2
+  %f.ptr: [bool] = alloc bool
+  %3: bool = const false
+  %4: bool = call $test.echo %3
+  store %f.ptr %4
+  %t.1: bool = load %t.ptr
+  br %t.1 @2 @3
+@2:
+  %f.1: bool = load %f.ptr
+  jmp @3
+@3:
+  %5: bool = phi @1 %t.1 @2 %f.1
+  br %5 @4 @5
+@4:
+  %6: i32 = const 1
+  ret %6
+@5:
+  %f.2: bool = load %f.ptr
+  br %f.2 @6 @7
+@6:
+  %t.2: bool = load %t.ptr
+  jmp @7
+@7:
+  %7: bool = phi @5 %f.2 @6 %t.2
+  br %7 @8 @9
+@8:
+  %8: i32 = const 2
+  ret %8
+@9:
+  %t.3: bool = load %t.ptr
+  br %t.3 @10 @11
+@10:
+  %t.4: bool = load %t.ptr
+  jmp @11
+@11:
+  %9: bool = phi @9 %t.3 @10 %t.4
+  br %9 @12 @13
+@12:
+  jmp @14
+@13:
+  %10: i32 = const 3
+  ret %10
+@14:
+  %f.3: bool = load %f.ptr
+  br %f.3 @15 @16
+@15:
+  %f.4: bool = load %f.ptr
+  jmp @16
+@16:
+  %11: bool = phi @14 %f.3 @15 %f.4
+  br %11 @17 @18
+@17:
+  %12: i32 = const 4
+  ret %12
+@18:
+  %t.5: bool = load %t.ptr
+  br %t.5 @19 @20
+@19:
+  %t.6: bool = load %t.ptr
+  jmp @20
+@20:
+  %13: bool = phi @18 %t.5 @19 %t.6
+  br %13 @21 @22
+@21:
+  %f.5: bool = load %f.ptr
+  br %f.5 @23 @24
+@23:
+  %f.6: bool = load %f.ptr
+  jmp @24
+@24:
+  %14: bool = phi @21 %f.5 @23 %f.6
+  jmp @22
+@22:
+  %15: bool = phi @20 %13 @24 %14
+  br %15 @25 @26
+@25:
+  %16: i32 = const 5
+  ret %16
+@26:
+  %17: i32 = const 0
+  ret %17
+}
+
+$test.echo(%v: bool): bool {
+@1:
+  ret %v
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

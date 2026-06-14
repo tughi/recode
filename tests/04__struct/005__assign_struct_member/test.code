@@ -1,0 +1,15 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+type Line = struct {
+    p1: Point
+    p2: Point
+}
+
+proc main() -> i32 {
+    let line: Line
+    line.p2.y = 64
+    return line.p2.y - 64
+}

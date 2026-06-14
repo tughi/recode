@@ -1,0 +1,6 @@
+import source
+
+proc main() -> i32 {
+    let span: source.Span
+    return 0
+}

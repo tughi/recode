@@ -1,0 +1,6 @@
+const NODE_ERROR = 1
+
+type Node = struct {
+    kind: i32
+    span: Span
+}

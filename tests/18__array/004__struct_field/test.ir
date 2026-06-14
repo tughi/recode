@@ -1,0 +1,26 @@
+type test.Buffer = struct {
+  data: [4]i32
+}
+
+$test.main(): i32 {
+@1:
+  %buffer.ptr: [test.Buffer] = alloc test.Buffer
+  %1: [[4]i32] = offset %buffer.ptr .data
+  %2: i32 = const 3
+  %3: [i32] = offset %1 %2
+  %4: i32 = const 42
+  store %3 %4
+  %5: [[4]i32] = offset %buffer.ptr .data
+  %6: i32 = const 3
+  %7: [i32] = offset %5 %6
+  %8: i32 = load %7
+  %9: i32 = const 42
+  %10: i32 = sub %8 %9
+  ret %10
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

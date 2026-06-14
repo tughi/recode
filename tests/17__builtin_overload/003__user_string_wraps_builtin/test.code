@@ -1,0 +1,9 @@
+import token
+
+proc main() -> i32 {
+    let label = token.string("forty-two")
+    if label.lexeme.length == 9 {
+        return 0
+    }
+    return 1
+}

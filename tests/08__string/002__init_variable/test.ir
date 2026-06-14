@@ -1,0 +1,27 @@
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$str_1: [*]u8 = "Answer to the Ultimate Question of Life, the Universe, and Everything"
+
+$test.main(): i32 {
+@1:
+  %empty.ptr: [String] = alloc String
+  %1: [*]u8 = const null
+  %2: usize = const 0
+  %3: String = struct .data %1 .length %2
+  store %empty.ptr %3
+  %quote.ptr: [String] = alloc String
+  %4: usize = const 69
+  %5: String = struct .data $str_1 .length %4
+  store %quote.ptr %5
+  %6: i32 = const 0
+  ret %6
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

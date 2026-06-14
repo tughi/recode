@@ -1,0 +1,3 @@
+const FORTY_ONE = 41
+const FORTY_TWO = FORTY_ONE + 1
+const FORTY_THREE = FORTY_TWO + 1

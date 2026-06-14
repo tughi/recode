@@ -1,0 +1,10 @@
+import libc
+
+type Writer = struct {
+    file: ^libc.FILE
+}
+
+proc (^Writer).write(writer, char: i32) -> ^Writer {
+    libc.fputc(char, writer.file)
+    return writer
+}

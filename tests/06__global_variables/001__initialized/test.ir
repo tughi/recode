@@ -1,0 +1,15 @@
+$test.value: [i32] = 42
+
+$test.main(): i32 {
+@1:
+  %1: i32 = load $test.value
+  %2: i32 = const 42
+  %3: i32 = sub %1 %2
+  ret %3
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

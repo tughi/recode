@@ -1,0 +1,13 @@
+proc main() -> i32 {
+    stdout.write(char: '4').write(char: '2').write(char: '\n')
+    return 0
+}
+
+proc (^FILE).write(self, char: u8) -> ^FILE {
+    fputc(char.as(i32), stdout)
+    return self
+}
+
+type FILE = external
+let stdout: ^FILE = external
+proc fputc(char: i32, stream: ^FILE) -> i32 = external

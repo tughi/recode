@@ -1,0 +1,19 @@
+type Vehicle = struct {
+    wheels: i32
+}
+
+type Car = struct {
+    super: Vehicle
+}
+
+type Sports_Car = struct {
+    super: Car
+    turbo: bool
+}
+
+proc main() -> i32 {
+    let my_vehicle: ^Vehicle = alloc Sports_Car(super: Car(super: Vehicle(wheels: 4)), turbo: true)
+    return my_vehicle.wheels - 4
+}
+
+proc malloc(size: usize) -> ^Any = external

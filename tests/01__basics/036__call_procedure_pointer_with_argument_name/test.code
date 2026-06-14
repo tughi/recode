@@ -1,0 +1,9 @@
+proc echo(value: i32) -> i32 {
+    return value
+}
+
+proc main() -> i32 {
+    let fn: [proc (i32) -> i32]
+    fn = echo
+    return fn(value: 42)
+}

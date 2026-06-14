@@ -1,0 +1,7 @@
+proc main() -> i32 {
+    let mem = malloc(42)
+
+    return 0
+}
+
+proc malloc(size: usize) -> ^Any = external

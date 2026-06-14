@@ -1,0 +1,17 @@
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$test.main(): i32 {
+@1:
+  %string.ptr: [String] = alloc String
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -1,0 +1,18 @@
+type Counter = struct {
+    value: i32
+}
+
+proc (^Counter).add(self) {
+    self.value = self.value + 1
+}
+
+proc (^Counter).add_amount(self, amount: i32) {
+    self.value = self.value + amount
+}
+
+proc main() -> i32 {
+    let counter = Counter(value: 0)
+    counter.add()
+    counter.add_amount(4)
+    return counter.value - 5
+}

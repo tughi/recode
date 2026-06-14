@@ -1,0 +1,4 @@
+proc main() -> i32 {
+    let value = 42
+    return 0
+}

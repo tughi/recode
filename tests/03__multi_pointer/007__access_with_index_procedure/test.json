@@ -1,0 +1,9 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/03__multi_pointer/007__access_with_index_procedure/test.code:1:16-20: Consumed 1 spaces where 0 were expected",
+            "tests/03__multi_pointer/007__access_with_index_procedure/test.code:1:16-20: Unexpected token"
+        ]
+    }
+}

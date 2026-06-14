@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/02__any/004__type_alignment/test.code:2:27-30: Type Any has no alignment"
+        ]
+    }
+}

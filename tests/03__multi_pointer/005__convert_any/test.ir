@@ -1,0 +1,32 @@
+$test.main(%argc: i32, %argv: [*][*]u8): i32 {
+@1:
+  %any.ptr: [[Any]] = alloc [Any]
+  %1: i32 = const 0
+  %2: [[*]u8] = offset %argv %1
+  %3: [*]u8 = load %2
+  %4: [Any] = cast %3
+  store %any.ptr %4
+  %name.ptr: [[*]u8] = alloc [*]u8
+  %any.1: [Any] = load %any.ptr
+  %5: [*]u8 = cast %any.1
+  store %name.ptr %5
+  %name.1: [*]u8 = load %name.ptr
+  %6: i32 = const 0
+  %7: [u8] = offset %name.1 %6
+  %8: u8 = load %7
+  %9: u8 = const 'b'
+  %10: bool = cmp_ne %8 %9
+  br %10 @2 @3
+@2:
+  %11: i32 = const 1
+  ret %11
+@3:
+  %12: i32 = const 0
+  ret %12
+}
+
+$main(%argc: i32, %argv: [*][*]u8): i32 {
+@1:
+  %1: i32 = call $test.main %argc %argv
+  ret %1
+}

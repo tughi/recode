@@ -1,0 +1,47 @@
+type token.String = struct {
+  lexeme: String
+}
+
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$str_1: [*]u8 = "forty-two"
+
+$test.main(): i32 {
+@1:
+  %label.ptr: [token.String] = alloc token.String
+  %1: usize = const 9
+  %2: String = struct .data $str_1 .length %1
+  %3: token.String = call $token.string %2
+  store %label.ptr %3
+  %4: [String] = offset %label.ptr .lexeme
+  %5: [usize] = offset %4 .length
+  %6: usize = load %5
+  %7: usize = const 9
+  %8: bool = cmp_eq %6 %7
+  br %8 @2 @3
+@2:
+  %9: i32 = const 0
+  ret %9
+@3:
+  %10: i32 = const 1
+  ret %10
+}
+
+$token.string(%lexeme: String): token.String {
+@1:
+  %lexeme_copy.ptr: [String] = alloc String
+  store %lexeme_copy.ptr %lexeme
+  %1: [String] = cast %lexeme_copy.ptr
+  %2: String = load %1
+  %3: token.String = struct .lexeme %2
+  ret %3
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

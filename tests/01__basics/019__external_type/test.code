@@ -1,0 +1,12 @@
+type FILE = external
+
+let std_out: ^FILE = external "stdout"
+
+proc fputc(char: i32, file: ^FILE) -> i32 = external
+
+proc main() -> i32 {
+    fputc(52, std_out) // '4'
+    fputc(50, std_out) // '2'
+    fputc(10, std_out) // '\n'
+    return 0
+}

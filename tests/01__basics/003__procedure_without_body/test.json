@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/003__procedure_without_body/test.code:1:19: Missing procedure body"
+        ]
+    }
+}

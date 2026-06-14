@@ -1,0 +1,7 @@
+proc main() -> i32 {
+    let source: [4]i32
+    source[2] = 42
+    let copy = source
+    source[2] = 13
+    return copy[2] - 42
+}

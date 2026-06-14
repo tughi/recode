@@ -1,0 +1,6 @@
+proc strlen(anon s: [^]u8) -> usize = external
+
+proc ([^]u8).to_str(self) -> str {
+    let string = String(data: self, length: strlen(self))
+    return (^string).as(^str).^
+}

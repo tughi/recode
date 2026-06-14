@@ -1,0 +1,69 @@
+import calculator.expression
+import calculator.source
+
+type Tokenizer = struct {
+    data: [^]u8
+    index: i32
+
+    current_token: ^source.Node
+}
+
+proc (^Tokenizer).peek_token(self) -> ^source.Node {
+    if self.current_token == null {
+        self.current_token = self.scan_token()
+    }
+    return self.current_token
+}
+
+proc (^Tokenizer).next_token(self) -> ^source.Node {
+    let token = self.peek_token()
+    self.current_token = null
+    return token
+}
+
+proc (^Tokenizer).scan_token(self) -> ^source.Node {
+    while self.data[self.index] == ' ' {
+        self.index = self.index + 1
+    }
+    let ch = self.data[self.index]
+    if ch == 0 {
+        return alloc Stop(super: source.Node(kind: NODE_STOP, span: source.Span(start: self.index, end: self.index)))
+    }
+    if ch >= '0' and ch <= '9' {
+        return self.scan_number_token()
+    }
+    self.index = self.index + 1
+    if ch == '+' {
+        return alloc Plus(super: source.Node(kind: NODE_PLUS, span: source.Span(start: self.index - 1, end: self.index)))
+    }
+    if ch == '-' {
+        return alloc Minus(super: source.Node(kind: NODE_MINUS, span: source.Span(start: self.index - 1, end: self.index)))
+    }
+    if ch == '*' {
+        return alloc Multiply(super: source.Node(kind: NODE_MULTIPLY, span: source.Span(start: self.index - 1, end: self.index)))
+    }
+    if ch == '/' {
+        return alloc Divide(super: source.Node(kind: NODE_DIVIDE, span: source.Span(start: self.index - 1, end: self.index)))
+    }
+    return alloc source.Error(
+        super: source.Node(kind: source.NODE_ERROR, span: source.Span(start: self.index - 1, end: self.index))
+        message: "Unexpected character"
+    )
+}
+
+proc (^Tokenizer).scan_number_token(self) -> ^source.Node {
+    let start = self.index
+    let value = 0
+    loop {
+        let c = self.data[self.index]
+        if c < '0' or c > '9' {
+            break
+        }
+        value = value * 10 + (c - '0').as(i32)
+        self.index = self.index + 1
+    }
+    return alloc expression.Number(
+        super: source.Node(kind: expression.NODE_NUMBER, span: source.Span(start: start, end: self.index))
+        value: value
+    )
+}

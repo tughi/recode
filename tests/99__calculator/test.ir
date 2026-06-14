@@ -1,0 +1,1297 @@
+type calculator.source.Node = struct {
+  kind: i32
+  span: calculator.source.Span
+}
+
+type calculator.source.Span = struct {
+  start: i32
+  end: i32
+}
+
+type io.Writer = struct {
+  object: [Any]
+  write_char: [proc ([Any], u8)]
+}
+
+type calculator.parser.Parser = struct {
+  tokenizer: calculator.tokenizer.Tokenizer
+}
+
+type calculator.tokenizer.Tokenizer = struct {
+  data: [*]u8
+  index: i32
+  current_token: [calculator.source.Node]
+}
+
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+type FILE = opaque
+
+type string.Builder = struct {
+  data: [*]u8
+  data_size: usize
+  length: usize
+}
+
+type calculator.expression.Number = struct {
+  super: calculator.source.Node
+  value: i32
+}
+
+type calculator.expression.Addition = struct {
+  super: calculator.source.Node
+  left: [calculator.source.Node]
+  right: [calculator.source.Node]
+}
+
+type calculator.expression.Division = struct {
+  super: calculator.source.Node
+  left: [calculator.source.Node]
+  right: [calculator.source.Node]
+}
+
+type calculator.expression.Multiplication = struct {
+  super: calculator.source.Node
+  left: [calculator.source.Node]
+  right: [calculator.source.Node]
+}
+
+type calculator.expression.Subtraction = struct {
+  super: calculator.source.Node
+  left: [calculator.source.Node]
+  right: [calculator.source.Node]
+}
+
+type calculator.source.Error = struct {
+  super: calculator.source.Node
+  message: String
+}
+
+type calculator.tokenizer.Stop = struct {
+  super: calculator.source.Node
+}
+
+type calculator.tokenizer.Plus = struct {
+  super: calculator.source.Node
+}
+
+type calculator.tokenizer.Minus = struct {
+  super: calculator.source.Node
+}
+
+type calculator.tokenizer.Multiply = struct {
+  super: calculator.source.Node
+}
+
+type calculator.tokenizer.Divide = struct {
+  super: calculator.source.Node
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$realloc: [proc ([Any], usize): [Any]] = external
+
+$exit: [proc (i32)] = external
+
+$stdin: [[FILE]] = external
+
+$stdout: [[FILE]] = external
+
+$stderr: [[FILE]] = external
+
+$fputc: [proc (i32, [FILE]): i32] = external
+
+$os.stdout: [[io.Writer]]
+
+$os.stderr: [[io.Writer]]
+
+$str_1: [*]u8 = "Expression: "
+
+$str_2: [*]u8 = "Result: "
+
+$str_3: [*]u8 = "Nil!"
+
+$str_4: [*]u8 = "("
+
+$str_5: [*]u8 = " + "
+
+$str_6: [*]u8 = ")"
+
+$str_7: [*]u8 = " / "
+
+$str_8: [*]u8 = " * "
+
+$str_9: [*]u8 = " - "
+
+$str_10: [*]u8 = "Error: "
+
+$str_11: [*]u8 = "Expected number"
+
+$str_12: [*]u8 = "Number: "
+
+$str_13: [*]u8 = "Plus"
+
+$str_14: [*]u8 = "Minus"
+
+$str_15: [*]u8 = "Multiply"
+
+$str_16: [*]u8 = "Divide"
+
+$str_17: [*]u8 = "Stop"
+
+$str_18: [*]u8 = "Unexpected character"
+
+$test.main(%argc: i32, %argv: [*][*]u8): i32 {
+@1:
+  call $os.init
+  %1: i32 = const 2
+  %2: bool = cmp_ne %argc %1
+  br %2 @2 @3
+@2:
+  %3: i32 = const 1
+  call $exit %3
+  jmp @3
+@3:
+  %input_tokenizer.ptr: [calculator.tokenizer.Tokenizer] = alloc calculator.tokenizer.Tokenizer
+  %4: i32 = const 1
+  %5: [[*]u8] = offset %argv %4
+  %6: [*]u8 = load %5
+  %7: i32 = const 0
+  %8: calculator.tokenizer.Tokenizer = struct .data %6 .index %7
+  store %input_tokenizer.ptr %8
+  jmp @4
+@4:
+  %9: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %input_tokenizer.ptr
+  %10: [i32] = offset %9 .kind
+  %11: i32 = load %10
+  %12: i32 = const 11
+  %13: bool = cmp_ne %11 %12
+  br %13 @5 @6
+@5:
+  %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %14: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %input_tokenizer.ptr
+  store %token.ptr %14
+  %15: [io.Writer] = load $os.stdout
+  %token.1: [calculator.source.Node] = load %token.ptr
+  %16: [io.Writer] = call $([io.Writer]).write_token %15 %token.1
+  %17: [io.Writer] = call $([io.Writer]).end_line %16
+  jmp @4
+@6:
+  %input_parser.ptr: [calculator.parser.Parser] = alloc calculator.parser.Parser
+  %18: i32 = const 1
+  %19: [[*]u8] = offset %argv %18
+  %20: [*]u8 = load %19
+  %21: i32 = const 0
+  %22: calculator.tokenizer.Tokenizer = struct .data %20 .index %21
+  %23: calculator.parser.Parser = struct .tokenizer %22
+  store %input_parser.ptr %23
+  %parsed_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %24: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_expression %input_parser.ptr
+  store %parsed_expression.ptr %24
+  %25: [io.Writer] = load $os.stdout
+  %26: usize = const 12
+  %27: String = struct .data $str_1 .length %26
+  %28: [io.Writer] = call $([io.Writer]).write_string %25 %27
+  %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
+  %29: [io.Writer] = call $([io.Writer]).write_expression %28 %parsed_expression.1
+  %30: [io.Writer] = call $([io.Writer]).end_line %29
+  %result.ptr: [i32] = alloc i32
+  %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
+  %31: i32 = call $test.evaluate %parsed_expression.2
+  store %result.ptr %31
+  %32: [io.Writer] = load $os.stdout
+  %33: usize = const 8
+  %34: String = struct .data $str_2 .length %33
+  %35: [io.Writer] = call $([io.Writer]).write_string %32 %34
+  %result.1: i32 = load %result.ptr
+  %36: [io.Writer] = call $([io.Writer]).write_signed %35 %result.1
+  %37: [io.Writer] = call $([io.Writer]).end_line %36
+  %38: i32 = const 0
+  ret %38
+}
+
+$test.evaluate(%node: [calculator.source.Node]): i32 {
+@1:
+  %1: [i32] = offset %node .kind
+  %2: i32 = load %1
+  %3: i32 = const 2
+  %4: bool = cmp_eq %2 %3
+  br %4 @2 @3
+@2:
+  %5: [calculator.expression.Number] = cast %node
+  %6: [i32] = offset %5 .value
+  %7: i32 = load %6
+  ret %7
+@3:
+  %8: [i32] = offset %node .kind
+  %9: i32 = load %8
+  %10: i32 = const 3
+  %11: bool = cmp_eq %9 %10
+  br %11 @5 @6
+@5:
+  %addition.ptr: [[calculator.expression.Addition]] = alloc [calculator.expression.Addition]
+  %12: [calculator.expression.Addition] = cast %node
+  store %addition.ptr %12
+  %addition.1: [calculator.expression.Addition] = load %addition.ptr
+  %13: [[calculator.source.Node]] = offset %addition.1 .left
+  %14: [calculator.source.Node] = load %13
+  %15: i32 = call $test.evaluate %14
+  %addition.2: [calculator.expression.Addition] = load %addition.ptr
+  %16: [[calculator.source.Node]] = offset %addition.2 .right
+  %17: [calculator.source.Node] = load %16
+  %18: i32 = call $test.evaluate %17
+  %19: i32 = add %15 %18
+  ret %19
+@6:
+  %20: [i32] = offset %node .kind
+  %21: i32 = load %20
+  %22: i32 = const 4
+  %23: bool = cmp_eq %21 %22
+  br %23 @8 @9
+@8:
+  %division.ptr: [[calculator.expression.Division]] = alloc [calculator.expression.Division]
+  %24: [calculator.expression.Division] = cast %node
+  store %division.ptr %24
+  %division.1: [calculator.expression.Division] = load %division.ptr
+  %25: [[calculator.source.Node]] = offset %division.1 .left
+  %26: [calculator.source.Node] = load %25
+  %27: i32 = call $test.evaluate %26
+  %division.2: [calculator.expression.Division] = load %division.ptr
+  %28: [[calculator.source.Node]] = offset %division.2 .right
+  %29: [calculator.source.Node] = load %28
+  %30: i32 = call $test.evaluate %29
+  %31: i32 = div %27 %30
+  ret %31
+@9:
+  %32: [i32] = offset %node .kind
+  %33: i32 = load %32
+  %34: i32 = const 5
+  %35: bool = cmp_eq %33 %34
+  br %35 @11 @12
+@11:
+  %multiplication.ptr: [[calculator.expression.Multiplication]] = alloc [calculator.expression.Multiplication]
+  %36: [calculator.expression.Multiplication] = cast %node
+  store %multiplication.ptr %36
+  %multiplication.1: [calculator.expression.Multiplication] = load %multiplication.ptr
+  %37: [[calculator.source.Node]] = offset %multiplication.1 .left
+  %38: [calculator.source.Node] = load %37
+  %39: i32 = call $test.evaluate %38
+  %multiplication.2: [calculator.expression.Multiplication] = load %multiplication.ptr
+  %40: [[calculator.source.Node]] = offset %multiplication.2 .right
+  %41: [calculator.source.Node] = load %40
+  %42: i32 = call $test.evaluate %41
+  %43: i32 = mul %39 %42
+  ret %43
+@12:
+  %44: [i32] = offset %node .kind
+  %45: i32 = load %44
+  %46: i32 = const 6
+  %47: bool = cmp_eq %45 %46
+  br %47 @14 @15
+@14:
+  %subtraction.ptr: [[calculator.expression.Subtraction]] = alloc [calculator.expression.Subtraction]
+  %48: [calculator.expression.Subtraction] = cast %node
+  store %subtraction.ptr %48
+  %subtraction.1: [calculator.expression.Subtraction] = load %subtraction.ptr
+  %49: [[calculator.source.Node]] = offset %subtraction.1 .left
+  %50: [calculator.source.Node] = load %49
+  %51: i32 = call $test.evaluate %50
+  %subtraction.2: [calculator.expression.Subtraction] = load %subtraction.ptr
+  %52: [[calculator.source.Node]] = offset %subtraction.2 .right
+  %53: [calculator.source.Node] = load %52
+  %54: i32 = call $test.evaluate %53
+  %55: i32 = sub %51 %54
+  ret %55
+@15:
+  jmp @13
+@13:
+  jmp @10
+@10:
+  jmp @7
+@7:
+  jmp @4
+@4:
+  %56: i32 = const 1
+  call $exit %56
+}
+
+$([io.Writer]).write_expression(%self, %node: [calculator.source.Node]): [io.Writer] {
+@1:
+  %1: [calculator.source.Node] = const null
+  %2: bool = cmp_eq %node %1
+  br %2 @2 @3
+@2:
+  %3: usize = const 4
+  %4: String = struct .data $str_3 .length %3
+  %5: [io.Writer] = call $([io.Writer]).write_string %self %4
+  ret %5
+@3:
+  %6: [i32] = offset %node .kind
+  %7: i32 = load %6
+  %8: i32 = const 2
+  %9: bool = cmp_eq %7 %8
+  br %9 @4 @5
+@4:
+  %number.ptr: [[calculator.expression.Number]] = alloc [calculator.expression.Number]
+  %10: [calculator.expression.Number] = cast %node
+  store %number.ptr %10
+  %number.1: [calculator.expression.Number] = load %number.ptr
+  %11: [i32] = offset %number.1 .value
+  %12: i32 = load %11
+  %13: [io.Writer] = call $([io.Writer]).write_signed %self %12
+  ret %13
+@5:
+  %14: [i32] = offset %node .kind
+  %15: i32 = load %14
+  %16: i32 = const 3
+  %17: bool = cmp_eq %15 %16
+  br %17 @7 @8
+@7:
+  %addition.ptr: [[calculator.expression.Addition]] = alloc [calculator.expression.Addition]
+  %18: [calculator.expression.Addition] = cast %node
+  store %addition.ptr %18
+  %19: usize = const 1
+  %20: String = struct .data $str_4 .length %19
+  %21: [io.Writer] = call $([io.Writer]).write_string %self %20
+  %addition.1: [calculator.expression.Addition] = load %addition.ptr
+  %22: [[calculator.source.Node]] = offset %addition.1 .left
+  %23: [calculator.source.Node] = load %22
+  %24: [io.Writer] = call $([io.Writer]).write_expression %21 %23
+  %25: usize = const 3
+  %26: String = struct .data $str_5 .length %25
+  %27: [io.Writer] = call $([io.Writer]).write_string %24 %26
+  %addition.2: [calculator.expression.Addition] = load %addition.ptr
+  %28: [[calculator.source.Node]] = offset %addition.2 .right
+  %29: [calculator.source.Node] = load %28
+  %30: [io.Writer] = call $([io.Writer]).write_expression %27 %29
+  %31: usize = const 1
+  %32: String = struct .data $str_6 .length %31
+  %33: [io.Writer] = call $([io.Writer]).write_string %30 %32
+  ret %33
+@8:
+  %34: [i32] = offset %node .kind
+  %35: i32 = load %34
+  %36: i32 = const 4
+  %37: bool = cmp_eq %35 %36
+  br %37 @10 @11
+@10:
+  %division.ptr: [[calculator.expression.Division]] = alloc [calculator.expression.Division]
+  %38: [calculator.expression.Division] = cast %node
+  store %division.ptr %38
+  %39: usize = const 1
+  %40: String = struct .data $str_4 .length %39
+  %41: [io.Writer] = call $([io.Writer]).write_string %self %40
+  %division.1: [calculator.expression.Division] = load %division.ptr
+  %42: [[calculator.source.Node]] = offset %division.1 .left
+  %43: [calculator.source.Node] = load %42
+  %44: [io.Writer] = call $([io.Writer]).write_expression %41 %43
+  %45: usize = const 3
+  %46: String = struct .data $str_7 .length %45
+  %47: [io.Writer] = call $([io.Writer]).write_string %44 %46
+  %division.2: [calculator.expression.Division] = load %division.ptr
+  %48: [[calculator.source.Node]] = offset %division.2 .right
+  %49: [calculator.source.Node] = load %48
+  %50: [io.Writer] = call $([io.Writer]).write_expression %47 %49
+  %51: usize = const 1
+  %52: String = struct .data $str_6 .length %51
+  %53: [io.Writer] = call $([io.Writer]).write_string %50 %52
+  ret %53
+@11:
+  %54: [i32] = offset %node .kind
+  %55: i32 = load %54
+  %56: i32 = const 5
+  %57: bool = cmp_eq %55 %56
+  br %57 @13 @14
+@13:
+  %multiplication.ptr: [[calculator.expression.Multiplication]] = alloc [calculator.expression.Multiplication]
+  %58: [calculator.expression.Multiplication] = cast %node
+  store %multiplication.ptr %58
+  %59: usize = const 1
+  %60: String = struct .data $str_4 .length %59
+  %61: [io.Writer] = call $([io.Writer]).write_string %self %60
+  %multiplication.1: [calculator.expression.Multiplication] = load %multiplication.ptr
+  %62: [[calculator.source.Node]] = offset %multiplication.1 .left
+  %63: [calculator.source.Node] = load %62
+  %64: [io.Writer] = call $([io.Writer]).write_expression %61 %63
+  %65: usize = const 3
+  %66: String = struct .data $str_8 .length %65
+  %67: [io.Writer] = call $([io.Writer]).write_string %64 %66
+  %multiplication.2: [calculator.expression.Multiplication] = load %multiplication.ptr
+  %68: [[calculator.source.Node]] = offset %multiplication.2 .right
+  %69: [calculator.source.Node] = load %68
+  %70: [io.Writer] = call $([io.Writer]).write_expression %67 %69
+  %71: usize = const 1
+  %72: String = struct .data $str_6 .length %71
+  %73: [io.Writer] = call $([io.Writer]).write_string %70 %72
+  ret %73
+@14:
+  %74: [i32] = offset %node .kind
+  %75: i32 = load %74
+  %76: i32 = const 6
+  %77: bool = cmp_eq %75 %76
+  br %77 @16 @17
+@16:
+  %subtraction.ptr: [[calculator.expression.Subtraction]] = alloc [calculator.expression.Subtraction]
+  %78: [calculator.expression.Subtraction] = cast %node
+  store %subtraction.ptr %78
+  %79: usize = const 1
+  %80: String = struct .data $str_4 .length %79
+  %81: [io.Writer] = call $([io.Writer]).write_string %self %80
+  %subtraction.1: [calculator.expression.Subtraction] = load %subtraction.ptr
+  %82: [[calculator.source.Node]] = offset %subtraction.1 .left
+  %83: [calculator.source.Node] = load %82
+  %84: [io.Writer] = call $([io.Writer]).write_expression %81 %83
+  %85: usize = const 3
+  %86: String = struct .data $str_9 .length %85
+  %87: [io.Writer] = call $([io.Writer]).write_string %84 %86
+  %subtraction.2: [calculator.expression.Subtraction] = load %subtraction.ptr
+  %88: [[calculator.source.Node]] = offset %subtraction.2 .right
+  %89: [calculator.source.Node] = load %88
+  %90: [io.Writer] = call $([io.Writer]).write_expression %87 %89
+  %91: usize = const 1
+  %92: String = struct .data $str_6 .length %91
+  %93: [io.Writer] = call $([io.Writer]).write_string %90 %92
+  ret %93
+@17:
+  %94: [i32] = offset %node .kind
+  %95: i32 = load %94
+  %96: i32 = const 1
+  %97: bool = cmp_eq %95 %96
+  br %97 @19 @20
+@19:
+  %error.ptr: [[calculator.source.Error]] = alloc [calculator.source.Error]
+  %98: [calculator.source.Error] = cast %node
+  store %error.ptr %98
+  %99: usize = const 7
+  %100: String = struct .data $str_10 .length %99
+  %101: [io.Writer] = call $([io.Writer]).write_string %self %100
+  %error.1: [calculator.source.Error] = load %error.ptr
+  %102: [String] = offset %error.1 .message
+  %103: String = load %102
+  %104: [io.Writer] = call $([io.Writer]).write_string %101 %103
+  ret %104
+@20:
+  jmp @18
+@18:
+  jmp @15
+@15:
+  jmp @12
+@12:
+  jmp @9
+@9:
+  jmp @6
+@6:
+  ret %self
+}
+
+$([calculator.parser.Parser]).parse_expression(%self): [calculator.source.Node] {
+@1:
+  %1: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_additive_expression %self
+  ret %1
+}
+
+$([calculator.parser.Parser]).parse_additive_expression(%self): [calculator.source.Node] {
+@1:
+  %parsed_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %1: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
+  store %parsed_expression.ptr %1
+  jmp @2
+@2:
+  %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %2: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %3: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %2
+  store %token.ptr %3
+  %token.1: [calculator.source.Node] = load %token.ptr
+  %4: [i32] = offset %token.1 .kind
+  %5: i32 = load %4
+  %6: i32 = const 7
+  %7: bool = cmp_eq %5 %6
+  br %7 @4 @5
+@4:
+  %8: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %9: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %8
+  %other_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %10: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
+  store %other_expression.ptr %10
+  %11: usize = const 32
+  %12: [Any] = call $malloc %11
+  %13: [calculator.expression.Addition] = cast %12
+  %14: i32 = const 3
+  %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
+  %15: [calculator.source.Span] = offset %parsed_expression.1 .span
+  %16: [i32] = offset %15 .start
+  %17: i32 = load %16
+  %other_expression.1: [calculator.source.Node] = load %other_expression.ptr
+  %18: [calculator.source.Span] = offset %other_expression.1 .span
+  %19: [i32] = offset %18 .end
+  %20: i32 = load %19
+  %21: calculator.source.Span = struct .start %17 .end %20
+  %22: calculator.source.Node = struct .kind %14 .span %21
+  %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
+  %other_expression.2: [calculator.source.Node] = load %other_expression.ptr
+  %23: calculator.expression.Addition = struct .super %22 .left %parsed_expression.2 .right %other_expression.2
+  store %13 %23
+  %24: [calculator.source.Node] = cast %13
+  store %parsed_expression.ptr %24
+  jmp @6
+@5:
+  %token.2: [calculator.source.Node] = load %token.ptr
+  %25: [i32] = offset %token.2 .kind
+  %26: i32 = load %25
+  %27: i32 = const 8
+  %28: bool = cmp_eq %26 %27
+  br %28 @7 @8
+@7:
+  %29: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %30: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %29
+  %other_expression.2.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %31: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
+  store %other_expression.2.ptr %31
+  %32: usize = const 32
+  %33: [Any] = call $malloc %32
+  %34: [calculator.expression.Subtraction] = cast %33
+  %35: i32 = const 6
+  %parsed_expression.3: [calculator.source.Node] = load %parsed_expression.ptr
+  %36: [calculator.source.Span] = offset %parsed_expression.3 .span
+  %37: [i32] = offset %36 .start
+  %38: i32 = load %37
+  %other_expression.2.1: [calculator.source.Node] = load %other_expression.2.ptr
+  %39: [calculator.source.Span] = offset %other_expression.2.1 .span
+  %40: [i32] = offset %39 .end
+  %41: i32 = load %40
+  %42: calculator.source.Span = struct .start %38 .end %41
+  %43: calculator.source.Node = struct .kind %35 .span %42
+  %parsed_expression.4: [calculator.source.Node] = load %parsed_expression.ptr
+  %other_expression.2.2: [calculator.source.Node] = load %other_expression.2.ptr
+  %44: calculator.expression.Subtraction = struct .super %43 .left %parsed_expression.4 .right %other_expression.2.2
+  store %34 %44
+  %45: [calculator.source.Node] = cast %34
+  store %parsed_expression.ptr %45
+  jmp @9
+@8:
+  jmp @3
+@9:
+  jmp @6
+@6:
+  jmp @2
+@3:
+  %parsed_expression.5: [calculator.source.Node] = load %parsed_expression.ptr
+  ret %parsed_expression.5
+}
+
+$([calculator.parser.Parser]).parse_multiplicative_expression(%self): [calculator.source.Node] {
+@1:
+  %parsed_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %1: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_primary_expression %self
+  store %parsed_expression.ptr %1
+  jmp @2
+@2:
+  %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %2: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %3: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %2
+  store %token.ptr %3
+  %token.1: [calculator.source.Node] = load %token.ptr
+  %4: [i32] = offset %token.1 .kind
+  %5: i32 = load %4
+  %6: i32 = const 9
+  %7: bool = cmp_eq %5 %6
+  br %7 @4 @5
+@4:
+  %8: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %9: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %8
+  %other_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %10: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_primary_expression %self
+  store %other_expression.ptr %10
+  %11: usize = const 32
+  %12: [Any] = call $malloc %11
+  %13: [calculator.expression.Multiplication] = cast %12
+  %14: i32 = const 5
+  %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
+  %15: [calculator.source.Span] = offset %parsed_expression.1 .span
+  %16: [i32] = offset %15 .start
+  %17: i32 = load %16
+  %other_expression.1: [calculator.source.Node] = load %other_expression.ptr
+  %18: [calculator.source.Span] = offset %other_expression.1 .span
+  %19: [i32] = offset %18 .end
+  %20: i32 = load %19
+  %21: calculator.source.Span = struct .start %17 .end %20
+  %22: calculator.source.Node = struct .kind %14 .span %21
+  %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
+  %other_expression.2: [calculator.source.Node] = load %other_expression.ptr
+  %23: calculator.expression.Multiplication = struct .super %22 .left %parsed_expression.2 .right %other_expression.2
+  store %13 %23
+  %24: [calculator.source.Node] = cast %13
+  store %parsed_expression.ptr %24
+  jmp @6
+@5:
+  %token.2: [calculator.source.Node] = load %token.ptr
+  %25: [i32] = offset %token.2 .kind
+  %26: i32 = load %25
+  %27: i32 = const 10
+  %28: bool = cmp_eq %26 %27
+  br %28 @7 @8
+@7:
+  %29: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %30: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %29
+  %other_expression.2.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %31: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_primary_expression %self
+  store %other_expression.2.ptr %31
+  %32: usize = const 32
+  %33: [Any] = call $malloc %32
+  %34: [calculator.expression.Division] = cast %33
+  %35: i32 = const 4
+  %parsed_expression.3: [calculator.source.Node] = load %parsed_expression.ptr
+  %36: [calculator.source.Span] = offset %parsed_expression.3 .span
+  %37: [i32] = offset %36 .start
+  %38: i32 = load %37
+  %other_expression.2.1: [calculator.source.Node] = load %other_expression.2.ptr
+  %39: [calculator.source.Span] = offset %other_expression.2.1 .span
+  %40: [i32] = offset %39 .end
+  %41: i32 = load %40
+  %42: calculator.source.Span = struct .start %38 .end %41
+  %43: calculator.source.Node = struct .kind %35 .span %42
+  %parsed_expression.4: [calculator.source.Node] = load %parsed_expression.ptr
+  %other_expression.2.2: [calculator.source.Node] = load %other_expression.2.ptr
+  %44: calculator.expression.Division = struct .super %43 .left %parsed_expression.4 .right %other_expression.2.2
+  store %34 %44
+  %45: [calculator.source.Node] = cast %34
+  store %parsed_expression.ptr %45
+  jmp @9
+@8:
+  jmp @3
+@9:
+  jmp @6
+@6:
+  jmp @2
+@3:
+  %parsed_expression.5: [calculator.source.Node] = load %parsed_expression.ptr
+  ret %parsed_expression.5
+}
+
+$([calculator.parser.Parser]).parse_primary_expression(%self): [calculator.source.Node] {
+@1:
+  %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %1: [calculator.tokenizer.Tokenizer] = offset %self .tokenizer
+  %2: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %1
+  store %token.ptr %2
+  %token.1: [calculator.source.Node] = load %token.ptr
+  %3: [i32] = offset %token.1 .kind
+  %4: i32 = load %3
+  %5: i32 = const 2
+  %6: bool = cmp_eq %4 %5
+  br %6 @2 @3
+@2:
+  %token.2: [calculator.source.Node] = load %token.ptr
+  ret %token.2
+@3:
+  %7: usize = const 32
+  %8: [Any] = call $malloc %7
+  %9: [calculator.source.Error] = cast %8
+  %10: i32 = const 1
+  %token.3: [calculator.source.Node] = load %token.ptr
+  %11: [calculator.source.Span] = offset %token.3 .span
+  %12: calculator.source.Span = load %11
+  %13: calculator.source.Node = struct .kind %10 .span %12
+  %14: usize = const 15
+  %15: String = struct .data $str_11 .length %14
+  %16: calculator.source.Error = struct .super %13 .message %15
+  store %9 %16
+  %17: [calculator.source.Node] = cast %9
+  ret %17
+}
+
+$([io.Writer]).write_token(%self, %node: [calculator.source.Node]): [io.Writer] {
+@1:
+  %1: [calculator.source.Node] = const null
+  %2: bool = cmp_eq %node %1
+  br %2 @2 @3
+@2:
+  %3: usize = const 4
+  %4: String = struct .data $str_3 .length %3
+  %5: [io.Writer] = call $([io.Writer]).write_string %self %4
+  ret %5
+@3:
+  %6: [i32] = offset %node .kind
+  %7: i32 = load %6
+  %8: i32 = const 2
+  %9: bool = cmp_eq %7 %8
+  br %9 @4 @5
+@4:
+  %number.ptr: [[calculator.expression.Number]] = alloc [calculator.expression.Number]
+  %10: [calculator.expression.Number] = cast %node
+  store %number.ptr %10
+  %11: usize = const 8
+  %12: String = struct .data $str_12 .length %11
+  %13: [io.Writer] = call $([io.Writer]).write_string %self %12
+  %number.1: [calculator.expression.Number] = load %number.ptr
+  %14: [i32] = offset %number.1 .value
+  %15: i32 = load %14
+  %16: [io.Writer] = call $([io.Writer]).write_signed %13 %15
+  ret %16
+@5:
+  %17: [i32] = offset %node .kind
+  %18: i32 = load %17
+  %19: i32 = const 7
+  %20: bool = cmp_eq %18 %19
+  br %20 @7 @8
+@7:
+  %21: usize = const 4
+  %22: String = struct .data $str_13 .length %21
+  %23: [io.Writer] = call $([io.Writer]).write_string %self %22
+  ret %23
+@8:
+  %24: [i32] = offset %node .kind
+  %25: i32 = load %24
+  %26: i32 = const 8
+  %27: bool = cmp_eq %25 %26
+  br %27 @10 @11
+@10:
+  %28: usize = const 5
+  %29: String = struct .data $str_14 .length %28
+  %30: [io.Writer] = call $([io.Writer]).write_string %self %29
+  ret %30
+@11:
+  %31: [i32] = offset %node .kind
+  %32: i32 = load %31
+  %33: i32 = const 9
+  %34: bool = cmp_eq %32 %33
+  br %34 @13 @14
+@13:
+  %35: usize = const 8
+  %36: String = struct .data $str_15 .length %35
+  %37: [io.Writer] = call $([io.Writer]).write_string %self %36
+  ret %37
+@14:
+  %38: [i32] = offset %node .kind
+  %39: i32 = load %38
+  %40: i32 = const 10
+  %41: bool = cmp_eq %39 %40
+  br %41 @16 @17
+@16:
+  %42: usize = const 6
+  %43: String = struct .data $str_16 .length %42
+  %44: [io.Writer] = call $([io.Writer]).write_string %self %43
+  ret %44
+@17:
+  %45: [i32] = offset %node .kind
+  %46: i32 = load %45
+  %47: i32 = const 11
+  %48: bool = cmp_eq %46 %47
+  br %48 @19 @20
+@19:
+  %49: usize = const 4
+  %50: String = struct .data $str_17 .length %49
+  %51: [io.Writer] = call $([io.Writer]).write_string %self %50
+  ret %51
+@20:
+  %52: [i32] = offset %node .kind
+  %53: i32 = load %52
+  %54: i32 = const 1
+  %55: bool = cmp_eq %53 %54
+  br %55 @22 @23
+@22:
+  %error.ptr: [[calculator.source.Error]] = alloc [calculator.source.Error]
+  %56: [calculator.source.Error] = cast %node
+  store %error.ptr %56
+  %57: usize = const 7
+  %58: String = struct .data $str_10 .length %57
+  %59: [io.Writer] = call $([io.Writer]).write_string %self %58
+  %error.1: [calculator.source.Error] = load %error.ptr
+  %60: [String] = offset %error.1 .message
+  %61: String = load %60
+  %62: [io.Writer] = call $([io.Writer]).write_string %59 %61
+  ret %62
+@23:
+  jmp @21
+@21:
+  jmp @18
+@18:
+  jmp @15
+@15:
+  jmp @12
+@12:
+  jmp @9
+@9:
+  jmp @6
+@6:
+  ret %self
+}
+
+$([calculator.tokenizer.Tokenizer]).peek_token(%self): [calculator.source.Node] {
+@1:
+  %1: [[calculator.source.Node]] = offset %self .current_token
+  %2: [calculator.source.Node] = load %1
+  %3: [calculator.source.Node] = const null
+  %4: bool = cmp_eq %2 %3
+  br %4 @2 @3
+@2:
+  %5: [[calculator.source.Node]] = offset %self .current_token
+  %6: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).scan_token %self
+  store %5 %6
+  jmp @3
+@3:
+  %7: [[calculator.source.Node]] = offset %self .current_token
+  %8: [calculator.source.Node] = load %7
+  ret %8
+}
+
+$([calculator.tokenizer.Tokenizer]).next_token(%self): [calculator.source.Node] {
+@1:
+  %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
+  %1: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %self
+  store %token.ptr %1
+  %2: [[calculator.source.Node]] = offset %self .current_token
+  %3: [calculator.source.Node] = const null
+  store %2 %3
+  %token.1: [calculator.source.Node] = load %token.ptr
+  ret %token.1
+}
+
+$([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] {
+@1:
+  jmp @2
+@2:
+  %1: [[*]u8] = offset %self .data
+  %2: [*]u8 = load %1
+  %3: [i32] = offset %self .index
+  %4: i32 = load %3
+  %5: [u8] = offset %2 %4
+  %6: u8 = load %5
+  %7: u8 = const ' '
+  %8: bool = cmp_eq %6 %7
+  br %8 @3 @4
+@3:
+  %9: [i32] = offset %self .index
+  %10: [i32] = offset %self .index
+  %11: i32 = load %10
+  %12: i32 = const 1
+  %13: i32 = add %11 %12
+  store %9 %13
+  jmp @2
+@4:
+  %ch.ptr: [u8] = alloc u8
+  %14: [[*]u8] = offset %self .data
+  %15: [*]u8 = load %14
+  %16: [i32] = offset %self .index
+  %17: i32 = load %16
+  %18: [u8] = offset %15 %17
+  %19: u8 = load %18
+  store %ch.ptr %19
+  %ch.1: u8 = load %ch.ptr
+  %20: u8 = const 0
+  %21: bool = cmp_eq %ch.1 %20
+  br %21 @5 @6
+@5:
+  %22: usize = const 12
+  %23: [Any] = call $malloc %22
+  %24: [calculator.tokenizer.Stop] = cast %23
+  %25: i32 = const 11
+  %26: [i32] = offset %self .index
+  %27: i32 = load %26
+  %28: [i32] = offset %self .index
+  %29: i32 = load %28
+  %30: calculator.source.Span = struct .start %27 .end %29
+  %31: calculator.source.Node = struct .kind %25 .span %30
+  %32: calculator.tokenizer.Stop = struct .super %31
+  store %24 %32
+  %33: [calculator.source.Node] = cast %24
+  ret %33
+@6:
+  %ch.2: u8 = load %ch.ptr
+  %34: u8 = const '0'
+  %35: bool = cmp_ge %ch.2 %34
+  br %35 @7 @8
+@7:
+  %ch.3: u8 = load %ch.ptr
+  %36: u8 = const '9'
+  %37: bool = cmp_le %ch.3 %36
+  jmp @8
+@8:
+  %38: bool = phi @6 %35 @7 %37
+  br %38 @9 @10
+@9:
+  %39: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).scan_number_token %self
+  ret %39
+@10:
+  %40: [i32] = offset %self .index
+  %41: [i32] = offset %self .index
+  %42: i32 = load %41
+  %43: i32 = const 1
+  %44: i32 = add %42 %43
+  store %40 %44
+  %ch.4: u8 = load %ch.ptr
+  %45: u8 = const '+'
+  %46: bool = cmp_eq %ch.4 %45
+  br %46 @11 @12
+@11:
+  %47: usize = const 12
+  %48: [Any] = call $malloc %47
+  %49: [calculator.tokenizer.Plus] = cast %48
+  %50: i32 = const 7
+  %51: [i32] = offset %self .index
+  %52: i32 = load %51
+  %53: i32 = const 1
+  %54: i32 = sub %52 %53
+  %55: [i32] = offset %self .index
+  %56: i32 = load %55
+  %57: calculator.source.Span = struct .start %54 .end %56
+  %58: calculator.source.Node = struct .kind %50 .span %57
+  %59: calculator.tokenizer.Plus = struct .super %58
+  store %49 %59
+  %60: [calculator.source.Node] = cast %49
+  ret %60
+@12:
+  %ch.5: u8 = load %ch.ptr
+  %61: u8 = const '-'
+  %62: bool = cmp_eq %ch.5 %61
+  br %62 @13 @14
+@13:
+  %63: usize = const 12
+  %64: [Any] = call $malloc %63
+  %65: [calculator.tokenizer.Minus] = cast %64
+  %66: i32 = const 8
+  %67: [i32] = offset %self .index
+  %68: i32 = load %67
+  %69: i32 = const 1
+  %70: i32 = sub %68 %69
+  %71: [i32] = offset %self .index
+  %72: i32 = load %71
+  %73: calculator.source.Span = struct .start %70 .end %72
+  %74: calculator.source.Node = struct .kind %66 .span %73
+  %75: calculator.tokenizer.Minus = struct .super %74
+  store %65 %75
+  %76: [calculator.source.Node] = cast %65
+  ret %76
+@14:
+  %ch.6: u8 = load %ch.ptr
+  %77: u8 = const '*'
+  %78: bool = cmp_eq %ch.6 %77
+  br %78 @15 @16
+@15:
+  %79: usize = const 12
+  %80: [Any] = call $malloc %79
+  %81: [calculator.tokenizer.Multiply] = cast %80
+  %82: i32 = const 9
+  %83: [i32] = offset %self .index
+  %84: i32 = load %83
+  %85: i32 = const 1
+  %86: i32 = sub %84 %85
+  %87: [i32] = offset %self .index
+  %88: i32 = load %87
+  %89: calculator.source.Span = struct .start %86 .end %88
+  %90: calculator.source.Node = struct .kind %82 .span %89
+  %91: calculator.tokenizer.Multiply = struct .super %90
+  store %81 %91
+  %92: [calculator.source.Node] = cast %81
+  ret %92
+@16:
+  %ch.7: u8 = load %ch.ptr
+  %93: u8 = const '/'
+  %94: bool = cmp_eq %ch.7 %93
+  br %94 @17 @18
+@17:
+  %95: usize = const 12
+  %96: [Any] = call $malloc %95
+  %97: [calculator.tokenizer.Divide] = cast %96
+  %98: i32 = const 10
+  %99: [i32] = offset %self .index
+  %100: i32 = load %99
+  %101: i32 = const 1
+  %102: i32 = sub %100 %101
+  %103: [i32] = offset %self .index
+  %104: i32 = load %103
+  %105: calculator.source.Span = struct .start %102 .end %104
+  %106: calculator.source.Node = struct .kind %98 .span %105
+  %107: calculator.tokenizer.Divide = struct .super %106
+  store %97 %107
+  %108: [calculator.source.Node] = cast %97
+  ret %108
+@18:
+  %109: usize = const 32
+  %110: [Any] = call $malloc %109
+  %111: [calculator.source.Error] = cast %110
+  %112: i32 = const 1
+  %113: [i32] = offset %self .index
+  %114: i32 = load %113
+  %115: i32 = const 1
+  %116: i32 = sub %114 %115
+  %117: [i32] = offset %self .index
+  %118: i32 = load %117
+  %119: calculator.source.Span = struct .start %116 .end %118
+  %120: calculator.source.Node = struct .kind %112 .span %119
+  %121: usize = const 20
+  %122: String = struct .data $str_18 .length %121
+  %123: calculator.source.Error = struct .super %120 .message %122
+  store %111 %123
+  %124: [calculator.source.Node] = cast %111
+  ret %124
+}
+
+$([calculator.tokenizer.Tokenizer]).scan_number_token(%self): [calculator.source.Node] {
+@1:
+  %start.ptr: [i32] = alloc i32
+  %1: [i32] = offset %self .index
+  %2: i32 = load %1
+  store %start.ptr %2
+  %value.ptr: [i32] = alloc i32
+  %3: i32 = const 0
+  store %value.ptr %3
+  jmp @2
+@2:
+  %c.ptr: [u8] = alloc u8
+  %4: [[*]u8] = offset %self .data
+  %5: [*]u8 = load %4
+  %6: [i32] = offset %self .index
+  %7: i32 = load %6
+  %8: [u8] = offset %5 %7
+  %9: u8 = load %8
+  store %c.ptr %9
+  %c.1: u8 = load %c.ptr
+  %10: u8 = const '0'
+  %11: bool = cmp_lt %c.1 %10
+  br %11 @5 @4
+@4:
+  %c.2: u8 = load %c.ptr
+  %12: u8 = const '9'
+  %13: bool = cmp_gt %c.2 %12
+  jmp @5
+@5:
+  %14: bool = phi @2 %11 @4 %13
+  br %14 @6 @7
+@6:
+  jmp @3
+@7:
+  %value.1: i32 = load %value.ptr
+  %15: i32 = const 10
+  %16: i32 = mul %value.1 %15
+  %c.3: u8 = load %c.ptr
+  %17: u8 = const '0'
+  %18: u8 = sub %c.3 %17
+  %19: i32 = cast %18
+  %20: i32 = add %16 %19
+  store %value.ptr %20
+  %21: [i32] = offset %self .index
+  %22: [i32] = offset %self .index
+  %23: i32 = load %22
+  %24: i32 = const 1
+  %25: i32 = add %23 %24
+  store %21 %25
+  jmp @2
+@3:
+  %26: usize = const 16
+  %27: [Any] = call $malloc %26
+  %28: [calculator.expression.Number] = cast %27
+  %29: i32 = const 2
+  %start.1: i32 = load %start.ptr
+  %30: [i32] = offset %self .index
+  %31: i32 = load %30
+  %32: calculator.source.Span = struct .start %start.1 .end %31
+  %33: calculator.source.Node = struct .kind %29 .span %32
+  %value.2: i32 = load %value.ptr
+  %34: calculator.expression.Number = struct .super %33 .value %value.2
+  store %28 %34
+  %35: [calculator.source.Node] = cast %28
+  ret %35
+}
+
+$([io.Writer]).write_string(%self, %string: String): [io.Writer] {
+@1:
+  %string_copy.ptr: [String] = alloc String
+  store %string_copy.ptr %string
+  %string_data.ptr: [[*]u8] = alloc [*]u8
+  %1: [String] = cast %string_copy.ptr
+  %2: [[*]u8] = offset %1 .data
+  %3: [*]u8 = load %2
+  store %string_data.ptr %3
+  %index.ptr: [usize] = alloc usize
+  %4: usize = const 0
+  store %index.ptr %4
+  jmp @2
+@2:
+  %index.1: usize = load %index.ptr
+  %5.ptr: [String] = alloc String
+  store %5.ptr %string
+  %6: [usize] = offset %5.ptr .length
+  %7: usize = load %6
+  %8: bool = cmp_lt %index.1 %7
+  br %8 @3 @4
+@3:
+  %string_data.1: [*]u8 = load %string_data.ptr
+  %index.2: usize = load %index.ptr
+  %9: [u8] = offset %string_data.1 %index.2
+  %10: u8 = load %9
+  %11: [io.Writer] = call $([io.Writer]).write %self %10
+  %index.3: usize = load %index.ptr
+  %12: usize = const 1
+  %13: usize = add %index.3 %12
+  store %index.ptr %13
+  jmp @2
+@4:
+  ret %self
+}
+
+$([io.Writer]).write(%self, %char: u8): [io.Writer] {
+@1:
+  %1: [[proc ([Any], u8)]] = offset %self .write_char
+  %2: [proc ([Any], u8)] = load %1
+  %3: [[Any]] = offset %self .object
+  %4: [Any] = load %3
+  call %2 %4 %char
+  ret %self
+}
+
+$([io.Writer]).write_signed(%self, %value: i32): [io.Writer] {
+@1:
+  %1: i32 = const 0
+  %2: bool = cmp_lt %value %1
+  br %2 @2 @3
+@2:
+  %3: u8 = const '-'
+  %4: [io.Writer] = call $([io.Writer]).write %self %3
+  %5: i32 = neg %value
+  %6: [io.Writer] = call $([io.Writer]).write_signed %self %5
+  ret %6
+@3:
+  %7: i32 = const 10
+  %8: bool = cmp_ge %value %7
+  br %8 @4 @5
+@4:
+  %9: i32 = const 10
+  %10: i32 = div %value %9
+  %11: [io.Writer] = call $([io.Writer]).write_signed %self %10
+  jmp @5
+@5:
+  %12: i32 = const 10
+  %13: i32 = mod %value %12
+  %14: u8 = cast %13
+  %15: u8 = const '0'
+  %16: u8 = add %14 %15
+  %17: [io.Writer] = call $([io.Writer]).write %self %16
+  ret %17
+}
+
+$([io.Writer]).end_line(%self): [io.Writer] {
+@1:
+  %1: u8 = const '\n'
+  %2: [io.Writer] = call $([io.Writer]).write %self %1
+  ret %self
+}
+
+$os.init() {
+@1:
+  %1: usize = const 16
+  %2: [Any] = call $malloc %1
+  %3: [io.Writer] = cast %2
+  %4: [FILE] = load $stdout
+  %5: [Any] = cast %4
+  %6: io.Writer = struct .object %5 .write_char $os.file_write_char
+  store %3 %6
+  store $os.stdout %3
+  %7: usize = const 16
+  %8: [Any] = call $malloc %7
+  %9: [io.Writer] = cast %8
+  %10: [FILE] = load $stderr
+  %11: [Any] = cast %10
+  %12: io.Writer = struct .object %11 .write_char $os.file_write_char
+  store %9 %12
+  store $os.stderr %9
+  ret
+}
+
+$os.file_write_char(%object: [Any], %c: u8) {
+@1:
+  %1: i32 = cast %c
+  %2: [FILE] = cast %object
+  %3: i32 = call $fputc %1 %2
+  ret
+}
+
+$([string.Builder]).write(%self, %char: u8): [string.Builder] {
+@1:
+  %1: [usize] = offset %self .length
+  %2: usize = load %1
+  %3: [usize] = offset %self .data_size
+  %4: usize = load %3
+  %5: bool = cmp_eq %2 %4
+  br %5 @2 @3
+@2:
+  %6: [usize] = offset %self .data_size
+  %7: [usize] = offset %self .data_size
+  %8: usize = load %7
+  %9: usize = const 8
+  %10: usize = add %8 %9
+  store %6 %10
+  %11: [[*]u8] = offset %self .data
+  %12: [[*]u8] = offset %self .data
+  %13: [*]u8 = load %12
+  %14: [Any] = cast %13
+  %15: [usize] = offset %self .data_size
+  %16: usize = load %15
+  %17: [Any] = call $realloc %14 %16
+  %18: [*]u8 = cast %17
+  store %11 %18
+  jmp @3
+@3:
+  %19: [[*]u8] = offset %self .data
+  %20: [*]u8 = load %19
+  %21: [usize] = offset %self .length
+  %22: usize = load %21
+  %23: [u8] = offset %20 %22
+  store %23 %char
+  %24: [usize] = offset %self .length
+  %25: [usize] = offset %self .length
+  %26: usize = load %25
+  %27: usize = const 1
+  %28: usize = add %26 %27
+  store %24 %28
+  ret %self
+}
+
+$([string.Builder]).build(%self): String {
+@1:
+  %1: u8 = const 0
+  %2: [string.Builder] = call $([string.Builder]).write %self %1
+  %string.ptr: [String] = alloc String
+  %3: [[*]u8] = offset %self .data
+  %4: [*]u8 = load %3
+  %5: [usize] = offset %self .length
+  %6: usize = load %5
+  %7: usize = const 1
+  %8: usize = sub %6 %7
+  %9: String = struct .data %4 .length %8
+  store %string.ptr %9
+  %10: [String] = cast %string.ptr
+  %11: String = load %10
+  ret %11
+}
+
+$string.make_string_builder(): string.Builder {
+@1:
+  %1: usize = const 4
+  %2: string.Builder = call $string.make_string_builder_with_data_size %1
+  ret %2
+}
+
+$string.make_string_builder_with_data_size(%data_size: usize): string.Builder {
+@1:
+  %1: [Any] = call $malloc %data_size
+  %2: [*]u8 = cast %1
+  %3: usize = const 0
+  %4: string.Builder = struct .data %2 .data_size %data_size .length %3
+  ret %4
+}
+
+$([string.Builder]).write_char(%self, %char: u8) {
+@1:
+  %1: [string.Builder] = call $([string.Builder]).write %self %char
+  ret
+}
+
+$main(%argc: i32, %argv: [*][*]u8): i32 {
+@1:
+  %1: i32 = call $test.main %argc %argv
+  ret %1
+}

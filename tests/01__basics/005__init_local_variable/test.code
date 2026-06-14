@@ -1,0 +1,5 @@
+proc main() -> i32 {
+    let v1: i32
+    let v2: i32
+    return 0
+}

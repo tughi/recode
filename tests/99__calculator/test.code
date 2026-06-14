@@ -1,0 +1,57 @@
+import calculator.expression
+import calculator.parser
+import calculator.tokenizer
+import calculator.source
+import io
+import libc
+import os
+import string
+
+proc main(argc: i32, argv: [^][^]u8) -> i32 {
+    os.init()
+
+    if argc != 2 {
+        libc.exit(1)
+    }
+
+    let input_tokenizer = tokenizer.Tokenizer(
+        data: argv[1]
+        index: 0
+    )
+
+    while input_tokenizer.peek_token().kind != tokenizer.NODE_STOP {
+        let token = input_tokenizer.next_token()
+        os.stdout.write_token(token).end_line()
+    }
+
+    let input_parser = parser.Parser(tokenizer: tokenizer.Tokenizer(
+        data: argv[1]
+        index: 0
+    ))
+    let parsed_expression = input_parser.parse_expression()
+    os.stdout.write_string("Expression: ").write_expression(parsed_expression).end_line()
+
+    let result = evaluate(node: parsed_expression)
+    os.stdout.write_string("Result: ").write_signed(result).end_line()
+
+    return 0
+}
+
+proc evaluate(node: ^source.Node) -> i32 {
+    if node.kind == expression.NODE_NUMBER {
+        return node.as(^expression.Number).value
+    } else if node.kind == expression.NODE_ADDITION {
+        let addition = node.as(^expression.Addition)
+        return evaluate(node: addition.left) + evaluate(node: addition.right)
+    } else if node.kind == expression.NODE_DIVISION {
+        let division = node.as(^expression.Division)
+        return evaluate(node: division.left) / evaluate(node: division.right)
+    } else if node.kind == expression.NODE_MULTIPLICATION {
+        let multiplication = node.as(^expression.Multiplication)
+        return evaluate(node: multiplication.left) * evaluate(node: multiplication.right)
+    } else if node.kind == expression.NODE_SUBTRACTION {
+        let subtraction = node.as(^expression.Subtraction)
+        return evaluate(node: subtraction.left) - evaluate(node: subtraction.right)
+    }
+    libc.exit(1)
+}

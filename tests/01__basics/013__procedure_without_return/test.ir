@@ -1,0 +1,27 @@
+$exit: [proc (i32)] = external
+
+$test.main(): i32 {
+@1:
+  call $test.finish
+  %1: i32 = const 1
+  ret %1
+}
+
+$test.finish() {
+@1:
+  call $test.nothing
+  %1: i32 = const 0
+  call $exit %1
+  ret
+}
+
+$test.nothing() {
+@1:
+  ret
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -1,0 +1,5 @@
+import deep_thought
+
+proc main() -> i32 {
+    return deep_thought.get_answer() - 42
+}

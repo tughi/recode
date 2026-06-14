@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/003__call_unknown_procedure/test.code:2:12-22: Undefined symbol: get_answer"
+        ]
+    }
+}

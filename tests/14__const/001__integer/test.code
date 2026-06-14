@@ -1,0 +1,5 @@
+const FORTY_TWO = 50 - 8
+
+proc main() -> i32 {
+    return FORTY_TWO / 7 - 6
+}

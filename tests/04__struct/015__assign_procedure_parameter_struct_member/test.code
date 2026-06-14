@@ -1,0 +1,13 @@
+type Number = struct {
+    value: i32
+}
+
+proc main() -> i32 {
+    let number: Number
+    set(number: number, value: 42)
+    return number.value
+}
+
+proc set(number: Number, value: i32) {
+    number.value = 42
+}

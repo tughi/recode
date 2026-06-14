@@ -1,0 +1,4 @@
+proc test() {
+    let string = "A string"
+    string.length = 42
+}

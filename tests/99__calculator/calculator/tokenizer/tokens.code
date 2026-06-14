@@ -1,0 +1,53 @@
+import calculator.expression
+import calculator.source
+import io
+
+const NODE_PLUS = 7
+const NODE_MINUS = 8
+const NODE_MULTIPLY = 9
+const NODE_DIVIDE = 10
+const NODE_STOP = 11
+
+type Plus = struct {
+    super: source.Node
+}
+
+type Minus = struct {
+    super: source.Node
+}
+
+type Multiply = struct {
+    super: source.Node
+}
+
+type Divide = struct {
+    super: source.Node
+}
+
+type Stop = struct {
+    super: source.Node
+}
+
+proc (^io.Writer).write_token(self, node: ^source.Node) -> ^io.Writer {
+    if node == null {
+        return self.write_string("Nil!")
+    }
+    if node.kind == expression.NODE_NUMBER {
+        let number = node.as(^expression.Number)
+        return self.write_string("Number: ").write_signed(number.value)
+    } else if node.kind == NODE_PLUS {
+        return self.write_string("Plus")
+    } else if node.kind == NODE_MINUS {
+        return self.write_string("Minus")
+    } else if node.kind == NODE_MULTIPLY {
+        return self.write_string("Multiply")
+    } else if node.kind == NODE_DIVIDE {
+        return self.write_string("Divide")
+    } else if node.kind == NODE_STOP {
+        return self.write_string("Stop")
+    } else if node.kind == source.NODE_ERROR {
+        let error = node.as(^source.Error)
+        return self.write_string("Error: ").write_string(error.message)
+    }
+    return self
+}

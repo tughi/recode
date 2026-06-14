@@ -1,0 +1,9 @@
+import libc
+
+proc main() -> i32 {
+    libc.fputc('4'.as(i32), libc.stdout)
+    libc.fputc('2'.as(i32), libc.stdout)
+    libc.fputc('\n'.as(i32), libc.stdout)
+
+    return 0
+}

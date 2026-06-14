@@ -1,0 +1,16 @@
+$test.main(): i32 {
+@1:
+  %result.ptr: [i32] = alloc i32
+  %1: i32 = const 42
+  store %result.ptr %1
+  %result.1: i32 = load %result.ptr
+  %2: i32 = const 42
+  %3: i32 = sub %result.1 %2
+  ret %3
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

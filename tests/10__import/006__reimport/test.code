@@ -1,0 +1,10 @@
+import io
+import libc
+
+proc main() -> i32 {
+    let stdout = io.Writer(file: libc.stdout)
+
+    stdout.write(char: 52).write(char: 50).write(char: 10) // "42\n"
+
+    return 0
+}

@@ -1,0 +1,9 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+proc main() -> i32 {
+    let point = Point(x: 16, y: 32)
+    return point.x - 16
+}

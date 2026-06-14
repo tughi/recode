@@ -1,0 +1,19 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+type Line = struct {
+    p1: Point
+    p2: Point
+}
+
+proc main() -> i32 {
+    let line = alloc Line(
+        p1: Point(x: 16, y: 32)
+        p2: Point(x: 48, y: 64)
+    )
+    return line.p1.x + line.p1.y + line.p2.x + line.p2.y - 160
+}
+
+proc malloc(size: usize) -> ^Any = external

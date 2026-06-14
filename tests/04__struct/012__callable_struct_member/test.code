@@ -1,0 +1,13 @@
+type Function = struct {
+    run: [proc () -> i32]
+}
+
+proc forty_two() -> i32 {
+    return 42
+}
+
+proc main() -> i32 {
+    let procedure = Function(run: forty_two)
+
+    return procedure.run() - 42
+}

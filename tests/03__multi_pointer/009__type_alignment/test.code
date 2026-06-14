@@ -1,0 +1,12 @@
+proc main() -> i32 {
+    if type_alignment([^]bool) != 1 {
+        return 1
+    }
+    if type_alignment([^]i16) != 2 {
+        return 2
+    }
+    if type_alignment([^]^i32) != 8 {
+        return 3
+    }
+    return 0
+}

@@ -1,0 +1,2 @@
+proc test(value: i32) -> Any {
+}

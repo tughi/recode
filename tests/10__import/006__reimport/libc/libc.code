@@ -1,0 +1,5 @@
+type FILE = external
+
+let stdout: ^FILE = external
+
+proc fputc(char: i32, file: ^FILE) -> i32 = external

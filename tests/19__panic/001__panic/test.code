@@ -1,0 +1,11 @@
+type FILE = external
+
+let std_err: ^FILE = external "stderr"
+
+proc exit(status: i32) = external
+
+proc fwrite(buffer: ^Any, size: usize, count: usize, file: ^FILE) -> usize = external
+
+proc main() -> i32 {
+    panic "Not supported yet"
+}

@@ -1,0 +1,39 @@
+import libc
+
+type Writer = struct {
+    object: ^Any
+    write_char: [proc (^Any, u8)]
+}
+
+proc (^Writer).write_string(self, string: str) -> ^Writer {
+    let string_copy = string
+    let string_data = (^string_copy).as(^String).data
+    let index = 0usize
+    while index < string.length {
+        self.write(char: string_data[index])
+        index = index + 1
+    }
+    return self
+}
+
+proc (^Writer).write(self, char: u8) -> ^Writer {
+    self.write_char(self.object, char)
+    return self
+}
+
+proc (^Writer).write_signed(self, value: i32) -> ^Writer {
+    // TODO: Use a buffer to avoid recursion
+    if value < 0 {
+        self.write(char: '-')
+        return self.write_signed(-value)
+    }
+    if value >= 10 {
+        self.write_signed(value / 10)
+    }
+    return self.write(char: (value % 10).as(u8) + '0')
+}
+
+proc (^Writer).end_line(self) -> ^Writer {
+    self.write(char: '\n')
+    return self
+}

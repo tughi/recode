@@ -1,0 +1,28 @@
+type test.Number = struct {
+  value: i32
+}
+
+$([test.Number]).get_value(%self): i32 {
+@1:
+  %1: [i32] = offset %self .value
+  %2: i32 = load %1
+  ret %2
+}
+
+$test.main(): i32 {
+@1:
+  %number.ptr: [test.Number] = alloc test.Number
+  %1: i32 = const 42
+  %2: test.Number = struct .value %1
+  store %number.ptr %2
+  %3: i32 = call $([test.Number]).get_value %number.ptr
+  %4: i32 = const 42
+  %5: i32 = sub %3 %4
+  ret %5
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

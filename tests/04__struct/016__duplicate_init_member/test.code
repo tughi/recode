@@ -1,0 +1,13 @@
+type Number = struct {
+    value: i32
+    next: ^Number
+}
+
+proc main() -> i32 {
+    let number = Number(
+        value: 13
+        value: 14
+        next: null
+    )
+    return number.value
+}

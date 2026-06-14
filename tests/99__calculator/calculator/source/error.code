@@ -1,0 +1,4 @@
+type Error = struct {
+    super: Node
+    message: str
+}

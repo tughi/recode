@@ -1,0 +1,12 @@
+$test.main(): i32 {
+@1:
+  %array.ptr: [[*]i32] = alloc [*]i32
+  %1: i32 = const 0
+  ret %1
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -1,0 +1,50 @@
+import string.builder
+
+proc (str).equals(self, anon other: str) -> bool {
+    if self.length != other.length {
+        return false
+    }
+    let self_data = self.data()
+    let other_data = other.data()
+    let index = 0usize
+    while index < self.length {
+        if self_data[index] != other_data[index] {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+proc (str).data(self) -> [^]u8 {
+    let copy = self
+    return (^copy).as(^String).data
+}
+
+proc (str).char_at(self, anon index: usize) -> u8 {
+    let self_data = self.data()
+    return self_data[index]
+}
+
+proc (str).starts_with(self, anon other: str, from index: usize) -> bool {
+    let self_length = self.length
+    let other_length = other.length
+    if self_length < other_length + index {
+        return false
+    }
+
+    let self_data = self.data()
+    let self_index = index
+    let other_data = other.data()
+    let other_index = 0usize
+    while self_index < self_length and other_index < other_length and self_data[self_index] == other_data[other_index] {
+        self_index = self_index + 1
+        other_index = other_index + 1
+    }
+
+    return other_index == other_length
+}
+
+proc new_builder() -> builder.Builder {
+    return builder.new()
+}

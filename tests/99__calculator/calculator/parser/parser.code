@@ -1,0 +1,76 @@
+import calculator.expression
+import calculator.source
+import calculator.tokenizer
+
+type Parser = struct {
+    tokenizer: tokenizer.Tokenizer
+}
+
+proc (^Parser).parse_expression(self) -> ^source.Node {
+    return self.parse_additive_expression()
+}
+
+proc (^Parser).parse_additive_expression(self) -> ^source.Node {
+    let parsed_expression = self.parse_multiplicative_expression()
+    loop {
+        let token = self.tokenizer.peek_token()
+        if token.kind == tokenizer.NODE_PLUS {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_multiplicative_expression()
+            parsed_expression = alloc expression.Addition(
+                super: source.Node(kind: expression.NODE_ADDITION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
+                left: parsed_expression
+                right: other_expression
+            )
+        } else if token.kind == tokenizer.NODE_MINUS {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_multiplicative_expression()
+            parsed_expression = alloc expression.Subtraction(
+                super: source.Node(kind: expression.NODE_SUBTRACTION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
+                left: parsed_expression
+                right: other_expression
+            )
+        } else {
+            break
+        }
+    }
+    return parsed_expression
+}
+
+proc (^Parser).parse_multiplicative_expression(self) -> ^source.Node {
+    let parsed_expression = self.parse_primary_expression()
+    loop {
+        let token = self.tokenizer.peek_token()
+        if token.kind == tokenizer.NODE_MULTIPLY {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            parsed_expression = alloc expression.Multiplication(
+                super: source.Node(kind: expression.NODE_MULTIPLICATION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
+                left: parsed_expression
+                right: other_expression
+            )
+        } else if token.kind == tokenizer.NODE_DIVIDE {
+            self.tokenizer.next_token()
+            let other_expression = self.parse_primary_expression()
+            parsed_expression = alloc expression.Division(
+                super: source.Node(kind: expression.NODE_DIVISION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
+                left: parsed_expression
+                right: other_expression
+            )
+        } else {
+            break
+        }
+    }
+    return parsed_expression
+}
+
+proc (^Parser).parse_primary_expression(self) -> ^source.Node {
+    let token = self.tokenizer.next_token()
+    if token.kind == expression.NODE_NUMBER {
+        return token
+    }
+    return alloc source.Error(
+        super: source.Node(kind: source.NODE_ERROR, span: token.span)
+        message: "Expected number"
+    )
+}

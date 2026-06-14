@@ -1,0 +1,5 @@
+proc main() -> i32 {
+    let matrix: [2][3]i32
+    matrix[1][2] = 42
+    return matrix[1][2] - 42
+}

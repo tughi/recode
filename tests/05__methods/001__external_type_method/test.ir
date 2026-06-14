@@ -1,0 +1,32 @@
+type FILE = opaque
+
+$stdout: [[FILE]] = external
+
+$fputc: [proc (i32, [FILE]): i32] = external
+
+$test.main(): i32 {
+@1:
+  %1: [FILE] = load $stdout
+  %2: u8 = const '4'
+  %3: [FILE] = call $([FILE]).write %1 %2
+  %4: u8 = const '2'
+  %5: [FILE] = call $([FILE]).write %3 %4
+  %6: u8 = const '\n'
+  %7: [FILE] = call $([FILE]).write %5 %6
+  %8: i32 = const 0
+  ret %8
+}
+
+$([FILE]).write(%self, %char: u8): [FILE] {
+@1:
+  %1: i32 = cast %char
+  %2: [FILE] = load $stdout
+  %3: i32 = call $fputc %1 %2
+  ret %self
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

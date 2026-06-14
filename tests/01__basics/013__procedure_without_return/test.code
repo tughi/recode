@@ -1,0 +1,14 @@
+proc exit(status: i32) = external
+
+proc main() -> i32 {
+    finish()
+    return 1
+}
+
+proc finish() {
+    nothing()
+    exit(0)
+}
+
+proc nothing() {
+}

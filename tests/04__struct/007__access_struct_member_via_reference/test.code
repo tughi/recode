@@ -1,0 +1,18 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+type Line = struct {
+    p1: Point
+    p2: Point
+}
+
+proc main() -> i32 {
+    let line = Line(
+        p1: Point(x: 16, y: 32)
+        p2: Point(x: 48, y: 64)
+    )
+    let line_reference = ^line
+    return line_reference.p2.y - 64
+}

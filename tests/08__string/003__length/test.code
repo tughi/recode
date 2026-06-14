@@ -1,0 +1,8 @@
+proc main() -> i32 {
+    let message = "I have a length!"
+    if message.length != 16 {
+        return 1
+    }
+    let message_ptr = ^message
+    return message_ptr.length.as(i32) - 16
+}

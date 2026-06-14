@@ -1,0 +1,8 @@
+proc main(argc: i32, argv: [^][^]u8) -> i32 {
+    let arg = argv[0]
+    let ch = arg[0]
+    if ch != 'b' {
+        return 1
+    }
+    return 0
+}

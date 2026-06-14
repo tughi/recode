@@ -1,0 +1,7 @@
+proc main() -> i32 {
+    return echo(number: 0)
+}
+
+proc echo(value: i32) -> i32 {
+    return value
+}

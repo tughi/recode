@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/033__unrechable_after_return/test.code:4:5-20: Unreachable statement"
+        ]
+    }
+}

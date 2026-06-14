@@ -1,0 +1,6 @@
+proc main() -> i32 {
+    let array: [4]i32
+    array[3] = 42
+    return array[3] - 42
+}
+

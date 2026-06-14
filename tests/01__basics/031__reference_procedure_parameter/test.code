@@ -1,0 +1,3 @@
+proc demo(parameter: i32) {
+    let parameter_ref = ^parameter
+}
