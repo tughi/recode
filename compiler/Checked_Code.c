@@ -739,6 +739,12 @@ Checked_Symbol_Expression *Checked_Symbol_Expression__create(Source_Location loc
     return expression;
 }
 
+Checked_Type_Expression *Checked_Type_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *declared_type) {
+    Checked_Type_Expression *expression = (Checked_Type_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE, sizeof(Checked_Type_Expression), location, type);
+    expression->declared_type = declared_type;
+    return expression;
+}
+
 Checked_Type_Alignment_Expression *Checked_Type_Alignment_Expression__create(Source_Location location, Checked_Type *type, Checked_Type *aligned_type) {
     Checked_Type_Alignment_Expression *expression = (Checked_Type_Alignment_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT, sizeof(Checked_Type_Alignment_Expression), location, type);
     expression->aligned_type = aligned_type;

@@ -1,0 +1,14 @@
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+proc (^Point).get_x(self) -> i32 {
+    return self.x
+}
+
+proc main() -> i32 {
+    let point = Point(x: 42)
+    let get_point_x = (^Point).get_x
+    return get_point_x(^point) - 42
+}

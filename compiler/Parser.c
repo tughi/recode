@@ -130,7 +130,7 @@ primary_expression
     | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
     | "(" expression ")"
-    | "[" INTEGER "]" type "(" call_arguments ")"
+    | "[" INTEGER "]" type ( "(" call_arguments ")" )?
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_alloc)) {
@@ -191,13 +191,16 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         return (Parsed_Expression *)Parsed_Group_Expression__create(Source_Location__merge(first_token->location, last_token->location), expression);
     }
     if (Parser__matches_one(self, Token__is_opening_bracket)) {
-        Parsed_Type *array_type = Parser__parse_type(self);
-        Parser__consume_space(self, 0);
-        Parser__consume_token(self, Token__is_opening_paren);
-        Parsed_Call_Argument *first_argument = Parser__parse_call_arguments(self);
-        Parser__consume_space(self, 0);
-        Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
-        return (Parsed_Expression *)Parsed_Make_Array_Expression__create(Source_Location__merge(array_type->location, last_token->location), array_type, first_argument);
+        Parsed_Type *type = Parser__parse_type(self);
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_opening_paren);
+            Parsed_Call_Argument *first_argument = Parser__parse_call_arguments(self);
+            Parser__consume_space(self, 0);
+            Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
+            return (Parsed_Expression *)Parsed_Make_Array_Expression__create(Source_Location__merge(type->location, last_token->location), type, first_argument);
+        }
+        return (Parsed_Expression *)Parsed_Type_Expression__create(type->location, type);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unexpected token");

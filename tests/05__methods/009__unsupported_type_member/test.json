@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/05__methods/009__unsupported_type_member/test.code:12:23-34: Did you mean: `(test.Point).get_x`?"
+        ]
+    }
+}

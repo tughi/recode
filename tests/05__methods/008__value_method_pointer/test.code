@@ -1,0 +1,8 @@
+proc (i32).get_value(self) -> i32 {
+    return self
+}
+
+proc main() -> i32 {
+    let f = (42).get_value
+    return f() - 42
+}

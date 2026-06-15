@@ -647,6 +647,12 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         pWriter__end_line(stderr_writer);
         panic();
     }
+    case CHECKED_EXPRESSION_KIND__RECEIVER_METHOD: {
+        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Code does not have closures");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     default:
         pWriter__write__cstring(stderr_writer, "Lowering not supported yet: expression kind ");
         pWriter__write__int64(stderr_writer, expression->kind);

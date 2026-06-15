@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/05__methods/008__value_method_pointer/test.code:6:13-27: Code does not have closures"
+        ]
+    }
+}

@@ -532,6 +532,43 @@ let token = Integer(super: Token_Base(lexeme: "42", source_position: 5), value: 
 token.end_position()   // resolves to Token_Base.end_position — returns 7
 ```
 
+### Method Pointers
+
+A method can be referenced as a value — a procedure pointer — using the type-qualified form `(T).method`, which mirrors the way methods are declared (`proc (T).method`). The parentheses are part of the syntax and are required.
+
+```code
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+proc (Point).get_x(self) -> i32 {
+    return self.x
+}
+
+proc main() -> i32 {
+    let get_x = (Point).get_x   // [proc (Point) -> i32]
+    let point = Point(x: 42)
+    return get_x(point)
+}
+```
+
+The result is an ordinary procedure pointer whose first parameter is the receiver, so it is called by passing the receiver explicitly (`get_x(point)`, not `point.get_x()`).
+
+The receiver may be any type a method can be defined on:
+
+```code
+let a = (i32).abs           // primitive receiver
+let b = (^Point).scale      // pointer receiver
+let c = ([^]u8).length      // multi-pointer receiver
+let d = (str).equals        // str receiver
+```
+
+Restrictions:
+
+- The parentheses are mandatory. Writing `Point.get_x` is a compile error (`Did you mean: \`(Point).get_x\`?`).
+- Only a **type** receiver yields a method pointer. Taking a method off a **value** — e.g. `(42).get_value` — is rejected, because Code has no closures to capture the receiver.
+
 ---
 
 ## Constants

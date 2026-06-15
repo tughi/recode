@@ -1,0 +1,10 @@
+proc ([^]i32).first(self) -> i32 {
+    return self[0]
+}
+
+proc main() -> i32 {
+    let forty_two = 42
+    let multi_pointer = (^forty_two).as([^]i32)
+    let get_first_i32 = ([^]i32).first
+    return get_first_i32(multi_pointer) - 42
+}
