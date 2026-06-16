@@ -136,16 +136,6 @@ bool Checked_Procedure_Type__equals(Checked_Procedure_Type *self, Checked_Proced
     return true;
 }
 
-Checked_Procedure_Pointer_Type *Checked_Procedure_Pointer_Type__create(Source_Location location, Checked_Procedure_Type *procedure_type) {
-    Checked_Procedure_Pointer_Type *type = (Checked_Procedure_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__PROCEDURE_POINTER, sizeof(Checked_Procedure_Pointer_Type), location);
-    type->procedure_type = procedure_type;
-    return type;
-}
-
-bool Checked_Procedure_Pointer_Type__equals(Checked_Procedure_Pointer_Type *self, Checked_Procedure_Pointer_Type *other) {
-    return Checked_Procedure_Type__equals(self->procedure_type, other->procedure_type);
-}
-
 Checked_Multi_Pointer_Type *Checked_Multi_Pointer_Type__create(Source_Location location, Checked_Type *item_type) {
     Checked_Multi_Pointer_Type *type = (Checked_Multi_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__MULTI_POINTER, sizeof(Checked_Multi_Pointer_Type), location);
     type->item_type = item_type;
@@ -213,8 +203,6 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
     case CHECKED_TYPE_KIND__PROCEDURE:
         return Checked_Procedure_Type__equals((Checked_Procedure_Type *)self, (Checked_Procedure_Type *)other);
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
-        return Checked_Procedure_Pointer_Type__equals((Checked_Procedure_Pointer_Type *)self, (Checked_Procedure_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__MULTI_POINTER:
         return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
@@ -273,13 +261,6 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         } else {
             pWriter__write__char(self, ')');
         }
-        break;
-    }
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)type;
-        pWriter__write__char(self, '[');
-        pWriter__write__checked_type(self, (Checked_Type *)procedure_pointer_type->procedure_type);
-        pWriter__write__char(self, ']');
         break;
     }
     case CHECKED_TYPE_KIND__MULTI_POINTER: {
@@ -381,11 +362,10 @@ Checked_Import_Symbol *Checked_Import_Symbol__create(Checked_Package *package, S
 }
 
 Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Package *package, Source_Location location, String *symbol_name, Source_Location procedure_location, Parsed_Procedure_Statement *parsed_procedure_statement, Checked_Procedure_Type *procedure_type, Checked_Type *receiver_type) {
-    Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), package, location, symbol_name, (Checked_Type *)Checked_Procedure_Pointer_Type__create(procedure_type->super.location, procedure_type), true);
+    Checked_Procedure_Symbol *symbol = (Checked_Procedure_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__PROCEDURE, sizeof(Checked_Procedure_Symbol), package, location, symbol_name, (Checked_Type *)procedure_type, true);
     symbol->procedure_location = procedure_location;
     symbol->parsed_procedure_statement = parsed_procedure_statement;
     symbol->procedure_name = parsed_procedure_statement->super.name->lexeme;
-    symbol->procedure_type = procedure_type;
     symbol->receiver_type = receiver_type;
     symbol->checked_block_statement = NULL;
     symbol->external_name = NULL;
@@ -394,7 +374,7 @@ Checked_Procedure_Symbol *Checked_Procedure_Symbol__create(Checked_Package *pack
 
 void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_Symbol *procedure_symbol) {
     pWriter__write__cstring(writer, "proc ");
-    Checked_Procedure_Parameter *parameter = procedure_symbol->procedure_type->first_parameter;
+    Checked_Procedure_Parameter *parameter = ((Checked_Procedure_Type *)procedure_symbol->super.type)->first_parameter;
     if (procedure_symbol->receiver_type != NULL) {
         pWriter__write__char(writer, '(');
         pWriter__write__checked_type(writer, procedure_symbol->receiver_type);
@@ -422,9 +402,9 @@ void pWriter__write__checked_procedure_symbol(Writer *writer, Checked_Procedure_
         }
     }
     pWriter__write__char(writer, ')');
-    if (procedure_symbol->procedure_type->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
+    if (((Checked_Procedure_Type *)procedure_symbol->super.type)->return_type->kind != CHECKED_TYPE_KIND__NOTHING) {
         pWriter__write__cstring(writer, " -> ");
-        pWriter__write__checked_type(writer, procedure_symbol->procedure_type->return_type);
+        pWriter__write__checked_type(writer, ((Checked_Procedure_Type *)procedure_symbol->super.type)->return_type);
     }
 }
 

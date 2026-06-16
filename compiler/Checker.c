@@ -222,9 +222,9 @@ bool Checked_Type__is_identical(Checked_Type *self, Checked_Type *other) {
     case CHECKED_TYPE_KIND__POINTER: {
         return Checked_Type__is_identical(((Checked_Pointer_Type *)self)->other_type, ((Checked_Pointer_Type *)other)->other_type);
     }
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Type *self_procedure_type = ((Checked_Procedure_Pointer_Type *)self)->procedure_type;
-        Checked_Procedure_Type *other_procedure_type = ((Checked_Procedure_Pointer_Type *)other)->procedure_type;
+    case CHECKED_TYPE_KIND__PROCEDURE: {
+        Checked_Procedure_Type *self_procedure_type = (Checked_Procedure_Type *)self;
+        Checked_Procedure_Type *other_procedure_type = (Checked_Procedure_Type *)other;
         if (!Checked_Type__is_identical(self_procedure_type->return_type, other_procedure_type->return_type)) {
             return false;
         }
@@ -278,8 +278,7 @@ Checked_Type *Checker__resolve_type(Checker *self, Checker_Context *context, Par
         } else {
             procedure_return_type = Checker__resolve_type(self, context, parsed_procedure_type->return_type);
         }
-        Checked_Procedure_Type *procedure_type = Checked_Procedure_Type__create(parsed_procedure_type->super.location, procedure_first_parameter, procedure_return_type);
-        return (Checked_Type *)Checked_Procedure_Pointer_Type__create(parsed_type->location, procedure_type);
+        return (Checked_Type *)Checked_Procedure_Type__create(parsed_procedure_type->super.location, procedure_first_parameter, procedure_return_type);
     }
     case PARSED_TYPE_KIND__MULTI_POINTER:
         return (Checked_Type *)Checked_Multi_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, context, ((Parsed_Multi_Pointer_Type *)parsed_type)->item_type));
@@ -354,7 +353,7 @@ void Checker__require_same_type(Checker *self, Checked_Type *expected_type, Chec
         if (expected_type->kind == CHECKED_TYPE_KIND__POINTER) {
             return;
         }
-        if (expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+        if (expected_type->kind == CHECKED_TYPE_KIND__PROCEDURE) {
             return;
         }
     }
@@ -544,7 +543,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
             }
             if (procedure_symbol != NULL) {
                 Checked_Symbol_Expression *procedure_sym_expression = Checked_Symbol_Expression__create(parsed_member_access_expression->member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-                callee_expression = (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_member_access_expression->super.location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_sym_expression, procedure_symbol->procedure_type);
+                callee_expression = (Checked_Expression *)Checked_Receiver_Method_Expression__create(parsed_member_access_expression->super.location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_sym_expression, ((Checked_Procedure_Type *)procedure_symbol->super.type));
             }
         }
         if (callee_expression == NULL) {
@@ -562,14 +561,14 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
     switch (callee_expression->kind) {
     case CHECKED_EXPRESSION_KIND__MEMBER_ACCESS: {
         Checked_Member_Access_Expression *member_access_expression = (Checked_Member_Access_Expression *)callee_expression;
-        if (member_access_expression->member->type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+        if (member_access_expression->member->type->kind != CHECKED_TYPE_KIND__PROCEDURE) {
             pWriter__begin_location_message(stderr_writer, callee_expression->location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
         procedure_expression = (Checked_Expression *)member_access_expression;
-        procedure_type = ((Checked_Procedure_Pointer_Type *)member_access_expression->member->type)->procedure_type;
+        procedure_type = (Checked_Procedure_Type *)member_access_expression->member->type;
         receiver_expression = NULL;
         break;
     }
@@ -587,7 +586,7 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
         case CHECKED_SYMBOL_KIND__PROCEDURE: {
             Checked_Procedure_Symbol *procedure_symbol = (Checked_Procedure_Symbol *)callee_symbol;
             procedure_expression = callee_expression;
-            procedure_type = procedure_symbol->procedure_type;
+            procedure_type = ((Checked_Procedure_Type *)procedure_symbol->super.type);
             receiver_expression = NULL;
             break;
         }
@@ -595,26 +594,26 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Checker_Contex
             return Checker__check_init_expression(self, context, (Checked_Type *)((Checked_Type_Symbol *)callee_symbol)->named_type, parsed_expression->first_argument, parsed_expression->super.location);
         case CHECKED_SYMBOL_KIND__PROCEDURE_PARAMETER: {
             Checked_Type *parameter_type = callee_symbol->type;
-            if (parameter_type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+            if (parameter_type->kind != CHECKED_TYPE_KIND__PROCEDURE) {
                 pWriter__begin_location_message(stderr_writer, callee_expression->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            procedure_type = ((Checked_Procedure_Pointer_Type *)parameter_type)->procedure_type;
+            procedure_type = (Checked_Procedure_Type *)parameter_type;
             procedure_expression = callee_expression;
             receiver_expression = NULL;
             break;
         }
         case CHECKED_SYMBOL_KIND__VARIABLE: {
             Checked_Type *variable_type = callee_symbol->type;
-            if (variable_type->kind != CHECKED_TYPE_KIND__PROCEDURE_POINTER) {
+            if (variable_type->kind != CHECKED_TYPE_KIND__PROCEDURE) {
                 pWriter__begin_location_message(stderr_writer, callee_expression->location, WRITER_STYLE__ERROR);
                 pWriter__write__cstring(stderr_writer, "Not a procedure pointer");
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            procedure_type = ((Checked_Procedure_Pointer_Type *)variable_type)->procedure_type;
+            procedure_type = (Checked_Procedure_Type *)variable_type;
             procedure_expression = callee_expression;
             receiver_expression = NULL;
             break;
@@ -1087,7 +1086,7 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
     Checked_Procedure_Symbol *procedure_symbol = Checker__resolve_method_symbol(self, context, object_type, member_name->lexeme);
     if (procedure_symbol != NULL) {
         Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(member_name->location, procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-        return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
+        return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_expression, ((Checked_Procedure_Type *)procedure_symbol->super.type));
     }
 
     /* Check referenced method */
@@ -1097,7 +1096,7 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
             object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
             object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(object_expression->location, object_type, object_expression);
             Checked_Symbol_Expression *procedure_expression = Checked_Symbol_Expression__create(member_name->location, (Checked_Type *)procedure_symbol->super.type, (Checked_Symbol *)procedure_symbol);
-            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_expression, procedure_symbol->procedure_type);
+            return (Checked_Expression *)Checked_Receiver_Method_Expression__create(expression_location, procedure_symbol->super.type, object_expression, (Checked_Expression *)procedure_expression, ((Checked_Procedure_Type *)procedure_symbol->super.type));
         }
     }
 
@@ -1156,7 +1155,7 @@ Checked_Expression *Checker__check_null_expression(Checker *self, Checker_Contex
         switch (expected_type->kind) {
         case CHECKED_TYPE_KIND__MULTI_POINTER:
         case CHECKED_TYPE_KIND__POINTER:
-        case CHECKED_TYPE_KIND__PROCEDURE_POINTER:
+        case CHECKED_TYPE_KIND__PROCEDURE:
             expression_type = expected_type;
             break;
         default:
@@ -1519,14 +1518,14 @@ void Checked_Type__append_weak_dependencies(Checked_Type *self, Checked_Type *ot
     case CHECKED_TYPE_KIND__POINTER:
         Checked_Type__append_weak_dependencies(self, ((Checked_Pointer_Type *)other)->other_type, location, checker, true);
         return;
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Pointer_Type *procedure_pointer_type = (Checked_Procedure_Pointer_Type *)other;
-        Checked_Procedure_Parameter *procedure_parameter = procedure_pointer_type->procedure_type->first_parameter;
+    case CHECKED_TYPE_KIND__PROCEDURE: {
+        Checked_Procedure_Type *procedure_type = (Checked_Procedure_Type *)other;
+        Checked_Procedure_Parameter *procedure_parameter = procedure_type->first_parameter;
         while (procedure_parameter != NULL) {
             Checked_Type__append_weak_dependencies(self, procedure_parameter->type, location, checker, true);
             procedure_parameter = procedure_parameter->next_parameter;
         }
-        Checked_Type__append_weak_dependencies(self, procedure_pointer_type->procedure_type->return_type, location, checker, true);
+        Checked_Type__append_weak_dependencies(self, procedure_type->return_type, location, checker, true);
         return;
     }
     case CHECKED_TYPE_KIND__STRUCT:
@@ -1968,7 +1967,7 @@ Checked_Statement *Checker__check_statement(Checker *self, Checker_Context *cont
 }
 
 void Checker__check_procedure_definition(Checker *self, Checker_Context *context, Checked_Procedure_Symbol *procedure_symbol) {
-    Checked_Procedure_Type *procedure_type = procedure_symbol->procedure_type;
+    Checked_Procedure_Type *procedure_type = ((Checked_Procedure_Type *)procedure_symbol->super.type);
     context->return_type = procedure_type->return_type;
 
     /* Create and push procedure symbols */

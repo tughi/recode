@@ -47,7 +47,6 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__EXTERNAL,
     CHECKED_TYPE_KIND__MULTI_POINTER,
     CHECKED_TYPE_KIND__POINTER,
-    CHECKED_TYPE_KIND__PROCEDURE_POINTER,
     CHECKED_TYPE_KIND__PROCEDURE,
     CHECKED_TYPE_KIND__STRUCT,
 } Checked_Type_Kind;
@@ -167,13 +166,6 @@ typedef struct Checked_Procedure_Type {
 Checked_Procedure_Type *Checked_Procedure_Type__create(Source_Location location, Checked_Procedure_Parameter *first_parameter, Checked_Type *return_type);
 
 bool Checked_Procedure_Type__equals(Checked_Procedure_Type *self, Checked_Procedure_Type *other);
-
-typedef struct Checked_Procedure_Pointer_Type {
-    Checked_Type super;
-    Checked_Procedure_Type *procedure_type;
-} Checked_Procedure_Pointer_Type;
-
-Checked_Procedure_Pointer_Type *Checked_Procedure_Pointer_Type__create(Source_Location location, Checked_Procedure_Type *procedure_type);
 
 typedef struct Checked_Multi_Pointer_Type {
     Checked_Type super;
@@ -300,7 +292,6 @@ typedef struct Checked_Procedure_Symbol {
     Source_Location procedure_location;
     Parsed_Procedure_Statement *parsed_procedure_statement;
     String *procedure_name;
-    Checked_Procedure_Type *procedure_type;
     Checked_Type *receiver_type;
     Checked_Statement *checked_block_statement;
     String *external_name;

@@ -726,7 +726,7 @@ Parsed_Procedure_Parameter *Parser__parse_procedure_pointer_parameters(Parser *s
 /*
 type
     | "^" type
-    | "[" "proc" "(" procedure_pointer_parameters? ")" ( "->" type )? "]"
+    | "proc" "(" procedure_pointer_parameters? ")" ( "->" type )?
     | "[" ( INTEGER | "^" ) "]" type
     | IDENTIFIER ( "." IDENTIFIER )?
 */
@@ -737,28 +737,28 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         Parsed_Type *type = Parser__parse_type(self);
         return Parsed_Pointer_Type__create(Source_Location__merge(first_token->location, type->location), type);
     }
+    if (Parser__matches_one(self, Token__is_proc)) {
+        Token *first_token = Parser__consume_token(self, Token__is_proc);
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_opening_paren);
+        Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_pointer_parameters(self);
+        Parser__consume_space(self, 0);
+        Token *last_token = Parser__consume_token(self, Token__is_closing_paren);
+        Parsed_Type *return_type = NULL;
+        Source_Location last_location = last_token->location;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
+            Parser__consume_space(self, 1);
+            Parser__consume_token(self, Token__is_minus);
+            Parser__consume_token(self, Token__is_greater_than);
+            Parser__consume_space(self, 1);
+            return_type = Parser__parse_type(self);
+            last_location = return_type->location;
+        }
+        return Parsed_Procedure_Type__create(Source_Location__merge(first_token->location, last_location), first_parameter, return_type);
+    }
     if (Parser__matches_one(self, Token__is_opening_bracket)) {
         Token *first_token = Parser__consume_token(self, Token__is_opening_bracket);
         Parser__consume_space(self, 0);
-        if (Parser__matches_one(self, Token__is_proc)) {
-            Parser__consume_token(self, Token__is_proc);
-            Parser__consume_space(self, 1);
-            Parser__consume_token(self, Token__is_opening_paren);
-            Parsed_Procedure_Parameter *first_parameter = Parser__parse_procedure_pointer_parameters(self);
-            Parser__consume_space(self, 0);
-            Parser__consume_token(self, Token__is_closing_paren);
-            Parsed_Type *return_type = NULL;
-            if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
-                Parser__consume_space(self, 1);
-                Parser__consume_token(self, Token__is_minus);
-                Parser__consume_token(self, Token__is_greater_than);
-                Parser__consume_space(self, 1);
-                return_type = Parser__parse_type(self);
-            }
-            Parser__consume_space(self, 0);
-            Token *last_token = Parser__consume_token(self, Token__is_closing_bracket);
-            return Parsed_Procedure_Type__create(Source_Location__merge(first_token->location, last_token->location), first_parameter, return_type);
-        }
         if (Parser__matches_one(self, Token__is_caret)) {
             Parser__consume_token(self, Token__is_caret);
             Parser__consume_space(self, 0);

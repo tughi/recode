@@ -150,7 +150,7 @@ test(
 ### Procedure Pointers
 
 ```code
-let fn: [proc (i32) -> i32]             // declare
+let fn: proc (i32) -> i32               // declare
 fn = echo                               // assign
 let fn2 = echo                          // infer type
 let result = fn(42)                     // call via pointer
@@ -381,7 +381,7 @@ Struct fields may hold procedure pointers:
 
 ```code
 type Function = struct {
-    run: [proc () -> i32]
+    run: proc () -> i32
 }
 let f = Function(run: forty_two)
 let result = f.run()
@@ -547,7 +547,7 @@ proc (Point).get_x(self) -> i32 {
 }
 
 proc main() -> i32 {
-    let get_x = (Point).get_x   // [proc (Point) -> i32]
+    let get_x = (Point).get_x   // proc (Point) -> i32
     let point = Point(x: 42)
     return get_x(point)
 }

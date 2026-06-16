@@ -1,4 +1,4 @@
 proc main() -> i32 {
-    let procedure_pointer: [proc (i32) -> i32]
+    let procedure_pointer: proc (i32) -> i32
     return 0
 }

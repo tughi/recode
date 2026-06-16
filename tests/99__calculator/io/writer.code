@@ -2,7 +2,7 @@ import libc
 
 type Writer = struct {
     object: ^Any
-    write_char: [proc (^Any, u8)]
+    write_char: proc (^Any, u8)
 }
 
 proc (^Writer).write_string(self, string: str) -> ^Writer {

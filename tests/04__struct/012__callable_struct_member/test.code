@@ -1,5 +1,5 @@
 type Function = struct {
-    run: [proc () -> i32]
+    run: proc () -> i32
 }
 
 proc forty_two() -> i32 {

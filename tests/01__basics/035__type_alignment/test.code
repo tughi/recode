@@ -37,7 +37,7 @@ proc main() -> i32 {
     if type_alignment(^bool) != type_alignment(usize) {
         return 12
     }
-    if type_alignment([proc (i32) -> i32]) != type_alignment(usize) {
+    if type_alignment(proc (i32) -> i32) != type_alignment(usize) {
         return 13
     }
     return 0

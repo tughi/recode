@@ -164,8 +164,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
         return (IR_Type *)IR_Multi_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Multi_Pointer_Type *)type)->item_type));
     case CHECKED_TYPE_KIND__POINTER:
         return (IR_Type *)IR_Pointer_Type__create(Lowerer__lower_type(self, ((Checked_Pointer_Type *)type)->other_type));
-    case CHECKED_TYPE_KIND__PROCEDURE_POINTER: {
-        Checked_Procedure_Type *procedure_type = ((Checked_Procedure_Pointer_Type *)type)->procedure_type;
+    case CHECKED_TYPE_KIND__PROCEDURE: {
+        Checked_Procedure_Type *procedure_type = (Checked_Procedure_Type *)type;
         IR_Type *return_type = Lowerer__lower_type(self, procedure_type->return_type);
         size_t parameter_count;
         IR_Type **parameter_types = Lowerer__lower_parameter_types(self, procedure_type, &parameter_count);
@@ -858,7 +858,7 @@ IR_Type **Lowerer__lower_parameter_types(Lowerer *self, Checked_Procedure_Type *
 }
 
 void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
-    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
+    Checked_Procedure_Type *checked_procedure_type = ((Checked_Procedure_Type *)procedure_symbol->super.type);
     IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
 
     size_t parameter_count;
@@ -876,7 +876,7 @@ void Lowerer__declare_procedure(Lowerer *self, Checked_Procedure_Symbol *procedu
 }
 
 void Lowerer__declare_external_procedure(Lowerer *self, Checked_Procedure_Symbol *procedure_symbol) {
-    Checked_Procedure_Type *checked_procedure_type = procedure_symbol->procedure_type;
+    Checked_Procedure_Type *checked_procedure_type = ((Checked_Procedure_Type *)procedure_symbol->super.type);
     IR_Type *return_type = Lowerer__lower_type(self, checked_procedure_type->return_type);
 
     size_t parameter_count;
