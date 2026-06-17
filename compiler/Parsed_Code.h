@@ -14,6 +14,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__CHARACTER,
     PARSED_EXPRESSION_KIND__DEREFERENCE,
     PARSED_EXPRESSION_KIND__DIVIDE,
+    PARSED_EXPRESSION_KIND__DOT_MEMBER,
     PARSED_EXPRESSION_KIND__EQUALS,
     PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS,
     PARSED_EXPRESSION_KIND__GREATER,
@@ -287,6 +288,13 @@ typedef struct Parsed_Member_Access_Expression {
 
 Parsed_Member_Access_Expression *Parsed_Member_Access_Expression__create(Parsed_Expression *object_expression, Token *member_name);
 
+typedef struct Parsed_Dot_Member_Expression {
+    Parsed_Expression super;
+    Token *name;
+} Parsed_Dot_Member_Expression;
+
+Parsed_Dot_Member_Expression *Parsed_Dot_Member_Expression__create(Source_Location location, Token *name);
+
 typedef struct Parsed_Minus_Expression {
     Parsed_Unary_Expression super;
 } Parsed_Minus_Expression;
@@ -485,6 +493,7 @@ Parsed_Statement *Parsed_Return_Statement__create(Source_Location location, Pars
 
 typedef enum Parsed_Type_Specifier_Kind {
     PARSED_TYPE_SPECIFIER_KIND__BUILTIN,
+    PARSED_TYPE_SPECIFIER_KIND__ENUM,
     PARSED_TYPE_SPECIFIER_KIND__EXTERNAL,
     PARSED_TYPE_SPECIFIER_KIND__STRUCT,
 } Parsed_Type_Specifier_Kind;
@@ -545,6 +554,20 @@ typedef struct Parsed_Struct_Type_Specifier {
 } Parsed_Struct_Type_Specifier;
 
 Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Location location, Parsed_Struct_Member *first_member);
+
+typedef struct Parsed_Enum_Member {
+    Token *name;
+    struct Parsed_Enum_Member *next_member;
+} Parsed_Enum_Member;
+
+Parsed_Enum_Member *Parsed_Enum_Member__create(Token *name);
+
+typedef struct Parsed_Enum_Type_Specifier {
+    Parsed_Type_Specifier super;
+    Parsed_Enum_Member *first_member;
+} Parsed_Enum_Type_Specifier;
+
+Parsed_Enum_Type_Specifier *Parsed_Enum_Type_Specifier__create(Source_Location location, Parsed_Enum_Member *first_member);
 
 typedef struct Parsed_Module {
     Source *source;

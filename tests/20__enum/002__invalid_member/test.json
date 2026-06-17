@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/20__enum/002__invalid_member/test.code:9:23-25: Enum `test.Direction` has no member: UP"
+        ]
+    }
+}

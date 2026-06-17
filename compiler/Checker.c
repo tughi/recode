@@ -1020,9 +1020,24 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
     }
 
     if (object_expression->kind == CHECKED_EXPRESSION_KIND__TYPE) {
-        /* Check type method */
         Checked_Type_Expression *type_expression = (Checked_Type_Expression *)object_expression;
 
+        if (group_depth == 0 && type_expression->declared_type->kind == CHECKED_TYPE_KIND__ENUM) {
+            Checked_Enum_Type *enum_type = (Checked_Enum_Type *)type_expression->declared_type;
+            Checked_Enum_Member *enum_member = Checked_Enum_Type__find_member(enum_type, member_name->lexeme);
+            if (enum_member == NULL) {
+                pWriter__begin_location_message(stderr_writer, member_name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Enum `");
+                pWriter__write__checked_type(stderr_writer, type_expression->declared_type);
+                pWriter__write__cstring(stderr_writer, "` has no member: ");
+                pWriter__write__string(stderr_writer, member_name->lexeme);
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            return (Checked_Expression *)Checked_Enum_Member_Expression__create(expression_location, type_expression->declared_type, enum_member);
+        }
+
+        /* Check type method */
         if (group_depth != 1) {
             pWriter__begin_location_message(stderr_writer, expression_location, WRITER_STYLE__ERROR);
             pWriter__write__cstring(stderr_writer, "Did you mean: `(");
@@ -1104,6 +1119,29 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
     pWriter__write__cstring(stderr_writer, "No such struct member");
     pWriter__end_location_message(stderr_writer);
     panic();
+}
+
+Checked_Expression *Checker__check_dot_member_expression(Checker *self, Checker_Context *context, Parsed_Dot_Member_Expression *parsed_expression, Checked_Type *expected_type) {
+    if (expected_type == NULL || expected_type->kind != CHECKED_TYPE_KIND__ENUM) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Cannot infer enum type for `.");
+        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+        pWriter__write__cstring(stderr_writer, "`");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    Checked_Enum_Type *enum_type = (Checked_Enum_Type *)expected_type;
+    Checked_Enum_Member *enum_member = Checked_Enum_Type__find_member(enum_type, parsed_expression->name->lexeme);
+    if (enum_member == NULL) {
+        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Enum `");
+        pWriter__write__checked_type(stderr_writer, expected_type);
+        pWriter__write__cstring(stderr_writer, "` has no member: ");
+        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+    return (Checked_Expression *)Checked_Enum_Member_Expression__create(parsed_expression->super.location, expected_type, enum_member);
 }
 
 Checked_Expression *Checker__check_member_access_expression(Checker *self, Checker_Context *context, Parsed_Member_Access_Expression *parsed_expression) {
@@ -1299,6 +1337,9 @@ Checked_Expression *Checker__check_expression(Checker *self, Checker_Context *co
         break;
     case PARSED_EXPRESSION_KIND__DIVIDE:
         expression = Checker__check_divide_expression(self, context, (Parsed_Divide_Expression *)parsed_expression, expected_type);
+        break;
+    case PARSED_EXPRESSION_KIND__DOT_MEMBER:
+        expression = Checker__check_dot_member_expression(self, context, (Parsed_Dot_Member_Expression *)parsed_expression, expected_type);
         break;
     case PARSED_EXPRESSION_KIND__EQUALS:
         expression = Checker__check_equals_expression(self, context, (Parsed_Equals_Expression *)parsed_expression);
@@ -1587,6 +1628,58 @@ Checked_Named_Type *Checker__create_struct_type(Checker *self, Checker_Context *
     struct_type->super.super.symbol = Checker__create_type_symbol(self, context->checked_package, struct_type_name, (Checked_Named_Type *)struct_type);
 
     return (Checked_Named_Type *)struct_type;
+}
+
+Checked_Named_Type *Checker__create_enum_type(Checker *self, Checker_Context *context, Token *type_name, Parsed_Enum_Type_Specifier *parsed_type_specifier) {
+    Checked_Package *enum_lookup_package = (self->global_symbols == self->builtin_types->symbols) ? NULL : context->checked_package;
+    Checked_Named_Type *other_type = Checker__find_package_type(self, enum_lookup_package, type_name->lexeme);
+    if (other_type != NULL) {
+        if (other_type->super.kind == CHECKED_TYPE_KIND__ENUM) {
+            /* Type checked already */
+            return other_type;
+        }
+        pWriter__begin_location_message(stderr_writer, type_name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Type redeclaration");
+        pWriter__end_location_message(stderr_writer);
+        if (other_type->super.location.source != NULL) {
+            pWriter__begin_location_message(stderr_writer, other_type->super.location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Previous declaration here");
+            pWriter__end_location_message(stderr_writer);
+        }
+        panic();
+    }
+
+    String *enum_type_name = type_name->lexeme;
+    Checked_Package *enum_type_package = context->checked_package;
+    if (self->global_symbols == self->builtin_types->symbols) {
+        /* This is a builtin type */
+        enum_type_package = NULL;
+    }
+    Checked_Enum_Type *enum_type = Checked_Enum_Type__create(type_name->location, enum_type_name, enum_type_package);
+    enum_type->super.super.symbol = Checker__create_type_symbol(self, context->checked_package, enum_type_name, (Checked_Named_Type *)enum_type);
+
+    Checked_Enum_Member *last_enum_member = NULL;
+    uint64_t next_value = 0;
+    Parsed_Enum_Member *parsed_member = parsed_type_specifier->first_member;
+    while (parsed_member != NULL) {
+        if (Checked_Enum_Type__find_member(enum_type, parsed_member->name->lexeme) != NULL) {
+            pWriter__begin_location_message(stderr_writer, parsed_member->name->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Duplicate enum member declaration");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        Checked_Enum_Member *enum_member = Checked_Enum_Member__create(parsed_member->name->location, enum_type, parsed_member->name->lexeme, next_value);
+        if (last_enum_member == NULL) {
+            enum_type->first_member = enum_member;
+        } else {
+            last_enum_member->next_member = enum_member;
+        }
+        last_enum_member = enum_member;
+        next_value = next_value + 1;
+        parsed_member = parsed_member->next_member;
+    }
+
+    return (Checked_Named_Type *)enum_type;
 }
 
 void Checker__check_struct_type(Checker *self, Checker_Context *context, Checked_Struct_Type *struct_type) {
@@ -2011,6 +2104,8 @@ Checked_Named_Type *Checker__check_type_statement(Checker *self, Checker_Context
         return Checker__check_external_type_statement(self, context, type_name);
     case PARSED_TYPE_SPECIFIER_KIND__STRUCT:
         return Checker__create_struct_type(self, context, type_name, (Parsed_Struct_Type_Specifier *)parsed_type_statement->type_specifier);
+    case PARSED_TYPE_SPECIFIER_KIND__ENUM:
+        return Checker__create_enum_type(self, context, type_name, (Parsed_Enum_Type_Specifier *)parsed_type_statement->type_specifier);
     default:
         pWriter__begin_location_message(stderr_writer, parsed_type_statement->type_specifier->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Unsupported type specifier");

@@ -44,6 +44,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__USIZE,
     /* Defined */
     CHECKED_TYPE_KIND__ARRAY,
+    CHECKED_TYPE_KIND__ENUM,
     CHECKED_TYPE_KIND__EXTERNAL,
     CHECKED_TYPE_KIND__MULTI_POINTER,
     CHECKED_TYPE_KIND__POINTER,
@@ -88,6 +89,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__CHARACTER,
     CHECKED_EXPRESSION_KIND__DEREFERENCE,
     CHECKED_EXPRESSION_KIND__DIVIDE,
+    CHECKED_EXPRESSION_KIND__ENUM_MEMBER,
     CHECKED_EXPRESSION_KIND__EQUALS,
     CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
     CHECKED_EXPRESSION_KIND__GREATER,
@@ -201,6 +203,26 @@ Checked_Struct_Member *Checked_Struct_Member__create(Source_Location location, C
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location location, String *name, Checked_Package *package, Parsed_Struct_Type_Specifier *parsed_type_specifier);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
+
+struct Checked_Enum_Type;
+
+typedef struct Checked_Enum_Member {
+    Source_Location location;
+    struct Checked_Enum_Type *enum_type;
+    String *name;
+    uint64_t value;
+    struct Checked_Enum_Member *next_member;
+} Checked_Enum_Member;
+
+typedef struct Checked_Enum_Type {
+    Checked_Named_Type super;
+    Checked_Enum_Member *first_member;
+} Checked_Enum_Type;
+
+Checked_Enum_Member *Checked_Enum_Member__create(Source_Location location, struct Checked_Enum_Type *enum_type, String *name, uint64_t value);
+Checked_Enum_Type *Checked_Enum_Type__create(Source_Location location, String *name, Checked_Package *package);
+
+Checked_Enum_Member *Checked_Enum_Type__find_member(Checked_Enum_Type *self, String *name);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
@@ -523,6 +545,13 @@ typedef struct Checked_Member_Access_Expression {
 } Checked_Member_Access_Expression;
 
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member);
+
+typedef struct Checked_Enum_Member_Expression {
+    Checked_Expression super;
+    Checked_Enum_Member *member;
+} Checked_Enum_Member_Expression;
+
+Checked_Enum_Member_Expression *Checked_Enum_Member_Expression__create(Source_Location location, Checked_Type *type, Checked_Enum_Member *member);
 
 typedef struct Checked_Nothing_Expression {
     Checked_Expression super;

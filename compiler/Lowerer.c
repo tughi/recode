@@ -144,6 +144,8 @@ IR_Type *Lowerer__lower_type(Lowerer *self, Checked_Type *type) {
     }
     case CHECKED_TYPE_KIND__BOOL:
         return IR_Type__get(IR_TYPE_KIND__BOOL);
+    case CHECKED_TYPE_KIND__ENUM:
+        return IR_Type__get(IR_TYPE_KIND__I32);
     case CHECKED_TYPE_KIND__EXTERNAL:
         return Lowerer__lower_external_type(self, ((Checked_External_Type *)type)->super.name);
     case CHECKED_TYPE_KIND__I8:
@@ -370,6 +372,12 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__INTEGER: {
         Checked_Integer_Expression *integer_expression = (Checked_Integer_Expression *)expression;
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), integer_expression->value, integer_expression->literal);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+        return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__ENUM_MEMBER: {
+        Checked_Enum_Member_Expression *enum_member_expression = (Checked_Enum_Member_Expression *)expression;
+        IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), enum_member_expression->member->value, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
     }

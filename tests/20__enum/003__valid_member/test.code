@@ -1,0 +1,14 @@
+type Direction = enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+
+proc main() -> i32 {
+    let d = Direction.SOUTH
+    if d == .SOUTH {
+        return 0
+    }
+    return 1
+}

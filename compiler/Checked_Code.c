@@ -46,6 +46,7 @@ void String__append_mangled_type_name(String *self, Checked_Type *type) {
         break;
     }
     case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__ENUM:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__I16:
     case CHECKED_TYPE_KIND__I32:
@@ -191,6 +192,33 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
     return NULL;
 }
 
+Checked_Enum_Member *Checked_Enum_Member__create(Source_Location location, Checked_Enum_Type *enum_type, String *name, uint64_t value) {
+    Checked_Enum_Member *member = (Checked_Enum_Member *)malloc(sizeof(Checked_Enum_Member));
+    member->location = location;
+    member->enum_type = enum_type;
+    member->name = name;
+    member->value = value;
+    member->next_member = NULL;
+    return member;
+}
+
+Checked_Enum_Type *Checked_Enum_Type__create(Source_Location location, String *name, Checked_Package *package) {
+    Checked_Enum_Type *type = (Checked_Enum_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ENUM, sizeof(Checked_Enum_Type), location, name, package);
+    type->first_member = NULL;
+    return type;
+}
+
+Checked_Enum_Member *Checked_Enum_Type__find_member(Checked_Enum_Type *self, String *name) {
+    Checked_Enum_Member *member = self->first_member;
+    while (member != NULL) {
+        if (String__equals_string(name, member->name)) {
+            return member;
+        }
+        member = member->next_member;
+    }
+    return NULL;
+}
+
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     if (self == other) {
         return true;
@@ -207,6 +235,7 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return Checked_Multi_Pointer_Type__equals((Checked_Multi_Pointer_Type *)self, (Checked_Multi_Pointer_Type *)other);
     case CHECKED_TYPE_KIND__POINTER:
         return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__ENUM:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT: {
         return Checked_Named_Type__equals((Checked_Named_Type *)self, (Checked_Named_Type *)other);
@@ -221,6 +250,7 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__ANY:
     case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__ENUM:
     case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__I16:
     case CHECKED_TYPE_KIND__I32:
@@ -657,6 +687,12 @@ Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Lo
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member) {
     Checked_Member_Access_Expression *expression = (Checked_Member_Access_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type);
     expression->object_expression = object_expression;
+    expression->member = member;
+    return expression;
+}
+
+Checked_Enum_Member_Expression *Checked_Enum_Member_Expression__create(Source_Location location, Checked_Type *type, Checked_Enum_Member *member) {
+    Checked_Enum_Member_Expression *expression = (Checked_Enum_Member_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Expression), location, type);
     expression->member = member;
     return expression;
 }

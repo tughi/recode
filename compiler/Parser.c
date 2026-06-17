@@ -148,6 +148,12 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_true)) {
         return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
     }
+    if (Parser__matches_three(self, Token__is_dot, true, Token__is_space, false, Token__is_identifier)) {
+        Token *dot_token = Parser__consume_token(self, Token__is_dot);
+        Parser__consume_space(self, 0);
+        Token *name = Parser__consume_token(self, Token__is_identifier);
+        return (Parsed_Expression *)Parsed_Dot_Member_Expression__create(Source_Location__merge(dot_token->location, name->location), name);
+    }
     if (Parser__matches_one(self, Token__is_identifier)) {
         return (Parsed_Expression *)Parsed_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
     }
@@ -603,6 +609,38 @@ Parsed_Type_Specifier *Parser__parse_struct_type_specifier(Parser *self) {
     return (Parsed_Type_Specifier *)Parsed_Struct_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_struct_member);
 }
 
+/*
+enum_type_specifier
+    | "enum" "{" ( IDENTIFIER )* "}"
+*/
+Parsed_Type_Specifier *Parser__parse_enum_type_specifier(Parser *self) {
+    Token *first_token = Parser__consume_token(self, Token__is_enum);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_opening_brace);
+    Parser__consume_end_of_line(self);
+    self->current_indentation = self->current_indentation + 1;
+    Parsed_Enum_Member *first_enum_member = NULL;
+    Parsed_Enum_Member *last_enum_member = NULL;
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        if (!Parser__consume_empty_line(self)) {
+            Parser__consume_space(self, self->current_indentation * 4);
+            Token *enum_member_name = Parser__consume_token(self, Token__is_identifier);
+            Parser__consume_end_of_line(self);
+            Parsed_Enum_Member *enum_member = Parsed_Enum_Member__create(enum_member_name);
+            if (first_enum_member == NULL) {
+                first_enum_member = enum_member;
+            } else {
+                last_enum_member->next_member = enum_member;
+            }
+            last_enum_member = enum_member;
+        }
+    }
+    self->current_indentation = self->current_indentation - 1;
+    Parser__consume_space(self, self->current_indentation * 4);
+    Token *last_token = Parser__consume_token(self, Token__is_closing_brace);
+    return (Parsed_Type_Specifier *)Parsed_Enum_Type_Specifier__create(Source_Location__merge(first_token->location, last_token->location), first_enum_member);
+}
+
 Parsed_Procedure_Parameter *Parser__parse_procedure_parameters(Parser *self, Parsed_Type *receiver_type);
 
 /*
@@ -628,6 +666,7 @@ type_specifier
     | builtin_type_specifier
     | external_type_specifier
     | struct_type_specifier
+    | enum_type_specifier
     | variant_type_specifier
 */
 Parsed_Type_Specifier *Parser__parse_type_specifier(Parser *self) {
@@ -639,6 +678,9 @@ Parsed_Type_Specifier *Parser__parse_type_specifier(Parser *self) {
     }
     if (Parser__matches_one(self, Token__is_struct)) {
         return Parser__parse_struct_type_specifier(self);
+    }
+    if (Parser__matches_one(self, Token__is_enum)) {
+        return Parser__parse_enum_type_specifier(self);
     }
     Token *unsupported_type = Parser__consume_token(self, Token__is_identifier);
     pWriter__begin_location_message(stderr_writer, unsupported_type->location, WRITER_STYLE__ERROR);

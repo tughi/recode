@@ -201,6 +201,12 @@ Parsed_Member_Access_Expression *Parsed_Member_Access_Expression__create(Parsed_
     return expression;
 }
 
+Parsed_Dot_Member_Expression *Parsed_Dot_Member_Expression__create(Source_Location location, Token *name) {
+    Parsed_Dot_Member_Expression *expression = (Parsed_Dot_Member_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__DOT_MEMBER, sizeof(Parsed_Dot_Member_Expression), location);
+    expression->name = name;
+    return expression;
+}
+
 Parsed_Minus_Expression *Parsed_Minus_Expression__create(Source_Location location, Parsed_Expression *other_expression) {
     return (Parsed_Minus_Expression *)Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__MINUS, sizeof(Parsed_Minus_Expression), location, other_expression);
 }
@@ -411,6 +417,19 @@ Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *typ
 
 Parsed_Struct_Type_Specifier *Parsed_Struct_Type_Specifier__create(Source_Location location, Parsed_Struct_Member *first_member) {
     Parsed_Struct_Type_Specifier *type_specifier = (Parsed_Struct_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__STRUCT, sizeof(Parsed_Struct_Type_Specifier), location);
+    type_specifier->first_member = first_member;
+    return type_specifier;
+}
+
+Parsed_Enum_Member *Parsed_Enum_Member__create(Token *name) {
+    Parsed_Enum_Member *member = (Parsed_Enum_Member *)malloc(sizeof(Parsed_Enum_Member));
+    member->name = name;
+    member->next_member = NULL;
+    return member;
+}
+
+Parsed_Enum_Type_Specifier *Parsed_Enum_Type_Specifier__create(Source_Location location, Parsed_Enum_Member *first_member) {
+    Parsed_Enum_Type_Specifier *type_specifier = (Parsed_Enum_Type_Specifier *)Parsed_Type_Specifier__create(PARSED_TYPE_SPECIFIER_KIND__ENUM, sizeof(Parsed_Enum_Type_Specifier), location);
     type_specifier->first_member = first_member;
     return type_specifier;
 }
