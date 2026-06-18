@@ -14,6 +14,9 @@ typedef struct Lowerer {
     IR_Value *malloc_callee;
     Checked_Struct_Type *string_type;
     int32_t string_counter;
+    Checked_Enum_Type **enum_names;
+    size_t enum_names_size;
+    size_t enum_names_capacity;
 } Lowerer;
 
 IR_Block *Lowerer__create_block(Lowerer *self) {
@@ -322,6 +325,110 @@ IR_Value *Lowerer__string_global(Lowerer *self, String *value) {
     return &global->super.value;
 }
 
+IR_Value *Lowerer__lower_string_constant(Lowerer *self, String *value) {
+    Checked_Struct_Member *data_member = self->string_type->first_member;
+    Checked_Struct_Member *length_member = data_member->next_member;
+
+    IR_Value *data;
+    if (value->length == 0) {
+        IR_Const_Instruction *null = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, data_member->type), 0, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)null);
+        data = &null->super.result;
+    } else {
+        data = Lowerer__string_global(self, value);
+    }
+
+    IR_Const_Instruction *length = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, length_member->type), value->length, NULL);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)length);
+
+    IR_Struct_Instruction *instruction = IR_Struct_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, (Checked_Type *)self->string_type));
+    IR_Struct_Instruction__append_field(instruction, data_member->name, data);
+    IR_Struct_Instruction__append_field(instruction, length_member->name, &length->super.result);
+    IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
+    return &instruction->super.result;
+}
+
+IR_Value *Lowerer__find_global_or_null(Lowerer *self, String *name) {
+    for (size_t i = 0; i < self->globals.size; i++) {
+        if (String__equals__value_name(self->globals.values[i]->name, '$', name)) {
+            return self->globals.values[i];
+        }
+    }
+    return NULL;
+}
+
+String *Lowerer__enum_name_procedure_name(Lowerer *self, Checked_Enum_Type *enum_type) {
+    String *procedure_name = Lowerer__type_name(self, (Checked_Type *)enum_type);
+    String__append_cstring(procedure_name, ".name");
+    return procedure_name;
+}
+
+IR_Value *Lowerer__enum_name_procedure(Lowerer *self, Checked_Enum_Type *enum_type) {
+    String *procedure_name = Lowerer__enum_name_procedure_name(self, enum_type);
+
+    IR_Value *cached = Lowerer__find_global_or_null(self, procedure_name);
+    if (cached != NULL) {
+        return cached;
+    }
+
+    IR_Type *str_type = Lowerer__lower_type(self, (Checked_Type *)self->string_type);
+    IR_Type **parameter_types = (IR_Type **)malloc(sizeof(IR_Type *));
+    parameter_types[0] = IR_Type__get(IR_TYPE_KIND__I32);
+    IR_Procedure *procedure = IR_Procedure__create(procedure_name, parameter_types, 1, str_type);
+    IR_Program__append_procedure(self->program, procedure);
+    IR_Value_List__append(&self->globals, &procedure->super.value);
+    IR_Value *parameter = IR_Value__create(IR_VALUE_KIND__PARAMETER, IR__value_name('%', String__create_from("value")), IR_Type__get(IR_TYPE_KIND__I32));
+    IR_Value_List__append(&procedure->parameters, parameter);
+
+    // Remember this enum so its body gets generated once all bodies are lowered.
+    if (self->enum_names_size == self->enum_names_capacity) {
+        self->enum_names_capacity = self->enum_names_capacity == 0 ? 4 : self->enum_names_capacity * 2;
+        self->enum_names = (Checked_Enum_Type **)realloc(self->enum_names, self->enum_names_capacity * sizeof(Checked_Enum_Type *));
+    }
+    self->enum_names[self->enum_names_size++] = enum_type;
+
+    return &procedure->super.value;
+}
+
+void Lowerer__define_enum_name_procedure(Lowerer *self, Checked_Enum_Type *enum_type) {
+    IR_Value *global = Lowerer__find_global_or_null(self, Lowerer__enum_name_procedure_name(self, enum_type));
+    if (global == NULL) {
+        return;
+    }
+    IR_Procedure *procedure = (IR_Procedure *)global;
+    IR_Value *parameter = procedure->parameters.values[0];
+
+    self->procedure = procedure;
+    self->value_counter = 0;
+    self->block_counter = 0;
+    self->break_block = NULL;
+    IR_Block *block = Lowerer__create_block(self);
+    IR_Procedure__append_block(procedure, block);
+    self->block = block;
+
+    for (Checked_Enum_Member *member = enum_type->first_member; member != NULL; member = member->next_member) {
+        IR_Const_Instruction *member_value = IR_Const_Instruction__create(Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__I32), member->value, NULL);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)member_value);
+        IR_Binary_Instruction *matches = IR_Binary_Instruction__create(IR_INSTRUCTION_KIND__CMP_EQ, Lowerer__fresh_name(self), IR_Type__get(IR_TYPE_KIND__BOOL), parameter, &member_value->super.result);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)matches);
+
+        IR_Block *match_block = Lowerer__create_block(self);
+        IR_Block *next_block = Lowerer__create_block(self);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Br_Instruction__create(&matches->super.result, match_block, next_block));
+
+        IR_Procedure__append_block(self->procedure, match_block);
+        self->block = match_block;
+        IR_Value *name_value = Lowerer__lower_string_constant(self, member->name);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(name_value));
+
+        IR_Procedure__append_block(self->procedure, next_block);
+        self->block = next_block;
+    }
+    // No member matched: return an empty string.
+    IR_Value *empty_value = Lowerer__lower_string_constant(self, String__create());
+    IR_Block__append_instruction(self->block, (IR_Instruction *)IR_Ret_Instruction__create(empty_value));
+}
+
 IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expression) {
     switch (expression->kind) {
     case CHECKED_EXPRESSION_KIND__CALL: {
@@ -380,6 +487,20 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
         IR_Const_Instruction *instruction = IR_Const_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), enum_member_expression->member->value, NULL);
         IR_Block__append_instruction(self->block, (IR_Instruction *)instruction);
         return &instruction->super.result;
+    }
+    case CHECKED_EXPRESSION_KIND__ENUM_VALUE: {
+        Checked_Enum_Value_Expression *enum_value_expression = (Checked_Enum_Value_Expression *)expression;
+        return Lowerer__lower_expression(self, enum_value_expression->enum_expression);
+    }
+    case CHECKED_EXPRESSION_KIND__ENUM_NAME: {
+        Checked_Enum_Name_Expression *enum_name_expression = (Checked_Enum_Name_Expression *)expression;
+        Checked_Enum_Type *enum_type = (Checked_Enum_Type *)enum_name_expression->enum_expression->type;
+        IR_Value *value = Lowerer__lower_expression(self, enum_name_expression->enum_expression);
+        IR_Value *callee = Lowerer__enum_name_procedure(self, enum_type);
+        IR_Call_Instruction *call = IR_Call_Instruction__create(Lowerer__fresh_name(self), Lowerer__lower_type(self, expression->type), callee);
+        IR_Value_List__append(&call->super.operands, value);
+        IR_Block__append_instruction(self->block, (IR_Instruction *)call);
+        return &call->super.result;
     }
     case CHECKED_EXPRESSION_KIND__ADD:
     case CHECKED_EXPRESSION_KIND__DIVIDE:
@@ -1006,6 +1127,9 @@ IR_Program *lower(Checked_Source *checked_source) {
     lowerer.malloc_callee = NULL;
     lowerer.string_type = NULL;
     lowerer.string_counter = 0;
+    lowerer.enum_names = NULL;
+    lowerer.enum_names_size = 0;
+    lowerer.enum_names_capacity = 0;
 
     for (Checked_Symbols *symbols = checked_source->symbols; symbols != NULL; symbols = symbols->parent) {
         for (Checked_Symbol *symbol = symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {
@@ -1039,6 +1163,11 @@ IR_Program *lower(Checked_Source *checked_source) {
         if (symbol->kind == CHECKED_SYMBOL_KIND__PROCEDURE && Checked_Procedure_Symbol__is_lowerable((Checked_Procedure_Symbol *)symbol)) {
             Lowerer__define_procedure(&lowerer, (Checked_Procedure_Symbol *)symbol);
         }
+    }
+
+    // Fill in the bodies of the `<Enum>.name` helpers declared on demand above.
+    for (size_t i = 0; i < lowerer.enum_names_size; i++) {
+        Lowerer__define_enum_name_procedure(&lowerer, lowerer.enum_names[i]);
     }
 
     for (Checked_Symbol *symbol = checked_source->symbols->first_symbol; symbol != NULL; symbol = symbol->next_symbol) {

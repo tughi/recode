@@ -1,0 +1,15 @@
+type Direction = enum {
+    Up
+    Down
+}
+
+proc main() -> i32 {
+    let d = Direction.Down
+    if d.name.length != 4 {
+        return 1
+    }
+    if Direction.Up.name.length != 2 {
+        return 2
+    }
+    return 0
+}

@@ -1,5 +1,5 @@
-proc malloc(anon size: usize) -> ^Any = external
-proc realloc(anon block: ^Any, anon size: usize) -> ^Any = external
-proc free(anon block: ^Any) = external
+proc malloc(size: usize) -> ^Any = external
+proc realloc(block: ^Any, size: usize) -> ^Any = external
+proc free(block: ^Any) = external
 
-proc exit(anon code: i32) = external
+proc exit(code: i32) = external

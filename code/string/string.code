@@ -1,6 +1,6 @@
 import string.builder
 
-proc (str).equals(self, anon other: str) -> bool {
+proc (str).equals(self, other: str) -> bool {
     if self.length != other.length {
         return false
     }
@@ -21,12 +21,12 @@ proc (str).data(self) -> [^]u8 {
     return (^copy).as(^String).data
 }
 
-proc (str).char_at(self, anon index: usize) -> u8 {
+proc (str).char_at(self, index: usize) -> u8 {
     let self_data = self.data()
     return self_data[index]
 }
 
-proc (str).starts_with(self, anon other: str, from index: usize) -> bool {
+proc (str).starts_with(self, other: str, index: usize) -> bool {
     let self_length = self.length
     let other_length = other.length
     if self_length < other_length + index {

@@ -1092,6 +1092,14 @@ Checked_Expression *Checker__check_object_member_access(Checker *self, Checker_C
         }
         break;
     }
+    case CHECKED_TYPE_KIND__ENUM:
+        if (String__equals_cstring(member_name->lexeme, "value")) {
+            return (Checked_Expression *)Checked_Enum_Value_Expression__create(expression_location, (Checked_Type *)self->builtin_types->i32_type, object_expression);
+        }
+        if (String__equals_cstring(member_name->lexeme, "name")) {
+            return (Checked_Expression *)Checked_Enum_Name_Expression__create(expression_location, (Checked_Type *)self->builtin_types->str_type, object_expression);
+        }
+        break;
     default:
         break;
     }

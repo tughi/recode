@@ -90,6 +90,8 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__DEREFERENCE,
     CHECKED_EXPRESSION_KIND__DIVIDE,
     CHECKED_EXPRESSION_KIND__ENUM_MEMBER,
+    CHECKED_EXPRESSION_KIND__ENUM_NAME,
+    CHECKED_EXPRESSION_KIND__ENUM_VALUE,
     CHECKED_EXPRESSION_KIND__EQUALS,
     CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
     CHECKED_EXPRESSION_KIND__GREATER,
@@ -552,6 +554,20 @@ typedef struct Checked_Enum_Member_Expression {
 } Checked_Enum_Member_Expression;
 
 Checked_Enum_Member_Expression *Checked_Enum_Member_Expression__create(Source_Location location, Checked_Type *type, Checked_Enum_Member *member);
+
+typedef struct Checked_Enum_Name_Expression {
+    Checked_Expression super;
+    Checked_Expression *enum_expression;
+} Checked_Enum_Name_Expression;
+
+Checked_Enum_Name_Expression *Checked_Enum_Name_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *enum_expression);
+
+typedef struct Checked_Enum_Value_Expression {
+    Checked_Expression super;
+    Checked_Expression *enum_expression;
+} Checked_Enum_Value_Expression;
+
+Checked_Enum_Value_Expression *Checked_Enum_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *enum_expression);
 
 typedef struct Checked_Nothing_Expression {
     Checked_Expression super;

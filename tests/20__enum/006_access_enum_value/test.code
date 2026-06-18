@@ -1,0 +1,9 @@
+type Direction = enum {
+    Up
+    Down
+}
+
+proc main() -> i32 {
+    let d = Direction.Down
+    return d.value - 1
+}

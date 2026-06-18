@@ -745,6 +745,18 @@ Checked_String_Length_Expression *Checked_String_Length_Expression__create(Sourc
     return expression;
 }
 
+Checked_Enum_Name_Expression *Checked_Enum_Name_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *enum_expression) {
+    Checked_Enum_Name_Expression *expression = (Checked_Enum_Name_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__ENUM_NAME, sizeof(Checked_Enum_Name_Expression), location, type);
+    expression->enum_expression = enum_expression;
+    return expression;
+}
+
+Checked_Enum_Value_Expression *Checked_Enum_Value_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *enum_expression) {
+    Checked_Enum_Value_Expression *expression = (Checked_Enum_Value_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__ENUM_VALUE, sizeof(Checked_Enum_Value_Expression), location, type);
+    expression->enum_expression = enum_expression;
+    return expression;
+}
+
 Checked_Subtract_Expression *Checked_Subtract_Expression__create(Source_Location location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     return (Checked_Subtract_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__SUBTRACT, location, type, left_expression, right_expression);
 }
