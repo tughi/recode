@@ -6,11 +6,11 @@ type Builder = struct {
     length: usize
 }
 
-proc (^Builder).append(self, anon suffix: str) -> ^Builder {
+proc (^Builder).append(self, suffix: str) -> ^Builder {
     return self.append_chars(suffix.data(), count: suffix.length)
 }
 
-proc (^Builder).append_char(self, anon c: u8) -> ^Builder {
+proc (^Builder).append_char(self, char: u8) -> ^Builder {
     if self.length == self.data_size {
         self.data_size = self.data_size + 8
         self.data = libc.realloc(
@@ -18,12 +18,12 @@ proc (^Builder).append_char(self, anon c: u8) -> ^Builder {
             self.data_size
         ).as([^]u8)
     }
-    self.data[self.length] = c
+    self.data[self.length] = char
     self.length = self.length + 1
     return self
 }
 
-proc (^Builder).append_chars(self, anon content: [^]u8, count: usize) -> ^Builder {
+proc (^Builder).append_chars(self, content: [^]u8, count: usize) -> ^Builder {
     let index = 0usize
     while index < count {
         self.append_char(content[index])
@@ -32,7 +32,7 @@ proc (^Builder).append_chars(self, anon content: [^]u8, count: usize) -> ^Builde
     return self
 }
 
-proc (^Builder).append_decimal(self, anon value: usize) -> ^Builder {
+proc (^Builder).append_decimal(self, value: usize) -> ^Builder {
     if value >= 10 {
         return self.append_decimal(value / 10)
     }
