@@ -1,0 +1,91 @@
+import allocator
+import compiler.lexer
+
+type Type_Kind = enum {
+    Array
+    Multi_Pointer
+    Named
+    Pointer
+    Procedure
+}
+
+type Type = struct {
+    kind: Type_Kind
+    source_position: usize
+}
+
+type Array_Type = struct {
+    super: Type
+    size: ^lexer.Integer
+    item_type: ^Type
+}
+
+proc new_array_type(source_position: usize, size: ^lexer.Integer, item_type: ^Type) -> ^Type {
+    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
+    result.^ = Array_Type(
+        super: Type(kind: .Array, source_position: source_position)
+        size: size
+        item_type: item_type
+    )
+    return result.as(^Type)
+}
+
+type Multi_Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_multi_pointer_type(source_position: usize, pointee: ^Type) -> ^Type {
+    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
+    result.^ = Multi_Pointer_Type(
+        super: Type(kind: .Multi_Pointer, source_position: source_position)
+        pointee: pointee
+    )
+    return result.as(^Type)
+}
+
+type Named_Type = struct {
+    super: Type
+    module: ^lexer.Identifier
+    name: ^lexer.Identifier
+}
+
+proc new_named_type(source_position: usize, module: ^lexer.Identifier, name: ^lexer.Identifier) -> ^Type {
+    let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
+    result.^ = Named_Type(
+        super: Type(kind: .Named, source_position: source_position)
+        module: module
+        name: name
+    )
+    return result.as(^Type)
+}
+
+type Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_pointer_type(source_position: usize, pointee: ^Type) -> ^Type {
+    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
+    result.^ = Pointer_Type(
+        super: Type(kind: .Pointer, source_position: source_position)
+        pointee: pointee
+    )
+    return result.as(^Type)
+}
+
+type Procedure_Type = struct {
+    super: Type
+    first_parameter: ^Procedure_Parameter
+    return_type: ^Type
+}
+
+proc new_procedure_type(source_position: usize, first_parameter: ^Procedure_Parameter, return_type: ^Type) -> ^Type {
+    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
+    result.^ = Procedure_Type(
+        super: Type(kind: .Procedure, source_position: source_position)
+        first_parameter: first_parameter
+        return_type: return_type
+    )
+    return result.as(^Type)
+}

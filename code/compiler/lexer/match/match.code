@@ -28,8 +28,8 @@ let end_of_line: Match
 let identifier: Match
 let integer: Match
 let integer_type: Match
+let optional_space: Match
 let required_space: Match
-let space: Match
 
 proc init() {
     character = Match(kind: .Character)
@@ -40,7 +40,7 @@ proc init() {
     integer = Match(kind: .Integer)
     integer_type = Match(kind: .Integer_Type)
     required_space = Match(kind: .Space, required: true)
-    space = Match(kind: .Space)
+    optional_space = Match(kind: .Space)
 }
 
 

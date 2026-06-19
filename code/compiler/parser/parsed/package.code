@@ -1,0 +1,40 @@
+import allocator
+import compiler.source
+
+type Module = struct {
+    source: source.Source
+    first_statement: ^Statement
+    next_module: ^Module
+}
+
+proc new_module(source: source.Source, first_statement: ^Statement) -> ^Module {
+    let result = allocator.alloc(size: type_size(Module), alignment: type_alignment(Module)).as(^Module)
+    result.^ = Module(
+        source: source
+        first_statement: first_statement
+        next_module: null
+    )
+    return result
+}
+
+type Package = struct {
+    name: str
+    is_root: bool
+    import_source: source.Source
+    import_source_position: usize
+    first_module: ^Module
+    next_package: ^Package
+}
+
+proc new_package(name: str, is_root: bool) -> ^Package {
+    let result = allocator.alloc(size: type_size(Package), alignment: type_alignment(Package)).as(^Package)
+    result.^ = Package(
+        name: name
+        is_root: is_root
+        import_source: source.Source(path: "", content: "")
+        import_source_position: 0
+        first_module: null
+        next_package: null
+    )
+    return result
+}

@@ -1,0 +1,247 @@
+import allocator
+import compiler.lexer
+
+type Expression_Kind = enum {
+    Add
+    Address_Of
+    Alloc
+    Array_Access
+    Call
+    Cast
+    Character
+    Dereference
+    Divide
+    Equals
+    Greater
+    Greater_Or_Equals
+    Identifier
+    Integer
+    Less
+    Less_Or_Equals
+    Logic_And
+    Logic_Or
+    Member_Access
+    Modulo
+    Multiply
+    Negate
+    Not
+    Not_Equals
+    String
+    Subtract
+    Symbol
+    Type_Alignment
+    Type_Size
+}
+
+type Expression = struct {
+    kind: Expression_Kind
+    source_position: usize
+}
+
+type Binary_Expression = struct {
+    super: Expression
+    left: ^Expression
+    right: ^Expression
+}
+
+proc new_binary_expression(kind: Expression_Kind, source_position: usize, left: ^Expression, right: ^Expression) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Binary_Expression), alignment: type_alignment(Binary_Expression)).as(^Binary_Expression)
+    result.^ = Binary_Expression(
+        super: Expression(kind: kind, source_position: source_position)
+        left: left
+        right: right
+    )
+    return result.as(^Expression)
+}
+
+type Unary_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_unary_expression(kind: Expression_Kind, source_position: usize, operand: ^Expression) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Unary_Expression), alignment: type_alignment(Unary_Expression)).as(^Unary_Expression)
+    result.^ = Unary_Expression(
+        super: Expression(kind: kind, source_position: source_position)
+        operand: operand
+    )
+    return result.as(^Expression)
+}
+
+type Array_Access_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    index: ^Expression
+}
+
+proc new_array_access_expression(source_position: usize, operand: ^Expression, index: ^Expression) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Array_Access_Expression), alignment: type_alignment(Array_Access_Expression)).as(^Array_Access_Expression)
+    result.^ = Array_Access_Expression(
+        super: Expression(kind: .Array_Access, source_position: source_position)
+        operand: operand
+        index: index
+    )
+    return result.as(^Expression)
+}
+
+type Call_Argument = struct {
+    label: ^lexer.Identifier
+    expression: ^Expression
+    next: ^Call_Argument
+}
+
+proc new_call_argument(label: ^lexer.Identifier, expression: ^Expression) -> ^Call_Argument {
+    let result = allocator.alloc(size: type_size(Call_Argument), alignment: type_alignment(Call_Argument)).as(^Call_Argument)
+    result.^ = Call_Argument(
+        label: label
+        expression: expression
+        next: null
+    )
+    return result
+}
+
+type Call_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    first_argument: ^Call_Argument
+}
+
+proc new_call_expression(source_position: usize, operand: ^Expression, first_argument: ^Call_Argument) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Call_Expression), alignment: type_alignment(Call_Expression)).as(^Call_Expression)
+    result.^ = Call_Expression(
+        super: Expression(kind: .Call, source_position: source_position)
+        operand: operand
+        first_argument: first_argument
+    )
+    return result.as(^Expression)
+}
+
+type Cast_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    target_type: ^Type
+}
+
+proc new_cast_expression(source_position: usize, operand: ^Expression, target_type: ^Type) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Cast_Expression), alignment: type_alignment(Cast_Expression)).as(^Cast_Expression)
+    result.^ = Cast_Expression(
+        super: Expression(kind: .Cast, source_position: source_position)
+        operand: operand
+        target_type: target_type
+    )
+    return result.as(^Expression)
+}
+
+type Character_Expression = struct {
+    super: Expression
+    token: ^lexer.Character
+}
+
+proc new_character_expression(token: ^lexer.Character) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Character_Expression), alignment: type_alignment(Character_Expression)).as(^Character_Expression)
+    result.^ = Character_Expression(
+        super: Expression(kind: .Character, source_position: token.source_position)
+        token: token
+    )
+    return result.as(^Expression)
+}
+
+type Identifier_Expression = struct {
+    super: Expression
+    name: ^lexer.Identifier
+}
+
+proc new_identifier_expression(name: ^lexer.Identifier) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Identifier_Expression), alignment: type_alignment(Identifier_Expression)).as(^Identifier_Expression)
+    result.^ = Identifier_Expression(
+        super: Expression(kind: .Identifier, source_position: name.source_position)
+        name: name
+    )
+    return result.as(^Expression)
+}
+
+type Integer_Expression = struct {
+    super: Expression
+    token: ^lexer.Integer
+}
+
+proc new_integer_expression(token: ^lexer.Integer) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Integer_Expression), alignment: type_alignment(Integer_Expression)).as(^Integer_Expression)
+    result.^ = Integer_Expression(
+        super: Expression(kind: .Integer, source_position: token.source_position)
+        token: token
+    )
+    return result.as(^Expression)
+}
+
+type Member_Access_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    member: ^lexer.Identifier
+}
+
+proc new_member_access_expression(source_position: usize, operand: ^Expression, member: ^lexer.Identifier) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Member_Access_Expression), alignment: type_alignment(Member_Access_Expression)).as(^Member_Access_Expression)
+    result.^ = Member_Access_Expression(
+        super: Expression(kind: .Member_Access, source_position: source_position)
+        operand: operand
+        member: member
+    )
+    return result.as(^Expression)
+}
+
+type String_Expression = struct {
+    super: Expression
+    token: ^lexer.String
+}
+
+proc new_string_expression(token: ^lexer.String) -> ^Expression {
+    let result = allocator.alloc(size: type_size(String_Expression), alignment: type_alignment(String_Expression)).as(^String_Expression)
+    result.^ = String_Expression(
+        super: Expression(kind: .String, source_position: token.source_position)
+        token: token
+    )
+    return result.as(^Expression)
+}
+
+type Symbol_Expression = struct {
+    super: Expression
+    name: ^lexer.Identifier
+}
+
+proc new_symbol_expression(source_position: usize, name: ^lexer.Identifier) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Symbol_Expression), alignment: type_alignment(Symbol_Expression)).as(^Symbol_Expression)
+    result.^ = Symbol_Expression(
+        super: Expression(kind: .Symbol, source_position: source_position)
+        name: name
+    )
+    return result.as(^Expression)
+}
+
+type Type_Alignment_Expression = struct {
+    super: Expression
+    target_type: ^Type
+}
+
+proc new_type_alignment_expression(source_position: usize, target_type: ^Type) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Type_Alignment_Expression), alignment: type_alignment(Type_Alignment_Expression)).as(^Type_Alignment_Expression)
+    result.^ = Type_Alignment_Expression(
+        super: Expression(kind: .Type_Alignment, source_position: source_position)
+        target_type: target_type
+    )
+    return result.as(^Expression)
+}
+
+type Type_Size_Expression = struct {
+    super: Expression
+    target_type: ^Type
+}
+
+proc new_type_size_expression(source_position: usize, target_type: ^Type) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Type_Size_Expression), alignment: type_alignment(Type_Size_Expression)).as(^Type_Size_Expression)
+    result.^ = Type_Size_Expression(
+        super: Expression(kind: .Type_Size, source_position: source_position)
+        target_type: target_type
+    )
+    return result.as(^Expression)
+}

@@ -281,7 +281,7 @@ proc (^Lexer).consume_empty_line(self, alignment: i32) {
 }
 
 proc (^Lexer).consume_end_of_line(self) -> ^End_Of_Line {
-    if self.matches_two(match.space, match.comment) {
+    if self.matches_two(match.optional_space, match.comment) {
         self.consume_space(1)
         self.consume_comment()
     } else {

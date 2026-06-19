@@ -1,11 +1,8 @@
 // import compiler.checker
-import compiler.lexer
 // import compiler.lowerer
-// import compiler.parser
+import compiler.parser
 // import compiler.printer
-import compiler.source
 import libc
-import string
 
 proc main(argc: i32, argv: [^][^]u8) -> i32 {
     let arg = 1
@@ -70,38 +67,9 @@ proc main(argc: i32, argv: [^][^]u8) -> i32 {
         binary_name = "app"
     }
 
-    let result = source.load(source_dir)
-    if not result.error.equals("") {
-        return 1
-    }
+    let main_package = parser.parse(source_dir: source_dir, package_name: package_name, binary_name: binary_name)
 
-    let source_lexer = lexer.create(result.source)
-
-    loop {
-        let token = source_lexer.peek_token()
-        if token.kind == .End_Of_File {
-            libc.stdout.write(token.kind.name).end_line()
-            break
-        } else if token.kind == .End_Of_Line {
-            libc.stdout.write(token.kind.name).end_line()
-        } else if token.kind == .Space {
-            libc.stdout.write(token.kind.name).write(".count: ").write_i64(token.as(^lexer.Space).count.as(i64)).end_line()
-        } else {
-            libc.stdout.write(token.kind.name).write(": ").write(token.lexeme).end_line()
-        }
-        source_lexer.consume_token()
-    }
-
-
-    // let main_package = try parser.parse(source_dir: source_dir, package_name: package_name, binary_name: binary_name) else {
-    //     libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
-    //     return 1
-    // }
-
-    // let builtin_package = try parser.parse(source_dir: "code", package_name: "builtin", binary_name: nil) else {
-    //     libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
-    //     return 1
-    // }
+    let builtin_package = parser.parse(source_dir: "code", package_name: "builtin", binary_name: "")
 
     // let checked_package = try checker.check(builtin_package: builtin_package, main_package: main_package) else {
     //     libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
