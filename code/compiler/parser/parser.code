@@ -941,7 +941,7 @@ proc (^Parser).decrease_alignment(self) {
 }
 
 proc (^Parser).consume_other(self, expected: u8) -> ^lexer.Other {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Other and token.lexeme.char_at(0) == expected {
         self.lexer.advance()
         return token.as(^lexer.Other)
@@ -953,9 +953,9 @@ proc (^Parser).consume_other(self, expected: u8) -> ^lexer.Other {
 }
 
 proc (^Parser).consume_two_other(self, first: u8, second: u8) -> ^lexer.Other {
-    let first_token = self.lexer.peek_token()
+    let first_token = self.lexer.peek_token(1)
     if first_token.kind == .Other and first_token.lexeme.char_at(0) == first {
-        let second_token = self.lexer.peek_token_at(offset: 1)
+        let second_token = self.lexer.peek_token(2)
         if second_token.kind == .Other and second_token.lexeme.char_at(0) == second {
             self.lexer.advance() // first
             self.lexer.advance() // second
@@ -969,7 +969,7 @@ proc (^Parser).consume_two_other(self, first: u8, second: u8) -> ^lexer.Other {
 }
 
 proc (^Parser).consume_character(self) -> ^lexer.Character {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Character {
         self.lexer.advance()
         return token.as(^lexer.Character)
@@ -978,7 +978,7 @@ proc (^Parser).consume_character(self) -> ^lexer.Character {
 }
 
 proc (^Parser).consume_comment(self) -> ^lexer.Comment {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Comment {
         self.lexer.advance()
         return token.as(^lexer.Comment)
@@ -1001,7 +1001,7 @@ proc (^Parser).consume_end_of_line(self) -> ^lexer.End_Of_Line {
     } else {
         self.consume_space(0)
     }
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .End_Of_File {
         return lexer.new_end_of_line(
             lexeme: ""
@@ -1016,7 +1016,7 @@ proc (^Parser).consume_end_of_line(self) -> ^lexer.End_Of_Line {
 }
 
 proc (^Parser).consume_identifier(self) -> ^lexer.Identifier {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Identifier {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
@@ -1025,7 +1025,7 @@ proc (^Parser).consume_identifier(self) -> ^lexer.Identifier {
 }
 
 proc (^Parser).consume_keyword(self, lexeme: str) -> ^lexer.Identifier {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Identifier and token.lexeme.equals(lexeme) {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
@@ -1037,7 +1037,7 @@ proc (^Parser).consume_keyword(self, lexeme: str) -> ^lexer.Identifier {
 }
 
 proc (^Parser).consume_integer(self) -> ^lexer.Integer {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Integer {
         self.lexer.advance()
         if self.lexer.matches_one(match.integer_type) {
@@ -1049,7 +1049,7 @@ proc (^Parser).consume_integer(self) -> ^lexer.Integer {
 }
 
 proc (^Parser).consume_string(self) -> ^lexer.String {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .String {
         self.lexer.advance()
         return token.as(^lexer.String)
@@ -1058,7 +1058,7 @@ proc (^Parser).consume_string(self) -> ^lexer.String {
 }
 
 proc (^Parser).consume_space(self, count: i32) -> ^lexer.Space {
-    let token = self.lexer.peek_token()
+    let token = self.lexer.peek_token(1)
     if token.kind == .Space {
         self.lexer.advance()
         return token.as(^lexer.Space)

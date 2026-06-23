@@ -1,5 +1,5 @@
 type Source_Location = struct {
-    source: ^Source
+    source: Source
     line: u32
     column: u32
 }
