@@ -5,37 +5,32 @@ type Source = struct {
     content: str
 }
 
-type Load_Result = struct {
-    error: str
-    source: Source
-}
-
-proc load(file_path: str) -> Load_Result {
+proc load(file_path: str) -> Source {
     let file = libc.fopen(file_path.data(), "r".data())
     if file == null {
-        return Load_Result(error: "Failed to open file")
+        panic "Failed to open file"
     }
 
     if libc.fseek(file, 0, libc.SEEK_END) != 0 {
         libc.fclose(file)
-        return Load_Result(error: "Failed to seek to end of file")
+        panic "Failed to seek to end of file"
     }
     let file_size = libc.ftell(file).as(usize)
     if libc.fseek(file, 0, libc.SEEK_SET) != 0 {
         libc.fclose(file)
-        return Load_Result(error: "Failed to seek to start of file")
+        panic "Failed to seek to start of file"
     }
 
     let content = libc.malloc(file_size + 1).as([^]u8)
     if content == null {
         libc.fclose(file)
-        return Load_Result(error: "Failed to allocate memory")
+        panic "Failed to allocate memory"
     }
     let read_size = libc.fread(content, 1, file_size, file)
     if read_size != file_size {
         libc.free(content.as(^Any))
         libc.fclose(file)
-        return Load_Result(error: "Failed to read file to memory")
+        panic "Failed to read file to memory"
     }
     content[file_size] = 0
 
@@ -43,10 +38,8 @@ proc load(file_path: str) -> Load_Result {
 
     let result = String(data: content, length: file_size)
 
-    return Load_Result(
-        source: Source(
-            path: file_path
-            content: (^result).as(^str).^
-        )
+    return Source(
+        path: file_path
+        content: (^result).as(^str).^
     )
 }
