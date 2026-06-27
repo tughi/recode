@@ -20,8 +20,7 @@ proc new_module(source: source.Source, first_statement: ^Statement) -> ^Module {
 type Package = struct {
     name: str
     is_root: bool
-    import_source: source.Source
-    import_source_position: usize
+    import_location: source.Source_Location
     first_module: ^Module
     next_package: ^Package
 }
@@ -31,8 +30,7 @@ proc new_package(name: str, is_root: bool) -> ^Package {
     result.^ = Package(
         name: name
         is_root: is_root
-        import_source: source.Source(path: "", content: "")
-        import_source_position: 0
+        import_location: source.Source_Location(source: source.Source(path: "", content: ""), line: 0, column: 0)
         first_module: null
         next_package: null
     )

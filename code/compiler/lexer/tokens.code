@@ -1,4 +1,5 @@
 import allocator
+import compiler.source
 import string
 
 type Token_Kind = enum {
@@ -17,11 +18,7 @@ type Token_Kind = enum {
 type Token = struct {
     kind: Token_Kind
     lexeme: str
-    source_position: usize
-}
-
-proc (^Token).end_position(self) -> usize {
-    return self.source_position + self.lexeme.length
+    location: source.Source_Location
 }
 
 type Character = struct {
@@ -29,10 +26,10 @@ type Character = struct {
     value: u8
 }
 
-proc new_character(lexeme: str, source_position: usize, value: u8) -> ^Character {
+proc new_character(lexeme: str, location: source.Source_Location, value: u8) -> ^Character {
     let result = allocator.alloc(size: type_size(Character), alignment: type_alignment(Character)).as(^Character)
     result.^ = Character(
-        super: Token(kind: .Character, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Character, lexeme: lexeme, location: location)
         value: value
     )
     return result
@@ -42,10 +39,10 @@ type Comment = struct {
     super: Token
 }
 
-proc new_comment(lexeme: str, source_position: usize) -> ^Comment {
+proc new_comment(lexeme: str, location: source.Source_Location) -> ^Comment {
     let result = allocator.alloc(size: type_size(Comment), alignment: type_alignment(Comment)).as(^Comment)
     result.^ = Comment(
-        super: Token(kind: .Comment, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Comment, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -54,10 +51,10 @@ type End_Of_File = struct {
     super: Token
 }
 
-proc new_end_of_file(lexeme: str, source_position: usize) -> ^End_Of_File {
+proc new_end_of_file(lexeme: str, location: source.Source_Location) -> ^End_Of_File {
     let result = allocator.alloc(size: type_size(End_Of_File), alignment: type_alignment(End_Of_File)).as(^End_Of_File)
     result.^ = End_Of_File(
-        super: Token(kind: .End_Of_File, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .End_Of_File, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -66,10 +63,10 @@ type End_Of_Line = struct {
     super: Token
 }
 
-proc new_end_of_line(lexeme: str, source_position: usize) -> ^End_Of_Line {
+proc new_end_of_line(lexeme: str, location: source.Source_Location) -> ^End_Of_Line {
     let result = allocator.alloc(size: type_size(End_Of_Line), alignment: type_alignment(End_Of_Line)).as(^End_Of_Line)
     result.^ = End_Of_Line(
-        super: Token(kind: .End_Of_Line, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -78,10 +75,10 @@ type Error = struct {
     super: Token
 }
 
-proc new_error(lexeme: str, source_position: usize) -> ^Error {
+proc new_error(lexeme: str, location: source.Source_Location) -> ^Error {
     let result = allocator.alloc(size: type_size(Error), alignment: type_alignment(Error)).as(^Error)
     result.^ = Error(
-        super: Token(kind: .Error, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Error, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -90,10 +87,10 @@ type Identifier = struct {
     super: Token
 }
 
-proc new_identifier(lexeme: str, source_position: usize) -> ^Identifier {
+proc new_identifier(lexeme: str, location: source.Source_Location) -> ^Identifier {
     let result = allocator.alloc(size: type_size(Identifier), alignment: type_alignment(Identifier)).as(^Identifier)
     result.^ = Identifier(
-        super: Token(kind: .Identifier, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Identifier, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -104,10 +101,10 @@ type Integer = struct {
     base: i32
 }
 
-proc new_integer(lexeme: str, source_position: usize, value: u64, base: i32) -> ^Integer {
+proc new_integer(lexeme: str, location: source.Source_Location, value: u64, base: i32) -> ^Integer {
     let result = allocator.alloc(size: type_size(Integer), alignment: type_alignment(Integer)).as(^Integer)
     result.^ = Integer(
-        super: Token(kind: .Integer, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Integer, lexeme: lexeme, location: location)
         value: value
         base: base
     )
@@ -118,10 +115,10 @@ type Other = struct {
     super: Token
 }
 
-proc new_other(lexeme: str, source_position: usize) -> ^Other {
+proc new_other(lexeme: str, location: source.Source_Location) -> ^Other {
     let result = allocator.alloc(size: type_size(Other), alignment: type_alignment(Other)).as(^Other)
     result.^ = Other(
-        super: Token(kind: .Other, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Other, lexeme: lexeme, location: location)
     )
     return result
 }
@@ -131,10 +128,10 @@ type Space = struct {
     count: i32
 }
 
-proc new_space(lexeme: str, source_position: usize, count: i32) -> ^Space {
+proc new_space(lexeme: str, location: source.Source_Location, count: i32) -> ^Space {
     let result = allocator.alloc(size: type_size(Space), alignment: type_alignment(Space)).as(^Space)
     result.^ = Space(
-        super: Token(kind: .Space, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .Space, lexeme: lexeme, location: location)
         count: count
     )
     return result
@@ -145,10 +142,10 @@ type String = struct {
     value: str
 }
 
-proc new_string(lexeme: str, source_position: usize, value: str) -> ^String {
+proc new_string(lexeme: str, location: source.Source_Location, value: str) -> ^String {
     let result = allocator.alloc(size: type_size(String), alignment: type_alignment(String)).as(^String)
     result.^ = String(
-        super: Token(kind: .String, lexeme: lexeme, source_position: source_position)
+        super: Token(kind: .String, lexeme: lexeme, location: location)
         value: value
     )
     return result
@@ -166,7 +163,7 @@ proc (^Identifier).merge_with(self, separator: ^Other, another: ^Identifier) -> 
     // Merge by extending self's lexeme
     return new_identifier(
         lexeme: self.lexeme.slice(0, self.lexeme.length + separator.lexeme.length + another.lexeme.length)
-        source_position: self.source_position
+        location: self.location
     )
 }
 
@@ -179,6 +176,6 @@ proc (^Other).merge_with(self, another: ^Other) -> ^Other {
     // Merge by extending self's lexeme
     return new_other(
         lexeme: self.lexeme.slice(0, self.lexeme.length + another.lexeme.length)
-        source_position: self.source_position
+        location: self.location
     )
 }

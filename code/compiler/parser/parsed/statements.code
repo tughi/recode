@@ -1,5 +1,6 @@
 import allocator
 import compiler.lexer
+import compiler.source
 
 type Statement_Kind = enum {
     Assignment
@@ -20,7 +21,7 @@ type Statement_Kind = enum {
 
 type Statement = struct {
     kind: Statement_Kind
-    source_position: usize
+    location: source.Source_Location
     next: ^Statement
 }
 
@@ -30,10 +31,10 @@ type Assignment_Statement = struct {
     value: ^Expression
 }
 
-proc new_assignment_statement(source_position: usize, object: ^Expression, value: ^Expression) -> ^Statement {
+proc new_assignment_statement(location: source.Source_Location, object: ^Expression, value: ^Expression) -> ^Statement {
     let result = allocator.alloc(size: type_size(Assignment_Statement), alignment: type_alignment(Assignment_Statement)).as(^Assignment_Statement)
     result.^ = Assignment_Statement(
-        super: Statement(kind: .Assignment, source_position: source_position, next: null)
+        super: Statement(kind: .Assignment, location: location, next: null)
         object: object
         value: value
     )
@@ -45,10 +46,10 @@ type Block_Statement = struct {
     first_statement: ^Statement
 }
 
-proc new_block_statement(source_position: usize, first_statement: ^Statement) -> ^Statement {
+proc new_block_statement(location: source.Source_Location, first_statement: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(Block_Statement), alignment: type_alignment(Block_Statement)).as(^Block_Statement)
     result.^ = Block_Statement(
-        super: Statement(kind: .Block, source_position: source_position, next: null)
+        super: Statement(kind: .Block, location: location, next: null)
         first_statement: first_statement
     )
     return result.as(^Statement)
@@ -58,10 +59,10 @@ type Break_Statement = struct {
     super: Statement
 }
 
-proc new_break_statement(source_position: usize) -> ^Statement {
+proc new_break_statement(location: source.Source_Location) -> ^Statement {
     let result = allocator.alloc(size: type_size(Break_Statement), alignment: type_alignment(Break_Statement)).as(^Break_Statement)
     result.^ = Break_Statement(
-        super: Statement(kind: .Break, source_position: source_position, next: null)
+        super: Statement(kind: .Break, location: location, next: null)
     )
     return result.as(^Statement)
 }
@@ -72,10 +73,10 @@ type Const_Statement = struct {
     expression: ^Expression
 }
 
-proc new_const_statement(source_position: usize, name: ^lexer.Identifier, expression: ^Expression) -> ^Statement {
+proc new_const_statement(location: source.Source_Location, name: ^lexer.Identifier, expression: ^Expression) -> ^Statement {
     let result = allocator.alloc(size: type_size(Const_Statement), alignment: type_alignment(Const_Statement)).as(^Const_Statement)
     result.^ = Const_Statement(
-        super: Statement(kind: .Const, source_position: source_position, next: null)
+        super: Statement(kind: .Const, location: location, next: null)
         name: name
         expression: expression
     )
@@ -87,10 +88,10 @@ type Expression_Statement = struct {
     expression: ^Expression
 }
 
-proc new_expression_statement(source_position: usize, expression: ^Expression) -> ^Statement {
+proc new_expression_statement(location: source.Source_Location, expression: ^Expression) -> ^Statement {
     let result = allocator.alloc(size: type_size(Expression_Statement), alignment: type_alignment(Expression_Statement)).as(^Expression_Statement)
     result.^ = Expression_Statement(
-        super: Statement(kind: .Expression, source_position: source_position, next: null)
+        super: Statement(kind: .Expression, location: location, next: null)
         expression: expression
     )
     return result.as(^Statement)
@@ -103,10 +104,10 @@ type If_Statement = struct {
     false_statement: ^Statement
 }
 
-proc new_if_statement(source_position: usize, condition: ^Expression, true_block: ^Statement, false_statement: ^Statement) -> ^Statement {
+proc new_if_statement(location: source.Source_Location, condition: ^Expression, true_block: ^Statement, false_statement: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(If_Statement), alignment: type_alignment(If_Statement)).as(^If_Statement)
     result.^ = If_Statement(
-        super: Statement(kind: .If, source_position: source_position, next: null)
+        super: Statement(kind: .If, location: location, next: null)
         condition: condition
         true_block: true_block
         false_statement: false_statement
@@ -120,10 +121,10 @@ type Import_Statement = struct {
     alias: ^lexer.Identifier
 }
 
-proc new_import_statement(source_position: usize, package: ^Package, alias: ^lexer.Identifier) -> ^Statement {
+proc new_import_statement(location: source.Source_Location, package: ^Package, alias: ^lexer.Identifier) -> ^Statement {
     let result = allocator.alloc(size: type_size(Import_Statement), alignment: type_alignment(Import_Statement)).as(^Import_Statement)
     result.^ = Import_Statement(
-        super: Statement(kind: .Import, source_position: source_position, next: null)
+        super: Statement(kind: .Import, location: location, next: null)
         package: package
         alias: alias
     )
@@ -135,10 +136,10 @@ type Loop_Statement = struct {
     body: ^Statement
 }
 
-proc new_loop_statement(source_position: usize, body: ^Statement) -> ^Statement {
+proc new_loop_statement(location: source.Source_Location, body: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(Loop_Statement), alignment: type_alignment(Loop_Statement)).as(^Loop_Statement)
     result.^ = Loop_Statement(
-        super: Statement(kind: .Loop, source_position: source_position, next: null)
+        super: Statement(kind: .Loop, location: location, next: null)
         body: body
     )
     return result.as(^Statement)
@@ -173,10 +174,10 @@ type Procedure_Statement = struct {
     body: ^Statement
 }
 
-proc new_procedure_statement(source_position: usize, receiver: ^Type, name: ^lexer.Identifier, first_parameter: ^Procedure_Parameter, return_type: ^Type, is_external: bool, external_name: ^lexer.String, body: ^Statement) -> ^Statement {
+proc new_procedure_statement(location: source.Source_Location, receiver: ^Type, name: ^lexer.Identifier, first_parameter: ^Procedure_Parameter, return_type: ^Type, is_external: bool, external_name: ^lexer.String, body: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(Procedure_Statement), alignment: type_alignment(Procedure_Statement)).as(^Procedure_Statement)
     result.^ = Procedure_Statement(
-        super: Statement(kind: .Procedure, source_position: source_position, next: null)
+        super: Statement(kind: .Procedure, location: location, next: null)
         receiver: receiver
         name: name
         first_parameter: first_parameter
@@ -193,10 +194,10 @@ type Panic_Statement = struct {
     message: ^lexer.String
 }
 
-proc new_panic_statement(source_position: usize, message: ^lexer.String) -> ^Statement {
+proc new_panic_statement(location: source.Source_Location, message: ^lexer.String) -> ^Statement {
     let result = allocator.alloc(size: type_size(Panic_Statement), alignment: type_alignment(Panic_Statement)).as(^Panic_Statement)
     result.^ = Panic_Statement(
-        super: Statement(kind: .Panic, source_position: source_position, next: null)
+        super: Statement(kind: .Panic, location: location, next: null)
         message: message
     )
     return result.as(^Statement)
@@ -207,10 +208,10 @@ type Return_Statement = struct {
     expression: ^Expression
 }
 
-proc new_return_statement(source_position: usize, expression: ^Expression) -> ^Statement {
+proc new_return_statement(location: source.Source_Location, expression: ^Expression) -> ^Statement {
     let result = allocator.alloc(size: type_size(Return_Statement), alignment: type_alignment(Return_Statement)).as(^Return_Statement)
     result.^ = Return_Statement(
-        super: Statement(kind: .Return, source_position: source_position, next: null)
+        super: Statement(kind: .Return, location: location, next: null)
         expression: expression
     )
     return result.as(^Statement)
@@ -225,10 +226,10 @@ type Variable_Statement = struct {
     external_name: ^lexer.String
 }
 
-proc new_variable_statement(source_position: usize, name: ^lexer.Identifier, variable_type: ^Type, is_external: bool, expression: ^Expression, external_name: ^lexer.String) -> ^Statement {
+proc new_variable_statement(location: source.Source_Location, name: ^lexer.Identifier, variable_type: ^Type, is_external: bool, expression: ^Expression, external_name: ^lexer.String) -> ^Statement {
     let result = allocator.alloc(size: type_size(Variable_Statement), alignment: type_alignment(Variable_Statement)).as(^Variable_Statement)
     result.^ = Variable_Statement(
-        super: Statement(kind: .Variable, source_position: source_position, next: null)
+        super: Statement(kind: .Variable, location: location, next: null)
         name: name
         variable_type: variable_type
         is_external: is_external
@@ -244,10 +245,10 @@ type While_Statement = struct {
     body: ^Statement
 }
 
-proc new_while_statement(source_position: usize, condition: ^Expression, body: ^Statement) -> ^Statement {
+proc new_while_statement(location: source.Source_Location, condition: ^Expression, body: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(While_Statement), alignment: type_alignment(While_Statement)).as(^While_Statement)
     result.^ = While_Statement(
-        super: Statement(kind: .While, source_position: source_position, next: null)
+        super: Statement(kind: .While, location: location, next: null)
         condition: condition
         body: body
     )
@@ -260,10 +261,10 @@ type Type_Statement = struct {
     specifier: ^Type_Specifier
 }
 
-proc new_type_statement(source_position: usize, name: ^lexer.Identifier, specifier: ^Type_Specifier) -> ^Statement {
+proc new_type_statement(location: source.Source_Location, name: ^lexer.Identifier, specifier: ^Type_Specifier) -> ^Statement {
     let result = allocator.alloc(size: type_size(Type_Statement), alignment: type_alignment(Type_Statement)).as(^Type_Statement)
     result.^ = Type_Statement(
-        super: Statement(kind: .Type, source_position: source_position, next: null)
+        super: Statement(kind: .Type, location: location, next: null)
         name: name
         specifier: specifier
     )
@@ -279,17 +280,17 @@ type Type_Specifier_Kind = enum {
 
 type Type_Specifier = struct {
     kind: Type_Specifier_Kind
-    source_position: usize
+    location: source.Source_Location
 }
 
 type Builtin_Type_Specifier = struct {
     super: Type_Specifier
 }
 
-proc new_builtin_type_specifier(source_position: usize) -> ^Type_Specifier {
+proc new_builtin_type_specifier(location: source.Source_Location) -> ^Type_Specifier {
     let result = allocator.alloc(size: type_size(Builtin_Type_Specifier), alignment: type_alignment(Builtin_Type_Specifier)).as(^Builtin_Type_Specifier)
     result.^ = Builtin_Type_Specifier(
-        super: Type_Specifier(kind: .Builtin, source_position: source_position)
+        super: Type_Specifier(kind: .Builtin, location: location)
     )
     return result.as(^Type_Specifier)
 }
@@ -298,10 +299,10 @@ type External_Type_Specifier = struct {
     super: Type_Specifier
 }
 
-proc new_external_type_specifier(source_position: usize) -> ^Type_Specifier {
+proc new_external_type_specifier(location: source.Source_Location) -> ^Type_Specifier {
     let result = allocator.alloc(size: type_size(External_Type_Specifier), alignment: type_alignment(External_Type_Specifier)).as(^External_Type_Specifier)
     result.^ = External_Type_Specifier(
-        super: Type_Specifier(kind: .External, source_position: source_position)
+        super: Type_Specifier(kind: .External, location: location)
     )
     return result.as(^Type_Specifier)
 }
@@ -327,10 +328,10 @@ type Struct_Type_Specifier = struct {
     first_member: ^Struct_Member
 }
 
-proc new_struct_type_specifier(source_position: usize, first_member: ^Struct_Member) -> ^Type_Specifier {
+proc new_struct_type_specifier(location: source.Source_Location, first_member: ^Struct_Member) -> ^Type_Specifier {
     let result = allocator.alloc(size: type_size(Struct_Type_Specifier), alignment: type_alignment(Struct_Type_Specifier)).as(^Struct_Type_Specifier)
     result.^ = Struct_Type_Specifier(
-        super: Type_Specifier(kind: .Struct, source_position: source_position)
+        super: Type_Specifier(kind: .Struct, location: location)
         first_member: first_member
     )
     return result.as(^Type_Specifier)
@@ -355,10 +356,10 @@ type Enum_Type_Specifier = struct {
     first_member: ^Enum_Member
 }
 
-proc new_enum_type_specifier(source_position: usize, first_member: ^Enum_Member) -> ^Type_Specifier {
+proc new_enum_type_specifier(location: source.Source_Location, first_member: ^Enum_Member) -> ^Type_Specifier {
     let result = allocator.alloc(size: type_size(Enum_Type_Specifier), alignment: type_alignment(Enum_Type_Specifier)).as(^Enum_Type_Specifier)
     result.^ = Enum_Type_Specifier(
-        super: Type_Specifier(kind: .Enum, source_position: source_position)
+        super: Type_Specifier(kind: .Enum, location: location)
         first_member: first_member
     )
     return result.as(^Type_Specifier)

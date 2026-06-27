@@ -5,9 +5,9 @@ type Lexer = struct {
     source: source.Source
     source_content: [^]u8
     source_content_length: usize
-    source_position: usize
-    source_line: u32
-    source_column: u32
+    scan_position: usize
+    scan_line: u32
+    scan_column: u32
     token_cache: Token_Cache
 }
 
@@ -17,19 +17,31 @@ proc create(source: source.Source) -> Lexer {
         source: source
         source_content: source.content.data()
         source_content_length: source.content.length
-        source_position: 0
-        source_line: 1
-        source_column: 1
+        scan_position: 0
+        scan_line: 1
+        scan_column: 1
     )
+}
+
+proc (^Lexer).location(self) -> source.Source_Location {
+    return self.peek_token(1).location
+}
+
+proc (^Lexer).scan_location(self) -> source.Source_Location {
+    return source.Source_Location(source: self.source, line: self.scan_line, column: self.scan_column)
 }
 
 proc (^Lexer).peek_token(self, lookahead: usize) -> ^Token {
     while self.token_cache.size < lookahead {
-        let source_position = self.source_position
-        if self.token_cache.size > 0 {
-            source_position = self.token_cache.at(index: self.token_cache.size - 1).end_position()
+        let token = self.scan_token(self.scan_position)
+        self.scan_position = self.scan_position + token.lexeme.length
+        if token.kind == .End_Of_Line {
+            self.scan_line = self.scan_line + 1
+            self.scan_column = 1
+        } else {
+            self.scan_column = self.scan_column + token.lexeme.length.as(u32)
         }
-        self.token_cache.append(self.scan_token(source_position))
+        self.token_cache.append(token)
     }
     return self.token_cache.at(index: lookahead - 1)
 }
@@ -56,41 +68,26 @@ proc (^Lexer).scan_token(self, source_position: usize) -> ^Token {
         return self.scan_comment(source_position)
     }
     if next_char == '\n' {
-        return new_end_of_line(
-            lexeme: self.source.content.slice(source_position, source_position + 1)
-            source_position: source_position
-        )
+        return new_end_of_line(lexeme: self.source.content.slice(source_position, source_position + 1), location: self.scan_location())
     }
     if source_position >= self.source_content_length {
-        return new_end_of_file(
-            lexeme: ""
-            source_position: source_position
-        )
+        return new_end_of_file(lexeme: "", location: self.scan_location())
     }
-    return new_other(
-        lexeme: self.source.content.slice(source_position, source_position + 1)
-        source_position: source_position
-    )
+    return new_other(lexeme: self.source.content.slice(source_position, source_position + 1), location: self.scan_location())
 }
 
 proc (^Lexer).scan_character(self, source_position: usize) -> ^Token {
     let position = source_position + 1
     let body_char = self.source_content[position]
     if body_char < ' ' or body_char == '\'' {
-        return new_error(
-            lexeme: self.source.content.slice(source_position, position)
-            source_position: source_position
-        )
+        return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
     }
     position = position + 1
     let char_value = body_char
     if body_char == '\\' {
         let escape_char = self.source_content[position]
         if not escape_char.is_escape_char() {
-            return new_error(
-                lexeme: self.source.content.slice(source_position, position)
-                source_position: source_position
-            )
+            return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
         }
         position = position + 1
         if escape_char == 'n' {
@@ -106,17 +103,10 @@ proc (^Lexer).scan_character(self, source_position: usize) -> ^Token {
         }
     }
     if self.source_content[position] != '\'' {
-        return new_error(
-            lexeme: self.source.content.slice(source_position, position)
-            source_position: source_position
-        )
+        return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
     }
     position = position + 1
-    return new_character(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-        value: char_value
-    )
+    return new_character(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), value: char_value)
 }
 
 proc (^Lexer).scan_comment(self, source_position: usize) -> ^Token {
@@ -126,15 +116,9 @@ proc (^Lexer).scan_comment(self, source_position: usize) -> ^Token {
         while position < self.source_content_length and self.source_content[position] != '\n' {
             position = position + 1
         }
-        return new_comment(
-            lexeme: self.source.content.slice(source_position, position)
-            source_position: source_position
-        )
+        return new_comment(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
     }
-    return new_other(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-    )
+    return new_other(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
 }
 
 proc (^Lexer).scan_identifier(self, source_position: usize) -> ^Identifier {
@@ -142,10 +126,7 @@ proc (^Lexer).scan_identifier(self, source_position: usize) -> ^Identifier {
     while self.source_content[position].is_identifier_char() {
         position = position + 1
     }
-    return new_identifier(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-    )
+    return new_identifier(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
 }
 
 proc (^Lexer).scan_integer(self, source_position: usize) -> ^Integer {
@@ -185,12 +166,7 @@ proc (^Lexer).scan_integer(self, source_position: usize) -> ^Integer {
             position = position + 1
         }
     }
-    return new_integer(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-        value: value
-        base: base
-    )
+    return new_integer(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), value: value, base: base)
 }
 
 proc (^Lexer).scan_space(self, source_position: usize) -> ^Space {
@@ -200,11 +176,7 @@ proc (^Lexer).scan_space(self, source_position: usize) -> ^Space {
         position = position + 1
         count = count + 1
     }
-    return new_space(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-        count: count
-    )
+    return new_space(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), count: count)
 }
 
 proc (^Lexer).scan_string(self, source_position: usize) -> ^Token {
@@ -212,40 +184,27 @@ proc (^Lexer).scan_string(self, source_position: usize) -> ^Token {
     let value_start = position
     loop {
         if position >= self.source_content_length {
-            return new_error(
-                lexeme: self.source.content.slice(source_position, position)
-                source_position: source_position
-            )
+            return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
         }
         let next_char = self.source_content[position]
         if next_char == '"' {
             break
         }
         if next_char < ' ' {
-            return new_error(
-                lexeme: self.source.content.slice(source_position, position)
-                source_position: source_position
-            )
+            return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
         }
         if next_char == '\\' {
             position = position + 1
             let escape_char = self.source_content[position]
             if not escape_char.is_escape_char() {
-                return new_error(
-                    lexeme: self.source.content.slice(source_position, position)
-                    source_position: source_position
-                )
+                return new_error(lexeme: self.source.content.slice(source_position, position), location: self.scan_location())
             }
         }
         position = position + 1
     }
     let string_value = self.source.content.slice(value_start, position)
     position = position + 1
-    return new_string(
-        lexeme: self.source.content.slice(source_position, position)
-        source_position: source_position
-        value: string_value
-    )
+    return new_string(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), value: string_value)
 }
 
 proc (u8).is_escape_char(self) -> bool {
@@ -253,7 +212,6 @@ proc (u8).is_escape_char(self) -> bool {
 }
 
 proc (^Lexer).advance(self) {
-    self.source_position = self.token_cache.at(index: 0).end_position()
     self.token_cache.remove_first()
 }
 
