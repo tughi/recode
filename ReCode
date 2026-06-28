@@ -253,7 +253,7 @@ class Tester:
             self.actual_test_data,
             compile_stderr=[re.sub(r"\x1b\[[0-9;]+m", "", line) for line in lines],
         )
-        if lines and re.match(r"^compiler/.*:\d+: Panic!$", self.actual_test_data.compile_stderr[-1]):
+        if lines and re.match(r"^(code/)?compiler/.*:\d+: Panic!", self.actual_test_data.compile_stderr[-1]):
             self.actual_test_data.compile_stderr.pop()
             self.compile_panic = lines.pop()
         else:
@@ -352,7 +352,8 @@ def test(paths, save=False, stage=1):
             os.remove(build_ir_path)
 
         compiler_command = [
-            f"build/stage{stage}/ReCode",
+            "Runner",
+            "build/compiler.ir",
             "-o",
             build_dir,
             "-n",
@@ -372,7 +373,8 @@ def test(paths, save=False, stage=1):
                 )
                 if tester.compile_panic:
                     logger.error(f"{COLOR_ERROR}{tester.compile_panic}{COLOR_RESET}")
-                trace(*compiler_command)
+                if compiler_command[0] != "Runner":
+                    trace(*compiler_command)
                 exit(1)
         else:
             tester.update_actual_compile_error(compiler_result.returncode)
@@ -436,6 +438,11 @@ def build():
     logger.info("Building stage1")
 
     run(["make", "BUILD_DIR=build/stage1"])
+
+    logger.info("Building self-hosted compiler")
+
+    run("mkdir -p build")
+    run(["build/stage1/ReCode", "-o", "build", "-n", "compiler", "code", "compiler"])
 
 
 def stage():
