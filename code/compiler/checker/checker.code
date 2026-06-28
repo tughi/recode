@@ -1,11 +1,13 @@
 import compiler.checker.checked
 import compiler.parser.parsed
+import compiler.source
 import libc
 
 type Checker = struct {
     builtin_symbols: ^checked.Symbols
     global_symbols: ^checked.Symbols
     return_type: ^checked.Type
+    current_location: source.Source_Location
 }
 
 proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
@@ -13,6 +15,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         builtin_symbols: checked.new_symbols(null)
         global_symbols: null
         return_type: null
+        current_location: source.Source_Location(source: builtin_package.first_module.source, line: 0, column: 0)
     )
 
     checker.check_builtin_package(builtin_package)
@@ -37,6 +40,7 @@ proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
 }
 
 proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_Statement) {
+    self.current_location = type_statement.location
     if type_statement.specifier.kind != .Builtin {
         return
     }
@@ -79,6 +83,7 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
 }
 
 proc (^Checker).check_procedure_statement(self, procedure_statement: ^parsed.Procedure_Statement) {
+    self.current_location = procedure_statement.location
     let name = procedure_statement.name.lexeme
 
     let return_type: ^checked.Type = null
@@ -131,6 +136,7 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
 }
 
 proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_Statement) -> ^checked.Statement {
+    self.current_location = return_statement.location
     let expression: ^checked.Expression = null
     if return_statement.expression != null {
         expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
@@ -148,6 +154,7 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    self.current_location = integer_expression.location
     let expression_type = expected_type
     if expression_type == null {
         let i32_symbol = self.builtin_symbols.find("i32")
@@ -166,6 +173,7 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
     if parsed_type.kind == .Named {
         let named_type = parsed_type.as(^parsed.Named_Type)
+        self.current_location = named_type.location
         let name = named_type.name.lexeme
         let symbol = self.global_symbols.find(name)
         if symbol == null {
@@ -183,6 +191,6 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
 }
 
 proc (^Checker).error(self, message: str) {
-    libc.stderr.write(message).end_line()
+    libc.stderr.write(self.current_location.source.path).write_char(char: ':').write_u64(value: self.current_location.line.as(u64)).write_char(char: ':').write_u64(value: self.current_location.column.as(u64)).write(": ").write(message).end_line()
     panic
 }

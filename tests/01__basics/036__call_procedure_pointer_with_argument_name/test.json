@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/036__call_procedure_pointer_with_argument_name/test.code:8:15-20: Unexpected argument name: a procedure pointer has no parameter names"
+            "tests/01__basics/036__call_procedure_pointer_with_argument_name/test.code:8:15: Unexpected argument name: a procedure pointer has no parameter names"
         ]
     }
 }

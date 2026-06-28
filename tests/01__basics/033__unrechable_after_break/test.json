@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/01__basics/033__unrechable_after_break/test.code:5:9-24: Unreachable statement"
+            "tests/01__basics/033__unrechable_after_break/test.code:5:9: Unreachable statement"
         ]
     }
 }

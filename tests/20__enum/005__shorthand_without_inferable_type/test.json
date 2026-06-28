@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/20__enum/005__shorthand_without_inferable_type/test.code:9:13-19: Cannot infer enum type for `.SOUTH`"
+            "tests/20__enum/005__shorthand_without_inferable_type/test.code:9:13: Cannot infer enum type for `.SOUTH`"
         ]
     }
 }

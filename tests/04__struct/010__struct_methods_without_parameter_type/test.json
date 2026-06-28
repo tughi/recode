@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/04__struct/010__struct_methods_without_parameter_type/test.code:9:37-38: Unexpected token"
+            "tests/04__struct/010__struct_methods_without_parameter_type/test.code:9:37: Unexpected token"
         ]
     }
 }
