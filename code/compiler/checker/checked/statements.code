@@ -1,0 +1,39 @@
+import allocator
+
+type Statement_Kind = enum {
+    Block
+    Return
+}
+
+type Statement = struct {
+    kind: Statement_Kind
+    next: ^Statement
+}
+
+type Block_Statement = struct {
+    super: Statement
+    first_statement: ^Statement
+}
+
+proc new_block_statement(first_statement: ^Statement) -> ^Block_Statement {
+    let result = allocator.alloc(size: type_size(Block_Statement), alignment: type_alignment(Block_Statement)).as(^Block_Statement)
+    result.^ = Block_Statement(
+        super: Statement(kind: .Block, next: null)
+        first_statement: first_statement
+    )
+    return result
+}
+
+type Return_Statement = struct {
+    super: Statement
+    expression: ^Expression
+}
+
+proc new_return_statement(expression: ^Expression) -> ^Return_Statement {
+    let result = allocator.alloc(size: type_size(Return_Statement), alignment: type_alignment(Return_Statement)).as(^Return_Statement)
+    result.^ = Return_Statement(
+        super: Statement(kind: .Return, next: null)
+        expression: expression
+    )
+    return result
+}

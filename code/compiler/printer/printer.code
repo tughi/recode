@@ -1,0 +1,83 @@
+import compiler.ir
+import libc
+
+proc print(program: ^ir.Program, file: ^libc.FILE) {
+    let procedure = program.first_procedure
+    let first = true
+    while procedure != null {
+        if not first {
+            file.end_line()
+        }
+        first = false
+        print_procedure(procedure, file: file)
+        procedure = procedure.next
+    }
+}
+
+proc print_procedure(procedure: ^ir.Procedure, file: ^libc.FILE) {
+    file.write_char(char: '$').write(procedure.name).write_char(char: '(').write_char(char: ')')
+    if procedure.return_type.kind != .Nothing {
+        file.write(": ")
+        print_type(procedure.return_type, file: file)
+    }
+    file.write(" {").end_line()
+
+    let block = procedure.first_block
+    while block != null {
+        print_block(block, file: file)
+        block = block.next
+    }
+
+    file.write_char(char: '}').end_line()
+}
+
+proc print_block(block: ^ir.Block, file: ^libc.FILE) {
+    file.write_char(char: '@').write_u64(value: block.label.as(u64)).write_char(char: ':').end_line()
+    let instruction = block.first_instruction
+    while instruction != null {
+        file.write("  ")
+        print_instruction(instruction, file: file)
+        file.end_line()
+        instruction = instruction.next
+    }
+}
+
+proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
+    if instruction.kind == .Call {
+        let call_instruction = instruction.as(^ir.Call_Instruction)
+        if call_instruction.result.type.kind != .Nothing {
+            print_value_definition(^call_instruction.result, file: file)
+            file.write(" = ")
+        }
+        file.write("call $").write(call_instruction.callee.name)
+    } else if instruction.kind == .Const {
+        let const_instruction = instruction.as(^ir.Const_Instruction)
+        print_value_definition(^const_instruction.result, file: file)
+        file.write(" = const ").write_u64(value: const_instruction.literal.value)
+    } else if instruction.kind == .Ret {
+        let ret_instruction = instruction.as(^ir.Ret_Instruction)
+        file.write("ret")
+        if ret_instruction.value != null {
+            file.write_char(char: ' ')
+            print_value_reference(ret_instruction.value, file: file)
+        }
+    }
+}
+
+proc print_value_definition(value: ^ir.Value, file: ^libc.FILE) {
+    print_value_reference(value, file: file)
+    file.write(": ")
+    print_type(value.type, file: file)
+}
+
+proc print_value_reference(value: ^ir.Value, file: ^libc.FILE) {
+    file.write_char(char: '%').write(value.name)
+}
+
+proc print_type(type: ^ir.Type, file: ^libc.FILE) {
+    if type.kind == .Nothing {
+        panic
+    } else if type.kind == .Primitive {
+        file.write(type.as(^ir.Primitive_Type).name)
+    }
+}

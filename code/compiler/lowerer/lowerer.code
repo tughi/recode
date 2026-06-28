@@ -1,0 +1,128 @@
+import compiler.checker.checked
+import compiler.ir
+import string
+
+type Lowerer = struct {
+    program: ^ir.Program
+    package_name: str
+    current_block: ^ir.Block
+    next_value_id: usize
+}
+
+proc lower(checked_package: ^checked.Package) -> ^ir.Program {
+    let lowerer = Lowerer(
+        program: ir.new_program()
+        package_name: checked_package.name
+        current_block: null
+        next_value_id: 0
+    )
+
+    let main_procedure: ^ir.Procedure = null
+    let entry = checked_package.symbols.first
+    while entry != null {
+        if entry.symbol.kind == .Procedure {
+            let procedure = lowerer.lower_procedure(entry.symbol.as(^checked.Procedure_Symbol))
+            if entry.symbol.name.equals("main") {
+                main_procedure = procedure
+            }
+        }
+        entry = entry.next
+    }
+
+    if main_procedure != null {
+        lowerer.lower_main_wrapper(main_procedure)
+    }
+
+    return lowerer.program
+}
+
+proc (^Lowerer).lower_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
+    let name_builder = string.new_builder()
+    let name = name_builder.append(self.package_name).append_char('.').append(procedure_symbol.name).build()
+
+    let procedure = ir.new_procedure(name: name, return_type: self.lower_type(procedure_symbol.procedure_type.return_type))
+    self.program.append_procedure(procedure)
+
+    if procedure_symbol.body == null {
+        return procedure
+    }
+
+    self.next_value_id = 0
+    let block = ir.new_block(label: 1)
+    procedure.append_block(block)
+    self.current_block = block
+
+    self.lower_statement(procedure_symbol.body)
+
+    return procedure
+}
+
+proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
+    let wrapper = ir.new_procedure(name: "main", return_type: main_procedure.return_type)
+    self.program.append_procedure(wrapper)
+
+    self.next_value_id = 0
+    let block = ir.new_block(label: 1)
+    wrapper.append_block(block)
+    self.current_block = block
+
+    let call_instruction = ir.new_call_instruction(
+        result: ir.Value(name: self.fresh_name(), type: main_procedure.return_type)
+        callee: main_procedure
+    )
+    self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
+
+    let result: ^ir.Value = null
+    if main_procedure.return_type.kind != .Nothing {
+        result = ^call_instruction.result
+    }
+    self.current_block.append_instruction(ir.new_ret_instruction(value: result).as(^ir.Instruction))
+}
+
+proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
+    if statement.kind == .Block {
+        let block_statement = statement.as(^checked.Block_Statement)
+        let item = block_statement.first_statement
+        while item != null {
+            self.lower_statement(item)
+            item = item.next
+        }
+    } else if statement.kind == .Return {
+        let return_statement = statement.as(^checked.Return_Statement)
+        let value: ^ir.Value = null
+        if return_statement.expression != null {
+            value = self.lower_expression(return_statement.expression)
+        }
+        self.current_block.append_instruction(ir.new_ret_instruction(value: value).as(^ir.Instruction))
+    }
+}
+
+proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.Value {
+    if expression.kind == .Integer {
+        let integer_expression = expression.as(^checked.Integer_Expression)
+        let const_instruction = ir.new_const_instruction(
+            result: ir.Value(name: self.fresh_name(), type: self.lower_type(integer_expression.type))
+            literal: integer_expression.token
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return ^const_instruction.result
+    }
+    panic "Lowering not supported yet: expression"
+}
+
+proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
+    if type == null {
+        return ir.new_nothing_type().as(^ir.Type)
+    }
+    if type.kind == .Builtin {
+        return ir.new_primitive_type(name: type.as(^checked.Builtin_Type).name).as(^ir.Type)
+    }
+    panic "Lowering not supported yet: type"
+}
+
+proc (^Lowerer).fresh_name(self) -> str {
+    self.next_value_id = self.next_value_id + 1
+    let buffer = string.new_builder()
+    buffer.append_decimal(self.next_value_id)
+    return buffer.build()
+}

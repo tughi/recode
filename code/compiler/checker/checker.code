@@ -1,0 +1,188 @@
+import compiler.checker.checked
+import compiler.parser.parsed
+import libc
+
+type Checker = struct {
+    builtin_symbols: ^checked.Symbols
+    global_symbols: ^checked.Symbols
+    return_type: ^checked.Type
+}
+
+proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
+    let checker = Checker(
+        builtin_symbols: checked.new_symbols(null)
+        global_symbols: null
+        return_type: null
+    )
+
+    checker.check_builtin_package(builtin_package)
+
+    return checker.check_package(main_package)
+}
+
+proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
+    let module = parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Type {
+                self.check_builtin_type_statement(statement.as(^parsed.Type_Statement))
+            } else {
+                panic "Not supported yet: builtin statement"
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+}
+
+proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_Statement) {
+    if type_statement.specifier.kind != .Builtin {
+        return
+    }
+    let name = type_statement.name.lexeme
+    let type = checked.new_builtin_type(name: name).as(^checked.Type)
+    let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
+    self.builtin_symbols.append(name: name, symbol: symbol)
+}
+
+proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
+    let global_symbols = checked.new_symbols(null)
+    self.global_symbols = global_symbols
+
+    let checked_package = checked.new_package(name: parsed_package.name, symbols: global_symbols)
+
+    let module = parsed_package.first_module
+    let last_checked_module: ^checked.Module = null
+    while module != null {
+        let checked_module = checked.new_module(source: module.source)
+        if last_checked_module == null {
+            checked_package.first_module = checked_module
+        } else {
+            last_checked_module.next_module = checked_module
+        }
+        last_checked_module = checked_module
+
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Procedure {
+                self.check_procedure_statement(statement.as(^parsed.Procedure_Statement))
+            } else {
+                panic "Not supported yet: package statement"
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+
+    return checked_package
+}
+
+proc (^Checker).check_procedure_statement(self, procedure_statement: ^parsed.Procedure_Statement) {
+    let name = procedure_statement.name.lexeme
+
+    let return_type: ^checked.Type = null
+    if procedure_statement.return_type != null {
+        return_type = self.resolve_type(procedure_statement.return_type)
+    }
+
+    let procedure_type = checked.new_procedure_type(first_parameter: null, return_type: return_type)
+
+    let body: ^checked.Statement = null
+    if not procedure_statement.is_external and procedure_statement.body != null {
+        self.return_type = return_type
+        if procedure_statement.body.kind == .Block {
+            body = self.check_block_statement(procedure_statement.body.as(^parsed.Block_Statement))
+        } else {
+            panic "Not supported yet: procedure body"
+        }
+    }
+
+    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: body).as(^checked.Symbol)
+    self.global_symbols.append(name: name, symbol: symbol)
+}
+
+proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statement) -> ^checked.Statement {
+    let first_statement: ^checked.Statement = null
+    let last_statement: ^checked.Statement = null
+    let statement = parsed_block.first_statement
+    while statement != null {
+        let checked_statement = self.check_statement(statement)
+        if checked_statement != null {
+            if last_statement == null {
+                first_statement = checked_statement
+            } else {
+                last_statement.next = checked_statement
+            }
+            last_statement = checked_statement
+        }
+        statement = statement.next
+    }
+    return checked.new_block_statement(first_statement: first_statement).as(^checked.Statement)
+}
+
+proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
+    if parsed_statement.kind == .Block {
+        return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
+    } else if parsed_statement.kind == .Return {
+        return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
+    }
+    panic "Not supported yet: statement"
+}
+
+proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_Statement) -> ^checked.Statement {
+    let expression: ^checked.Expression = null
+    if return_statement.expression != null {
+        expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
+    } else if self.return_type != null {
+        self.error("Missing return expression")
+    }
+    return checked.new_return_statement(expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    if parsed_expression.kind == .Integer {
+        return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
+    }
+    panic "Not supported yet: expression"
+}
+
+proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let expression_type = expected_type
+    if expression_type == null {
+        let i32_symbol = self.builtin_symbols.find("i32")
+        if i32_symbol != null {
+            if i32_symbol.kind == .Type {
+                expression_type = i32_symbol.as(^checked.Type_Symbol).type
+            }
+        }
+    }
+    if expression_type == null {
+        self.error("Cannot infer type of integer literal")
+    }
+    return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
+    if parsed_type.kind == .Named {
+        let named_type = parsed_type.as(^parsed.Named_Type)
+        let name = named_type.name.lexeme
+        let symbol = self.global_symbols.find(name)
+        if symbol == null {
+            symbol = self.builtin_symbols.find(name)
+        }
+        if symbol == null {
+            self.error("Unknown type")
+        }
+        if symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+        self.error("Symbol is not a type")
+    }
+    panic "Not supported yet: type"
+}
+
+proc (^Checker).error(self, message: str) {
+    libc.stderr.write(message).end_line()
+    panic
+}

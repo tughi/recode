@@ -1,0 +1,92 @@
+import allocator
+
+type Program = struct {
+    first_procedure: ^Procedure
+    last_procedure: ^Procedure
+}
+
+proc new_program() -> ^Program {
+    let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
+    result.^ = Program(first_procedure: null, last_procedure: null)
+    return result
+}
+
+proc (^Program).append_procedure(self, procedure: ^Procedure) {
+    if self.first_procedure == null {
+        self.first_procedure = procedure
+    } else {
+        self.last_procedure.next = procedure
+    }
+    self.last_procedure = procedure
+}
+
+type Procedure = struct {
+    name: str
+    return_type: ^Type
+    first_block: ^Block
+    last_block: ^Block
+    next: ^Procedure
+}
+
+proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
+    let result = allocator.alloc(size: type_size(Procedure), alignment: type_alignment(Procedure)).as(^Procedure)
+    result.^ = Procedure(name: name, return_type: return_type, first_block: null, last_block: null, next: null)
+    return result
+}
+
+proc (^Procedure).append_block(self, block: ^Block) {
+    if self.first_block == null {
+        self.first_block = block
+    } else {
+        self.last_block.next = block
+    }
+    self.last_block = block
+}
+
+type Block = struct {
+    label: usize
+    first_instruction: ^Instruction
+    last_instruction: ^Instruction
+    next: ^Block
+}
+
+proc new_block(label: usize) -> ^Block {
+    let result = allocator.alloc(size: type_size(Block), alignment: type_alignment(Block)).as(^Block)
+    result.^ = Block(label: label, first_instruction: null, last_instruction: null, next: null)
+    return result
+}
+
+type Type_Kind = enum {
+    Nothing
+    Primitive
+}
+
+type Type = struct {
+    kind: Type_Kind
+}
+
+type Nothing_Type = struct {
+    super: Type
+}
+
+proc new_nothing_type() -> ^Nothing_Type {
+    let result = allocator.alloc(size: type_size(Nothing_Type), alignment: type_alignment(Nothing_Type)).as(^Nothing_Type)
+    result.^ = Nothing_Type(super: Type(kind: .Nothing))
+    return result
+}
+
+type Primitive_Type = struct {
+    super: Type
+    name: str
+}
+
+proc new_primitive_type(name: str) -> ^Primitive_Type {
+    let result = allocator.alloc(size: type_size(Primitive_Type), alignment: type_alignment(Primitive_Type)).as(^Primitive_Type)
+    result.^ = Primitive_Type(super: Type(kind: .Primitive), name: name)
+    return result
+}
+
+type Value = struct {
+    name: str
+    type: ^Type
+}

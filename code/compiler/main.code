@@ -1,8 +1,9 @@
-// import compiler.checker
-// import compiler.lowerer
+import compiler.checker
+import compiler.lowerer
 import compiler.parser
-// import compiler.printer
+import compiler.printer
 import libc
+import string
 
 proc main(argc: i32, argv: [^][^]u8) -> i32 {
     let arg = 1
@@ -71,32 +72,28 @@ proc main(argc: i32, argv: [^][^]u8) -> i32 {
 
     let builtin_package = parser.parse(source_dir: "code", package_name: "builtin", binary_name: "")
 
-    // let checked_package = try checker.check(builtin_package: builtin_package, main_package: main_package) else {
-    //     libc.stderr.write(parser_error: error).write(": Error: ").write(error.message).end_line()
-    //     return 1
-    // }
+    let checked_package = checker.check(builtin_package: builtin_package, main_package: main_package)
 
-    // let ir_program = lowerer.lower(checked_package)
+    let ir_program = lowerer.lower(checked_package)
 
-    // let path_builder = string.new_builder()
-    // path_builder.append(output_dir)
-    // if output_dir.length > 0 and output_dir.char_at(output_dir.length - 1) != '/' {
-    //     path_builder.append_char('/')
-    // }
-    // if binary_name is str as name {
-    //     path_builder.append(name)
-    // }
-    // path_builder.append(".ir")
-    // let path = path_builder.build()
+    let path_builder = string.new_builder()
+    path_builder.append(output_dir)
+    if output_dir.length > 0 and output_dir.char_at(output_dir.length - 1) != '/' {
+        path_builder.append_char('/')
+    }
+    path_builder.append(binary_name)
+    path_builder.append(".ir")
+    let path = path_builder.build()
 
-    // let file = libc.fopen(path.data(), "w".data())
-    // if file == null {
-    //     libc.stderr.write("Cannot open file: ").write(path).end_line()
-    //     return 1
-    // }
-    // defer libc.fclose(file)
+    let file = libc.fopen(path.data(), "w".data())
+    if file == null {
+        libc.stderr.write("Cannot open file: ").write(path).end_line()
+        return 1
+    }
 
-    // printer.print(program: ir_program, file: file)
+    printer.print(program: ir_program, file: file)
+
+    libc.fclose(file)
 
     return 0
 }

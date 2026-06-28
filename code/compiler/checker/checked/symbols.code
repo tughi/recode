@@ -1,0 +1,84 @@
+import allocator
+
+type Symbol_Kind = enum {
+    Procedure
+    Type
+}
+
+type Symbol = struct {
+    kind: Symbol_Kind
+    name: str
+}
+
+type Type_Symbol = struct {
+    super: Symbol
+    type: ^Type
+}
+
+proc new_type_symbol(name: str, type: ^Type) -> ^Type_Symbol {
+    let result = allocator.alloc(size: type_size(Type_Symbol), alignment: type_alignment(Type_Symbol)).as(^Type_Symbol)
+    result.^ = Type_Symbol(
+        super: Symbol(kind: .Type, name: name)
+        type: type
+    )
+    return result
+}
+
+type Procedure_Symbol = struct {
+    super: Symbol
+    procedure_type: ^Procedure_Type
+    body: ^Statement
+}
+
+proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Statement) -> ^Procedure_Symbol {
+    let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
+    result.^ = Procedure_Symbol(
+        super: Symbol(kind: .Procedure, name: name)
+        procedure_type: procedure_type
+        body: body
+    )
+    return result
+}
+
+type Symbol_Entry = struct {
+    name: str
+    symbol: ^Symbol
+    next: ^Symbol_Entry
+}
+
+type Symbols = struct {
+    parent: ^Symbols
+    first: ^Symbol_Entry
+    last: ^Symbol_Entry
+}
+
+proc new_symbols(parent: ^Symbols) -> ^Symbols {
+    let result = allocator.alloc(size: type_size(Symbols), alignment: type_alignment(Symbols)).as(^Symbols)
+    result.^ = Symbols(parent: parent, first: null, last: null)
+    return result
+}
+
+proc (^Symbols).find(self, name: str) -> ^Symbol {
+    let entry = self.first
+    while entry != null {
+        if entry.name.equals(name) {
+            return entry.symbol
+        }
+        entry = entry.next
+    }
+    if self.parent != null {
+        return self.parent.find(name)
+    }
+    return null
+}
+
+proc (^Symbols).append(self, name: str, symbol: ^Symbol) {
+    let entry = allocator.alloc(size: type_size(Symbol_Entry), alignment: type_alignment(Symbol_Entry)).as(^Symbol_Entry)
+    entry.^ = Symbol_Entry(name: name, symbol: symbol, next: null)
+    if self.first == null {
+        self.first = entry
+    } else {
+        self.last.next = entry
+    }
+    self.last = entry
+}

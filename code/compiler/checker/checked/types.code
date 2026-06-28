@@ -1,0 +1,52 @@
+import allocator
+
+type Type_Kind = enum {
+    Builtin
+    Procedure
+}
+
+type Type = struct {
+    kind: Type_Kind
+}
+
+type Builtin_Type = struct {
+    super: Type
+    name: str
+}
+
+proc new_builtin_type(name: str) -> ^Builtin_Type {
+    let result = allocator.alloc(size: type_size(Builtin_Type), alignment: type_alignment(Builtin_Type)).as(^Builtin_Type)
+    result.^ = Builtin_Type(
+        super: Type(kind: .Builtin)
+        name: name
+    )
+    return result
+}
+
+type Procedure_Parameter = struct {
+    name: str
+    parameter_type: ^Type
+    next: ^Procedure_Parameter
+}
+
+proc new_procedure_parameter(name: str, parameter_type: ^Type) -> ^Procedure_Parameter {
+    let result = allocator.alloc(size: type_size(Procedure_Parameter), alignment: type_alignment(Procedure_Parameter)).as(^Procedure_Parameter)
+    result.^ = Procedure_Parameter(name: name, parameter_type: parameter_type, next: null)
+    return result
+}
+
+type Procedure_Type = struct {
+    super: Type
+    first_parameter: ^Procedure_Parameter
+    return_type: ^Type
+}
+
+proc new_procedure_type(first_parameter: ^Procedure_Parameter, return_type: ^Type) -> ^Procedure_Type {
+    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
+    result.^ = Procedure_Type(
+        super: Type(kind: .Procedure)
+        first_parameter: first_parameter
+        return_type: return_type
+    )
+    return result
+}
