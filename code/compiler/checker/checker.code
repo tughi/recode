@@ -56,6 +56,7 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
 
     let checked_package = checked.new_package(name: parsed_package.name, symbols: global_symbols)
 
+    // Declare all procedure signatures first, so bodies can reference any procedure.
     let module = parsed_package.first_module
     let last_checked_module: ^checked.Module = null
     while module != null {
@@ -70,9 +71,22 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
         let statement = module.first_statement
         while statement != null {
             if statement.kind == .Procedure {
-                self.check_procedure_statement(statement.as(^parsed.Procedure_Statement))
+                self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
             } else {
                 panic "Not supported yet: package statement"
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+
+    // Check all procedure bodies.
+    module = parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Procedure {
+                self.check_procedure_body(statement.as(^parsed.Procedure_Statement))
             }
             statement = statement.next
         }
@@ -82,7 +96,7 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
     return checked_package
 }
 
-proc (^Checker).check_procedure_statement(self, procedure_statement: ^parsed.Procedure_Statement) {
+proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
     self.current_location = procedure_statement.location
     let name = procedure_statement.name.lexeme
 
@@ -92,19 +106,25 @@ proc (^Checker).check_procedure_statement(self, procedure_statement: ^parsed.Pro
     }
 
     let procedure_type = checked.new_procedure_type(first_parameter: null, return_type: return_type)
+    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: null).as(^checked.Symbol)
+    self.global_symbols.append(name: name, symbol: symbol)
+}
 
-    let body: ^checked.Statement = null
-    if not procedure_statement.is_external and procedure_statement.body != null {
-        self.return_type = return_type
-        if procedure_statement.body.kind == .Block {
-            body = self.check_block_statement(procedure_statement.body.as(^parsed.Block_Statement))
-        } else {
-            panic "Not supported yet: procedure body"
-        }
+proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedure_Statement) {
+    if procedure_statement.is_external or procedure_statement.body == null {
+        return
     }
 
-    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: body).as(^checked.Symbol)
-    self.global_symbols.append(name: name, symbol: symbol)
+    let name = procedure_statement.name.lexeme
+    let procedure_symbol = self.global_symbols.find(name).as(^checked.Procedure_Symbol)
+
+    self.return_type = procedure_symbol.procedure_type.return_type
+    self.current_location = procedure_statement.location
+    if procedure_statement.body.kind == .Block {
+        procedure_symbol.body = self.check_block_statement(procedure_statement.body.as(^parsed.Block_Statement))
+    } else {
+        panic "Not supported yet: procedure body"
+    }
 }
 
 proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statement) -> ^checked.Statement {
@@ -147,10 +167,32 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
 }
 
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    if parsed_expression.kind == .Integer {
+    if parsed_expression.kind == .Call {
+        return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
+    } else if parsed_expression.kind == .Integer {
         return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
     }
     panic "Not supported yet: expression"
+}
+
+proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    self.current_location = call_expression.location
+    if call_expression.operand.kind != .Identifier {
+        self.error("Unsupported callee expression")
+    }
+    let name = call_expression.operand.as(^parsed.Identifier_Expression).name.lexeme
+    let symbol = self.global_symbols.find(name)
+    if symbol == null {
+        self.error("Undefined procedure")
+    }
+    if symbol.kind != .Procedure {
+        self.error("Not a procedure")
+    }
+    let procedure_symbol = symbol.as(^checked.Procedure_Symbol)
+    if call_expression.first_argument != null {
+        panic "Not supported yet: call arguments"
+    }
+    return checked.new_call_expression(callee: procedure_symbol, type: procedure_symbol.procedure_type.return_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {

@@ -2,12 +2,27 @@ import allocator
 import compiler.lexer
 
 type Expression_Kind = enum {
+    Call
     Integer
 }
 
 type Expression = struct {
     kind: Expression_Kind
     type: ^Type
+}
+
+type Call_Expression = struct {
+    super: Expression
+    callee: ^Procedure_Symbol
+}
+
+proc new_call_expression(callee: ^Procedure_Symbol, type: ^Type) -> ^Call_Expression {
+    let result = allocator.alloc(size: type_size(Call_Expression), alignment: type_alignment(Call_Expression)).as(^Call_Expression)
+    result.^ = Call_Expression(
+        super: Expression(kind: .Call, type: type)
+        callee: callee
+    )
+    return result
 }
 
 type Integer_Expression = struct {

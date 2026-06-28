@@ -20,6 +20,17 @@ proc (^Program).append_procedure(self, procedure: ^Procedure) {
     self.last_procedure = procedure
 }
 
+proc (^Program).find_procedure(self, name: str) -> ^Procedure {
+    let procedure = self.first_procedure
+    while procedure != null {
+        if procedure.name.equals(name) {
+            return procedure
+        }
+        procedure = procedure.next
+    }
+    return null
+}
+
 type Procedure = struct {
     name: str
     return_type: ^Type
