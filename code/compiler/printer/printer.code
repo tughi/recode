@@ -49,7 +49,7 @@ proc print_block(block: ^ir.Block, file: ^libc.FILE) {
         file.write("  ")
         print_instruction(instruction, file: file)
         file.end_line()
-        instruction = instruction.next
+        instruction = instruction.next_instruction
     }
 }
 
@@ -58,13 +58,13 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "add", file: file)
     } else if instruction.kind == .Alloc {
         let alloc_instruction = instruction.as(^ir.Alloc_Instruction)
-        print_value_definition(^alloc_instruction.result, file: file)
+        print_value_definition(alloc_instruction.as(^ir.Value), file: file)
         file.write(" = alloc ")
-        print_type(alloc_instruction.type, file: file)
+        print_type(alloc_instruction.allocated_type, file: file)
     } else if instruction.kind == .Call {
         let call_instruction = instruction.as(^ir.Call_Instruction)
-        if call_instruction.result.type.kind != .Nothing {
-            print_value_definition(^call_instruction.result, file: file)
+        if call_instruction.type.kind != .Nothing {
+            print_value_definition(call_instruction.as(^ir.Value), file: file)
             file.write(" = ")
         }
         file.write("call $").write(call_instruction.callee.name)
@@ -76,13 +76,13 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
         }
     } else if instruction.kind == .Const {
         let const_instruction = instruction.as(^ir.Const_Instruction)
-        print_value_definition(^const_instruction.result, file: file)
+        print_value_definition(const_instruction.as(^ir.Value), file: file)
         file.write(" = const ").write_u64(value: const_instruction.literal.value)
     } else if instruction.kind == .Divide {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "div", file: file)
     } else if instruction.kind == .Load {
         let load_instruction = instruction.as(^ir.Load_Instruction)
-        print_value_definition(^load_instruction.result, file: file)
+        print_value_definition(load_instruction.as(^ir.Value), file: file)
         file.write(" = load ")
         print_value_reference(load_instruction.pointer, file: file)
     } else if instruction.kind == .Modulo {
@@ -108,7 +108,7 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
 }
 
 proc print_binary_instruction(instruction: ^ir.Binary_Instruction, operation: str, file: ^libc.FILE) {
-    print_value_definition(^instruction.result, file: file)
+    print_value_definition(instruction.as(^ir.Value), file: file)
     file.write(" = ").write(operation).write_char(char: ' ')
     print_value_reference(instruction.left, file: file)
     file.write_char(char: ' ')

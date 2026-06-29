@@ -1,5 +1,6 @@
 import allocator
 import compiler.lexer
+import string
 
 type Instruction_Kind = enum {
     Add
@@ -16,15 +17,16 @@ type Instruction_Kind = enum {
 }
 
 type Instruction = struct {
+    super: Value
     kind: Instruction_Kind
-    next: ^Instruction
+    next_instruction: ^Instruction
 }
 
 proc (^Block).append_instruction(self, instruction: ^Instruction) {
     if self.first_instruction == null {
         self.first_instruction = instruction
     } else {
-        self.last_instruction.next = instruction
+        self.last_instruction.next_instruction = instruction
     }
     self.last_instruction = instruction
 }
@@ -42,63 +44,97 @@ proc new_argument(value: ^Value) -> ^Argument {
 
 type Alloc_Instruction = struct {
     super: Instruction
-    result: Value
-    type: ^Type
+    allocated_type: ^Type
 }
 
-proc new_alloc_instruction(result: Value, type: ^Type) -> ^Alloc_Instruction {
+proc new_alloc_instruction(variable: ^Variable) -> ^Alloc_Instruction {
+    let name_builder = string.new_builder()
+    let result_name = name_builder.append(variable.name).append(".ptr").build()
     let allocated = allocator.alloc(size: type_size(Alloc_Instruction), alignment: type_alignment(Alloc_Instruction)).as(^Alloc_Instruction)
-    allocated.^ = Alloc_Instruction(super: Instruction(kind: .Alloc, next: null), result: result, type: type)
+    allocated.^ = Alloc_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: result_name, type: new_pointer_type(variable.type).as(^Type), variable: variable, next: null)
+            kind: .Alloc
+            next_instruction: null
+        )
+        allocated_type: variable.type
+    )
     return allocated
 }
 
 type Binary_Instruction = struct {
     super: Instruction
-    result: Value
     left: ^Value
     right: ^Value
 }
 
-proc new_binary_instruction(kind: Instruction_Kind, result: Value, left: ^Value, right: ^Value) -> ^Binary_Instruction {
+proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left: ^Value, right: ^Value) -> ^Binary_Instruction {
     let allocated = allocator.alloc(size: type_size(Binary_Instruction), alignment: type_alignment(Binary_Instruction)).as(^Binary_Instruction)
-    allocated.^ = Binary_Instruction(super: Instruction(kind: kind, next: null), result: result, left: left, right: right)
+    allocated.^ = Binary_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: kind
+            next_instruction: null
+        )
+        left: left
+        right: right
+    )
     return allocated
 }
 
 type Call_Instruction = struct {
     super: Instruction
-    result: Value
     callee: ^Procedure
     first_argument: ^Argument
 }
 
-proc new_call_instruction(result: Value, callee: ^Procedure) -> ^Call_Instruction {
+proc new_call_instruction(name: str, type: ^Type, callee: ^Procedure) -> ^Call_Instruction {
     let allocated = allocator.alloc(size: type_size(Call_Instruction), alignment: type_alignment(Call_Instruction)).as(^Call_Instruction)
-    allocated.^ = Call_Instruction(super: Instruction(kind: .Call, next: null), result: result, callee: callee, first_argument: null)
+    allocated.^ = Call_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Call
+            next_instruction: null
+        )
+        callee: callee
+        first_argument: null
+    )
     return allocated
 }
 
 type Const_Instruction = struct {
     super: Instruction
-    result: Value
     literal: ^lexer.Integer
 }
 
-proc new_const_instruction(result: Value, literal: ^lexer.Integer) -> ^Const_Instruction {
+proc new_const_instruction(name: str, type: ^Type, literal: ^lexer.Integer) -> ^Const_Instruction {
     let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
-    allocated.^ = Const_Instruction(super: Instruction(kind: .Const, next: null), result: result, literal: literal)
+    allocated.^ = Const_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Const
+            next_instruction: null
+        )
+        literal: literal
+    )
     return allocated
 }
 
 type Load_Instruction = struct {
     super: Instruction
-    result: Value
     pointer: ^Value
 }
 
-proc new_load_instruction(result: Value, pointer: ^Value) -> ^Load_Instruction {
+proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Instruction {
     let allocated = allocator.alloc(size: type_size(Load_Instruction), alignment: type_alignment(Load_Instruction)).as(^Load_Instruction)
-    allocated.^ = Load_Instruction(super: Instruction(kind: .Load, next: null), result: result, pointer: pointer)
+    allocated.^ = Load_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Load
+            next_instruction: null
+        )
+        pointer: pointer
+    )
     return allocated
 }
 
@@ -109,7 +145,14 @@ type Ret_Instruction = struct {
 
 proc new_ret_instruction(value: ^Value) -> ^Ret_Instruction {
     let allocated = allocator.alloc(size: type_size(Ret_Instruction), alignment: type_alignment(Ret_Instruction)).as(^Ret_Instruction)
-    allocated.^ = Ret_Instruction(super: Instruction(kind: .Ret, next: null), value: value)
+    allocated.^ = Ret_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Ret
+            next_instruction: null
+        )
+        value: value
+    )
     return allocated
 }
 
@@ -121,6 +164,14 @@ type Store_Instruction = struct {
 
 proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction {
     let allocated = allocator.alloc(size: type_size(Store_Instruction), alignment: type_alignment(Store_Instruction)).as(^Store_Instruction)
-    allocated.^ = Store_Instruction(super: Instruction(kind: .Store, next: null), pointer: pointer, value: value)
+    allocated.^ = Store_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Store
+            next_instruction: null
+        )
+        pointer: pointer
+        value: value
+    )
     return allocated
 }

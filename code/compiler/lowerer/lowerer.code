@@ -3,16 +3,14 @@ import compiler.checker.checked
 import compiler.ir
 import string
 
-type Local_Variable = struct {
-    symbol: ^checked.Symbol
-    pointer: ^ir.Value
-    version: usize
-    next: ^Local_Variable
+type Scope_Entry = struct {
+    value: ^ir.Value
+    next: ^Scope_Entry
 }
 
-proc new_local_variable(symbol: ^checked.Symbol, pointer: ^ir.Value) -> ^Local_Variable {
-    let result = allocator.alloc(size: type_size(Local_Variable), alignment: type_alignment(Local_Variable)).as(^Local_Variable)
-    result.^ = Local_Variable(symbol: symbol, pointer: pointer, version: 0, next: null)
+proc new_scope_entry(value: ^ir.Value, next: ^Scope_Entry) -> ^Scope_Entry {
+    let result = allocator.alloc(size: type_size(Scope_Entry), alignment: type_alignment(Scope_Entry)).as(^Scope_Entry)
+    result.^ = Scope_Entry(value: value, next: next)
     return result
 }
 
@@ -21,8 +19,7 @@ type Lowerer = struct {
     package_name: str
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
-    first_local: ^Local_Variable
-    last_local: ^Local_Variable
+    scope: ^Scope_Entry
     next_value_id: usize
 }
 
@@ -32,8 +29,7 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         package_name: checked_package.name
         current_procedure: null
         current_block: null
-        first_local: null
-        last_local: null
+        scope: null
         next_value_id: 0
     )
 
@@ -78,7 +74,7 @@ proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Sym
     )
     let parameter = procedure_symbol.procedure_type.first_parameter
     while parameter != null {
-        procedure.append_parameter(ir.new_value(name: parameter.name, type: self.lower_type(parameter.parameter_type)))
+        procedure.append_parameter(ir.new_value(kind: .Parameter, name: parameter.name, type: self.lower_type(parameter.parameter_type)))
         parameter = parameter.next
     }
     self.program.append_procedure(procedure)
@@ -93,8 +89,12 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     }
 
     self.next_value_id = 0
-    self.first_local = null
-    self.last_local = null
+    self.scope = null
+    let parameter = procedure.first_parameter
+    while parameter != null {
+        self.push_scope(parameter)
+        parameter = parameter.next
+    }
     let block = ir.new_block(label: 1)
     procedure.append_block(block)
     self.current_block = block
@@ -124,14 +124,15 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
     self.current_block = block
 
     let call_instruction = ir.new_call_instruction(
-        result: ir.Value(name: self.fresh_name(), type: main_procedure.return_type)
+        name: self.fresh_name()
+        type: main_procedure.return_type
         callee: main_procedure
     )
     self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
 
     let result: ^ir.Value = null
     if main_procedure.return_type.kind != .Nothing {
-        result = ^call_instruction.result
+        result = call_instruction.as(^ir.Value)
     }
     self.current_block.append_instruction(ir.new_ret_instruction(value: result).as(^ir.Instruction))
 }
@@ -161,17 +162,13 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
 
 proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Variable_Statement) {
     let pointee_type = self.lower_type(variable_statement.symbol.type)
-    let name_builder = string.new_builder()
-    let pointer_name = name_builder.append(variable_statement.symbol.name).append(".ptr").build()
-    let alloc_instruction = ir.new_alloc_instruction(
-        result: ir.Value(name: pointer_name, type: ir.new_pointer_type(pointee_type).as(^ir.Type))
-        type: pointee_type
-    )
+    let variable = self.declare_variable(symbol: variable_statement.symbol.as(^checked.Symbol), type: pointee_type)
+    let alloc_instruction = ir.new_alloc_instruction(variable)
     self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
-    self.declare_local(symbol: variable_statement.symbol.as(^checked.Symbol), pointer: ^alloc_instruction.result)
+    self.push_scope(alloc_instruction.as(^ir.Value))
     if variable_statement.expression != null {
         let value = self.lower_expression(variable_statement.expression)
-        self.current_block.append_instruction(ir.new_store_instruction(pointer: ^alloc_instruction.result, value: value).as(^ir.Instruction))
+        self.current_block.append_instruction(ir.new_store_instruction(pointer: alloc_instruction.as(^ir.Value), value: value).as(^ir.Instruction))
     }
 }
 
@@ -203,12 +200,13 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             result_name = self.fresh_name()
         }
         let call_instruction = ir.new_call_instruction(
-            result: ir.Value(name: result_name, type: result_type)
+            name: result_name
+            type: result_type
             callee: callee
         )
         call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
-        return ^call_instruction.result
+        return call_instruction.as(^ir.Value)
     } else if expression.kind == .Divide {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Divide)
     } else if expression.kind == .Multiply {
@@ -218,27 +216,30 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
     } else if expression.kind == .Integer {
         let integer_expression = expression.as(^checked.Integer_Expression)
         let const_instruction = ir.new_const_instruction(
-            result: ir.Value(name: self.fresh_name(), type: self.lower_type(integer_expression.type))
+            name: self.fresh_name()
+            type: self.lower_type(integer_expression.type)
             literal: integer_expression.token
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
-        return ^const_instruction.result
+        return const_instruction.as(^ir.Value)
     } else if expression.kind == .Symbol {
         let symbol_expression = expression.as(^checked.Symbol_Expression)
         let symbol = symbol_expression.symbol
         if symbol.kind == .Variable {
-            let local = self.find_local(symbol)
-            local.version = local.version + 1
+            let value_pointer = self.find_scope(symbol)
+            let variable = value_pointer.variable
+            variable.version = variable.version + 1
             let name_builder = string.new_builder()
-            let result_name = name_builder.append(symbol.name).append_char('.').append_decimal(local.version).build()
+            let result_name = name_builder.append(variable.name).append_char('.').append_decimal(variable.version).build()
             let load_instruction = ir.new_load_instruction(
-                result: ir.Value(name: result_name, type: self.lower_type(symbol_expression.type))
-                pointer: local.pointer
+                name: result_name
+                type: variable.type
+                pointer: value_pointer
             )
             self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
-            return ^load_instruction.result
+            return load_instruction.as(^ir.Value)
         }
-        return self.find_parameter(symbol.name)
+        return self.find_scope(symbol)
     } else if expression.kind == .Subtract {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     }
@@ -250,44 +251,53 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
     let right = self.lower_expression(binary_expression.right)
     let binary_instruction = ir.new_binary_instruction(
         kind: kind
-        result: ir.Value(name: self.fresh_name(), type: self.lower_type(binary_expression.type))
+        name: self.fresh_name()
+        type: self.lower_type(binary_expression.type)
         left: left
         right: right
     )
     self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
-    return ^binary_instruction.result
+    return binary_instruction.as(^ir.Value)
 }
 
-proc (^Lowerer).declare_local(self, symbol: ^checked.Symbol, pointer: ^ir.Value) {
-    let local = new_local_variable(symbol: symbol, pointer: pointer)
-    if self.first_local == null {
-        self.first_local = local
-    } else {
-        self.last_local.next = local
-    }
-    self.last_local = local
+proc (^Lowerer).push_scope(self, value: ^ir.Value) {
+    self.scope = new_scope_entry(value: value, next: self.scope)
 }
 
-proc (^Lowerer).find_local(self, symbol: ^checked.Symbol) -> ^Local_Variable {
-    let local = self.first_local
-    while local != null {
-        if local.symbol == symbol {
-            return local
+proc (^Lowerer).find_scope(self, symbol: ^checked.Symbol) -> ^ir.Value {
+    let entry = self.scope
+    while entry != null {
+        let value = entry.value
+        if value.variable != null {
+            if value.variable.symbol == symbol {
+                return value
+            }
+        } else if value.name.equals(symbol.name) {
+            return value
         }
-        local = local.next
+        entry = entry.next
     }
-    return null
+    panic "Lowering: symbol not in scope"
 }
 
-proc (^Lowerer).find_parameter(self, name: str) -> ^ir.Value {
-    let parameter = self.current_procedure.first_parameter
-    while parameter != null {
-        if parameter.name.equals(name) {
-            return parameter
+proc (^Lowerer).declare_variable(self, symbol: ^checked.Symbol, type: ^ir.Type) -> ^ir.Variable {
+    let count = 0usize
+    let entry = self.scope
+    while entry != null {
+        let existing = entry.value.variable
+        if existing != null {
+            if existing.symbol.name.equals(symbol.name) {
+                count = count + 1
+            }
         }
-        parameter = parameter.next
+        entry = entry.next
     }
-    panic "Lowering: parameter not found"
+    let display_name = symbol.name
+    if count > 0 {
+        let builder = string.new_builder()
+        display_name = builder.append(symbol.name).append_char('.').append_decimal(count + 1).build()
+    }
+    return ir.new_variable(name: display_name, type: type, symbol: symbol)
 }
 
 proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {

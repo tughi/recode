@@ -1,4 +1,5 @@
 import allocator
+import compiler.checker.checked
 
 type Program = struct {
     first_procedure: ^Procedure
@@ -128,14 +129,43 @@ proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
     return result
 }
 
+type Value_Kind = enum {
+    Global
+    Instruction_Result
+    Parameter
+    Procedure
+}
+
 type Value = struct {
+    kind: Value_Kind
     name: str
     type: ^Type
+    variable: ^Variable
     next: ^Value
 }
 
-proc new_value(name: str, type: ^Type) -> ^Value {
+proc new_value(kind: Value_Kind, name: str, type: ^Type) -> ^Value {
     let result = allocator.alloc(size: type_size(Value), alignment: type_alignment(Value)).as(^Value)
-    result.^ = Value(name: name, type: type, next: null)
+    result.^ = Value(kind: kind, name: name, type: type, variable: null, next: null)
+    return result
+}
+
+type Symbol = struct {
+    super: Value
+}
+
+type Variable = struct {
+    super: Symbol
+    symbol: ^checked.Symbol
+    version: usize
+}
+
+proc new_variable(name: str, type: ^Type, symbol: ^checked.Symbol) -> ^Variable {
+    let result = allocator.alloc(size: type_size(Variable), alignment: type_alignment(Variable)).as(^Variable)
+    result.^ = Variable(
+        super: Symbol(super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null))
+        symbol: symbol
+        version: 0
+    )
     return result
 }
