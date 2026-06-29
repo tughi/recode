@@ -1,6 +1,7 @@
 import allocator
 
 type Statement_Kind = enum {
+    Assignment
     Block
     Expression
     Return
@@ -10,6 +11,22 @@ type Statement_Kind = enum {
 type Statement = struct {
     kind: Statement_Kind
     next: ^Statement
+}
+
+type Assignment_Statement = struct {
+    super: Statement
+    object: ^Expression
+    value: ^Expression
+}
+
+proc new_assignment_statement(object: ^Expression, value: ^Expression) -> ^Assignment_Statement {
+    let result = allocator.alloc(size: type_size(Assignment_Statement), alignment: type_alignment(Assignment_Statement)).as(^Assignment_Statement)
+    result.^ = Assignment_Statement(
+        super: Statement(kind: .Assignment, next: null)
+        object: object
+        value: value
+    )
+    return result
 }
 
 type Block_Statement = struct {

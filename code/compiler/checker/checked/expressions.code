@@ -18,6 +18,13 @@ type Expression = struct {
     type: ^Type
 }
 
+proc (^Expression).is_mutable(self) -> bool {
+    if self.kind == .Symbol {
+        return self.as(^Symbol_Expression).symbol.kind == .Variable
+    }
+    return false
+}
+
 type Binary_Expression = struct {
     super: Expression
     left: ^Expression

@@ -156,6 +156,32 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
     }
 }
 
+proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
+    if parsed_statement.kind == .Assignment {
+        return self.check_assignment_statement(parsed_statement.as(^parsed.Assignment_Statement))
+    } else if parsed_statement.kind == .Block {
+        return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
+    } else if parsed_statement.kind == .Expression {
+        return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
+    } else if parsed_statement.kind == .Return {
+        return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
+    } else if parsed_statement.kind == .Variable {
+        return self.check_variable_statement(parsed_statement.as(^parsed.Variable_Statement))
+    }
+    panic "Not supported yet: statement"
+}
+
+proc (^Checker).check_assignment_statement(self, assignment_statement: ^parsed.Assignment_Statement) -> ^checked.Statement {
+    self.current_location = assignment_statement.location
+    let object = self.check_expression(assignment_statement.object, expected_type: null)
+    if not object.is_mutable() {
+        self.current_location = assignment_statement.object.location
+        self.error("Cannot assign to immutable expression")
+    }
+    let value = self.check_expression(assignment_statement.value, expected_type: object.type)
+    return checked.new_assignment_statement(object: object, value: value).as(^checked.Statement)
+}
+
 proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statement) -> ^checked.Statement {
     let first_statement: ^checked.Statement = null
     let last_statement: ^checked.Statement = null
@@ -173,19 +199,6 @@ proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statemen
         statement = statement.next
     }
     return checked.new_block_statement(first_statement: first_statement).as(^checked.Statement)
-}
-
-proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
-    if parsed_statement.kind == .Block {
-        return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
-    } else if parsed_statement.kind == .Expression {
-        return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
-    } else if parsed_statement.kind == .Return {
-        return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
-    } else if parsed_statement.kind == .Variable {
-        return self.check_variable_statement(parsed_statement.as(^parsed.Variable_Statement))
-    }
-    panic "Not supported yet: statement"
 }
 
 proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.Expression_Statement) -> ^checked.Statement {
@@ -265,22 +278,6 @@ proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_
     return checked.new_binary_expression(kind: kind, left: left, right: right, type: left.type).as(^checked.Expression)
 }
 
-proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {
-    self.current_location = identifier_expression.location
-    let name = identifier_expression.name.lexeme
-    let symbol = self.current_scope.find(name)
-    if symbol == null {
-        let message = string.new_builder()
-        self.error(message.append("Undefined symbol: ").append(name).build())
-    }
-    if symbol.kind == .Parameter {
-        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
-    } else if symbol.kind == .Variable {
-        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
-    }
-    panic "Not supported yet: identifier symbol"
-}
-
 proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
     self.current_location = call_expression.location
     if call_expression.operand.kind != .Identifier {
@@ -331,6 +328,22 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     }
 
     return checked.new_call_expression(callee: procedure_symbol, type: procedure_symbol.procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {
+    self.current_location = identifier_expression.location
+    let name = identifier_expression.name.lexeme
+    let symbol = self.current_scope.find(name)
+    if symbol == null {
+        let message = string.new_builder()
+        self.error(message.append("Undefined symbol: ").append(name).build())
+    }
+    if symbol.kind == .Parameter {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
+    } else if symbol.kind == .Variable {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
+    }
+    panic "Not supported yet: identifier symbol"
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {

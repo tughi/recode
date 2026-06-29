@@ -138,7 +138,9 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
 }
 
 proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
-    if statement.kind == .Block {
+    if statement.kind == .Assignment {
+        self.lower_assignment_statement(statement.as(^checked.Assignment_Statement))
+    } else if statement.kind == .Block {
         let block_statement = statement.as(^checked.Block_Statement)
         let item = block_statement.first_statement
         while item != null {
@@ -158,6 +160,18 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
     } else if statement.kind == .Variable {
         self.lower_variable_statement(statement.as(^checked.Variable_Statement))
     }
+}
+
+proc (^Lowerer).lower_assignment_statement(self, assignment_statement: ^checked.Assignment_Statement) {
+    let object = assignment_statement.object
+    let pointer: ^ir.Value = null
+    if object.kind == .Symbol {
+        pointer = self.find_scope(object.as(^checked.Symbol_Expression).symbol)
+    } else {
+        panic "Lowering not supported yet: assignment object"
+    }
+    let value = self.lower_expression(assignment_statement.value)
+    self.current_block.append_instruction(ir.new_store_instruction(pointer: pointer, value: value).as(^ir.Instruction))
 }
 
 proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Variable_Statement) {
@@ -209,10 +223,6 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return call_instruction.as(^ir.Value)
     } else if expression.kind == .Divide {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Divide)
-    } else if expression.kind == .Multiply {
-        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Multiply)
-    } else if expression.kind == .Modulo {
-        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Modulo)
     } else if expression.kind == .Integer {
         let integer_expression = expression.as(^checked.Integer_Expression)
         let const_instruction = ir.new_const_instruction(
@@ -222,6 +232,12 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
+    } else if expression.kind == .Modulo {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Modulo)
+    } else if expression.kind == .Multiply {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Multiply)
+    } else if expression.kind == .Subtract {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     } else if expression.kind == .Symbol {
         let symbol_expression = expression.as(^checked.Symbol_Expression)
         let symbol = symbol_expression.symbol
@@ -240,8 +256,6 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             return load_instruction.as(^ir.Value)
         }
         return self.find_scope(symbol)
-    } else if expression.kind == .Subtract {
-        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     }
     panic "Lowering not supported yet: expression"
 }
