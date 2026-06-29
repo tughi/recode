@@ -202,14 +202,31 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
 }
 
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    if parsed_expression.kind == .Call {
+    if parsed_expression.kind == .Add {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
+    } else if parsed_expression.kind == .Call {
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
+    } else if parsed_expression.kind == .Divide {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Divide, expected_type: expected_type)
     } else if parsed_expression.kind == .Identifier {
         return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
     } else if parsed_expression.kind == .Integer {
         return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Multiply {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
+    } else if parsed_expression.kind == .Modulo {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Modulo, expected_type: expected_type)
+    } else if parsed_expression.kind == .Subtract {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
     }
     panic "Not supported yet: expression"
+}
+
+proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind, expected_type: ^checked.Type) -> ^checked.Expression {
+    self.current_location = binary_expression.location
+    let left = self.check_expression(binary_expression.left, expected_type: expected_type)
+    let right = self.check_expression(binary_expression.right, expected_type: left.type)
+    return checked.new_binary_expression(kind: kind, left: left, right: right, type: left.type).as(^checked.Expression)
 }
 
 proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {

@@ -2,14 +2,35 @@ import allocator
 import compiler.lexer
 
 type Expression_Kind = enum {
+    Add
     Call
+    Divide
     Integer
+    Modulo
+    Multiply
+    Subtract
     Symbol
 }
 
 type Expression = struct {
     kind: Expression_Kind
     type: ^Type
+}
+
+type Binary_Expression = struct {
+    super: Expression
+    left: ^Expression
+    right: ^Expression
+}
+
+proc new_binary_expression(kind: Expression_Kind, left: ^Expression, right: ^Expression, type: ^Type) -> ^Binary_Expression {
+    let result = allocator.alloc(size: type_size(Binary_Expression), alignment: type_alignment(Binary_Expression)).as(^Binary_Expression)
+    result.^ = Binary_Expression(
+        super: Expression(kind: kind, type: type)
+        left: left
+        right: right
+    )
+    return result
 }
 
 type Call_Argument = struct {

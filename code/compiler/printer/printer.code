@@ -54,7 +54,9 @@ proc print_block(block: ^ir.Block, file: ^libc.FILE) {
 }
 
 proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
-    if instruction.kind == .Call {
+    if instruction.kind == .Add {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "add", file: file)
+    } else if instruction.kind == .Call {
         let call_instruction = instruction.as(^ir.Call_Instruction)
         if call_instruction.result.type.kind != .Nothing {
             print_value_definition(^call_instruction.result, file: file)
@@ -71,6 +73,12 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
         let const_instruction = instruction.as(^ir.Const_Instruction)
         print_value_definition(^const_instruction.result, file: file)
         file.write(" = const ").write_u64(value: const_instruction.literal.value)
+    } else if instruction.kind == .Divide {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "div", file: file)
+    } else if instruction.kind == .Multiply {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "mul", file: file)
+    } else if instruction.kind == .Modulo {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "mod", file: file)
     } else if instruction.kind == .Ret {
         let ret_instruction = instruction.as(^ir.Ret_Instruction)
         file.write("ret")
@@ -78,7 +86,17 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
             file.write_char(char: ' ')
             print_value_reference(ret_instruction.value, file: file)
         }
+    } else if instruction.kind == .Subtract {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "sub", file: file)
     }
+}
+
+proc print_binary_instruction(instruction: ^ir.Binary_Instruction, operation: str, file: ^libc.FILE) {
+    print_value_definition(^instruction.result, file: file)
+    file.write(" = ").write(operation).write_char(char: ' ')
+    print_value_reference(instruction.left, file: file)
+    file.write_char(char: ' ')
+    print_value_reference(instruction.right, file: file)
 }
 
 proc print_value_definition(value: ^ir.Value, file: ^libc.FILE) {

@@ -2,9 +2,14 @@ import allocator
 import compiler.lexer
 
 type Instruction_Kind = enum {
+    Add
     Call
     Const
+    Divide
+    Modulo
+    Multiply
     Ret
+    Subtract
 }
 
 type Instruction = struct {
@@ -30,6 +35,19 @@ proc new_argument(value: ^Value) -> ^Argument {
     let result = allocator.alloc(size: type_size(Argument), alignment: type_alignment(Argument)).as(^Argument)
     result.^ = Argument(value: value, next: null)
     return result
+}
+
+type Binary_Instruction = struct {
+    super: Instruction
+    result: Value
+    left: ^Value
+    right: ^Value
+}
+
+proc new_binary_instruction(kind: Instruction_Kind, result: Value, left: ^Value, right: ^Value) -> ^Binary_Instruction {
+    let allocated = allocator.alloc(size: type_size(Binary_Instruction), alignment: type_alignment(Binary_Instruction)).as(^Binary_Instruction)
+    allocated.^ = Binary_Instruction(super: Instruction(kind: kind, next: null), result: result, left: left, right: right)
+    return allocated
 }
 
 type Call_Instruction = struct {

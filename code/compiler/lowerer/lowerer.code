@@ -138,7 +138,9 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
 }
 
 proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.Value {
-    if expression.kind == .Call {
+    if expression.kind == .Add {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Add)
+    } else if expression.kind == .Call {
         let call_expression = expression.as(^checked.Call_Expression)
 
         let first_argument: ^ir.Argument = null
@@ -169,6 +171,12 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
         return ^call_instruction.result
+    } else if expression.kind == .Divide {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Divide)
+    } else if expression.kind == .Multiply {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Multiply)
+    } else if expression.kind == .Modulo {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Modulo)
     } else if expression.kind == .Integer {
         let integer_expression = expression.as(^checked.Integer_Expression)
         let const_instruction = ir.new_const_instruction(
@@ -180,8 +188,23 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
     } else if expression.kind == .Symbol {
         let symbol_expression = expression.as(^checked.Symbol_Expression)
         return self.find_parameter(symbol_expression.symbol.name)
+    } else if expression.kind == .Subtract {
+        return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     }
     panic "Lowering not supported yet: expression"
+}
+
+proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary_Expression, kind: ir.Instruction_Kind) -> ^ir.Value {
+    let left = self.lower_expression(binary_expression.left)
+    let right = self.lower_expression(binary_expression.right)
+    let binary_instruction = ir.new_binary_instruction(
+        kind: kind
+        result: ir.Value(name: self.fresh_name(), type: self.lower_type(binary_expression.type))
+        left: left
+        right: right
+    )
+    self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
+    return ^binary_instruction.result
 }
 
 proc (^Lowerer).find_parameter(self, name: str) -> ^ir.Value {
