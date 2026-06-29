@@ -276,10 +276,20 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
     } else if parsed_expression.kind == .Divide {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Divide, expected_type: expected_type)
+    } else if parsed_expression.kind == .Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Equals)
+    } else if parsed_expression.kind == .Greater {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater)
+    } else if parsed_expression.kind == .Greater_Or_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater_Or_Equals)
     } else if parsed_expression.kind == .Identifier {
         return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
     } else if parsed_expression.kind == .Integer {
         return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Less {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Less)
+    } else if parsed_expression.kind == .Less_Or_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Less_Or_Equals)
     } else if parsed_expression.kind == .Logic_And {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_And, expected_type: self.bool_type)
     } else if parsed_expression.kind == .Logic_Or {
@@ -290,6 +300,8 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
     } else if parsed_expression.kind == .Not {
         return self.check_not_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Not_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Not_Equals)
     } else if parsed_expression.kind == .Null {
         return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
     } else if parsed_expression.kind == .Subtract {
@@ -360,6 +372,13 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     }
 
     return checked.new_call_expression(callee: procedure_symbol, type: procedure_symbol.procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind) -> ^checked.Expression {
+    self.current_location = binary_expression.location
+    let left = self.check_expression(binary_expression.left, expected_type: null)
+    let right = self.check_expression(binary_expression.right, expected_type: left.type)
+    return checked.new_binary_expression(kind: kind, left: left, right: right, type: self.bool_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {

@@ -6,12 +6,18 @@ type Expression_Kind = enum {
     Bool
     Call
     Divide
+    Equals
+    Greater
+    Greater_Or_Equals
     Integer
+    Less
+    Less_Or_Equals
     Logic_And
     Logic_Or
     Modulo
     Multiply
     Not
+    Not_Equals
     Null
     Subtract
     Symbol

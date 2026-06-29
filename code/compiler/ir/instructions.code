@@ -6,6 +6,12 @@ type Instruction_Kind = enum {
     Alloc
     Br
     Call
+    Compare_Equal
+    Compare_Greater
+    Compare_Greater_Or_Equal
+    Compare_Less
+    Compare_Less_Or_Equal
+    Compare_Not_Equal
     Const
     Divide
     Jmp
