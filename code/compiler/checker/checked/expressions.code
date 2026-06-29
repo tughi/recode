@@ -3,6 +3,7 @@ import compiler.lexer
 
 type Expression_Kind = enum {
     Add
+    Bool
     Call
     Divide
     Integer
@@ -37,6 +38,20 @@ proc new_binary_expression(kind: Expression_Kind, left: ^Expression, right: ^Exp
         super: Expression(kind: kind, type: type)
         left: left
         right: right
+    )
+    return result
+}
+
+type Bool_Expression = struct {
+    super: Expression
+    value: bool
+}
+
+proc new_bool_expression(value: bool, type: ^Type) -> ^Bool_Expression {
+    let result = allocator.alloc(size: type_size(Bool_Expression), alignment: type_alignment(Bool_Expression)).as(^Bool_Expression)
+    result.^ = Bool_Expression(
+        super: Expression(kind: .Bool, type: type)
+        value: value
     )
     return result
 }

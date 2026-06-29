@@ -639,9 +639,15 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression {
 }
 
 proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression {
-    if self.lexer.matches_one(match.keyword("null")) {
+    if self.lexer.matches_one(match.keyword("false")) {
+        let false_token = self.consume_identifier()
+        return parsed.new_bool_expression(location: false_token.location, value: false)
+    } else if self.lexer.matches_one(match.keyword("null")) {
         let null_token = self.consume_identifier()
         return parsed.new_null_expression(null_token)
+    } else if self.lexer.matches_one(match.keyword("true")) {
+        let true_token = self.consume_identifier()
+        return parsed.new_bool_expression(location: true_token.location, value: true)
     } else if self.lexer.matches_one(match.identifier) {
         let name_token = self.consume_identifier()
         return parsed.new_identifier_expression(name_token)

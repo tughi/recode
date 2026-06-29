@@ -21,6 +21,7 @@ type Lowerer = struct {
     current_block: ^ir.Block
     scope: ^Scope_Entry
     next_value_id: usize
+    block_counter: usize
 }
 
 proc lower(checked_package: ^checked.Package) -> ^ir.Program {
@@ -31,6 +32,7 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         current_block: null
         scope: null
         next_value_id: 0
+        block_counter: 0
     )
 
     // Declare all procedures first, so calls can reference any procedure.
@@ -89,25 +91,20 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     }
 
     self.next_value_id = 0
+    self.block_counter = 0
     self.scope = null
     let parameter = procedure.first_parameter
     while parameter != null {
         self.push_scope(parameter)
         parameter = parameter.next
     }
-    let block = ir.new_block(label: 1)
+    let block = self.create_block()
     procedure.append_block(block)
     self.current_block = block
 
     self.lower_statement(procedure_symbol.body)
 
-    let terminated = false
-    if self.current_block.last_instruction != null {
-        if self.current_block.last_instruction.kind == .Ret {
-            terminated = true
-        }
-    }
-    if not terminated {
+    if not self.current_block.is_terminated() {
         self.current_block.append_instruction(ir.new_ret_instruction(value: null).as(^ir.Instruction))
     }
 
@@ -119,7 +116,8 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
     self.program.append_procedure(wrapper)
 
     self.next_value_id = 0
-    let block = ir.new_block(label: 1)
+    self.block_counter = 0
+    let block = self.create_block()
     wrapper.append_block(block)
     self.current_block = block
 
@@ -150,6 +148,8 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
     } else if statement.kind == .Expression {
         let expression_statement = statement.as(^checked.Expression_Statement)
         self.lower_expression(expression_statement.expression)
+    } else if statement.kind == .If {
+        self.lower_if_statement(statement.as(^checked.If_Statement))
     } else if statement.kind == .Return {
         let return_statement = statement.as(^checked.Return_Statement)
         let value: ^ir.Value = null
@@ -174,6 +174,37 @@ proc (^Lowerer).lower_assignment_statement(self, assignment_statement: ^checked.
     self.current_block.append_instruction(ir.new_store_instruction(pointer: pointer, value: value).as(^ir.Instruction))
 }
 
+proc (^Lowerer).lower_if_statement(self, if_statement: ^checked.If_Statement) {
+    let condition = self.lower_expression(if_statement.condition)
+    let true_block = self.create_block()
+    let false_block: ^ir.Block = null
+    if if_statement.false_statement != null {
+        false_block = self.create_block()
+    }
+    let end_block = self.create_block()
+    let branch_false_block = end_block
+    if false_block != null {
+        branch_false_block = false_block
+    }
+    self.current_block.append_instruction(ir.new_br_instruction(condition: condition, true_block: true_block, false_block: branch_false_block).as(^ir.Instruction))
+    self.current_procedure.append_block(true_block)
+    self.current_block = true_block
+    self.lower_statement(if_statement.true_block)
+    if not self.current_block.is_terminated() {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+    }
+    if false_block != null {
+        self.current_procedure.append_block(false_block)
+        self.current_block = false_block
+        self.lower_statement(if_statement.false_statement)
+        if not self.current_block.is_terminated() {
+            self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+        }
+    }
+    self.current_procedure.append_block(end_block)
+    self.current_block = end_block
+}
+
 proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Variable_Statement) {
     let pointee_type = self.lower_type(variable_statement.symbol.type)
     let variable = self.declare_variable(symbol: variable_statement.symbol.as(^checked.Symbol), type: pointee_type)
@@ -189,6 +220,19 @@ proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Vari
 proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.Value {
     if expression.kind == .Add {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Add)
+    } else if expression.kind == .Bool {
+        let bool_expression = expression.as(^checked.Bool_Expression)
+        let value = 0u64
+        if bool_expression.value {
+            value = 1u64
+        }
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(bool_expression.type)
+            value: value
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
     } else if expression.kind == .Call {
         let call_expression = expression.as(^checked.Call_Expression)
 
@@ -228,7 +272,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         let const_instruction = ir.new_const_instruction(
             name: self.fresh_name()
             type: self.lower_type(integer_expression.type)
-            literal: integer_expression.token
+            value: integer_expression.token.value
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
@@ -322,6 +366,11 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
         return ir.new_primitive_type(name: type.as(^checked.Builtin_Type).name).as(^ir.Type)
     }
     panic "Lowering not supported yet: type"
+}
+
+proc (^Lowerer).create_block(self) -> ^ir.Block {
+    self.block_counter = self.block_counter + 1
+    return ir.new_block(label: self.block_counter)
 }
 
 proc (^Lowerer).fresh_name(self) -> str {

@@ -9,6 +9,7 @@ type Checker = struct {
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
     return_type: ^checked.Type
+    bool_type: ^checked.Type
     null_type: ^checked.Type
     current_location: source.Source_Location
 }
@@ -19,11 +20,13 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         global_symbols: null
         current_scope: null
         return_type: null
+        bool_type: null
         null_type: checked.new_null_type()
         current_location: source.Source_Location(source: builtin_package.first_module.source, line: 0, column: 0)
     )
 
     checker.check_builtin_package(builtin_package)
+    checker.bool_type = checker.find_builtin_type("bool")
 
     return checker.check_package(main_package)
 }
@@ -163,6 +166,8 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
         return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
     } else if parsed_statement.kind == .Expression {
         return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
+    } else if parsed_statement.kind == .If {
+        return self.check_if_statement(parsed_statement.as(^parsed.If_Statement))
     } else if parsed_statement.kind == .Return {
         return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
     } else if parsed_statement.kind == .Variable {
@@ -205,6 +210,20 @@ proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.E
     self.current_location = expression_statement.location
     let expression = self.check_expression(expression_statement.expression, expected_type: null)
     return checked.new_expression_statement(expression).as(^checked.Statement)
+}
+
+proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> ^checked.Statement {
+    self.current_location = if_statement.location
+    let scope = checked.new_symbols(self.current_scope)
+    self.current_scope = scope
+    let condition = self.check_expression(if_statement.condition, expected_type: self.bool_type)
+    let true_block = self.check_statement(if_statement.true_block)
+    self.current_scope = scope.parent
+    let false_statement: ^checked.Statement = null
+    if if_statement.false_statement != null {
+        false_statement = self.check_statement(if_statement.false_statement)
+    }
+    return checked.new_if_statement(condition: condition, true_block: true_block, false_statement: false_statement).as(^checked.Statement)
 }
 
 proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_Statement) -> ^checked.Statement {
@@ -251,6 +270,8 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
     if parsed_expression.kind == .Add {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
+    } else if parsed_expression.kind == .Bool {
+        return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
     } else if parsed_expression.kind == .Call {
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
     } else if parsed_expression.kind == .Divide {
@@ -276,6 +297,11 @@ proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_
     let left = self.check_expression(binary_expression.left, expected_type: expected_type)
     let right = self.check_expression(binary_expression.right, expected_type: left.type)
     return checked.new_binary_expression(kind: kind, left: left, right: right, type: left.type).as(^checked.Expression)
+}
+
+proc (^Checker).check_bool_expression(self, bool_expression: ^parsed.Bool_Expression) -> ^checked.Expression {
+    self.current_location = bool_expression.location
+    return checked.new_bool_expression(value: bool_expression.value, type: self.bool_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
@@ -379,6 +405,16 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
         self.error(message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).find_builtin_type(self, name: str) -> ^checked.Type {
+    let symbol = self.builtin_symbols.find(name)
+    if symbol != null {
+        if symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+    }
+    return null
 }
 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {

@@ -1,13 +1,14 @@
 import allocator
-import compiler.lexer
 import string
 
 type Instruction_Kind = enum {
     Add
     Alloc
+    Br
     Call
     Const
     Divide
+    Jmp
     Load
     Modulo
     Multiply
@@ -29,6 +30,14 @@ proc (^Block).append_instruction(self, instruction: ^Instruction) {
         self.last_instruction.next_instruction = instruction
     }
     self.last_instruction = instruction
+}
+
+proc (^Block).is_terminated(self) -> bool {
+    if self.last_instruction == null {
+        return false
+    }
+    let kind = self.last_instruction.kind
+    return kind == .Br or kind == .Jmp or kind == .Ret
 }
 
 type Argument = struct {
@@ -82,6 +91,28 @@ proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left
     return allocated
 }
 
+type Br_Instruction = struct {
+    super: Instruction
+    condition: ^Value
+    true_block: ^Block
+    false_block: ^Block
+}
+
+proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Block) -> ^Br_Instruction {
+    let allocated = allocator.alloc(size: type_size(Br_Instruction), alignment: type_alignment(Br_Instruction)).as(^Br_Instruction)
+    allocated.^ = Br_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Br
+            next_instruction: null
+        )
+        condition: condition
+        true_block: true_block
+        false_block: false_block
+    )
+    return allocated
+}
+
 type Call_Instruction = struct {
     super: Instruction
     callee: ^Procedure
@@ -104,10 +135,10 @@ proc new_call_instruction(name: str, type: ^Type, callee: ^Procedure) -> ^Call_I
 
 type Const_Instruction = struct {
     super: Instruction
-    literal: ^lexer.Integer
+    value: u64
 }
 
-proc new_const_instruction(name: str, type: ^Type, literal: ^lexer.Integer) -> ^Const_Instruction {
+proc new_const_instruction(name: str, type: ^Type, value: u64) -> ^Const_Instruction {
     let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
     allocated.^ = Const_Instruction(
         super: Instruction(
@@ -115,7 +146,25 @@ proc new_const_instruction(name: str, type: ^Type, literal: ^lexer.Integer) -> ^
             kind: .Const
             next_instruction: null
         )
-        literal: literal
+        value: value
+    )
+    return allocated
+}
+
+type Jmp_Instruction = struct {
+    super: Instruction
+    block: ^Block
+}
+
+proc new_jmp_instruction(block: ^Block) -> ^Jmp_Instruction {
+    let allocated = allocator.alloc(size: type_size(Jmp_Instruction), alignment: type_alignment(Jmp_Instruction)).as(^Jmp_Instruction)
+    allocated.^ = Jmp_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Jmp
+            next_instruction: null
+        )
+        block: block
     )
     return allocated
 }

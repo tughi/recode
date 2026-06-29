@@ -4,6 +4,7 @@ type Statement_Kind = enum {
     Assignment
     Block
     Expression
+    If
     Return
     Variable
 }
@@ -53,6 +54,24 @@ proc new_expression_statement(expression: ^Expression) -> ^Expression_Statement 
     result.^ = Expression_Statement(
         super: Statement(kind: .Expression, next: null)
         expression: expression
+    )
+    return result
+}
+
+type If_Statement = struct {
+    super: Statement
+    condition: ^Expression
+    true_block: ^Statement
+    false_statement: ^Statement
+}
+
+proc new_if_statement(condition: ^Expression, true_block: ^Statement, false_statement: ^Statement) -> ^If_Statement {
+    let result = allocator.alloc(size: type_size(If_Statement), alignment: type_alignment(If_Statement)).as(^If_Statement)
+    result.^ = If_Statement(
+        super: Statement(kind: .If, next: null)
+        condition: condition
+        true_block: true_block
+        false_statement: false_statement
     )
     return result
 }
