@@ -88,6 +88,7 @@ proc new_block(label: usize) -> ^Block {
 
 type Type_Kind = enum {
     Nothing
+    Pointer
     Primitive
 }
 
@@ -113,6 +114,17 @@ type Primitive_Type = struct {
 proc new_primitive_type(name: str) -> ^Primitive_Type {
     let result = allocator.alloc(size: type_size(Primitive_Type), alignment: type_alignment(Primitive_Type)).as(^Primitive_Type)
     result.^ = Primitive_Type(super: Type(kind: .Primitive), name: name)
+    return result
+}
+
+type Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
+    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
+    result.^ = Pointer_Type(super: Type(kind: .Pointer), pointee: pointee)
     return result
 }
 

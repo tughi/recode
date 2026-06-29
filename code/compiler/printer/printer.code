@@ -56,6 +56,11 @@ proc print_block(block: ^ir.Block, file: ^libc.FILE) {
 proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
     if instruction.kind == .Add {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "add", file: file)
+    } else if instruction.kind == .Alloc {
+        let alloc_instruction = instruction.as(^ir.Alloc_Instruction)
+        print_value_definition(^alloc_instruction.result, file: file)
+        file.write(" = alloc ")
+        print_type(alloc_instruction.type, file: file)
     } else if instruction.kind == .Call {
         let call_instruction = instruction.as(^ir.Call_Instruction)
         if call_instruction.result.type.kind != .Nothing {
@@ -86,6 +91,12 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
             file.write_char(char: ' ')
             print_value_reference(ret_instruction.value, file: file)
         }
+    } else if instruction.kind == .Store {
+        let store_instruction = instruction.as(^ir.Store_Instruction)
+        file.write("store ")
+        print_value_reference(store_instruction.pointer, file: file)
+        file.write_char(char: ' ')
+        print_value_reference(store_instruction.value, file: file)
     } else if instruction.kind == .Subtract {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "sub", file: file)
     }
@@ -112,6 +123,10 @@ proc print_value_reference(value: ^ir.Value, file: ^libc.FILE) {
 proc print_type(type: ^ir.Type, file: ^libc.FILE) {
     if type.kind == .Nothing {
         panic
+    } else if type.kind == .Pointer {
+        file.write_char(char: '[')
+        print_type(type.as(^ir.Pointer_Type).pointee, file: file)
+        file.write_char(char: ']')
     } else if type.kind == .Primitive {
         file.write(type.as(^ir.Primitive_Type).name)
     }

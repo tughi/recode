@@ -180,6 +180,8 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
         return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
     } else if parsed_statement.kind == .Return {
         return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
+    } else if parsed_statement.kind == .Variable {
+        return self.check_variable_statement(parsed_statement.as(^parsed.Variable_Statement))
     }
     panic "Not supported yet: statement"
 }
@@ -199,6 +201,32 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
         self.error("Missing return expression")
     }
     return checked.new_return_statement(expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Variable_Statement) -> ^checked.Statement {
+    self.current_location = variable_statement.location
+
+    let variable_type: ^checked.Type = null
+    if variable_statement.variable_type != null {
+        variable_type = self.resolve_type(variable_statement.variable_type)
+    }
+
+    let expression: ^checked.Expression = null
+    if variable_statement.expression != null {
+        expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
+        if variable_type == null {
+            variable_type = expression.type
+        }
+    }
+
+    if variable_type == null {
+        self.error("Missing type")
+    }
+
+    let name = variable_statement.name.lexeme
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type)
+    self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
+    return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }
 
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {

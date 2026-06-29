@@ -4,6 +4,7 @@ type Symbol_Kind = enum {
     Parameter
     Procedure
     Type
+    Variable
 }
 
 type Symbol = struct {
@@ -51,6 +52,20 @@ proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Sta
         super: Symbol(kind: .Procedure, name: name)
         procedure_type: procedure_type
         body: body
+    )
+    return result
+}
+
+type Variable_Symbol = struct {
+    super: Symbol
+    type: ^Type
+}
+
+proc new_variable_symbol(name: str, type: ^Type) -> ^Variable_Symbol {
+    let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
+    result.^ = Variable_Symbol(
+        super: Symbol(kind: .Variable, name: name)
+        type: type
     )
     return result
 }

@@ -4,6 +4,7 @@ type Statement_Kind = enum {
     Block
     Expression
     Return
+    Variable
 }
 
 type Statement = struct {
@@ -48,6 +49,22 @@ proc new_return_statement(expression: ^Expression) -> ^Return_Statement {
     let result = allocator.alloc(size: type_size(Return_Statement), alignment: type_alignment(Return_Statement)).as(^Return_Statement)
     result.^ = Return_Statement(
         super: Statement(kind: .Return, next: null)
+        expression: expression
+    )
+    return result
+}
+
+type Variable_Statement = struct {
+    super: Statement
+    symbol: ^Variable_Symbol
+    expression: ^Expression
+}
+
+proc new_variable_statement(symbol: ^Variable_Symbol, expression: ^Expression) -> ^Variable_Statement {
+    let result = allocator.alloc(size: type_size(Variable_Statement), alignment: type_alignment(Variable_Statement)).as(^Variable_Statement)
+    result.^ = Variable_Statement(
+        super: Statement(kind: .Variable, next: null)
+        symbol: symbol
         expression: expression
     )
     return result

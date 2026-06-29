@@ -134,6 +134,23 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
             value = self.lower_expression(return_statement.expression)
         }
         self.current_block.append_instruction(ir.new_ret_instruction(value: value).as(^ir.Instruction))
+    } else if statement.kind == .Variable {
+        self.lower_variable_statement(statement.as(^checked.Variable_Statement))
+    }
+}
+
+proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Variable_Statement) {
+    let pointee_type = self.lower_type(variable_statement.symbol.type)
+    let name_builder = string.new_builder()
+    let pointer_name = name_builder.append(variable_statement.symbol.name).append(".ptr").build()
+    let alloc_instruction = ir.new_alloc_instruction(
+        result: ir.Value(name: pointer_name, type: ir.new_pointer_type(pointee_type).as(^ir.Type))
+        type: pointee_type
+    )
+    self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
+    if variable_statement.expression != null {
+        let value = self.lower_expression(variable_statement.expression)
+        self.current_block.append_instruction(ir.new_store_instruction(pointer: ^alloc_instruction.result, value: value).as(^ir.Instruction))
     }
 }
 

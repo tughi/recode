@@ -3,12 +3,14 @@ import compiler.lexer
 
 type Instruction_Kind = enum {
     Add
+    Alloc
     Call
     Const
     Divide
     Modulo
     Multiply
     Ret
+    Store
     Subtract
 }
 
@@ -35,6 +37,18 @@ proc new_argument(value: ^Value) -> ^Argument {
     let result = allocator.alloc(size: type_size(Argument), alignment: type_alignment(Argument)).as(^Argument)
     result.^ = Argument(value: value, next: null)
     return result
+}
+
+type Alloc_Instruction = struct {
+    super: Instruction
+    result: Value
+    type: ^Type
+}
+
+proc new_alloc_instruction(result: Value, type: ^Type) -> ^Alloc_Instruction {
+    let allocated = allocator.alloc(size: type_size(Alloc_Instruction), alignment: type_alignment(Alloc_Instruction)).as(^Alloc_Instruction)
+    allocated.^ = Alloc_Instruction(super: Instruction(kind: .Alloc, next: null), result: result, type: type)
+    return allocated
 }
 
 type Binary_Instruction = struct {
@@ -83,5 +97,17 @@ type Ret_Instruction = struct {
 proc new_ret_instruction(value: ^Value) -> ^Ret_Instruction {
     let allocated = allocator.alloc(size: type_size(Ret_Instruction), alignment: type_alignment(Ret_Instruction)).as(^Ret_Instruction)
     allocated.^ = Ret_Instruction(super: Instruction(kind: .Ret, next: null), value: value)
+    return allocated
+}
+
+type Store_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    value: ^Value
+}
+
+proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction {
+    let allocated = allocator.alloc(size: type_size(Store_Instruction), alignment: type_alignment(Store_Instruction)).as(^Store_Instruction)
+    allocated.^ = Store_Instruction(super: Instruction(kind: .Store, next: null), pointer: pointer, value: value)
     return allocated
 }
