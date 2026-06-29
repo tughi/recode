@@ -77,6 +77,21 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
         self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "mod")
     } else if instruction.kind == .Multiply {
         self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "mul")
+    } else if instruction.kind == .Not {
+        let not_instruction = instruction.as(^ir.Not_Instruction)
+        self.write_value_definition(not_instruction.as(^ir.Value))
+        self.write(" = not ")
+        self.write_value_reference(not_instruction.operand)
+    } else if instruction.kind == .Phi {
+        let phi_instruction = instruction.as(^ir.Phi_Instruction)
+        self.write_value_definition(phi_instruction.as(^ir.Value))
+        self.write(" = phi")
+        let entry = phi_instruction.first_entry
+        while entry != null {
+            self.write(" @").write_u64(value: entry.block.label.as(u64)).write_char(char: ' ')
+            self.write_value_reference(entry.value)
+            entry = entry.next
+        }
     } else if instruction.kind == .Ret {
         let ret_instruction = instruction.as(^ir.Ret_Instruction)
         self.write("ret")

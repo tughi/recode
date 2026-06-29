@@ -12,6 +12,8 @@ type Instruction_Kind = enum {
     Load
     Modulo
     Multiply
+    Not
+    Phi
     Ret
     Store
     Subtract
@@ -185,6 +187,66 @@ proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Inst
         pointer: pointer
     )
     return allocated
+}
+
+type Not_Instruction = struct {
+    super: Instruction
+    operand: ^Value
+}
+
+proc new_not_instruction(name: str, type: ^Type, operand: ^Value) -> ^Not_Instruction {
+    let allocated = allocator.alloc(size: type_size(Not_Instruction), alignment: type_alignment(Not_Instruction)).as(^Not_Instruction)
+    allocated.^ = Not_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Not
+            next_instruction: null
+        )
+        operand: operand
+    )
+    return allocated
+}
+
+type Phi_Entry = struct {
+    block: ^Block
+    value: ^Value
+    next: ^Phi_Entry
+}
+
+proc new_phi_entry(block: ^Block, value: ^Value) -> ^Phi_Entry {
+    let result = allocator.alloc(size: type_size(Phi_Entry), alignment: type_alignment(Phi_Entry)).as(^Phi_Entry)
+    result.^ = Phi_Entry(block: block, value: value, next: null)
+    return result
+}
+
+type Phi_Instruction = struct {
+    super: Instruction
+    first_entry: ^Phi_Entry
+    last_entry: ^Phi_Entry
+}
+
+proc new_phi_instruction(name: str, type: ^Type) -> ^Phi_Instruction {
+    let allocated = allocator.alloc(size: type_size(Phi_Instruction), alignment: type_alignment(Phi_Instruction)).as(^Phi_Instruction)
+    allocated.^ = Phi_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Phi
+            next_instruction: null
+        )
+        first_entry: null
+        last_entry: null
+    )
+    return allocated
+}
+
+proc (^Phi_Instruction).append_entry(self, block: ^Block, value: ^Value) {
+    let entry = new_phi_entry(block: block, value: value)
+    if self.first_entry == null {
+        self.first_entry = entry
+    } else {
+        self.last_entry.next = entry
+    }
+    self.last_entry = entry
 }
 
 type Ret_Instruction = struct {

@@ -280,10 +280,16 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
     } else if parsed_expression.kind == .Integer {
         return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Logic_And {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_And, expected_type: self.bool_type)
+    } else if parsed_expression.kind == .Logic_Or {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_Or, expected_type: self.bool_type)
     } else if parsed_expression.kind == .Modulo {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Modulo, expected_type: expected_type)
     } else if parsed_expression.kind == .Multiply {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
+    } else if parsed_expression.kind == .Not {
+        return self.check_not_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Null {
         return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
     } else if parsed_expression.kind == .Subtract {
@@ -387,6 +393,12 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
         self.error("Cannot infer type of integer literal")
     }
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_not_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    self.current_location = unary_expression.location
+    let operand = self.check_expression(unary_expression.operand, expected_type: self.bool_type)
+    return checked.new_not_expression(operand: operand, type: operand.type).as(^checked.Expression)
 }
 
 proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expression, expected_type: ^checked.Type) -> ^checked.Expression {

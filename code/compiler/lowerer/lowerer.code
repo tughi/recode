@@ -276,10 +276,16 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
+    } else if expression.kind == .Logic_And {
+        return self.lower_logic_expression(expression.as(^checked.Binary_Expression))
+    } else if expression.kind == .Logic_Or {
+        return self.lower_logic_expression(expression.as(^checked.Binary_Expression))
     } else if expression.kind == .Modulo {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Modulo)
     } else if expression.kind == .Multiply {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Multiply)
+    } else if expression.kind == .Not {
+        return self.lower_not_expression(expression.as(^checked.Not_Expression))
     } else if expression.kind == .Subtract {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     } else if expression.kind == .Symbol {
@@ -316,6 +322,43 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
     )
     self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
     return binary_instruction.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_logic_expression(self, binary_expression: ^checked.Binary_Expression) -> ^ir.Value {
+    let left = self.lower_expression(binary_expression.left)
+    let left_block = self.current_block
+    let right_block = self.create_block()
+    let end_block = self.create_block()
+    let branch: ^ir.Br_Instruction = null
+    if binary_expression.kind == .Logic_And {
+        branch = ir.new_br_instruction(condition: left, true_block: right_block, false_block: end_block)
+    } else {
+        branch = ir.new_br_instruction(condition: left, true_block: end_block, false_block: right_block)
+    }
+    self.current_block.append_instruction(branch.as(^ir.Instruction))
+    self.current_procedure.append_block(right_block)
+    self.current_block = right_block
+    let right = self.lower_expression(binary_expression.right)
+    let right_end_block = self.current_block
+    self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+    self.current_procedure.append_block(end_block)
+    self.current_block = end_block
+    let phi = ir.new_phi_instruction(name: self.fresh_name(), type: self.lower_type(binary_expression.type))
+    phi.append_entry(block: left_block, value: left)
+    phi.append_entry(block: right_end_block, value: right)
+    self.current_block.append_instruction(phi.as(^ir.Instruction))
+    return phi.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_not_expression(self, not_expression: ^checked.Not_Expression) -> ^ir.Value {
+    let operand = self.lower_expression(not_expression.operand)
+    let not_instruction = ir.new_not_instruction(
+        name: self.fresh_name()
+        type: self.lower_type(not_expression.type)
+        operand: operand
+    )
+    self.current_block.append_instruction(not_instruction.as(^ir.Instruction))
+    return not_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).push_scope(self, value: ^ir.Value) {

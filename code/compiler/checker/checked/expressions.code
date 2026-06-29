@@ -7,8 +7,11 @@ type Expression_Kind = enum {
     Call
     Divide
     Integer
+    Logic_And
+    Logic_Or
     Modulo
     Multiply
+    Not
     Null
     Subtract
     Symbol
@@ -93,6 +96,20 @@ proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expr
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
+    )
+    return result
+}
+
+type Not_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_not_expression(operand: ^Expression, type: ^Type) -> ^Not_Expression {
+    let result = allocator.alloc(size: type_size(Not_Expression), alignment: type_alignment(Not_Expression)).as(^Not_Expression)
+    result.^ = Not_Expression(
+        super: Expression(kind: .Not, type: type)
+        operand: operand
     )
     return result
 }
