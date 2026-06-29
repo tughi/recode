@@ -2,14 +2,25 @@ import allocator
 import compiler.checker.checked
 
 type Program = struct {
+    first_global: ^Global
+    last_global: ^Global
     first_procedure: ^Procedure
     last_procedure: ^Procedure
 }
 
 proc new_program() -> ^Program {
     let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
-    result.^ = Program(first_procedure: null, last_procedure: null)
+    result.^ = Program(first_global: null, last_global: null, first_procedure: null, last_procedure: null)
     return result
+}
+
+proc (^Program).append_global(self, global: ^Global) {
+    if self.first_global == null {
+        self.first_global = global
+    } else {
+        self.last_global.next_global = global
+    }
+    self.last_global = global
 }
 
 proc (^Program).append_procedure(self, procedure: ^Procedure) {
@@ -91,6 +102,7 @@ type Type_Kind = enum {
     Nothing
     Pointer
     Primitive
+    Procedure
 }
 
 type Type = struct {
@@ -129,6 +141,40 @@ proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
     return result
 }
 
+type Procedure_Type_Parameter = struct {
+    type: ^Type
+    next: ^Procedure_Type_Parameter
+}
+
+proc new_procedure_type_parameter(type: ^Type) -> ^Procedure_Type_Parameter {
+    let result = allocator.alloc(size: type_size(Procedure_Type_Parameter), alignment: type_alignment(Procedure_Type_Parameter)).as(^Procedure_Type_Parameter)
+    result.^ = Procedure_Type_Parameter(type: type, next: null)
+    return result
+}
+
+type Procedure_Type = struct {
+    super: Type
+    first_parameter: ^Procedure_Type_Parameter
+    last_parameter: ^Procedure_Type_Parameter
+    return_type: ^Type
+}
+
+proc new_procedure_type(return_type: ^Type) -> ^Procedure_Type {
+    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
+    result.^ = Procedure_Type(super: Type(kind: .Procedure), first_parameter: null, last_parameter: null, return_type: return_type)
+    return result
+}
+
+proc (^Procedure_Type).append_parameter(self, type: ^Type) {
+    let parameter = new_procedure_type_parameter(type)
+    if self.first_parameter == null {
+        self.first_parameter = parameter
+    } else {
+        self.last_parameter.next = parameter
+    }
+    self.last_parameter = parameter
+}
+
 type Value_Kind = enum {
     Global
     Instruction_Result
@@ -152,6 +198,22 @@ proc new_value(kind: Value_Kind, name: str, type: ^Type) -> ^Value {
 
 type Symbol = struct {
     super: Value
+}
+
+type Global = struct {
+    super: Symbol
+    is_external: bool
+    next_global: ^Global
+}
+
+proc new_external_global(name: str, type: ^Type) -> ^Global {
+    let result = allocator.alloc(size: type_size(Global), alignment: type_alignment(Global)).as(^Global)
+    result.^ = Global(
+        super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
+        is_external: true
+        next_global: null
+    )
+    return result
 }
 
 type Variable = struct {

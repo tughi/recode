@@ -70,6 +70,10 @@ proc (^Lowerer).qualified_name(self, name: str) -> str {
 }
 
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
+    if procedure_symbol.is_external {
+        self.declare_external_procedure(procedure_symbol)
+        return
+    }
     let procedure = ir.new_procedure(
         name: self.qualified_name(procedure_symbol.name)
         return_type: self.lower_type(procedure_symbol.procedure_type.return_type)
@@ -80,6 +84,18 @@ proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Sym
         parameter = parameter.next
     }
     self.program.append_procedure(procedure)
+}
+
+proc (^Lowerer).declare_external_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
+    let procedure_type = ir.new_procedure_type(return_type: self.lower_type(procedure_symbol.procedure_type.return_type))
+    let parameter = procedure_symbol.procedure_type.first_parameter
+    while parameter != null {
+        procedure_type.append_parameter(self.lower_type(parameter.parameter_type))
+        parameter = parameter.next
+    }
+    let pointer_type = ir.new_pointer_type(procedure_type.as(^ir.Type)).as(^ir.Type)
+    let global = ir.new_external_global(name: procedure_symbol.name, type: pointer_type)
+    self.program.append_global(global)
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
@@ -124,7 +140,7 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
     let call_instruction = ir.new_call_instruction(
         name: self.fresh_name()
         type: main_procedure.return_type
-        callee: main_procedure
+        callee_name: main_procedure.name
     )
     self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
 
@@ -251,7 +267,10 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             checked_argument = checked_argument.next
         }
 
-        let callee = self.program.find_procedure(self.qualified_name(call_expression.callee.name))
+        let callee_name = self.qualified_name(call_expression.callee.name)
+        if call_expression.callee.is_external {
+            callee_name = call_expression.callee.name
+        }
         let result_type = self.lower_type(expression.type)
         let result_name = ""
         if result_type.kind != .Nothing {
@@ -260,7 +279,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         let call_instruction = ir.new_call_instruction(
             name: result_name
             type: result_type
-            callee: callee
+            callee_name: callee_name
         )
         call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))

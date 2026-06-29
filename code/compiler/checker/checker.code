@@ -129,7 +129,7 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     }
 
     let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: null).as(^checked.Symbol)
+    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: null, is_external: procedure_statement.is_external).as(^checked.Symbol)
     self.global_symbols.append(name: name, symbol: symbol)
 }
 

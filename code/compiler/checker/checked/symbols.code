@@ -44,14 +44,16 @@ type Procedure_Symbol = struct {
     super: Symbol
     procedure_type: ^Procedure_Type
     body: ^Statement
+    is_external: bool
 }
 
-proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Statement) -> ^Procedure_Symbol {
+proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Statement, is_external: bool) -> ^Procedure_Symbol {
     let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
     result.^ = Procedure_Symbol(
         super: Symbol(kind: .Procedure, name: name)
         procedure_type: procedure_type
         body: body
+        is_external: is_external
     )
     return result
 }
