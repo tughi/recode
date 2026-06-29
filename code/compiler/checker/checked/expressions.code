@@ -4,6 +4,7 @@ import compiler.lexer
 type Expression_Kind = enum {
     Call
     Integer
+    Symbol
 }
 
 type Expression = struct {
@@ -11,16 +12,29 @@ type Expression = struct {
     type: ^Type
 }
 
+type Call_Argument = struct {
+    expression: ^Expression
+    next: ^Call_Argument
+}
+
+proc new_call_argument(expression: ^Expression) -> ^Call_Argument {
+    let result = allocator.alloc(size: type_size(Call_Argument), alignment: type_alignment(Call_Argument)).as(^Call_Argument)
+    result.^ = Call_Argument(expression: expression, next: null)
+    return result
+}
+
 type Call_Expression = struct {
     super: Expression
     callee: ^Procedure_Symbol
+    first_argument: ^Call_Argument
 }
 
-proc new_call_expression(callee: ^Procedure_Symbol, type: ^Type) -> ^Call_Expression {
+proc new_call_expression(callee: ^Procedure_Symbol, type: ^Type, first_argument: ^Call_Argument) -> ^Call_Expression {
     let result = allocator.alloc(size: type_size(Call_Expression), alignment: type_alignment(Call_Expression)).as(^Call_Expression)
     result.^ = Call_Expression(
         super: Expression(kind: .Call, type: type)
         callee: callee
+        first_argument: first_argument
     )
     return result
 }
@@ -35,6 +49,20 @@ proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expr
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
+    )
+    return result
+}
+
+type Symbol_Expression = struct {
+    super: Expression
+    symbol: ^Symbol
+}
+
+proc new_symbol_expression(symbol: ^Symbol, type: ^Type) -> ^Symbol_Expression {
+    let result = allocator.alloc(size: type_size(Symbol_Expression), alignment: type_alignment(Symbol_Expression)).as(^Symbol_Expression)
+    result.^ = Symbol_Expression(
+        super: Expression(kind: .Symbol, type: type)
+        symbol: symbol
     )
     return result
 }

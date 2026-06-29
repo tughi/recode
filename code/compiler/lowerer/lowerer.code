@@ -5,6 +5,7 @@ import string
 type Lowerer = struct {
     program: ^ir.Program
     package_name: str
+    current_procedure: ^ir.Procedure
     current_block: ^ir.Block
     next_value_id: usize
 }
@@ -13,6 +14,7 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
     let lowerer = Lowerer(
         program: ir.new_program()
         package_name: checked_package.name
+        current_procedure: null
         current_block: null
         next_value_id: 0
     )
@@ -56,11 +58,17 @@ proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Sym
         name: self.qualified_name(procedure_symbol.name)
         return_type: self.lower_type(procedure_symbol.procedure_type.return_type)
     )
+    let parameter = procedure_symbol.procedure_type.first_parameter
+    while parameter != null {
+        procedure.append_parameter(ir.new_value(name: parameter.name, type: self.lower_type(parameter.parameter_type)))
+        parameter = parameter.next
+    }
     self.program.append_procedure(procedure)
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
     let procedure = self.program.find_procedure(self.qualified_name(procedure_symbol.name))
+    self.current_procedure = procedure
 
     if procedure_symbol.body == null {
         return procedure
@@ -72,6 +80,16 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     self.current_block = block
 
     self.lower_statement(procedure_symbol.body)
+
+    let terminated = false
+    if self.current_block.last_instruction != null {
+        if self.current_block.last_instruction.kind == .Ret {
+            terminated = true
+        }
+    }
+    if not terminated {
+        self.current_block.append_instruction(ir.new_ret_instruction(value: null).as(^ir.Instruction))
+    }
 
     return procedure
 }
@@ -106,6 +124,9 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
             self.lower_statement(item)
             item = item.next
         }
+    } else if statement.kind == .Expression {
+        let expression_statement = statement.as(^checked.Expression_Statement)
+        self.lower_expression(expression_statement.expression)
     } else if statement.kind == .Return {
         let return_statement = statement.as(^checked.Return_Statement)
         let value: ^ir.Value = null
@@ -119,11 +140,33 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
 proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.Value {
     if expression.kind == .Call {
         let call_expression = expression.as(^checked.Call_Expression)
+
+        let first_argument: ^ir.Argument = null
+        let last_argument: ^ir.Argument = null
+        let checked_argument = call_expression.first_argument
+        while checked_argument != null {
+            let argument_value = self.lower_expression(checked_argument.expression)
+            let argument = ir.new_argument(argument_value)
+            if last_argument == null {
+                first_argument = argument
+            } else {
+                last_argument.next = argument
+            }
+            last_argument = argument
+            checked_argument = checked_argument.next
+        }
+
         let callee = self.program.find_procedure(self.qualified_name(call_expression.callee.name))
+        let result_type = self.lower_type(expression.type)
+        let result_name = ""
+        if result_type.kind != .Nothing {
+            result_name = self.fresh_name()
+        }
         let call_instruction = ir.new_call_instruction(
-            result: ir.Value(name: self.fresh_name(), type: self.lower_type(expression.type))
+            result: ir.Value(name: result_name, type: result_type)
             callee: callee
         )
+        call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
         return ^call_instruction.result
     } else if expression.kind == .Integer {
@@ -134,8 +177,22 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return ^const_instruction.result
+    } else if expression.kind == .Symbol {
+        let symbol_expression = expression.as(^checked.Symbol_Expression)
+        return self.find_parameter(symbol_expression.symbol.name)
     }
     panic "Lowering not supported yet: expression"
+}
+
+proc (^Lowerer).find_parameter(self, name: str) -> ^ir.Value {
+    let parameter = self.current_procedure.first_parameter
+    while parameter != null {
+        if parameter.name.equals(name) {
+            return parameter
+        }
+        parameter = parameter.next
+    }
+    panic "Lowering: parameter not found"
 }
 
 proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {

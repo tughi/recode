@@ -176,18 +176,18 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement {
     self.consume_other('(')
     let first_parameter = self.parse_procedure_parameters(receiver: receiver)
     self.consume_other(')')
-    self.consume_space(1)
     let return_type: ^parsed.Type = null
-    if self.lexer.matches_two(match.other('-'), match.other('>')) {
+    if self.lexer.matches_two(match.optional_space, match.other('-')) {
+        self.consume_space(1)
         self.consume_two_other('-', '>')
         self.consume_space(1)
         return_type = self.parse_type()
-        self.consume_space(1)
     }
     let is_external = false
     let external_name: ^lexer.String = null
     let body: ^parsed.Statement = null
-    if self.lexer.matches_one(match.other('=')) {
+    if self.lexer.matches_two(match.optional_space, match.other('=')) {
+        self.consume_space(1)
         self.consume_other('=')
         self.consume_space(1)
         self.consume_keyword("external")
@@ -196,7 +196,10 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement {
             self.consume_space(1)
             external_name = self.consume_string()
         }
+    } else if not self.lexer.matches_two(match.optional_space, match.other('{')) {
+        self.error(self.lexer.peek_token(1).location, "Missing procedure body")
     } else {
+        self.consume_space(1)
         body = self.parse_block_statement()
     }
     return parsed.new_procedure_statement(
@@ -706,11 +709,18 @@ proc (^Parser).parse_call_arguments(self) -> ^parsed.Call_Argument {
         if self.lexer.matches_two(match.optional_space, match.comment) or self.lexer.matches_two(match.optional_space, match.end_of_line) {
             self.consume_end_of_line()
             if not multiline {
+                self.warning(first_argument.expression.location, "Multi-line argument list must start on a new line")
                 multiline = true
                 self.increase_alignment()
             }
             while self.lexer.matches_two(match.optional_space, match.comment) or self.lexer.matches_two(match.optional_space, match.end_of_line) {
                 self.consume_empty_line(self.alignment)
+            }
+        } else if multiline {
+            if self.lexer.matches_two(match.optional_space, match.other(')')) {
+                self.warning(self.lexer.peek_token(1).location, "Multi-line argument list must end on a new line")
+                multiline = false
+                self.decrease_alignment()
             }
         }
     }
@@ -986,9 +996,11 @@ proc (^Parser).consume_comment(self) -> ^lexer.Comment {
 }
 
 proc (^Parser).consume_empty_line(self, alignment: i32) {
-    self.consume_space(alignment)
-    if self.lexer.matches_one(match.comment) {
+    if self.lexer.matches_two(match.optional_space, match.comment) {
+        self.consume_space(alignment)
         self.consume_comment()
+    } else {
+        self.consume_space(0)
     }
     self.consume_end_of_line()
 }
@@ -1057,7 +1069,27 @@ proc (^Parser).consume_space(self, count: i32) -> ^lexer.Space {
     let token = self.lexer.peek_token(1)
     if token.kind == .Space {
         self.lexer.advance()
-        return token.as(^lexer.Space)
+        let space = token.as(^lexer.Space)
+        if space.count != count {
+            let message = string.new_builder()
+            message.append("Consumed ").append_decimal(space.count.as(usize)).append(" spaces where ").append_decimal(count.as(usize)).append(" were expected")
+            self.warning(self.lexer.peek_token(1).location, message.build())
+        }
+        return space
+    }
+    if count > 0 {
+        let message = string.new_builder()
+        message.append("Consumed 0 spaces where ").append_decimal(count.as(usize)).append(" were expected")
+        self.warning(token.location, message.build())
     }
     return lexer.new_space(lexeme: "", location: token.location, count: 0)
+}
+
+proc (^Parser).warning(self, location: source.Source_Location, message: str) {
+    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
+}
+
+proc (^Parser).error(self, location: source.Source_Location, message: str) {
+    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
+    panic
 }

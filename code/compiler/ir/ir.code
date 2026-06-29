@@ -33,6 +33,8 @@ proc (^Program).find_procedure(self, name: str) -> ^Procedure {
 
 type Procedure = struct {
     name: str
+    first_parameter: ^Value
+    last_parameter: ^Value
     return_type: ^Type
     first_block: ^Block
     last_block: ^Block
@@ -41,8 +43,25 @@ type Procedure = struct {
 
 proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
     let result = allocator.alloc(size: type_size(Procedure), alignment: type_alignment(Procedure)).as(^Procedure)
-    result.^ = Procedure(name: name, return_type: return_type, first_block: null, last_block: null, next: null)
+    result.^ = Procedure(
+        name: name
+        first_parameter: null
+        last_parameter: null
+        return_type: return_type
+        first_block: null
+        last_block: null
+        next: null
+    )
     return result
+}
+
+proc (^Procedure).append_parameter(self, value: ^Value) {
+    if self.first_parameter == null {
+        self.first_parameter = value
+    } else {
+        self.last_parameter.next = value
+    }
+    self.last_parameter = value
 }
 
 proc (^Procedure).append_block(self, block: ^Block) {
@@ -100,4 +119,11 @@ proc new_primitive_type(name: str) -> ^Primitive_Type {
 type Value = struct {
     name: str
     type: ^Type
+    next: ^Value
+}
+
+proc new_value(name: str, type: ^Type) -> ^Value {
+    let result = allocator.alloc(size: type_size(Value), alignment: type_alignment(Value)).as(^Value)
+    result.^ = Value(name: name, type: type, next: null)
+    return result
 }

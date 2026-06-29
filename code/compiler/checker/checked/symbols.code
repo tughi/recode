@@ -1,6 +1,7 @@
 import allocator
 
 type Symbol_Kind = enum {
+    Parameter
     Procedure
     Type
 }
@@ -8,6 +9,20 @@ type Symbol_Kind = enum {
 type Symbol = struct {
     kind: Symbol_Kind
     name: str
+}
+
+type Parameter_Symbol = struct {
+    super: Symbol
+    type: ^Type
+}
+
+proc new_parameter_symbol(name: str, type: ^Type) -> ^Parameter_Symbol {
+    let result = allocator.alloc(size: type_size(Parameter_Symbol), alignment: type_alignment(Parameter_Symbol)).as(^Parameter_Symbol)
+    result.^ = Parameter_Symbol(
+        super: Symbol(kind: .Parameter, name: name)
+        type: type
+    )
+    return result
 }
 
 type Type_Symbol = struct {

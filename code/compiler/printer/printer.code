@@ -15,7 +15,18 @@ proc print(program: ^ir.Program, file: ^libc.FILE) {
 }
 
 proc print_procedure(procedure: ^ir.Procedure, file: ^libc.FILE) {
-    file.write_char(char: '$').write(procedure.name).write_char(char: '(').write_char(char: ')')
+    file.write_char(char: '$').write(procedure.name).write_char(char: '(')
+    let parameter = procedure.first_parameter
+    let first = true
+    while parameter != null {
+        if not first {
+            file.write(", ")
+        }
+        first = false
+        print_value_definition(parameter, file: file)
+        parameter = parameter.next
+    }
+    file.write_char(char: ')')
     if procedure.return_type.kind != .Nothing {
         file.write(": ")
         print_type(procedure.return_type, file: file)
@@ -50,6 +61,12 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
             file.write(" = ")
         }
         file.write("call $").write(call_instruction.callee.name)
+        let argument = call_instruction.first_argument
+        while argument != null {
+            file.write_char(char: ' ')
+            print_value_reference(argument.value, file: file)
+            argument = argument.next
+        }
     } else if instruction.kind == .Const {
         let const_instruction = instruction.as(^ir.Const_Instruction)
         print_value_definition(^const_instruction.result, file: file)
