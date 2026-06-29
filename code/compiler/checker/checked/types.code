@@ -2,6 +2,7 @@ import allocator
 
 type Type_Kind = enum {
     Builtin
+    Null
     Procedure
 }
 
@@ -20,6 +21,12 @@ proc new_builtin_type(name: str) -> ^Builtin_Type {
         super: Type(kind: .Builtin)
         name: name
     )
+    return result
+}
+
+proc new_null_type() -> ^Type {
+    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
+    result.^ = Type(kind: .Null)
     return result
 }
 

@@ -27,6 +27,7 @@ type Expression_Kind = enum {
     Negate
     Not
     Not_Equals
+    Null
     String
     Subtract
     Symbol
@@ -187,6 +188,20 @@ proc new_member_access_expression(location: source.Source_Location, operand: ^Ex
         super: Expression(kind: .Member_Access, location: location)
         operand: operand
         member: member
+    )
+    return result.as(^Expression)
+}
+
+type Null_Expression = struct {
+    super: Expression
+    token: ^lexer.Identifier
+}
+
+proc new_null_expression(token: ^lexer.Identifier) -> ^Expression {
+    let result = allocator.alloc(size: type_size(Null_Expression), alignment: type_alignment(Null_Expression)).as(^Null_Expression)
+    result.^ = Null_Expression(
+        super: Expression(kind: .Null, location: token.location)
+        token: token
     )
     return result.as(^Expression)
 }

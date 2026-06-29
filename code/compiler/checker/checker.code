@@ -9,6 +9,7 @@ type Checker = struct {
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
     return_type: ^checked.Type
+    null_type: ^checked.Type
     current_location: source.Source_Location
 }
 
@@ -18,6 +19,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         global_symbols: null
         current_scope: null
         return_type: null
+        null_type: checked.new_null_type()
         current_location: source.Source_Location(source: builtin_package.first_module.source, line: 0, column: 0)
     )
 
@@ -215,6 +217,10 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     if variable_statement.expression != null {
         expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
         if variable_type == null {
+            if expression.type.kind == .Null {
+                self.current_location = variable_statement.expression.location
+                self.error("Cannot infer type from null expression")
+            }
             variable_type = expression.type
         }
     }
@@ -240,10 +246,12 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
     } else if parsed_expression.kind == .Integer {
         return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
-    } else if parsed_expression.kind == .Multiply {
-        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
     } else if parsed_expression.kind == .Modulo {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Modulo, expected_type: expected_type)
+    } else if parsed_expression.kind == .Multiply {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
+    } else if parsed_expression.kind == .Null {
+        return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
     } else if parsed_expression.kind == .Subtract {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
     }
@@ -338,6 +346,24 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
         self.error("Cannot infer type of integer literal")
     }
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    self.current_location = null_expression.location
+    let expression_type = expected_type
+    if expression_type == null {
+        expression_type = self.null_type
+    } else if expression_type.kind != .Procedure {
+        let message = string.new_builder()
+        message.append("\"null\" cannot be used with non-pointer type: ")
+        if expression_type.kind == .Builtin {
+            message.append(expression_type.as(^checked.Builtin_Type).name)
+        } else {
+            panic "Not supported yet: type name"
+        }
+        self.error(message.build())
+    }
+    return checked.new_null_expression(type: expression_type).as(^checked.Expression)
 }
 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {

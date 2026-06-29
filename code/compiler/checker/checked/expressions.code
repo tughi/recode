@@ -8,6 +8,7 @@ type Expression_Kind = enum {
     Integer
     Modulo
     Multiply
+    Null
     Subtract
     Symbol
 }
@@ -70,6 +71,18 @@ proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expr
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
+    )
+    return result
+}
+
+type Null_Expression = struct {
+    super: Expression
+}
+
+proc new_null_expression(type: ^Type) -> ^Null_Expression {
+    let result = allocator.alloc(size: type_size(Null_Expression), alignment: type_alignment(Null_Expression)).as(^Null_Expression)
+    result.^ = Null_Expression(
+        super: Expression(kind: .Null, type: type)
     )
     return result
 }
