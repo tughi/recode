@@ -1,12 +1,28 @@
+import allocator
 import compiler.checker.checked
 import compiler.ir
 import string
+
+type Local_Variable = struct {
+    symbol: ^checked.Symbol
+    pointer: ^ir.Value
+    version: usize
+    next: ^Local_Variable
+}
+
+proc new_local_variable(symbol: ^checked.Symbol, pointer: ^ir.Value) -> ^Local_Variable {
+    let result = allocator.alloc(size: type_size(Local_Variable), alignment: type_alignment(Local_Variable)).as(^Local_Variable)
+    result.^ = Local_Variable(symbol: symbol, pointer: pointer, version: 0, next: null)
+    return result
+}
 
 type Lowerer = struct {
     program: ^ir.Program
     package_name: str
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
+    first_local: ^Local_Variable
+    last_local: ^Local_Variable
     next_value_id: usize
 }
 
@@ -16,6 +32,8 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         package_name: checked_package.name
         current_procedure: null
         current_block: null
+        first_local: null
+        last_local: null
         next_value_id: 0
     )
 
@@ -75,6 +93,8 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     }
 
     self.next_value_id = 0
+    self.first_local = null
+    self.last_local = null
     let block = ir.new_block(label: 1)
     procedure.append_block(block)
     self.current_block = block
@@ -148,6 +168,7 @@ proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Vari
         type: pointee_type
     )
     self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
+    self.declare_local(symbol: variable_statement.symbol.as(^checked.Symbol), pointer: ^alloc_instruction.result)
     if variable_statement.expression != null {
         let value = self.lower_expression(variable_statement.expression)
         self.current_block.append_instruction(ir.new_store_instruction(pointer: ^alloc_instruction.result, value: value).as(^ir.Instruction))
@@ -204,7 +225,20 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return ^const_instruction.result
     } else if expression.kind == .Symbol {
         let symbol_expression = expression.as(^checked.Symbol_Expression)
-        return self.find_parameter(symbol_expression.symbol.name)
+        let symbol = symbol_expression.symbol
+        if symbol.kind == .Variable {
+            let local = self.find_local(symbol)
+            local.version = local.version + 1
+            let name_builder = string.new_builder()
+            let result_name = name_builder.append(symbol.name).append_char('.').append_decimal(local.version).build()
+            let load_instruction = ir.new_load_instruction(
+                result: ir.Value(name: result_name, type: self.lower_type(symbol_expression.type))
+                pointer: local.pointer
+            )
+            self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
+            return ^load_instruction.result
+        }
+        return self.find_parameter(symbol.name)
     } else if expression.kind == .Subtract {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     }
@@ -222,6 +256,27 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
     )
     self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
     return ^binary_instruction.result
+}
+
+proc (^Lowerer).declare_local(self, symbol: ^checked.Symbol, pointer: ^ir.Value) {
+    let local = new_local_variable(symbol: symbol, pointer: pointer)
+    if self.first_local == null {
+        self.first_local = local
+    } else {
+        self.last_local.next = local
+    }
+    self.last_local = local
+}
+
+proc (^Lowerer).find_local(self, symbol: ^checked.Symbol) -> ^Local_Variable {
+    let local = self.first_local
+    while local != null {
+        if local.symbol == symbol {
+            return local
+        }
+        local = local.next
+    }
+    return null
 }
 
 proc (^Lowerer).find_parameter(self, name: str) -> ^ir.Value {

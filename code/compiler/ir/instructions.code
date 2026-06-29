@@ -7,6 +7,7 @@ type Instruction_Kind = enum {
     Call
     Const
     Divide
+    Load
     Modulo
     Multiply
     Ret
@@ -86,6 +87,18 @@ type Const_Instruction = struct {
 proc new_const_instruction(result: Value, literal: ^lexer.Integer) -> ^Const_Instruction {
     let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
     allocated.^ = Const_Instruction(super: Instruction(kind: .Const, next: null), result: result, literal: literal)
+    return allocated
+}
+
+type Load_Instruction = struct {
+    super: Instruction
+    result: Value
+    pointer: ^Value
+}
+
+proc new_load_instruction(result: Value, pointer: ^Value) -> ^Load_Instruction {
+    let allocated = allocator.alloc(size: type_size(Load_Instruction), alignment: type_alignment(Load_Instruction)).as(^Load_Instruction)
+    allocated.^ = Load_Instruction(super: Instruction(kind: .Load, next: null), result: result, pointer: pointer)
     return allocated
 }
 

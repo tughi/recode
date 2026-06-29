@@ -275,6 +275,8 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
     }
     if symbol.kind == .Parameter {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
+    } else if symbol.kind == .Variable {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
     }
     panic "Not supported yet: identifier symbol"
 }

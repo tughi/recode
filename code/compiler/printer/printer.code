@@ -80,10 +80,15 @@ proc print_instruction(instruction: ^ir.Instruction, file: ^libc.FILE) {
         file.write(" = const ").write_u64(value: const_instruction.literal.value)
     } else if instruction.kind == .Divide {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "div", file: file)
-    } else if instruction.kind == .Multiply {
-        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "mul", file: file)
+    } else if instruction.kind == .Load {
+        let load_instruction = instruction.as(^ir.Load_Instruction)
+        print_value_definition(^load_instruction.result, file: file)
+        file.write(" = load ")
+        print_value_reference(load_instruction.pointer, file: file)
     } else if instruction.kind == .Modulo {
         print_binary_instruction(instruction.as(^ir.Binary_Instruction), "mod", file: file)
+    } else if instruction.kind == .Multiply {
+        print_binary_instruction(instruction.as(^ir.Binary_Instruction), "mul", file: file)
     } else if instruction.kind == .Ret {
         let ret_instruction = instruction.as(^ir.Ret_Instruction)
         file.write("ret")
