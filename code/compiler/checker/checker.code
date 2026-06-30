@@ -80,6 +80,8 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
         while statement != null {
             if statement.kind == .Procedure {
                 self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
+            } else if statement.kind == .Type {
+                self.check_global_type_statement(statement.as(^parsed.Type_Statement))
             } else if statement.kind == .Variable {
                 self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
             } else {
@@ -116,8 +118,24 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
         self.error("Missing type")
     }
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: true, is_external: variable_statement.is_external)
+    let external_name = ""
+    if variable_statement.external_name != null {
+        external_name = variable_statement.external_name.value
+    }
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
     self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
+}
+
+proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
+    self.current_location = type_statement.location
+    let name = type_statement.name.lexeme
+    if type_statement.specifier.kind == .External {
+        let type = checked.new_external_type(name: name).as(^checked.Type)
+        let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+    } else {
+        panic "Not supported yet: type specifier"
+    }
 }
 
 proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
@@ -127,6 +145,10 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let return_type: ^checked.Type = null
     if procedure_statement.return_type != null {
         return_type = self.resolve_type(procedure_statement.return_type)
+        if return_type.kind == .External {
+            self.current_location = procedure_statement.return_type.location
+            self.error("Cannot use external type as return type")
+        }
     }
 
     let first_parameter: ^checked.Procedure_Parameter = null
@@ -134,6 +156,10 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let parsed_parameter = procedure_statement.first_parameter
     while parsed_parameter != null {
         let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
+        if parameter_type.kind == .External {
+            self.current_location = parsed_parameter.parameter_type.location
+            self.error("Cannot use external types as procedure parameters")
+        }
         let parameter = checked.new_procedure_parameter(name: parsed_parameter.name.lexeme, parameter_type: parameter_type)
         if last_parameter == null {
             first_parameter = parameter
@@ -295,7 +321,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     }
 
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: false, is_external: false)
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: false, is_external: false, external_name: "")
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
     return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }
@@ -515,6 +541,10 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
             return symbol.as(^checked.Type_Symbol).type
         }
         self.error("Symbol is not a type")
+    } else if parsed_type.kind == .Pointer {
+        let pointer_type = parsed_type.as(^parsed.Pointer_Type)
+        let pointee = self.resolve_type(pointer_type.pointee)
+        return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
     }
     panic "Not supported yet: type"
 }

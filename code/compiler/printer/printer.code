@@ -166,6 +166,12 @@ proc (^libc.FILE).write_global(self, global: ^ir.Global) -> ^libc.FILE {
 }
 
 proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
+    let named_type = program.first_type
+    while named_type != null {
+        self.write_type_declaration(named_type)
+        self.end_line()
+        named_type = named_type.next_type
+    }
     let global = program.first_global
     while global != null {
         self.write_global(global)
@@ -188,6 +194,8 @@ proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
 proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
     if type.kind == .Nothing {
         panic
+    } else if type.kind == .Opaque {
+        self.write(type.as(^ir.Named_Type).name)
     } else if type.kind == .Pointer {
         self.write_char(char: '[')
         self.write_type(type.as(^ir.Pointer_Type).pointee)
@@ -214,6 +222,11 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
         }
     }
     return self
+}
+
+proc (^libc.FILE).write_type_declaration(self, type: ^ir.Named_Type) -> ^libc.FILE {
+    self.write("type ").write(type.name).write(" = opaque")
+    return self.end_line()
 }
 
 proc (^libc.FILE).write_value_definition(self, value: ^ir.Value) -> ^libc.FILE {

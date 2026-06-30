@@ -107,8 +107,18 @@ proc (^Lowerer).declare_external_procedure(self, procedure_symbol: ^checked.Proc
 
 proc (^Lowerer).declare_external_variable(self, variable_symbol: ^checked.Variable_Symbol) {
     let pointer_type = ir.new_pointer_type(self.lower_type(variable_symbol.type)).as(^ir.Type)
-    let global = ir.new_external_global(name: variable_symbol.name, type: pointer_type)
+    let global = ir.new_external_global(name: self.variable_name(variable_symbol), type: pointer_type)
     self.program.append_global(global)
+}
+
+proc (^Lowerer).variable_name(self, variable_symbol: ^checked.Variable_Symbol) -> str {
+    if variable_symbol.is_external {
+        if variable_symbol.external_name.length > 0 {
+            return variable_symbol.external_name
+        }
+        return variable_symbol.name
+    }
+    return self.qualified_name(variable_symbol.name)
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
@@ -384,7 +394,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         let symbol = symbol_expression.symbol
         if symbol.kind == .Variable {
             if symbol.as(^checked.Variable_Symbol).is_global {
-                let global_pointer = self.find_global(symbol.name)
+                let global_pointer = self.find_global(self.variable_name(symbol.as(^checked.Variable_Symbol)))
                 let load_instruction = ir.new_load_instruction(
                     name: self.fresh_name()
                     type: self.lower_type(symbol_expression.type)
@@ -531,7 +541,26 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
     if type.kind == .Builtin {
         return ir.new_primitive_type(name: type.as(^checked.Builtin_Type).name).as(^ir.Type)
     }
+    if type.kind == .External {
+        return self.lower_external_type(type.as(^checked.External_Type).name)
+    }
+    if type.kind == .Pointer {
+        return ir.new_pointer_type(self.lower_type(type.as(^checked.Pointer_Type).pointee)).as(^ir.Type)
+    }
     panic "Lowering not supported yet: type"
+}
+
+proc (^Lowerer).lower_external_type(self, name: str) -> ^ir.Type {
+    let existing_type = self.program.first_type
+    while existing_type != null {
+        if existing_type.name.equals(name) {
+            return existing_type.as(^ir.Type)
+        }
+        existing_type = existing_type.next_type
+    }
+    let opaque_type = ir.new_opaque_type(name)
+    self.program.append_type(opaque_type.as(^ir.Named_Type))
+    return opaque_type.as(^ir.Type)
 }
 
 proc (^Lowerer).create_block(self) -> ^ir.Block {

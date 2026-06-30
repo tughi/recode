@@ -2,7 +2,9 @@ import allocator
 
 type Type_Kind = enum {
     Builtin
+    External
     Null
+    Pointer
     Procedure
 }
 
@@ -24,9 +26,37 @@ proc new_builtin_type(name: str) -> ^Builtin_Type {
     return result
 }
 
+type External_Type = struct {
+    super: Type
+    name: str
+}
+
+proc new_external_type(name: str) -> ^External_Type {
+    let result = allocator.alloc(size: type_size(External_Type), alignment: type_alignment(External_Type)).as(^External_Type)
+    result.^ = External_Type(
+        super: Type(kind: .External)
+        name: name
+    )
+    return result
+}
+
 proc new_null_type() -> ^Type {
     let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
     result.^ = Type(kind: .Null)
+    return result
+}
+
+type Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
+    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
+    result.^ = Pointer_Type(
+        super: Type(kind: .Pointer)
+        pointee: pointee
+    )
     return result
 }
 

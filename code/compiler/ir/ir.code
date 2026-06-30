@@ -2,6 +2,8 @@ import allocator
 import compiler.checker.checked
 
 type Program = struct {
+    first_type: ^Named_Type
+    last_type: ^Named_Type
     first_global: ^Global
     last_global: ^Global
     first_procedure: ^Procedure
@@ -10,8 +12,17 @@ type Program = struct {
 
 proc new_program() -> ^Program {
     let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
-    result.^ = Program(first_global: null, last_global: null, first_procedure: null, last_procedure: null)
+    result.^ = Program(first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null)
     return result
+}
+
+proc (^Program).append_type(self, type: ^Named_Type) {
+    if self.first_type == null {
+        self.first_type = type
+    } else {
+        self.last_type.next_type = type
+    }
+    self.last_type = type
 }
 
 proc (^Program).append_global(self, global: ^Global) {
@@ -100,6 +111,7 @@ proc new_block(label: usize) -> ^Block {
 
 type Type_Kind = enum {
     Nothing
+    Opaque
     Pointer
     Primitive
     Procedure
@@ -116,6 +128,22 @@ type Nothing_Type = struct {
 proc new_nothing_type() -> ^Nothing_Type {
     let result = allocator.alloc(size: type_size(Nothing_Type), alignment: type_alignment(Nothing_Type)).as(^Nothing_Type)
     result.^ = Nothing_Type(super: Type(kind: .Nothing))
+    return result
+}
+
+type Named_Type = struct {
+    super: Type
+    name: str
+    next_type: ^Named_Type
+}
+
+type Opaque_Type = struct {
+    super: Named_Type
+}
+
+proc new_opaque_type(name: str) -> ^Opaque_Type {
+    let result = allocator.alloc(size: type_size(Opaque_Type), alignment: type_alignment(Opaque_Type)).as(^Opaque_Type)
+    result.^ = Opaque_Type(super: Named_Type(super: Type(kind: .Opaque), name: name, next_type: null))
     return result
 }
 

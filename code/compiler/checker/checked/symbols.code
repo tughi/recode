@@ -63,15 +63,17 @@ type Variable_Symbol = struct {
     type: ^Type
     is_global: bool
     is_external: bool
+    external_name: str
 }
 
-proc new_variable_symbol(name: str, type: ^Type, is_global: bool, is_external: bool) -> ^Variable_Symbol {
+proc new_variable_symbol(name: str, type: ^Type, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
     let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
     result.^ = Variable_Symbol(
         super: Symbol(kind: .Variable, name: name)
         type: type
         is_global: is_global
         is_external: is_external
+        external_name: external_name
     )
     return result
 }
