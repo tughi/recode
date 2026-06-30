@@ -42,6 +42,11 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
     while entry != null {
         if entry.symbol.kind == .Procedure {
             lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
+        } else if entry.symbol.kind == .Variable {
+            let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
+            if variable_symbol.is_external {
+                lowerer.declare_external_variable(variable_symbol)
+            }
         }
         entry = entry.next
     }
@@ -97,6 +102,12 @@ proc (^Lowerer).declare_external_procedure(self, procedure_symbol: ^checked.Proc
     }
     let pointer_type = ir.new_pointer_type(procedure_type.as(^ir.Type)).as(^ir.Type)
     let global = ir.new_external_global(name: procedure_symbol.name, type: pointer_type)
+    self.program.append_global(global)
+}
+
+proc (^Lowerer).declare_external_variable(self, variable_symbol: ^checked.Variable_Symbol) {
+    let pointer_type = ir.new_pointer_type(self.lower_type(variable_symbol.type)).as(^ir.Type)
+    let global = ir.new_external_global(name: variable_symbol.name, type: pointer_type)
     self.program.append_global(global)
 }
 
@@ -372,6 +383,16 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         let symbol_expression = expression.as(^checked.Symbol_Expression)
         let symbol = symbol_expression.symbol
         if symbol.kind == .Variable {
+            if symbol.as(^checked.Variable_Symbol).is_global {
+                let global_pointer = self.find_global(symbol.name)
+                let load_instruction = ir.new_load_instruction(
+                    name: self.fresh_name()
+                    type: self.lower_type(symbol_expression.type)
+                    pointer: global_pointer
+                )
+                self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
+                return load_instruction.as(^ir.Value)
+            }
             let value_pointer = self.find_scope(symbol)
             let variable = value_pointer.variable
             variable.version = variable.version + 1
@@ -454,6 +475,17 @@ proc (^Lowerer).lower_not_expression(self, not_expression: ^checked.Not_Expressi
 
 proc (^Lowerer).push_scope(self, value: ^ir.Value) {
     self.scope = new_scope_entry(value: value, next: self.scope)
+}
+
+proc (^Lowerer).find_global(self, name: str) -> ^ir.Value {
+    let global = self.program.first_global
+    while global != null {
+        if global.name.equals(name) {
+            return global.as(^ir.Value)
+        }
+        global = global.next_global
+    }
+    return null
 }
 
 proc (^Lowerer).find_scope(self, symbol: ^checked.Symbol) -> ^ir.Value {

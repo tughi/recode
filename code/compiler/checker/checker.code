@@ -80,6 +80,8 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
         while statement != null {
             if statement.kind == .Procedure {
                 self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
+            } else if statement.kind == .Variable {
+                self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
             } else {
                 panic "Not supported yet: package statement"
             }
@@ -102,6 +104,20 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
     }
 
     return checked_package
+}
+
+proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
+    self.current_location = variable_statement.location
+    let variable_type: ^checked.Type = null
+    if variable_statement.variable_type != null {
+        variable_type = self.resolve_type(variable_statement.variable_type)
+    }
+    if variable_type == null {
+        self.error("Missing type")
+    }
+    let name = variable_statement.name.lexeme
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: true, is_external: variable_statement.is_external)
+    self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
@@ -279,7 +295,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     }
 
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type)
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: false, is_external: false)
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
     return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }

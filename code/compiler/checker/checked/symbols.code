@@ -61,13 +61,17 @@ proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Sta
 type Variable_Symbol = struct {
     super: Symbol
     type: ^Type
+    is_global: bool
+    is_external: bool
 }
 
-proc new_variable_symbol(name: str, type: ^Type) -> ^Variable_Symbol {
+proc new_variable_symbol(name: str, type: ^Type, is_global: bool, is_external: bool) -> ^Variable_Symbol {
     let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
     result.^ = Variable_Symbol(
         super: Symbol(kind: .Variable, name: name)
         type: type
+        is_global: is_global
+        is_external: is_external
     )
     return result
 }
