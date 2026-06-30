@@ -312,10 +312,26 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
     let expression: ^checked.Expression = null
     if return_statement.expression != null {
         expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
+        if self.return_type != null {
+            self.require_same_type(self.return_type, expression.type, return_statement.expression.location)
+        }
     } else if self.return_type != null {
         self.error(return_statement.location, "Missing return expression")
     }
     return checked.new_return_statement(expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_type: ^checked.Type, location: source.Source_Location) {
+    if actual_type.kind == .Null {
+        if expected_type.kind == .Pointer or expected_type.kind == .Procedure {
+            return
+        }
+    }
+    if not expected_type.equals(actual_type) {
+        let message = string.new_builder()
+        message.append("Expected type ").append(expected_type.name()).append(" but got ").append(actual_type.name())
+        self.error(location, message.build())
+    }
 }
 
 proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Variable_Statement) -> ^checked.Statement {

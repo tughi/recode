@@ -33,6 +33,19 @@ proc (^Type).name(self) -> str {
     return self.as(^Named_Type).name
 }
 
+proc (^Type).equals(self, other: ^Type) -> bool {
+    if self.kind != other.kind {
+        return false
+    }
+    if self.kind == .External {
+        return self.name().equals(other.name())
+    }
+    if self.kind == .Pointer {
+        return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
+    }
+    return true
+}
+
 proc new_named_type(kind: Type_Kind, name: str) -> ^Named_Type {
     let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
     result.^ = Named_Type(
