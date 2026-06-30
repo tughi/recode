@@ -180,13 +180,15 @@ proc new_identifier_expression(name: ^lexer.Identifier) -> ^Expression {
 type Integer_Expression = struct {
     super: Expression
     token: ^lexer.Integer
+    type: ^Type
 }
 
-proc new_integer_expression(token: ^lexer.Integer) -> ^Expression {
+proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Expression {
     let result = allocator.alloc(size: type_size(Integer_Expression), alignment: type_alignment(Integer_Expression)).as(^Integer_Expression)
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, location: token.location)
         token: token
+        type: type
     )
     return result.as(^Expression)
 }

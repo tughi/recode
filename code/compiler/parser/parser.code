@@ -689,7 +689,12 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression {
         return parsed.new_string_expression(string_token)
     } else {
         let integer_token = self.consume_integer()
-        return parsed.new_integer_expression(integer_token)
+        let integer_type: ^parsed.Type = null
+        if self.lexer.matches_one(match.integer_type) {
+            let type_token = self.consume_identifier()
+            integer_type = parsed.new_named_type(location: type_token.location, module: null, name: type_token)
+        }
+        return parsed.new_integer_expression(token: integer_token, type: integer_type)
     }
 }
 
@@ -1076,9 +1081,6 @@ proc (^Parser).consume_integer(self) -> ^lexer.Integer {
     let token = self.lexer.peek_token(1)
     if token.kind == .Integer {
         self.lexer.advance()
-        if self.lexer.matches_one(match.integer_type) {
-            self.consume_identifier()
-        }
         return token.as(^lexer.Integer)
     }
     panic "Expected integer literal"

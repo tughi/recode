@@ -497,14 +497,14 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    let expression_type = expected_type
+    let expression_type: ^checked.Type = null
+    if integer_expression.type != null {
+        expression_type = self.resolve_type(integer_expression.type)
+    } else if expected_type != null {
+        expression_type = expected_type
+    }
     if expression_type == null {
-        let i32_symbol = self.builtin_symbols.find("i32")
-        if i32_symbol != null {
-            if i32_symbol.kind == .Type {
-                expression_type = i32_symbol.as(^checked.Type_Symbol).type
-            }
-        }
+        expression_type = self.i32_type
     }
     if expression_type == null {
         self.error(integer_expression.location, "Cannot infer type of integer literal")
