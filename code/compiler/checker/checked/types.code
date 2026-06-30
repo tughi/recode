@@ -1,40 +1,42 @@
 import allocator
 
 type Type_Kind = enum {
-    Builtin
+    Any
+    bool
     External
+    i16
+    i32
+    i64
+    i8
+    isize
     Null
     Pointer
     Procedure
+    str
+    u16
+    u32
+    u64
+    u8
+    usize
 }
 
 type Type = struct {
     kind: Type_Kind
 }
 
-type Builtin_Type = struct {
+type Named_Type = struct {
     super: Type
     name: str
 }
 
-proc new_builtin_type(name: str) -> ^Builtin_Type {
-    let result = allocator.alloc(size: type_size(Builtin_Type), alignment: type_alignment(Builtin_Type)).as(^Builtin_Type)
-    result.^ = Builtin_Type(
-        super: Type(kind: .Builtin)
-        name: name
-    )
-    return result
+proc (^Type).name(self) -> str {
+    return self.as(^Named_Type).name
 }
 
-type External_Type = struct {
-    super: Type
-    name: str
-}
-
-proc new_external_type(name: str) -> ^External_Type {
-    let result = allocator.alloc(size: type_size(External_Type), alignment: type_alignment(External_Type)).as(^External_Type)
-    result.^ = External_Type(
-        super: Type(kind: .External)
+proc new_named_type(kind: Type_Kind, name: str) -> ^Named_Type {
+    let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
+    result.^ = Named_Type(
+        super: Type(kind: kind)
         name: name
     )
     return result

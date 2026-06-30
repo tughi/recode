@@ -10,6 +10,7 @@ type Checker = struct {
     current_scope: ^checked.Symbols
     return_type: ^checked.Type
     bool_type: ^checked.Type
+    i32_type: ^checked.Type
     null_type: ^checked.Type
 }
 
@@ -20,11 +21,11 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         current_scope: null
         return_type: null
         bool_type: null
+        i32_type: null
         null_type: checked.new_null_type()
     )
 
     checker.check_builtin_package(builtin_package)
-    checker.bool_type = checker.find_builtin_type("bool")
 
     return checker.check_package(main_package)
 }
@@ -50,9 +51,46 @@ proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_
         return
     }
     let name = type_statement.name.lexeme
-    let type = checked.new_builtin_type(name: name).as(^checked.Type)
+    let kind = self.builtin_type_kind(name)
+    let type = checked.new_named_type(kind: kind, name: name).as(^checked.Type)
     let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
     self.builtin_symbols.append(name: name, symbol: symbol)
+    if kind == .bool {
+        self.bool_type = type
+    } else if kind == .i32 {
+        self.i32_type = type
+    }
+}
+
+proc (^Checker).builtin_type_kind(self, name: str) -> checked.Type_Kind {
+    if name.equals("Any") {
+        return .Any
+    } else if name.equals("bool") {
+        return .bool
+    } else if name.equals("i8") {
+        return .i8
+    } else if name.equals("i16") {
+        return .i16
+    } else if name.equals("i32") {
+        return .i32
+    } else if name.equals("i64") {
+        return .i64
+    } else if name.equals("isize") {
+        return .isize
+    } else if name.equals("str") {
+        return .str
+    } else if name.equals("u8") {
+        return .u8
+    } else if name.equals("u16") {
+        return .u16
+    } else if name.equals("u32") {
+        return .u32
+    } else if name.equals("u64") {
+        return .u64
+    } else if name.equals("usize") {
+        return .usize
+    }
+    panic "Unknown builtin type"
 }
 
 proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
@@ -125,7 +163,7 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
 proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
     let name = type_statement.name.lexeme
     if type_statement.specifier.kind == .External {
-        let type = checked.new_external_type(name: name).as(^checked.Type)
+        let type = checked.new_named_type(kind: .External, name: name).as(^checked.Type)
         let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
         self.global_symbols.append(name: name, symbol: symbol)
     } else {
@@ -491,24 +529,10 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
     } else if expression_type.kind != .Procedure {
         let message = string.new_builder()
         message.append("\"null\" cannot be used with non-pointer type: ")
-        if expression_type.kind == .Builtin {
-            message.append(expression_type.as(^checked.Builtin_Type).name)
-        } else {
-            panic "Not supported yet: type name"
-        }
+        message.append(expression_type.name())
         self.error(null_expression.location, message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
-}
-
-proc (^Checker).find_builtin_type(self, name: str) -> ^checked.Type {
-    let symbol = self.builtin_symbols.find(name)
-    if symbol != null {
-        if symbol.kind == .Type {
-            return symbol.as(^checked.Type_Symbol).type
-        }
-    }
-    return null
 }
 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {

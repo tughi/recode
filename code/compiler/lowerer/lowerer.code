@@ -582,17 +582,38 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
     if type == null {
         return ir.new_nothing_type().as(^ir.Type)
     }
-    if type.kind == .Builtin {
-        return ir.new_primitive_type(name: type.as(^checked.Builtin_Type).name).as(^ir.Type)
-    }
-    if type.kind == .External {
-        return self.lower_external_type(type.as(^checked.External_Type).name)
-    }
-    if type.kind == .Pointer {
+    if type.kind == .Any {
+        return ir.new_primitive_type(.Any)
+    } else if type.kind == .bool {
+        return ir.new_primitive_type(.bool)
+    } else if type.kind == .External {
+        return self.lower_external_type(type.name())
+    } else if type.kind == .i16 {
+        return ir.new_primitive_type(.i16)
+    } else if type.kind == .i32 {
+        return ir.new_primitive_type(.i32)
+    } else if type.kind == .i64 {
+        return ir.new_primitive_type(.i64)
+    } else if type.kind == .i8 {
+        return ir.new_primitive_type(.i8)
+    } else if type.kind == .isize {
+        return ir.new_primitive_type(.isize)
+    } else if type.kind == .Pointer {
         return ir.new_pointer_type(self.lower_type(type.as(^checked.Pointer_Type).pointee)).as(^ir.Type)
-    }
-    if type.kind == .Procedure {
+    } else if type.kind == .Procedure {
         return ir.new_pointer_type(self.lower_procedure_type(type.as(^checked.Procedure_Type)).as(^ir.Type)).as(^ir.Type)
+    } else if type.kind == .str {
+        return ir.new_primitive_type(.str)
+    } else if type.kind == .u16 {
+        return ir.new_primitive_type(.u16)
+    } else if type.kind == .u32 {
+        return ir.new_primitive_type(.u32)
+    } else if type.kind == .u64 {
+        return ir.new_primitive_type(.u64)
+    } else if type.kind == .u8 {
+        return ir.new_primitive_type(.u8)
+    } else if type.kind == .usize {
+        return ir.new_primitive_type(.usize)
     }
     panic "Lowering not supported yet: type"
 }

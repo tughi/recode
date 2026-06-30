@@ -23,7 +23,7 @@ proc (^libc.FILE).write_block(self, block: ^ir.Block) -> ^libc.FILE {
 }
 
 proc (^libc.FILE).write_const(self, value: u64, type: ^ir.Type) -> ^libc.FILE {
-    if type.kind == .Primitive and type.as(^ir.Primitive_Type).name.equals("bool") {
+    if type.kind == .bool {
         if value != 0 {
             return self.write("true")
         }
@@ -193,7 +193,21 @@ proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
 }
 
 proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
-    if type.kind == .Nothing {
+    if type.kind == .Any {
+        self.write("Any")
+    } else if type.kind == .bool {
+        self.write("bool")
+    } else if type.kind == .i16 {
+        self.write("i16")
+    } else if type.kind == .i32 {
+        self.write("i32")
+    } else if type.kind == .i64 {
+        self.write("i64")
+    } else if type.kind == .i8 {
+        self.write("i8")
+    } else if type.kind == .isize {
+        self.write("isize")
+    } else if type.kind == .Nothing {
         panic
     } else if type.kind == .Opaque {
         self.write(type.as(^ir.Named_Type).name)
@@ -201,8 +215,6 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
         self.write_char(char: '[')
         self.write_type(type.as(^ir.Pointer_Type).pointee)
         self.write_char(char: ']')
-    } else if type.kind == .Primitive {
-        self.write(type.as(^ir.Primitive_Type).name)
     } else if type.kind == .Procedure {
         let procedure_type = type.as(^ir.Procedure_Type)
         self.write("proc (")
@@ -221,6 +233,18 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
             self.write(": ")
             self.write_type(procedure_type.return_type)
         }
+    } else if type.kind == .str {
+        self.write("str")
+    } else if type.kind == .u16 {
+        self.write("u16")
+    } else if type.kind == .u32 {
+        self.write("u32")
+    } else if type.kind == .u64 {
+        self.write("u64")
+    } else if type.kind == .u8 {
+        self.write("u8")
+    } else if type.kind == .usize {
+        self.write("usize")
     }
     return self
 }

@@ -110,15 +110,33 @@ proc new_block(label: usize) -> ^Block {
 }
 
 type Type_Kind = enum {
+    Any
+    bool
+    i16
+    i32
+    i64
+    i8
+    isize
     Nothing
     Opaque
     Pointer
-    Primitive
     Procedure
+    str
+    u16
+    u32
+    u64
+    u8
+    usize
 }
 
 type Type = struct {
     kind: Type_Kind
+}
+
+proc new_primitive_type(kind: Type_Kind) -> ^Type {
+    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
+    result.^ = Type(kind: kind)
+    return result
 }
 
 type Nothing_Type = struct {
@@ -144,17 +162,6 @@ type Opaque_Type = struct {
 proc new_opaque_type(name: str) -> ^Opaque_Type {
     let result = allocator.alloc(size: type_size(Opaque_Type), alignment: type_alignment(Opaque_Type)).as(^Opaque_Type)
     result.^ = Opaque_Type(super: Named_Type(super: Type(kind: .Opaque), name: name, next_type: null))
-    return result
-}
-
-type Primitive_Type = struct {
-    super: Type
-    name: str
-}
-
-proc new_primitive_type(name: str) -> ^Primitive_Type {
-    let result = allocator.alloc(size: type_size(Primitive_Type), alignment: type_alignment(Primitive_Type)).as(^Primitive_Type)
-    result.^ = Primitive_Type(super: Type(kind: .Primitive), name: name)
     return result
 }
 
