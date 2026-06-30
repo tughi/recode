@@ -329,6 +329,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             name: self.fresh_name()
             type: self.lower_type(bool_expression.type)
             value: value
+            lexeme: ""
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
@@ -365,6 +366,8 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
         return call_instruction.as(^ir.Value)
+    } else if expression.kind == .Cast {
+        return self.lower_cast_expression(expression.as(^checked.Cast_Expression))
     } else if expression.kind == .Dereference {
         return self.lower_dereference_expression(expression.as(^checked.Dereference_Expression))
     } else if expression.kind == .Divide {
@@ -381,6 +384,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             name: self.fresh_name()
             type: self.lower_type(integer_expression.type)
             value: integer_expression.token.value
+            lexeme: integer_expression.token.lexeme
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
@@ -466,6 +470,17 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
     )
     self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
     return binary_instruction.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_cast_expression(self, cast_expression: ^checked.Cast_Expression) -> ^ir.Value {
+    let value = self.lower_expression(cast_expression.operand)
+    let cast_instruction = ir.new_cast_instruction(
+        name: self.fresh_name()
+        type: self.lower_type(cast_expression.type)
+        value: value
+    )
+    self.current_block.append_instruction(cast_instruction.as(^ir.Instruction))
+    return cast_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).lower_dereference_expression(self, dereference_expression: ^checked.Dereference_Expression) -> ^ir.Value {

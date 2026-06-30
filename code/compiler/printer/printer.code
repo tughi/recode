@@ -22,12 +22,15 @@ proc (^libc.FILE).write_block(self, block: ^ir.Block) -> ^libc.FILE {
     return self
 }
 
-proc (^libc.FILE).write_const(self, value: u64, type: ^ir.Type) -> ^libc.FILE {
+proc (^libc.FILE).write_const(self, value: u64, type: ^ir.Type, lexeme: str) -> ^libc.FILE {
     if type.kind == .bool {
         if value != 0 {
             return self.write("true")
         }
         return self.write("false")
+    }
+    if lexeme.length > 0 {
+        return self.write(lexeme)
     }
     return self.write_u64(value: value)
 }
@@ -60,6 +63,11 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
             self.write_value_reference(argument.value)
             argument = argument.next
         }
+    } else if instruction.kind == .Cast {
+        let cast_instruction = instruction.as(^ir.Cast_Instruction)
+        self.write_value_definition(cast_instruction.as(^ir.Value))
+        self.write(" = cast ")
+        self.write_value_reference(cast_instruction.value)
     } else if instruction.kind == .Compare_Equal {
         self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "cmp_eq")
     } else if instruction.kind == .Compare_Greater {
@@ -75,7 +83,7 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
     } else if instruction.kind == .Const {
         let const_instruction = instruction.as(^ir.Const_Instruction)
         self.write_value_definition(const_instruction.as(^ir.Value))
-        self.write(" = const ").write_const(value: const_instruction.value, type: const_instruction.as(^ir.Value).type)
+        self.write(" = const ").write_const(value: const_instruction.value, type: const_instruction.as(^ir.Value).type, lexeme: const_instruction.lexeme)
     } else if instruction.kind == .Divide {
         self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "div")
     } else if instruction.kind == .Jmp {

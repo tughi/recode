@@ -6,6 +6,7 @@ type Instruction_Kind = enum {
     Alloc
     Br
     Call
+    Cast
     Compare_Equal
     Compare_Greater
     Compare_Greater_Or_Equal
@@ -142,12 +143,31 @@ proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instr
     return allocated
 }
 
+type Cast_Instruction = struct {
+    super: Instruction
+    value: ^Value
+}
+
+proc new_cast_instruction(name: str, type: ^Type, value: ^Value) -> ^Cast_Instruction {
+    let allocated = allocator.alloc(size: type_size(Cast_Instruction), alignment: type_alignment(Cast_Instruction)).as(^Cast_Instruction)
+    allocated.^ = Cast_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Cast
+            next_instruction: null
+        )
+        value: value
+    )
+    return allocated
+}
+
 type Const_Instruction = struct {
     super: Instruction
     value: u64
+    lexeme: str
 }
 
-proc new_const_instruction(name: str, type: ^Type, value: u64) -> ^Const_Instruction {
+proc new_const_instruction(name: str, type: ^Type, value: u64, lexeme: str) -> ^Const_Instruction {
     let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
     allocated.^ = Const_Instruction(
         super: Instruction(
@@ -156,6 +176,7 @@ proc new_const_instruction(name: str, type: ^Type, value: u64) -> ^Const_Instruc
             next_instruction: null
         )
         value: value
+        lexeme: lexeme
     )
     return allocated
 }

@@ -363,6 +363,8 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
     } else if parsed_expression.kind == .Call {
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
+    } else if parsed_expression.kind == .Cast {
+        return self.check_cast_expression(parsed_expression.as(^parsed.Cast_Expression))
     } else if parsed_expression.kind == .Dereference {
         return self.check_dereference_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Divide {
@@ -462,6 +464,12 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     }
 
     return checked.new_call_expression(callee: callee, type: procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_cast_expression(self, cast_expression: ^parsed.Cast_Expression) -> ^checked.Expression {
+    let target_type = self.resolve_type(cast_expression.target_type)
+    let operand = self.check_expression(cast_expression.operand, expected_type: null)
+    return checked.new_cast_expression(operand: operand, type: target_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind) -> ^checked.Expression {
