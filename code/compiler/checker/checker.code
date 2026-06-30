@@ -339,10 +339,14 @@ proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_State
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
     if parsed_expression.kind == .Add {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
+    } else if parsed_expression.kind == .Address_Of {
+        return self.check_address_of_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Bool {
         return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
     } else if parsed_expression.kind == .Call {
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
+    } else if parsed_expression.kind == .Dereference {
+        return self.check_dereference_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Divide {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Divide, expected_type: expected_type)
     } else if parsed_expression.kind == .Equals {
@@ -379,6 +383,16 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
     }
     panic "Not supported yet: expression"
+}
+
+proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    self.current_location = unary_expression.location
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if not operand.is_mutable() {
+        self.error("Cannot take address of this expression")
+    }
+    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
+    return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind, expected_type: ^checked.Type) -> ^checked.Expression {
@@ -450,6 +464,16 @@ proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Bin
     let left = self.check_expression(binary_expression.left, expected_type: null)
     let right = self.check_expression(binary_expression.right, expected_type: left.type)
     return checked.new_binary_expression(kind: kind, left: left, right: right, type: self.bool_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    self.current_location = unary_expression.location
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if operand.type.kind != .Pointer {
+        self.error("Not a pointer")
+    }
+    let pointee_type = operand.type.as(^checked.Pointer_Type).pointee
+    return checked.new_dereference_expression(operand: operand, type: pointee_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {

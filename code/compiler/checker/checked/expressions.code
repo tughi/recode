@@ -3,8 +3,10 @@ import compiler.lexer
 
 type Expression_Kind = enum {
     Add
+    Address_Of
     Bool
     Call
+    Dereference
     Divide
     Equals
     Greater
@@ -34,6 +36,20 @@ proc (^Expression).is_mutable(self) -> bool {
         return self.as(^Symbol_Expression).symbol.kind == .Variable
     }
     return false
+}
+
+type Address_Of_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_address_of_expression(operand: ^Expression, type: ^Type) -> ^Address_Of_Expression {
+    let result = allocator.alloc(size: type_size(Address_Of_Expression), alignment: type_alignment(Address_Of_Expression)).as(^Address_Of_Expression)
+    result.^ = Address_Of_Expression(
+        super: Expression(kind: .Address_Of, type: type)
+        operand: operand
+    )
+    return result
 }
 
 type Binary_Expression = struct {
@@ -89,6 +105,20 @@ proc new_call_expression(callee: ^Procedure_Symbol, type: ^Type, first_argument:
         super: Expression(kind: .Call, type: type)
         callee: callee
         first_argument: first_argument
+    )
+    return result
+}
+
+type Dereference_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_dereference_expression(operand: ^Expression, type: ^Type) -> ^Dereference_Expression {
+    let result = allocator.alloc(size: type_size(Dereference_Expression), alignment: type_alignment(Dereference_Expression)).as(^Dereference_Expression)
+    result.^ = Dereference_Expression(
+        super: Expression(kind: .Dereference, type: type)
+        operand: operand
     )
     return result
 }
