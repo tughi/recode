@@ -124,11 +124,11 @@ proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Blo
 
 type Call_Instruction = struct {
     super: Instruction
-    callee_name: str
+    callee: ^Value
     first_argument: ^Argument
 }
 
-proc new_call_instruction(name: str, type: ^Type, callee_name: str) -> ^Call_Instruction {
+proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instruction {
     let allocated = allocator.alloc(size: type_size(Call_Instruction), alignment: type_alignment(Call_Instruction)).as(^Call_Instruction)
     allocated.^ = Call_Instruction(
         super: Instruction(
@@ -136,7 +136,7 @@ proc new_call_instruction(name: str, type: ^Type, callee_name: str) -> ^Call_Ins
             kind: .Call
             next_instruction: null
         )
-        callee_name: callee_name
+        callee: callee
         first_argument: null
     )
     return allocated

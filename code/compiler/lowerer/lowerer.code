@@ -76,6 +76,13 @@ proc (^Lowerer).qualified_name(self, name: str) -> str {
     return builder.append(self.package_name).append_char('.').append(name).build()
 }
 
+proc (^Lowerer).procedure_name(self, procedure_symbol: ^checked.Procedure_Symbol) -> str {
+    if procedure_symbol.is_external {
+        return procedure_symbol.name
+    }
+    return self.qualified_name(procedure_symbol.name)
+}
+
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
     if procedure_symbol.is_external {
         self.declare_external_procedure(procedure_symbol)
@@ -94,15 +101,20 @@ proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Sym
 }
 
 proc (^Lowerer).declare_external_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
-    let procedure_type = ir.new_procedure_type(return_type: self.lower_type(procedure_symbol.procedure_type.return_type))
-    let parameter = procedure_symbol.procedure_type.first_parameter
+    let procedure_type = self.lower_procedure_type(procedure_symbol.procedure_type)
+    let pointer_type = ir.new_pointer_type(procedure_type.as(^ir.Type)).as(^ir.Type)
+    let global = ir.new_external_global(name: procedure_symbol.name, type: pointer_type)
+    self.program.append_global(global)
+}
+
+proc (^Lowerer).lower_procedure_type(self, checked_procedure_type: ^checked.Procedure_Type) -> ^ir.Procedure_Type {
+    let procedure_type = ir.new_procedure_type(return_type: self.lower_type(checked_procedure_type.return_type))
+    let parameter = checked_procedure_type.first_parameter
     while parameter != null {
         procedure_type.append_parameter(self.lower_type(parameter.parameter_type))
         parameter = parameter.next
     }
-    let pointer_type = ir.new_pointer_type(procedure_type.as(^ir.Type)).as(^ir.Type)
-    let global = ir.new_external_global(name: procedure_symbol.name, type: pointer_type)
-    self.program.append_global(global)
+    return procedure_type
 }
 
 proc (^Lowerer).declare_external_variable(self, variable_symbol: ^checked.Variable_Symbol) {
@@ -160,10 +172,11 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
     wrapper.append_block(block)
     self.current_block = block
 
+    let callee = ir.new_value(kind: .Procedure, name: main_procedure.name, type: main_procedure.return_type)
     let call_instruction = ir.new_call_instruction(
         name: self.fresh_name()
         type: main_procedure.return_type
-        callee_name: main_procedure.name
+        callee: callee
     )
     self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
 
@@ -322,6 +335,8 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
     } else if expression.kind == .Call {
         let call_expression = expression.as(^checked.Call_Expression)
 
+        let callee = self.lower_expression(call_expression.callee)
+
         let first_argument: ^ir.Argument = null
         let last_argument: ^ir.Argument = null
         let checked_argument = call_expression.first_argument
@@ -337,10 +352,6 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             checked_argument = checked_argument.next
         }
 
-        let callee_name = self.qualified_name(call_expression.callee.name)
-        if call_expression.callee.is_external {
-            callee_name = call_expression.callee.name
-        }
         let result_type = self.lower_type(expression.type)
         let result_name = ""
         if result_type.kind != .Nothing {
@@ -349,7 +360,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         let call_instruction = ir.new_call_instruction(
             name: result_name
             type: result_type
-            callee_name: callee_name
+            callee: callee
         )
         call_instruction.first_argument = first_argument
         self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
@@ -419,6 +430,9 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             )
             self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
             return load_instruction.as(^ir.Value)
+        }
+        if symbol.kind == .Procedure {
+            return ir.new_value(kind: .Procedure, name: self.procedure_name(symbol.as(^checked.Procedure_Symbol)), type: self.lower_type(symbol_expression.type))
         }
         return self.find_scope(symbol)
     }
@@ -576,6 +590,9 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
     }
     if type.kind == .Pointer {
         return ir.new_pointer_type(self.lower_type(type.as(^checked.Pointer_Type).pointee)).as(^ir.Type)
+    }
+    if type.kind == .Procedure {
+        return ir.new_pointer_type(self.lower_procedure_type(type.as(^checked.Procedure_Type)).as(^ir.Type)).as(^ir.Type)
     }
     panic "Lowering not supported yet: type"
 }

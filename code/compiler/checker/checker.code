@@ -11,7 +11,6 @@ type Checker = struct {
     return_type: ^checked.Type
     bool_type: ^checked.Type
     null_type: ^checked.Type
-    current_location: source.Source_Location
 }
 
 proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
@@ -22,7 +21,6 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         return_type: null
         bool_type: null
         null_type: checked.new_null_type()
-        current_location: source.Source_Location(source: builtin_package.first_module.source, line: 0, column: 0)
     )
 
     checker.check_builtin_package(builtin_package)
@@ -48,7 +46,6 @@ proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
 }
 
 proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_Statement) {
-    self.current_location = type_statement.location
     if type_statement.specifier.kind != .Builtin {
         return
     }
@@ -109,13 +106,12 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
 }
 
 proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
-    self.current_location = variable_statement.location
     let variable_type: ^checked.Type = null
     if variable_statement.variable_type != null {
         variable_type = self.resolve_type(variable_statement.variable_type)
     }
     if variable_type == null {
-        self.error("Missing type")
+        self.error(variable_statement.location, "Missing type")
     }
     let name = variable_statement.name.lexeme
     let external_name = ""
@@ -127,7 +123,6 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
 }
 
 proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
-    self.current_location = type_statement.location
     let name = type_statement.name.lexeme
     if type_statement.specifier.kind == .External {
         let type = checked.new_external_type(name: name).as(^checked.Type)
@@ -139,15 +134,13 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
 }
 
 proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
-    self.current_location = procedure_statement.location
     let name = procedure_statement.name.lexeme
 
     let return_type: ^checked.Type = null
     if procedure_statement.return_type != null {
         return_type = self.resolve_type(procedure_statement.return_type)
         if return_type.kind == .External {
-            self.current_location = procedure_statement.return_type.location
-            self.error("Cannot use external type as return type")
+            self.error(procedure_statement.return_type.location, "Cannot use external type as return type")
         }
     }
 
@@ -157,8 +150,7 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     while parsed_parameter != null {
         let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
         if parameter_type.kind == .External {
-            self.current_location = parsed_parameter.parameter_type.location
-            self.error("Cannot use external types as procedure parameters")
+            self.error(parsed_parameter.parameter_type.location, "Cannot use external types as procedure parameters")
         }
         let parameter = checked.new_procedure_parameter(name: parsed_parameter.name.lexeme, parameter_type: parameter_type)
         if last_parameter == null {
@@ -193,7 +185,6 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
     self.current_scope = scope
 
     self.return_type = procedure_symbol.procedure_type.return_type
-    self.current_location = procedure_statement.location
     if procedure_statement.body.kind == .Block {
         procedure_symbol.body = self.check_block_statement(procedure_statement.body.as(^parsed.Block_Statement))
     } else {
@@ -225,11 +216,9 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
 }
 
 proc (^Checker).check_assignment_statement(self, assignment_statement: ^parsed.Assignment_Statement) -> ^checked.Statement {
-    self.current_location = assignment_statement.location
     let object = self.check_expression(assignment_statement.object, expected_type: null)
     if not object.is_mutable() {
-        self.current_location = assignment_statement.object.location
-        self.error("Cannot assign to immutable expression")
+        self.error(assignment_statement.object.location, "Cannot assign to immutable expression")
     }
     let value = self.check_expression(assignment_statement.value, expected_type: object.type)
     return checked.new_assignment_statement(object: object, value: value).as(^checked.Statement)
@@ -255,18 +244,15 @@ proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statemen
 }
 
 proc (^Checker).check_break_statement(self, break_statement: ^parsed.Break_Statement) -> ^checked.Statement {
-    self.current_location = break_statement.location
     return checked.new_break_statement().as(^checked.Statement)
 }
 
 proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.Expression_Statement) -> ^checked.Statement {
-    self.current_location = expression_statement.location
     let expression = self.check_expression(expression_statement.expression, expected_type: null)
     return checked.new_expression_statement(expression).as(^checked.Statement)
 }
 
 proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> ^checked.Statement {
-    self.current_location = if_statement.location
     let scope = checked.new_symbols(self.current_scope)
     self.current_scope = scope
     let condition = self.check_expression(if_statement.condition, expected_type: self.bool_type)
@@ -280,25 +266,21 @@ proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> 
 }
 
 proc (^Checker).check_loop_statement(self, loop_statement: ^parsed.Loop_Statement) -> ^checked.Statement {
-    self.current_location = loop_statement.location
     let body = self.check_statement(loop_statement.body)
     return checked.new_loop_statement(body: body).as(^checked.Statement)
 }
 
 proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_Statement) -> ^checked.Statement {
-    self.current_location = return_statement.location
     let expression: ^checked.Expression = null
     if return_statement.expression != null {
         expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
     } else if self.return_type != null {
-        self.error("Missing return expression")
+        self.error(return_statement.location, "Missing return expression")
     }
     return checked.new_return_statement(expression: expression).as(^checked.Statement)
 }
 
 proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Variable_Statement) -> ^checked.Statement {
-    self.current_location = variable_statement.location
-
     let variable_type: ^checked.Type = null
     if variable_statement.variable_type != null {
         variable_type = self.resolve_type(variable_statement.variable_type)
@@ -309,15 +291,14 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
         expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
         if variable_type == null {
             if expression.type.kind == .Null {
-                self.current_location = variable_statement.expression.location
-                self.error("Cannot infer type from null expression")
+                self.error(variable_statement.expression.location, "Cannot infer type from null expression")
             }
             variable_type = expression.type
         }
     }
 
     if variable_type == null {
-        self.error("Missing type")
+        self.error(variable_statement.location, "Missing type")
     }
 
     let name = variable_statement.name.lexeme
@@ -327,7 +308,6 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
 }
 
 proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_Statement) -> ^checked.Statement {
-    self.current_location = while_statement.location
     let scope = checked.new_symbols(self.current_scope)
     self.current_scope = scope
     let condition = self.check_expression(while_statement.condition, expected_type: self.bool_type)
@@ -386,58 +366,46 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
 }
 
 proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
-    self.current_location = unary_expression.location
     let operand = self.check_expression(unary_expression.operand, expected_type: null)
     if not operand.is_mutable() {
-        self.error("Cannot take address of this expression")
+        self.error(unary_expression.location, "Cannot take address of this expression")
     }
     let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind, expected_type: ^checked.Type) -> ^checked.Expression {
-    self.current_location = binary_expression.location
     let left = self.check_expression(binary_expression.left, expected_type: expected_type)
     let right = self.check_expression(binary_expression.right, expected_type: left.type)
     return checked.new_binary_expression(kind: kind, left: left, right: right, type: left.type).as(^checked.Expression)
 }
 
 proc (^Checker).check_bool_expression(self, bool_expression: ^parsed.Bool_Expression) -> ^checked.Expression {
-    self.current_location = bool_expression.location
     return checked.new_bool_expression(value: bool_expression.value, type: self.bool_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
-    self.current_location = call_expression.location
-    if call_expression.operand.kind != .Identifier {
-        self.error("Unsupported callee expression")
+    let callee = self.check_expression(call_expression.operand, expected_type: null)
+    if callee.type.kind != .Procedure {
+        self.error(call_expression.operand.location, "Not a procedure")
     }
-    let operand = call_expression.operand.as(^parsed.Identifier_Expression)
-    let name = operand.name.lexeme
-    let symbol = self.global_symbols.find(name)
-    if symbol == null {
-        self.current_location = operand.location
-        let message = string.new_builder()
-        self.error(message.append("Undefined symbol: ").append(name).build())
-    }
-    if symbol.kind != .Procedure {
-        self.error("Not a procedure")
-    }
-    let procedure_symbol = symbol.as(^checked.Procedure_Symbol)
+    let procedure_type = callee.type.as(^checked.Procedure_Type)
 
     let first_argument: ^checked.Call_Argument = null
     let last_argument: ^checked.Call_Argument = null
-    let parameter = procedure_symbol.procedure_type.first_parameter
+    let parameter = procedure_type.first_parameter
     let parsed_argument = call_expression.first_argument
     while parameter != null {
         if parsed_argument == null {
-            self.error("Too few arguments")
+            self.error(call_expression.location, "Too few arguments")
         }
         if parsed_argument.label != null {
+            if parameter.name.length == 0 {
+                self.error(parsed_argument.label.location, "Unexpected argument name: a procedure pointer has no parameter names")
+            }
             if not parsed_argument.label.lexeme.equals(parameter.name) {
-                self.current_location = parsed_argument.label.location
                 let message = string.new_builder()
-                self.error(message.append("Expected argument name: ").append(parameter.name).build())
+                self.error(parsed_argument.label.location, message.append("Expected argument name: ").append(parameter.name).build())
             }
         }
         let argument_expression = self.check_expression(parsed_argument.expression, expected_type: parameter.parameter_type)
@@ -452,40 +420,38 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         parsed_argument = parsed_argument.next
     }
     if parsed_argument != null {
-        self.current_location = parsed_argument.expression.location
-        self.error("Too many arguments")
+        self.error(parsed_argument.expression.location, "Too many arguments")
     }
 
-    return checked.new_call_expression(callee: procedure_symbol, type: procedure_symbol.procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
+    return checked.new_call_expression(callee: callee, type: procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
 }
 
 proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind) -> ^checked.Expression {
-    self.current_location = binary_expression.location
     let left = self.check_expression(binary_expression.left, expected_type: null)
     let right = self.check_expression(binary_expression.right, expected_type: left.type)
     return checked.new_binary_expression(kind: kind, left: left, right: right, type: self.bool_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
-    self.current_location = unary_expression.location
     let operand = self.check_expression(unary_expression.operand, expected_type: null)
     if operand.type.kind != .Pointer {
-        self.error("Not a pointer")
+        self.error(unary_expression.location, "Not a pointer")
     }
     let pointee_type = operand.type.as(^checked.Pointer_Type).pointee
     return checked.new_dereference_expression(operand: operand, type: pointee_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {
-    self.current_location = identifier_expression.location
     let name = identifier_expression.name.lexeme
     let symbol = self.current_scope.find(name)
     if symbol == null {
         let message = string.new_builder()
-        self.error(message.append("Undefined symbol: ").append(name).build())
+        self.error(identifier_expression.location, message.append("Undefined symbol: ").append(name).build())
     }
     if symbol.kind == .Parameter {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
+    } else if symbol.kind == .Procedure {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Procedure_Symbol).procedure_type.as(^checked.Type)).as(^checked.Expression)
     } else if symbol.kind == .Variable {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
     }
@@ -493,7 +459,6 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    self.current_location = integer_expression.location
     let expression_type = expected_type
     if expression_type == null {
         let i32_symbol = self.builtin_symbols.find("i32")
@@ -504,25 +469,22 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
         }
     }
     if expression_type == null {
-        self.error("Cannot infer type of integer literal")
+        self.error(integer_expression.location, "Cannot infer type of integer literal")
     }
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_negate_expression(self, unary_expression: ^parsed.Unary_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    self.current_location = unary_expression.location
     let operand = self.check_expression(unary_expression.operand, expected_type: expected_type)
     return checked.new_negate_expression(operand: operand, type: operand.type).as(^checked.Expression)
 }
 
 proc (^Checker).check_not_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
-    self.current_location = unary_expression.location
     let operand = self.check_expression(unary_expression.operand, expected_type: self.bool_type)
     return checked.new_not_expression(operand: operand, type: operand.type).as(^checked.Expression)
 }
 
 proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
-    self.current_location = null_expression.location
     let expression_type = expected_type
     if expression_type == null {
         expression_type = self.null_type
@@ -534,7 +496,7 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
         } else {
             panic "Not supported yet: type name"
         }
-        self.error(message.build())
+        self.error(null_expression.location, message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
 }
@@ -552,28 +514,48 @@ proc (^Checker).find_builtin_type(self, name: str) -> ^checked.Type {
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
     if parsed_type.kind == .Named {
         let named_type = parsed_type.as(^parsed.Named_Type)
-        self.current_location = named_type.location
         let name = named_type.name.lexeme
         let symbol = self.global_symbols.find(name)
         if symbol == null {
             symbol = self.builtin_symbols.find(name)
         }
         if symbol == null {
-            self.error("Unknown type")
+            self.error(named_type.location, "Unknown type")
         }
         if symbol.kind == .Type {
             return symbol.as(^checked.Type_Symbol).type
         }
-        self.error("Symbol is not a type")
+        self.error(named_type.location, "Symbol is not a type")
     } else if parsed_type.kind == .Pointer {
         let pointer_type = parsed_type.as(^parsed.Pointer_Type)
         let pointee = self.resolve_type(pointer_type.pointee)
         return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+    } else if parsed_type.kind == .Procedure {
+        let procedure_type = parsed_type.as(^parsed.Procedure_Type)
+        let return_type: ^checked.Type = null
+        if procedure_type.return_type != null {
+            return_type = self.resolve_type(procedure_type.return_type)
+        }
+        let first_parameter: ^checked.Procedure_Parameter = null
+        let last_parameter: ^checked.Procedure_Parameter = null
+        let parsed_parameter = procedure_type.first_parameter
+        while parsed_parameter != null {
+            let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
+            let parameter = checked.new_procedure_parameter(name: "", parameter_type: parameter_type)
+            if last_parameter == null {
+                first_parameter = parameter
+            } else {
+                last_parameter.next = parameter
+            }
+            last_parameter = parameter
+            parsed_parameter = parsed_parameter.next
+        }
+        return checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type).as(^checked.Type)
     }
     panic "Not supported yet: type"
 }
 
-proc (^Checker).error(self, message: str) {
-    libc.stderr.write(self.current_location.source.path).write_char(char: ':').write_u64(value: self.current_location.line.as(u64)).write_char(char: ':').write_u64(value: self.current_location.column.as(u64)).write(": ").write(message).end_line()
+proc (^Checker).error(self, location: source.Source_Location, message: str) {
+    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
     panic
 }

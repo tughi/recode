@@ -52,7 +52,8 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
             self.write_value_definition(call_instruction.as(^ir.Value))
             self.write(" = ")
         }
-        self.write("call $").write(call_instruction.callee_name)
+        self.write("call ")
+        self.write_value_reference(call_instruction.callee)
         let argument = call_instruction.first_argument
         while argument != null {
             self.write_char(char: ' ')

@@ -259,6 +259,24 @@ proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> ^pars
     return first_parameter
 }
 
+proc (^Parser).parse_procedure_pointer_parameters(self) -> ^parsed.Procedure_Parameter {
+    let first_parameter: ^parsed.Procedure_Parameter = null
+    let last_parameter: ^parsed.Procedure_Parameter = null
+    if not self.lexer.matches_two(match.optional_space, match.other(')')) {
+        self.consume_space(0)
+        first_parameter = parsed.new_procedure_parameter(label: null, name: null, parameter_type: self.parse_type())
+        last_parameter = first_parameter
+        while self.lexer.matches_two(match.optional_space, match.other(',')) {
+            self.consume_space(0)
+            self.consume_other(',')
+            self.consume_space(1)
+            last_parameter.next = parsed.new_procedure_parameter(label: null, name: null, parameter_type: self.parse_type())
+            last_parameter = last_parameter.next
+        }
+    }
+    return first_parameter
+}
+
 proc (^Parser).parse_statement(self) -> ^parsed.Statement {
     if self.lexer.matches_one(match.other('{')) {
         return self.parse_block_statement()
@@ -784,7 +802,8 @@ proc (^Parser).parse_type(self) -> ^parsed.Type {
         self.consume_keyword("proc")
         self.consume_space(1)
         self.consume_other('(')
-        let first_parameter = self.parse_procedure_parameters(receiver: null)
+        let first_parameter = self.parse_procedure_pointer_parameters()
+        self.consume_space(0)
         self.consume_other(')')
         let return_type: ^parsed.Type = null
         if self.lexer.matches_three(match.optional_space, match.other('-'), match.other('>')) {
