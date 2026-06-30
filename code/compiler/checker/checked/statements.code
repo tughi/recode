@@ -3,10 +3,13 @@ import allocator
 type Statement_Kind = enum {
     Assignment
     Block
+    Break
     Expression
     If
+    Loop
     Return
     Variable
+    While
 }
 
 type Statement = struct {
@@ -44,6 +47,18 @@ proc new_block_statement(first_statement: ^Statement) -> ^Block_Statement {
     return result
 }
 
+type Break_Statement = struct {
+    super: Statement
+}
+
+proc new_break_statement() -> ^Break_Statement {
+    let result = allocator.alloc(size: type_size(Break_Statement), alignment: type_alignment(Break_Statement)).as(^Break_Statement)
+    result.^ = Break_Statement(
+        super: Statement(kind: .Break, next: null)
+    )
+    return result
+}
+
 type Expression_Statement = struct {
     super: Statement
     expression: ^Expression
@@ -76,6 +91,20 @@ proc new_if_statement(condition: ^Expression, true_block: ^Statement, false_stat
     return result
 }
 
+type Loop_Statement = struct {
+    super: Statement
+    body: ^Statement
+}
+
+proc new_loop_statement(body: ^Statement) -> ^Loop_Statement {
+    let result = allocator.alloc(size: type_size(Loop_Statement), alignment: type_alignment(Loop_Statement)).as(^Loop_Statement)
+    result.^ = Loop_Statement(
+        super: Statement(kind: .Loop, next: null)
+        body: body
+    )
+    return result
+}
+
 type Return_Statement = struct {
     super: Statement
     expression: ^Expression
@@ -102,6 +131,22 @@ proc new_variable_statement(symbol: ^Variable_Symbol, expression: ^Expression) -
         super: Statement(kind: .Variable, next: null)
         symbol: symbol
         expression: expression
+    )
+    return result
+}
+
+type While_Statement = struct {
+    super: Statement
+    condition: ^Expression
+    body: ^Statement
+}
+
+proc new_while_statement(condition: ^Expression, body: ^Statement) -> ^While_Statement {
+    let result = allocator.alloc(size: type_size(While_Statement), alignment: type_alignment(While_Statement)).as(^While_Statement)
+    result.^ = While_Statement(
+        super: Statement(kind: .While, next: null)
+        condition: condition
+        body: body
     )
     return result
 }

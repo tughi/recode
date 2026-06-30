@@ -19,6 +19,7 @@ type Lowerer = struct {
     package_name: str
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
+    break_block: ^ir.Block
     scope: ^Scope_Entry
     next_value_id: usize
     block_counter: usize
@@ -30,6 +31,7 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         package_name: checked_package.name
         current_procedure: null
         current_block: null
+        break_block: null
         scope: null
         next_value_id: 0
         block_counter: 0
@@ -161,11 +163,15 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
             self.lower_statement(item)
             item = item.next
         }
+    } else if statement.kind == .Break {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: self.break_block).as(^ir.Instruction))
     } else if statement.kind == .Expression {
         let expression_statement = statement.as(^checked.Expression_Statement)
         self.lower_expression(expression_statement.expression)
     } else if statement.kind == .If {
         self.lower_if_statement(statement.as(^checked.If_Statement))
+    } else if statement.kind == .Loop {
+        self.lower_loop_statement(statement.as(^checked.Loop_Statement))
     } else if statement.kind == .Return {
         let return_statement = statement.as(^checked.Return_Statement)
         let value: ^ir.Value = null
@@ -175,6 +181,8 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
         self.current_block.append_instruction(ir.new_ret_instruction(value: value).as(^ir.Instruction))
     } else if statement.kind == .Variable {
         self.lower_variable_statement(statement.as(^checked.Variable_Statement))
+    } else if statement.kind == .While {
+        self.lower_while_statement(statement.as(^checked.While_Statement))
     }
 }
 
@@ -221,6 +229,23 @@ proc (^Lowerer).lower_if_statement(self, if_statement: ^checked.If_Statement) {
     self.current_block = end_block
 }
 
+proc (^Lowerer).lower_loop_statement(self, loop_statement: ^checked.Loop_Statement) {
+    let body_block = self.create_block()
+    let end_block = self.create_block()
+    self.current_block.append_instruction(ir.new_jmp_instruction(block: body_block).as(^ir.Instruction))
+    self.current_procedure.append_block(body_block)
+    self.current_block = body_block
+    let outer_break_block = self.break_block
+    self.break_block = end_block
+    self.lower_statement(loop_statement.body)
+    self.break_block = outer_break_block
+    if not self.current_block.is_terminated() {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: body_block).as(^ir.Instruction))
+    }
+    self.current_procedure.append_block(end_block)
+    self.current_block = end_block
+}
+
 proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Variable_Statement) {
     let pointee_type = self.lower_type(variable_statement.symbol.type)
     let variable = self.declare_variable(symbol: variable_statement.symbol.as(^checked.Symbol), type: pointee_type)
@@ -231,6 +256,28 @@ proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Vari
         let value = self.lower_expression(variable_statement.expression)
         self.current_block.append_instruction(ir.new_store_instruction(pointer: alloc_instruction.as(^ir.Value), value: value).as(^ir.Instruction))
     }
+}
+
+proc (^Lowerer).lower_while_statement(self, while_statement: ^checked.While_Statement) {
+    let condition_block = self.create_block()
+    let body_block = self.create_block()
+    let end_block = self.create_block()
+    self.current_block.append_instruction(ir.new_jmp_instruction(block: condition_block).as(^ir.Instruction))
+    self.current_procedure.append_block(condition_block)
+    self.current_block = condition_block
+    let condition = self.lower_expression(while_statement.condition)
+    self.current_block.append_instruction(ir.new_br_instruction(condition: condition, true_block: body_block, false_block: end_block).as(^ir.Instruction))
+    self.current_procedure.append_block(body_block)
+    self.current_block = body_block
+    let outer_break_block = self.break_block
+    self.break_block = end_block
+    self.lower_statement(while_statement.body)
+    self.break_block = outer_break_block
+    if not self.current_block.is_terminated() {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: condition_block).as(^ir.Instruction))
+    }
+    self.current_procedure.append_block(end_block)
+    self.current_block = end_block
 }
 
 proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.Value {
