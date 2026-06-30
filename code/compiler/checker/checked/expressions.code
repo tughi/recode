@@ -16,6 +16,7 @@ type Expression_Kind = enum {
     Logic_Or
     Modulo
     Multiply
+    Negate
     Not
     Not_Equals
     Null
@@ -102,6 +103,20 @@ proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expr
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
+    )
+    return result
+}
+
+type Negate_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_negate_expression(operand: ^Expression, type: ^Type) -> ^Negate_Expression {
+    let result = allocator.alloc(size: type_size(Negate_Expression), alignment: type_alignment(Negate_Expression)).as(^Negate_Expression)
+    result.^ = Negate_Expression(
+        super: Expression(kind: .Negate, type: type)
+        operand: operand
     )
     return result
 }

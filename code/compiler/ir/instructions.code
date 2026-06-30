@@ -18,6 +18,7 @@ type Instruction_Kind = enum {
     Load
     Modulo
     Multiply
+    Neg
     Not
     Phi
     Ret
@@ -191,6 +192,24 @@ proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Inst
             next_instruction: null
         )
         pointer: pointer
+    )
+    return allocated
+}
+
+type Neg_Instruction = struct {
+    super: Instruction
+    operand: ^Value
+}
+
+proc new_neg_instruction(name: str, type: ^Type, operand: ^Value) -> ^Neg_Instruction {
+    let allocated = allocator.alloc(size: type_size(Neg_Instruction), alignment: type_alignment(Neg_Instruction)).as(^Neg_Instruction)
+    allocated.^ = Neg_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Neg
+            next_instruction: null
+        )
+        operand: operand
     )
     return allocated
 }

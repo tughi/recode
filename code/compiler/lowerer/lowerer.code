@@ -360,6 +360,8 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Modulo)
     } else if expression.kind == .Multiply {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Multiply)
+    } else if expression.kind == .Negate {
+        return self.lower_negate_expression(expression.as(^checked.Negate_Expression))
     } else if expression.kind == .Not {
         return self.lower_not_expression(expression.as(^checked.Not_Expression))
     } else if expression.kind == .Not_Equals {
@@ -426,6 +428,17 @@ proc (^Lowerer).lower_logic_expression(self, binary_expression: ^checked.Binary_
     phi.append_entry(block: right_end_block, value: right)
     self.current_block.append_instruction(phi.as(^ir.Instruction))
     return phi.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_negate_expression(self, negate_expression: ^checked.Negate_Expression) -> ^ir.Value {
+    let operand = self.lower_expression(negate_expression.operand)
+    let neg_instruction = ir.new_neg_instruction(
+        name: self.fresh_name()
+        type: self.lower_type(negate_expression.type)
+        operand: operand
+    )
+    self.current_block.append_instruction(neg_instruction.as(^ir.Instruction))
+    return neg_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).lower_not_expression(self, not_expression: ^checked.Not_Expression) -> ^ir.Value {
