@@ -29,6 +29,9 @@ proc (^libc.FILE).write_const(self, value: u64, type: ^ir.Type, lexeme: str) -> 
         }
         return self.write("false")
     }
+    if type.kind == .Pointer {
+        return self.write("null")
+    }
     if lexeme.length > 0 {
         return self.write(lexeme)
     }

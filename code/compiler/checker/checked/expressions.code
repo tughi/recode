@@ -25,6 +25,8 @@ type Expression_Kind = enum {
     Null
     Subtract
     Symbol
+    Type_Alignment
+    Type_Size
 }
 
 type Expression = struct {
@@ -33,7 +35,9 @@ type Expression = struct {
 }
 
 proc (^Expression).is_mutable(self) -> bool {
-    if self.kind == .Symbol {
+    if self.kind == .Dereference {
+        return true
+    } else if self.kind == .Symbol {
         return self.as(^Symbol_Expression).symbol.kind == .Variable
     }
     return false
@@ -202,6 +206,34 @@ proc new_symbol_expression(symbol: ^Symbol, type: ^Type) -> ^Symbol_Expression {
     result.^ = Symbol_Expression(
         super: Expression(kind: .Symbol, type: type)
         symbol: symbol
+    )
+    return result
+}
+
+type Type_Alignment_Expression = struct {
+    super: Expression
+    aligned_type: ^Type
+}
+
+proc new_type_alignment_expression(aligned_type: ^Type, type: ^Type) -> ^Type_Alignment_Expression {
+    let result = allocator.alloc(size: type_size(Type_Alignment_Expression), alignment: type_alignment(Type_Alignment_Expression)).as(^Type_Alignment_Expression)
+    result.^ = Type_Alignment_Expression(
+        super: Expression(kind: .Type_Alignment, type: type)
+        aligned_type: aligned_type
+    )
+    return result
+}
+
+type Type_Size_Expression = struct {
+    super: Expression
+    sized_type: ^Type
+}
+
+proc new_type_size_expression(sized_type: ^Type, type: ^Type) -> ^Type_Size_Expression {
+    let result = allocator.alloc(size: type_size(Type_Size_Expression), alignment: type_alignment(Type_Size_Expression)).as(^Type_Size_Expression)
+    result.^ = Type_Size_Expression(
+        super: Expression(kind: .Type_Size, type: type)
+        sized_type: sized_type
     )
     return result
 }

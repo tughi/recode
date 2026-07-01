@@ -12,6 +12,8 @@ type Checker = struct {
     bool_type: ^checked.Type
     i32_type: ^checked.Type
     null_type: ^checked.Type
+    usize_type: ^checked.Type
+    is_unreachable: bool
 }
 
 proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
@@ -23,6 +25,8 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         bool_type: null
         i32_type: null
         null_type: checked.new_null_type()
+        usize_type: null
+        is_unreachable: false
     )
 
     checker.check_builtin_package(builtin_package)
@@ -59,6 +63,8 @@ proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_
         self.bool_type = type
     } else if kind == .i32 {
         self.i32_type = type
+    } else if kind == .usize {
+        self.usize_type = type
     }
 }
 
@@ -231,6 +237,9 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
 }
 
 proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
+    if self.is_unreachable {
+        self.error(parsed_statement.location, "Unreachable statement")
+    }
     if parsed_statement.kind == .Assignment {
         return self.check_assignment_statement(parsed_statement.as(^parsed.Assignment_Statement))
     } else if parsed_statement.kind == .Block {
@@ -278,10 +287,12 @@ proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statemen
         }
         statement = statement.next
     }
+    self.is_unreachable = false
     return checked.new_block_statement(first_statement: first_statement).as(^checked.Statement)
 }
 
 proc (^Checker).check_break_statement(self, break_statement: ^parsed.Break_Statement) -> ^checked.Statement {
+    self.is_unreachable = true
     return checked.new_break_statement().as(^checked.Statement)
 }
 
@@ -318,6 +329,7 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
     } else if self.return_type != null {
         self.error(return_statement.location, "Missing return expression")
     }
+    self.is_unreachable = true
     return checked.new_return_statement(expression: expression).as(^checked.Statement)
 }
 
@@ -417,6 +429,10 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
     } else if parsed_expression.kind == .Subtract {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
+    } else if parsed_expression.kind == .Type_Alignment {
+        return self.check_type_alignment_expression(parsed_expression.as(^parsed.Type_Alignment_Expression))
+    } else if parsed_expression.kind == .Type_Size {
+        return self.check_type_size_expression(parsed_expression.as(^parsed.Type_Size_Expression))
     }
     panic "Not supported yet: expression"
 }
@@ -424,7 +440,7 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
 proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
     let operand = self.check_expression(unary_expression.operand, expected_type: null)
     if not operand.is_mutable() {
-        self.error(unary_expression.location, "Cannot take address of this expression")
+        self.error(unary_expression.operand.location, "Cannot take address of this expression")
     }
     let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
@@ -550,13 +566,29 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
     let expression_type = expected_type
     if expression_type == null {
         expression_type = self.null_type
-    } else if expression_type.kind != .Procedure {
+    } else if expression_type.kind != .Pointer and expression_type.kind != .Procedure {
         let message = string.new_builder()
         message.append("\"null\" cannot be used with non-pointer type: ")
         message.append(expression_type.name())
         self.error(null_expression.location, message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_type_alignment_expression(self, type_alignment_expression: ^parsed.Type_Alignment_Expression) -> ^checked.Expression {
+    let aligned_type = self.resolve_type(type_alignment_expression.target_type)
+    if aligned_type.kind == .Any {
+        self.error(type_alignment_expression.target_type.location, "Type Any has no alignment")
+    }
+    return checked.new_type_alignment_expression(aligned_type: aligned_type, type: self.usize_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.Type_Size_Expression) -> ^checked.Expression {
+    let sized_type = self.resolve_type(type_size_expression.target_type)
+    if sized_type.kind == .Any {
+        self.error(type_size_expression.target_type.location, "Type Any has no size")
+    }
+    return checked.new_type_size_expression(sized_type: sized_type, type: self.usize_type).as(^checked.Expression)
 }
 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {

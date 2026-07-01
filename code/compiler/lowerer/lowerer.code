@@ -223,7 +223,9 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
 proc (^Lowerer).lower_assignment_statement(self, assignment_statement: ^checked.Assignment_Statement) {
     let object = assignment_statement.object
     let pointer: ^ir.Value = null
-    if object.kind == .Symbol {
+    if object.kind == .Dereference {
+        pointer = self.lower_expression(object.as(^checked.Dereference_Expression).operand)
+    } else if object.kind == .Symbol {
         pointer = self.find_scope(object.as(^checked.Symbol_Expression).symbol)
     } else {
         panic "Lowering not supported yet: assignment object"
@@ -406,6 +408,15 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_not_expression(expression.as(^checked.Not_Expression))
     } else if expression.kind == .Not_Equals {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Compare_Not_Equal)
+    } else if expression.kind == .Null {
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+            value: 0u64
+            lexeme: ""
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
     } else if expression.kind == .Subtract {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     } else if expression.kind == .Symbol {
@@ -439,6 +450,26 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             return ir.new_value(kind: .Procedure, name: self.procedure_name(symbol.as(^checked.Procedure_Symbol)), type: self.lower_type(symbol_expression.type))
         }
         return self.find_scope(symbol)
+    } else if expression.kind == .Type_Alignment {
+        let type_alignment_expression = expression.as(^checked.Type_Alignment_Expression)
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+            value: self.lower_type(type_alignment_expression.aligned_type).alignment().as(u64)
+            lexeme: ""
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
+    } else if expression.kind == .Type_Size {
+        let type_size_expression = expression.as(^checked.Type_Size_Expression)
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+            value: self.lower_type(type_size_expression.sized_type).size().as(u64)
+            lexeme: ""
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
     }
     panic "Lowering not supported yet: expression"
 }
