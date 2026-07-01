@@ -43,18 +43,32 @@ proc new_type_symbol(name: str, type: ^Type) -> ^Type_Symbol {
 type Procedure_Symbol = struct {
     super: Symbol
     procedure_type: ^Procedure_Type
+    receiver_type: ^Type
     body: ^Statement
     is_external: bool
 }
 
-proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, body: ^Statement, is_external: bool) -> ^Procedure_Symbol {
+proc new_procedure_symbol(name: str, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool) -> ^Procedure_Symbol {
     let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
     result.^ = Procedure_Symbol(
         super: Symbol(kind: .Procedure, name: name)
         procedure_type: procedure_type
+        receiver_type: receiver_type
         body: body
         is_external: is_external
     )
+    return result
+}
+
+type Method = struct {
+    receiver_type: ^Type
+    symbol: ^Procedure_Symbol
+    next: ^Method
+}
+
+proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
+    let result = allocator.alloc(size: type_size(Method), alignment: type_alignment(Method)).as(^Method)
+    result.^ = Method(receiver_type: receiver_type, symbol: symbol, next: null)
     return result
 }
 

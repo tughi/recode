@@ -4,6 +4,7 @@ import compiler.lexer
 type Expression_Kind = enum {
     Add
     Address_Of
+    Alloc
     Array_Access
     Bool
     Call
@@ -19,6 +20,8 @@ type Expression_Kind = enum {
     Less_Or_Equals
     Logic_And
     Logic_Or
+    Make_Struct
+    Member_Access
     Modulo
     Multiply
     Negate
@@ -41,6 +44,12 @@ proc (^Expression).is_mutable(self) -> bool {
         return true
     } else if self.kind == .Dereference {
         return true
+    } else if self.kind == .Member_Access {
+        let member_access = self.as(^Member_Access_Expression)
+        if member_access.operand.type.kind == .Pointer {
+            return true
+        }
+        return member_access.operand.is_mutable()
     } else if self.kind == .Symbol {
         return self.as(^Symbol_Expression).symbol.kind == .Variable
     }
@@ -56,6 +65,20 @@ proc new_address_of_expression(operand: ^Expression, type: ^Type) -> ^Address_Of
     let result = allocator.alloc(size: type_size(Address_Of_Expression), alignment: type_alignment(Address_Of_Expression)).as(^Address_Of_Expression)
     result.^ = Address_Of_Expression(
         super: Expression(kind: .Address_Of, type: type)
+        operand: operand
+    )
+    return result
+}
+
+type Alloc_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_alloc_expression(operand: ^Expression, type: ^Type) -> ^Alloc_Expression {
+    let result = allocator.alloc(size: type_size(Alloc_Expression), alignment: type_alignment(Alloc_Expression)).as(^Alloc_Expression)
+    result.^ = Alloc_Expression(
+        super: Expression(kind: .Alloc, type: type)
         operand: operand
     )
     return result
@@ -186,6 +209,48 @@ proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expr
     result.^ = Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
+    )
+    return result
+}
+
+type Make_Struct_Argument = struct {
+    member: ^Struct_Member
+    expression: ^Expression
+    next: ^Make_Struct_Argument
+}
+
+proc new_make_struct_argument(member: ^Struct_Member, expression: ^Expression) -> ^Make_Struct_Argument {
+    let result = allocator.alloc(size: type_size(Make_Struct_Argument), alignment: type_alignment(Make_Struct_Argument)).as(^Make_Struct_Argument)
+    result.^ = Make_Struct_Argument(member: member, expression: expression, next: null)
+    return result
+}
+
+type Make_Struct_Expression = struct {
+    super: Expression
+    first_argument: ^Make_Struct_Argument
+}
+
+proc new_make_struct_expression(struct_type: ^Struct_Type, first_argument: ^Make_Struct_Argument) -> ^Make_Struct_Expression {
+    let result = allocator.alloc(size: type_size(Make_Struct_Expression), alignment: type_alignment(Make_Struct_Expression)).as(^Make_Struct_Expression)
+    result.^ = Make_Struct_Expression(
+        super: Expression(kind: .Make_Struct, type: struct_type.as(^Type))
+        first_argument: first_argument
+    )
+    return result
+}
+
+type Member_Access_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    member: ^Struct_Member
+}
+
+proc new_member_access_expression(operand: ^Expression, member: ^Struct_Member) -> ^Member_Access_Expression {
+    let result = allocator.alloc(size: type_size(Member_Access_Expression), alignment: type_alignment(Member_Access_Expression)).as(^Member_Access_Expression)
+    result.^ = Member_Access_Expression(
+        super: Expression(kind: .Member_Access, type: member.type)
+        operand: operand
+        member: member
     )
     return result
 }

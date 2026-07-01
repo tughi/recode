@@ -15,12 +15,13 @@ proc new_module(source: source.Source) -> ^Module {
 type Package = struct {
     name: str
     symbols: ^Symbols
+    first_method: ^Method
     first_module: ^Module
     next_package: ^Package
 }
 
 proc new_package(name: str, symbols: ^Symbols) -> ^Package {
     let result = allocator.alloc(size: type_size(Package), alignment: type_alignment(Package)).as(^Package)
-    result.^ = Package(name: name, symbols: symbols, first_module: null, next_package: null)
+    result.^ = Package(name: name, symbols: symbols, first_method: null, first_module: null, next_package: null)
     return result
 }

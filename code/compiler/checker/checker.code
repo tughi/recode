@@ -1,4 +1,5 @@
 import compiler.checker.checked
+import compiler.lexer
 import compiler.parser.parsed
 import compiler.source
 import libc
@@ -8,6 +9,8 @@ type Checker = struct {
     builtin_symbols: ^checked.Symbols
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
+    first_method: ^checked.Method
+    last_method: ^checked.Method
     return_type: ^checked.Type
     bool_type: ^checked.Type
     i32_type: ^checked.Type
@@ -22,6 +25,8 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         builtin_symbols: checked.new_symbols(null)
         global_symbols: null
         current_scope: null
+        first_method: null
+        last_method: null
         return_type: null
         bool_type: null
         i32_type: null
@@ -150,6 +155,8 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
         module = module.next_module
     }
 
+    checked_package.first_method = self.first_method
+
     return checked_package
 }
 
@@ -176,6 +183,20 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
         let type = checked.new_named_type(kind: .External, name: name).as(^checked.Type)
         let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
         self.global_symbols.append(name: name, symbol: symbol)
+    } else if type_statement.specifier.kind == .Struct {
+        let struct_specifier = type_statement.specifier.as(^parsed.Struct_Type_Specifier)
+        let struct_type = checked.new_struct_type(name)
+        let symbol = checked.new_type_symbol(name: name, type: struct_type.as(^checked.Type)).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+        let parsed_member = struct_specifier.first_member
+        while parsed_member != null {
+            let member_type = self.resolve_type(parsed_member.member_type)
+            if member_type == struct_type.as(^checked.Type) {
+                self.error(parsed_member.member_type.location, "Struct member cannot be of its own type")
+            }
+            struct_type.append_member(checked.new_struct_member(name: parsed_member.name.lexeme, type: member_type))
+            parsed_member = parsed_member.next
+        }
     } else {
         panic "Not supported yet: type specifier"
     }
@@ -183,6 +204,11 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
 
 proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
     let name = procedure_statement.name.lexeme
+
+    let receiver_type: ^checked.Type = null
+    if procedure_statement.receiver != null {
+        receiver_type = self.resolve_type(procedure_statement.receiver)
+    }
 
     let return_type: ^checked.Type = null
     if procedure_statement.return_type != null {
@@ -215,8 +241,11 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     }
 
     let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, body: null, is_external: procedure_statement.is_external).as(^checked.Symbol)
-    self.global_symbols.append(name: name, symbol: symbol)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external)
+    if receiver_type != null {
+        self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
+    }
+    self.global_symbols.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedure_Statement) {
@@ -225,7 +254,13 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
     }
 
     let name = procedure_statement.name.lexeme
-    let procedure_symbol = self.global_symbols.find(name).as(^checked.Procedure_Symbol)
+    let procedure_symbol: ^checked.Procedure_Symbol = null
+    if procedure_statement.receiver != null {
+        let receiver_type = self.resolve_type(procedure_statement.receiver)
+        procedure_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: name)
+    } else {
+        procedure_symbol = self.global_symbols.find(name).as(^checked.Procedure_Symbol)
+    }
 
     let scope = checked.new_symbols(self.global_symbols)
     let parameter = procedure_symbol.procedure_type.first_parameter
@@ -395,6 +430,8 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
     } else if parsed_expression.kind == .Address_Of {
         return self.check_address_of_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Alloc {
+        return self.check_alloc_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Array_Access {
         return self.check_array_access_expression(parsed_expression.as(^parsed.Array_Access_Expression))
     } else if parsed_expression.kind == .Bool {
@@ -427,6 +464,8 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_And, expected_type: self.bool_type)
     } else if parsed_expression.kind == .Logic_Or {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_Or, expected_type: self.bool_type)
+    } else if parsed_expression.kind == .Member_Access {
+        return self.check_member_access_expression(parsed_expression.as(^parsed.Member_Access_Expression))
     } else if parsed_expression.kind == .Modulo {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Modulo, expected_type: expected_type)
     } else if parsed_expression.kind == .Multiply {
@@ -458,6 +497,15 @@ proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unar
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
 }
 
+proc (^Checker).check_alloc_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if operand.type.kind != .Struct {
+        panic "Not supported yet: alloc expression"
+    }
+    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
+    return checked.new_alloc_expression(operand: operand, type: pointer_type).as(^checked.Expression)
+}
+
 proc (^Checker).check_array_access_expression(self, array_access_expression: ^parsed.Array_Access_Expression) -> ^checked.Expression {
     let operand = self.check_expression(array_access_expression.operand, expected_type: null)
     let item_type: ^checked.Type = null
@@ -481,7 +529,35 @@ proc (^Checker).check_bool_expression(self, bool_expression: ^parsed.Bool_Expres
 }
 
 proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
-    let callee = self.check_expression(call_expression.operand, expected_type: null)
+    if call_expression.operand.kind == .Identifier {
+        let symbol = self.current_scope.find(call_expression.operand.as(^parsed.Identifier_Expression).name.lexeme)
+        if symbol != null and symbol.kind == .Type {
+            return self.check_make_expression(type: symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
+        }
+    }
+    let receiver: ^checked.Expression = null
+    let callee: ^checked.Expression = null
+    if call_expression.operand.kind == .Member_Access {
+        let member_access = call_expression.operand.as(^parsed.Member_Access_Expression)
+        let object = self.check_expression(member_access.operand, expected_type: null)
+        let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
+        if method_symbol == null and object.type.kind != .Pointer {
+            let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+            method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member_access.member.lexeme)
+            if method_symbol != null {
+                object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
+            }
+        }
+        if method_symbol != null {
+            receiver = object
+            callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+        } else {
+            callee = self.check_object_member_access(object: object, member: member_access.member)
+        }
+    }
+    if callee == null {
+        callee = self.check_expression(call_expression.operand, expected_type: null)
+    }
     if callee.type.kind != .Procedure {
         self.error(call_expression.operand.location, "Not a procedure")
     }
@@ -490,6 +566,11 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     let first_argument: ^checked.Call_Argument = null
     let last_argument: ^checked.Call_Argument = null
     let parameter = procedure_type.first_parameter
+    if receiver != null {
+        first_argument = checked.new_call_argument(receiver)
+        last_argument = first_argument
+        parameter = parameter.next
+    }
     let parsed_argument = call_expression.first_argument
     while parameter != null {
         if parsed_argument == null {
@@ -580,6 +661,69 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
 }
 
+proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    if type.kind != .Struct {
+        panic "Not supported yet: make expression"
+    }
+    let struct_type = type.as(^checked.Struct_Type)
+    let first_argument: ^checked.Make_Struct_Argument = null
+    let last_argument: ^checked.Make_Struct_Argument = null
+    let parsed_argument = call_expression.first_argument
+    while parsed_argument != null {
+        if parsed_argument.label == null {
+            self.error(parsed_argument.expression.location, "Expected named argument")
+        }
+        let member = struct_type.find_member(parsed_argument.label.lexeme)
+        if member == null {
+            self.error(parsed_argument.label.location, "No such struct member")
+        }
+        let earlier = call_expression.first_argument
+        while earlier != parsed_argument {
+            if earlier.label != null and earlier.label.lexeme.equals(parsed_argument.label.lexeme) {
+                let message = string.new_builder()
+                message.append("Struct member already initialized here: ")
+                message.append(earlier.label.location.source.path)
+                message.append_char(':').append_decimal(earlier.label.location.line.as(usize))
+                message.append_char(':').append_decimal(earlier.label.location.column.as(usize))
+                self.error(parsed_argument.label.location, message.build())
+            }
+            earlier = earlier.next
+        }
+        let expression = self.check_expression(parsed_argument.expression, expected_type: member.type)
+        if not member.type.equals(expression.type) {
+            expression = checked.new_cast_expression(operand: expression, type: member.type).as(^checked.Expression)
+        }
+        let argument = checked.new_make_struct_argument(member: member, expression: expression)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        parsed_argument = parsed_argument.next
+    }
+    return checked.new_make_struct_expression(struct_type: struct_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_member_access_expression(self, member_access_expression: ^parsed.Member_Access_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(member_access_expression.operand, expected_type: null)
+    return self.check_object_member_access(object: operand, member: member_access_expression.member)
+}
+
+proc (^Checker).check_object_member_access(self, object: ^checked.Expression, member: ^lexer.Identifier) -> ^checked.Expression {
+    let object_type = object.type
+    if object_type.kind == .Pointer {
+        object_type = object_type.as(^checked.Pointer_Type).pointee
+    }
+    if object_type.kind == .Struct {
+        let struct_member = object_type.as(^checked.Struct_Type).find_member(member.lexeme)
+        if struct_member != null {
+            return checked.new_member_access_expression(operand: object, member: struct_member).as(^checked.Expression)
+        }
+    }
+    panic "Not supported yet: member access"
+}
+
 proc (^Checker).check_negate_expression(self, unary_expression: ^parsed.Unary_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
     let operand = self.check_expression(unary_expression.operand, expected_type: expected_type)
     return checked.new_negate_expression(operand: operand, type: operand.type).as(^checked.Expression)
@@ -617,6 +761,26 @@ proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.T
         self.error(type_size_expression.target_type.location, "Type Any has no size")
     }
     return checked.new_type_size_expression(sized_type: sized_type, type: self.usize_type).as(^checked.Expression)
+}
+
+proc (^Checker).append_method(self, method: ^checked.Method) {
+    if self.first_method == null {
+        self.first_method = method
+    } else {
+        self.last_method.next = method
+    }
+    self.last_method = method
+}
+
+proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: str) -> ^checked.Procedure_Symbol {
+    let method = self.first_method
+    while method != null {
+        if method.symbol.name.equals(name) and method.receiver_type.equals(receiver_type) {
+            return method.symbol
+        }
+        method = method.next
+    }
+    return null
 }
 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {

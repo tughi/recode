@@ -141,6 +141,22 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
         self.write_value_reference(store_instruction.pointer)
         self.write_char(char: ' ')
         self.write_value_reference(store_instruction.value)
+    } else if instruction.kind == .Struct {
+        let struct_instruction = instruction.as(^ir.Struct_Instruction)
+        self.write_value_definition(struct_instruction.as(^ir.Value))
+        self.write(" = struct")
+        let field = struct_instruction.first_field
+        while field != null {
+            self.write(" .").write(field.name).write_char(char: ' ')
+            self.write_value_reference(field.value)
+            field = field.next
+        }
+    } else if instruction.kind == .Struct_Offset {
+        let offset_instruction = instruction.as(^ir.Struct_Offset_Instruction)
+        self.write_value_definition(offset_instruction.as(^ir.Value))
+        self.write(" = offset ")
+        self.write_value_reference(offset_instruction.pointer)
+        self.write(" .").write(offset_instruction.member)
     } else if instruction.kind == .Subtract {
         self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "sub")
     }
@@ -155,8 +171,12 @@ proc (^libc.FILE).write_procedure(self, procedure: ^ir.Procedure) -> ^libc.FILE 
         if not first {
             self.write(", ")
         }
+        if first and procedure.is_method {
+            self.write_value_reference(parameter)
+        } else {
+            self.write_value_definition(parameter)
+        }
         first = false
-        self.write_value_definition(parameter)
         parameter = parameter.next
     }
     self.write_char(char: ')')
@@ -256,6 +276,8 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
         }
     } else if type.kind == .str {
         self.write("str")
+    } else if type.kind == .Struct {
+        self.write(type.as(^ir.Named_Type).name)
     } else if type.kind == .u16 {
         self.write("u16")
     } else if type.kind == .u32 {
@@ -271,7 +293,20 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
 }
 
 proc (^libc.FILE).write_type_declaration(self, type: ^ir.Named_Type) -> ^libc.FILE {
-    self.write("type ").write(type.name).write(" = opaque")
+    self.write("type ").write(type.name).write(" = ")
+    if type.kind == .Struct {
+        self.write("struct {").end_line()
+        let member = type.as(^ir.Struct_Type).first_member
+        while member != null {
+            self.write("  ").write(member.name).write(": ")
+            self.write_type(member.type)
+            self.end_line()
+            member = member.next
+        }
+        self.write_char(char: '}')
+    } else {
+        self.write("opaque")
+    }
     return self.end_line()
 }
 

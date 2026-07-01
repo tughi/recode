@@ -25,6 +25,8 @@ type Instruction_Kind = enum {
     Phi
     Ret
     Store
+    Struct
+    Struct_Offset
     Subtract
 }
 
@@ -350,6 +352,56 @@ proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction
         )
         pointer: pointer
         value: value
+    )
+    return allocated
+}
+
+type Struct_Instruction_Field = struct {
+    name: str
+    value: ^Value
+    next: ^Struct_Instruction_Field
+}
+
+proc new_struct_instruction_field(name: str, value: ^Value) -> ^Struct_Instruction_Field {
+    let result = allocator.alloc(size: type_size(Struct_Instruction_Field), alignment: type_alignment(Struct_Instruction_Field)).as(^Struct_Instruction_Field)
+    result.^ = Struct_Instruction_Field(name: name, value: value, next: null)
+    return result
+}
+
+type Struct_Instruction = struct {
+    super: Instruction
+    first_field: ^Struct_Instruction_Field
+}
+
+proc new_struct_instruction(name: str, type: ^Type) -> ^Struct_Instruction {
+    let allocated = allocator.alloc(size: type_size(Struct_Instruction), alignment: type_alignment(Struct_Instruction)).as(^Struct_Instruction)
+    allocated.^ = Struct_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Struct
+            next_instruction: null
+        )
+        first_field: null
+    )
+    return allocated
+}
+
+type Struct_Offset_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    member: str
+}
+
+proc new_struct_offset_instruction(name: str, type: ^Type, pointer: ^Value, member: str) -> ^Struct_Offset_Instruction {
+    let allocated = allocator.alloc(size: type_size(Struct_Offset_Instruction), alignment: type_alignment(Struct_Offset_Instruction)).as(^Struct_Offset_Instruction)
+    allocated.^ = Struct_Offset_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Struct_Offset
+            next_instruction: null
+        )
+        pointer: pointer
+        member: member
     )
     return allocated
 }

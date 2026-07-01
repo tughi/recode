@@ -630,7 +630,7 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression {
                 expression = parsed.new_cast_expression(location: location, operand: expression, target_type: target_type)
             } else {
                 let member = self.consume_identifier()
-                expression = parsed.new_member_access_expression(location: location, operand: expression, member: member)
+                expression = parsed.new_member_access_expression(location: expression.location, operand: expression, member: member)
             }
         } else if self.lexer.matches_one(match.other('(')) {
             let location = self.lexer.location()

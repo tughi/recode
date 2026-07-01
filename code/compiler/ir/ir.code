@@ -1,5 +1,6 @@
 import allocator
 import compiler.checker.checked
+import string
 
 type Program = struct {
     first_type: ^Named_Type
@@ -56,6 +57,7 @@ proc (^Program).find_procedure(self, name: str) -> ^Procedure {
 
 type Procedure = struct {
     name: str
+    is_method: bool
     first_parameter: ^Value
     last_parameter: ^Value
     return_type: ^Type
@@ -68,6 +70,7 @@ proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
     let result = allocator.alloc(size: type_size(Procedure), alignment: type_alignment(Procedure)).as(^Procedure)
     result.^ = Procedure(
         name: name
+        is_method: false
         first_parameter: null
         last_parameter: null
         return_type: return_type
@@ -123,6 +126,7 @@ type Type_Kind = enum {
     Pointer
     Procedure
     str
+    Struct
     u16
     u32
     u64
@@ -140,7 +144,64 @@ proc new_primitive_type(kind: Type_Kind) -> ^Type {
     return result
 }
 
+proc (^Type).name_string(self) -> str {
+    if self.kind == .Any {
+        return "Any"
+    } else if self.kind == .bool {
+        return "bool"
+    } else if self.kind == .i16 {
+        return "i16"
+    } else if self.kind == .i32 {
+        return "i32"
+    } else if self.kind == .i64 {
+        return "i64"
+    } else if self.kind == .i8 {
+        return "i8"
+    } else if self.kind == .isize {
+        return "isize"
+    } else if self.kind == .Multi_Pointer {
+        let builder = string.new_builder()
+        return builder.append("[*]").append(self.as(^Multi_Pointer_Type).pointee.name_string()).build()
+    } else if self.kind == .Opaque {
+        return self.as(^Named_Type).name
+    } else if self.kind == .Pointer {
+        let builder = string.new_builder()
+        return builder.append_char('[').append(self.as(^Pointer_Type).pointee.name_string()).append_char(']').build()
+    } else if self.kind == .str {
+        return "str"
+    } else if self.kind == .Struct {
+        return self.as(^Named_Type).name
+    } else if self.kind == .u16 {
+        return "u16"
+    } else if self.kind == .u32 {
+        return "u32"
+    } else if self.kind == .u64 {
+        return "u64"
+    } else if self.kind == .u8 {
+        return "u8"
+    } else if self.kind == .usize {
+        return "usize"
+    }
+    panic "Not supported yet: type name"
+}
+
+proc align_up(size: usize, alignment: usize) -> usize {
+    return (size + alignment - 1) / alignment * alignment
+}
+
 proc (^Type).alignment(self) -> usize {
+    if self.kind == .Struct {
+        let alignment = 1usize
+        let member = self.as(^Struct_Type).first_member
+        while member != null {
+            let member_alignment = member.type.alignment()
+            if member_alignment > alignment {
+                alignment = member_alignment
+            }
+            member = member.next
+        }
+        return alignment
+    }
     let size = self.size()
     if size >= 8 {
         return 8
@@ -167,6 +228,20 @@ proc (^Type).size(self) -> usize {
         return 8
     } else if self.kind == .Procedure {
         return 8
+    } else if self.kind == .Struct {
+        let size = 0usize
+        let alignment = 1usize
+        let member = self.as(^Struct_Type).first_member
+        while member != null {
+            let member_alignment = member.type.alignment()
+            size = align_up(size, member_alignment)
+            size = size + member.type.size()
+            if member_alignment > alignment {
+                alignment = member_alignment
+            }
+            member = member.next
+        }
+        return align_up(size, alignment)
     } else if self.kind == .u16 {
         return 2
     } else if self.kind == .u32 {
@@ -261,6 +336,39 @@ proc (^Procedure_Type).append_parameter(self, type: ^Type) {
         self.last_parameter.next = parameter
     }
     self.last_parameter = parameter
+}
+
+type Struct_Member = struct {
+    name: str
+    type: ^Type
+    next: ^Struct_Member
+}
+
+type Struct_Type = struct {
+    super: Named_Type
+    first_member: ^Struct_Member
+    last_member: ^Struct_Member
+}
+
+proc new_struct_type(name: str) -> ^Struct_Type {
+    let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
+    result.^ = Struct_Type(
+        super: Named_Type(super: Type(kind: .Struct), name: name, next_type: null)
+        first_member: null
+        last_member: null
+    )
+    return result
+}
+
+proc (^Struct_Type).append_member(self, name: str, type: ^Type) {
+    let member = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
+    member.^ = Struct_Member(name: name, type: type, next: null)
+    if self.first_member == null {
+        self.first_member = member
+    } else {
+        self.last_member.next = member
+    }
+    self.last_member = member
 }
 
 type Value_Kind = enum {
