@@ -20,6 +20,7 @@ typedef struct {
     IR_Module *module;
     Debugger_Mode mode;
     size_t next_depth;
+    double last_render_time;
     IR_Instruction_List breakpoints;
     Font font;
     Call_Frame *current_frame;
@@ -726,15 +727,44 @@ static Variables_Panel make_variables_panel(float weight) {
     };
 }
 
+static void debugger_render_frame(Debugger *debugger) {
+    debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
+
+    if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        debugger->active_panel = debugger->root_panel->pick(debugger->root_panel, GetMousePosition());
+    }
+    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    debugger->active_panel->handle_input(debugger->active_panel, debugger);
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    debugger->root_panel->draw(debugger->root_panel, debugger, debugger->root_panel->bounds);
+    EndDrawing();
+}
+
 static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     Debugger *debugger = (Debugger *)observer;
 
     size_t depth = frame_depth(current_frame);
     bool at_breakpoint = is_breakpoint(debugger, current_frame->instruction);
-    if (debugger->mode == DEBUGGER_MODE__CONTINUE && !at_breakpoint) {
-        return;
-    }
-    if (debugger->mode == DEBUGGER_MODE__NEXT && depth > debugger->next_depth && !at_breakpoint) {
+    bool running = debugger->mode == DEBUGGER_MODE__CONTINUE || (debugger->mode == DEBUGGER_MODE__NEXT && depth > debugger->next_depth);
+    if (running && !at_breakpoint) {
+        // Render a UI frame at ~60 Hz while running.
+        double now = GetTime();
+        if (now - debugger->last_render_time < 1.0 / 60) {
+            return;
+        }
+        debugger->last_render_time = now;
+        if (WindowShouldClose()) {
+            exit(0);
+        }
+        debugger->current_frame = current_frame;
+        debugger_render_frame(debugger);
+        if (IsKeyPressed(KEY_SPACE)) {
+            debugger->mode = DEBUGGER_MODE__STEP;
+        } else if (IsKeyPressed(KEY_Q)) {
+            exit(0);
+        }
         return;
     }
 
@@ -744,18 +774,7 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     debugger->root_panel->handle_step(debugger->root_panel, debugger);
 
     while (!WindowShouldClose()) {
-        debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
-
-        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            debugger->active_panel = debugger->root_panel->pick(debugger->root_panel, GetMousePosition());
-        }
-        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-        debugger->active_panel->handle_input(debugger->active_panel, debugger);
-
-        BeginDrawing();
-        ClearBackground(BLACK);
-        debugger->root_panel->draw(debugger->root_panel, debugger, debugger->root_panel->bounds);
-        EndDrawing();
+        debugger_render_frame(debugger);
 
         if (IsKeyPressed(KEY_S)) {
             debugger->mode = DEBUGGER_MODE__STEP;

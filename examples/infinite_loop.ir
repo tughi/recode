@@ -1,0 +1,18 @@
+; Run with: ./Runner -d examples/infinite_loop.ir
+;
+; Press `c` to continue: `%counter` climbs in the Variables panel as the loop
+; runs. Set a gutter breakpoint or press `space` to pause the running loop.
+
+$main(): i32 {
+@1:
+  %counter.ptr: [i32] = alloc i32
+  %0: i32 = const 0
+  store %counter.ptr %0
+  jmp @2
+@2:
+  %counter: i32 = load %counter.ptr
+  %1: i32 = const 1
+  %counter.next: i32 = add %counter %1
+  store %counter.ptr %counter.next
+  jmp @2
+}
