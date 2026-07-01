@@ -12,6 +12,7 @@ type Checker = struct {
     bool_type: ^checked.Type
     i32_type: ^checked.Type
     null_type: ^checked.Type
+    u8_type: ^checked.Type
     usize_type: ^checked.Type
     is_unreachable: bool
 }
@@ -25,6 +26,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         bool_type: null
         i32_type: null
         null_type: checked.new_null_type()
+        u8_type: null
         usize_type: null
         is_unreachable: false
     )
@@ -63,6 +65,8 @@ proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_
         self.bool_type = type
     } else if kind == .i32 {
         self.i32_type = type
+    } else if kind == .u8 {
+        self.u8_type = type
     } else if kind == .usize {
         self.usize_type = type
     }
@@ -183,7 +187,9 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let return_type: ^checked.Type = null
     if procedure_statement.return_type != null {
         return_type = self.resolve_type(procedure_statement.return_type)
-        if return_type.kind == .External {
+        if return_type.kind == .Any {
+            self.error(procedure_statement.return_type.location, "Cannot use Any as return type")
+        } else if return_type.kind == .External {
             self.error(procedure_statement.return_type.location, "Cannot use external type as return type")
         }
     }
@@ -193,7 +199,9 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let parsed_parameter = procedure_statement.first_parameter
     while parsed_parameter != null {
         let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
-        if parameter_type.kind == .External {
+        if parameter_type.kind == .Any {
+            self.error(parsed_parameter.parameter_type.location, "Cannot use Any as parameter type")
+        } else if parameter_type.kind == .External {
             self.error(parsed_parameter.parameter_type.location, "Cannot use external types as procedure parameters")
         }
         let parameter = checked.new_procedure_parameter(name: parsed_parameter.name.lexeme, parameter_type: parameter_type)
@@ -387,12 +395,16 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
     } else if parsed_expression.kind == .Address_Of {
         return self.check_address_of_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Array_Access {
+        return self.check_array_access_expression(parsed_expression.as(^parsed.Array_Access_Expression))
     } else if parsed_expression.kind == .Bool {
         return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
     } else if parsed_expression.kind == .Call {
         return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
     } else if parsed_expression.kind == .Cast {
         return self.check_cast_expression(parsed_expression.as(^parsed.Cast_Expression))
+    } else if parsed_expression.kind == .Character {
+        return self.check_character_expression(parsed_expression.as(^parsed.Character_Expression))
     } else if parsed_expression.kind == .Dereference {
         return self.check_dereference_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Divide {
@@ -444,6 +456,18 @@ proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unar
     }
     let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_array_access_expression(self, array_access_expression: ^parsed.Array_Access_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(array_access_expression.operand, expected_type: null)
+    let item_type: ^checked.Type = null
+    if operand.type.kind == .Multi_Pointer {
+        item_type = operand.type.as(^checked.Multi_Pointer_Type).pointee
+    } else {
+        self.error(array_access_expression.operand.location, "Not an array")
+    }
+    let index = self.check_expression(array_access_expression.index, expected_type: null)
+    return checked.new_array_access_expression(operand: operand, index: index, type: item_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind, expected_type: ^checked.Type) -> ^checked.Expression {
@@ -502,6 +526,10 @@ proc (^Checker).check_cast_expression(self, cast_expression: ^parsed.Cast_Expres
     let target_type = self.resolve_type(cast_expression.target_type)
     let operand = self.check_expression(cast_expression.operand, expected_type: null)
     return checked.new_cast_expression(operand: operand, type: target_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_character_expression(self, character_expression: ^parsed.Character_Expression) -> ^checked.Expression {
+    return checked.new_character_expression(token: character_expression.token, type: self.u8_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind) -> ^checked.Expression {
@@ -606,6 +634,10 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
             return symbol.as(^checked.Type_Symbol).type
         }
         self.error(named_type.location, "Symbol is not a type")
+    } else if parsed_type.kind == .Multi_Pointer {
+        let multi_pointer_type = parsed_type.as(^parsed.Multi_Pointer_Type)
+        let pointee = self.resolve_type(multi_pointer_type.pointee)
+        return checked.new_multi_pointer_type(pointee: pointee).as(^checked.Type)
     } else if parsed_type.kind == .Pointer {
         let pointer_type = parsed_type.as(^parsed.Pointer_Type)
         let pointee = self.resolve_type(pointer_type.pointee)

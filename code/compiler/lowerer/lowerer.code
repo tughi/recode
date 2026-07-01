@@ -172,12 +172,29 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
     wrapper.append_block(block)
     self.current_block = block
 
+    let first_argument: ^ir.Argument = null
+    let last_argument: ^ir.Argument = null
+    let main_parameter = main_procedure.first_parameter
+    while main_parameter != null {
+        let parameter = ir.new_value(kind: .Parameter, name: main_parameter.name, type: main_parameter.type)
+        wrapper.append_parameter(parameter)
+        let argument = ir.new_argument(parameter)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        main_parameter = main_parameter.next
+    }
+
     let callee = ir.new_value(kind: .Procedure, name: main_procedure.name, type: main_procedure.return_type)
     let call_instruction = ir.new_call_instruction(
         name: self.fresh_name()
         type: main_procedure.return_type
         callee: callee
     )
+    call_instruction.first_argument = first_argument
     self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
 
     let result: ^ir.Value = null
@@ -223,7 +240,9 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
 proc (^Lowerer).lower_assignment_statement(self, assignment_statement: ^checked.Assignment_Statement) {
     let object = assignment_statement.object
     let pointer: ^ir.Value = null
-    if object.kind == .Dereference {
+    if object.kind == .Array_Access {
+        pointer = self.lower_array_offset(object.as(^checked.Array_Access_Expression))
+    } else if object.kind == .Dereference {
         pointer = self.lower_expression(object.as(^checked.Dereference_Expression).operand)
     } else if object.kind == .Symbol {
         pointer = self.find_scope(object.as(^checked.Symbol_Expression).symbol)
@@ -321,6 +340,15 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Add)
     } else if expression.kind == .Address_Of {
         return self.lower_address_of_expression(expression.as(^checked.Address_Of_Expression))
+    } else if expression.kind == .Array_Access {
+        let pointer = self.lower_array_offset(expression.as(^checked.Array_Access_Expression))
+        let load_instruction = ir.new_load_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+            pointer: pointer
+        )
+        self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
+        return load_instruction.as(^ir.Value)
     } else if expression.kind == .Bool {
         let bool_expression = expression.as(^checked.Bool_Expression)
         let value = 0u64
@@ -370,6 +398,16 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return call_instruction.as(^ir.Value)
     } else if expression.kind == .Cast {
         return self.lower_cast_expression(expression.as(^checked.Cast_Expression))
+    } else if expression.kind == .Character {
+        let character_expression = expression.as(^checked.Character_Expression)
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(character_expression.type)
+            value: character_expression.token.value.as(u64)
+            lexeme: character_expression.token.lexeme
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
     } else if expression.kind == .Dereference {
         return self.lower_dereference_expression(expression.as(^checked.Dereference_Expression))
     } else if expression.kind == .Divide {
@@ -452,10 +490,14 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.find_scope(symbol)
     } else if expression.kind == .Type_Alignment {
         let type_alignment_expression = expression.as(^checked.Type_Alignment_Expression)
+        let aligned_type = type_alignment_expression.aligned_type
+        if aligned_type.kind == .Multi_Pointer {
+            aligned_type = aligned_type.as(^checked.Multi_Pointer_Type).pointee
+        }
         let const_instruction = ir.new_const_instruction(
             name: self.fresh_name()
             type: self.lower_type(expression.type)
-            value: self.lower_type(type_alignment_expression.aligned_type).alignment().as(u64)
+            value: self.lower_type(aligned_type).alignment().as(u64)
             lexeme: ""
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
@@ -486,6 +528,9 @@ proc (^Lowerer).lower_address_of_expression(self, address_of_expression: ^checke
             return self.find_scope(symbol)
         }
     }
+    if operand.kind == .Array_Access {
+        return self.lower_array_offset(operand.as(^checked.Array_Access_Expression))
+    }
     panic "Lowering not supported yet: address-of operand"
 }
 
@@ -501,6 +546,20 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
     )
     self.current_block.append_instruction(binary_instruction.as(^ir.Instruction))
     return binary_instruction.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_array_offset(self, array_access_expression: ^checked.Array_Access_Expression) -> ^ir.Value {
+    let array = self.lower_expression(array_access_expression.operand)
+    let index = self.lower_expression(array_access_expression.index)
+    let item_type = self.lower_type(array_access_expression.type)
+    let offset_instruction = ir.new_offset_instruction(
+        name: self.fresh_name()
+        type: ir.new_pointer_type(item_type).as(^ir.Type)
+        pointer: array
+        index: index
+    )
+    self.current_block.append_instruction(offset_instruction.as(^ir.Instruction))
+    return offset_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).lower_cast_expression(self, cast_expression: ^checked.Cast_Expression) -> ^ir.Value {
@@ -644,6 +703,8 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
         return ir.new_primitive_type(.i8)
     } else if type.kind == .isize {
         return ir.new_primitive_type(.isize)
+    } else if type.kind == .Multi_Pointer {
+        return ir.new_multi_pointer_type(self.lower_type(type.as(^checked.Multi_Pointer_Type).pointee)).as(^ir.Type)
     } else if type.kind == .Pointer {
         return ir.new_pointer_type(self.lower_type(type.as(^checked.Pointer_Type).pointee)).as(^ir.Type)
     } else if type.kind == .Procedure {

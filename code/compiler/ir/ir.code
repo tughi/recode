@@ -117,6 +117,7 @@ type Type_Kind = enum {
     i64
     i8
     isize
+    Multi_Pointer
     Nothing
     Opaque
     Pointer
@@ -160,6 +161,8 @@ proc (^Type).size(self) -> usize {
         return 1
     } else if self.kind == .isize {
         return 8
+    } else if self.kind == .Multi_Pointer {
+        return 8
     } else if self.kind == .Pointer {
         return 8
     } else if self.kind == .Procedure {
@@ -176,6 +179,17 @@ proc (^Type).size(self) -> usize {
         return 8
     }
     panic "Lowering not supported yet: size of type"
+}
+
+type Multi_Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
+    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
+    result.^ = Multi_Pointer_Type(super: Type(kind: .Multi_Pointer), pointee: pointee)
+    return result
 }
 
 type Nothing_Type = struct {

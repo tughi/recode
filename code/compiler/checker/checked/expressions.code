@@ -4,9 +4,11 @@ import compiler.lexer
 type Expression_Kind = enum {
     Add
     Address_Of
+    Array_Access
     Bool
     Call
     Cast
+    Character
     Dereference
     Divide
     Equals
@@ -35,7 +37,9 @@ type Expression = struct {
 }
 
 proc (^Expression).is_mutable(self) -> bool {
-    if self.kind == .Dereference {
+    if self.kind == .Array_Access {
+        return true
+    } else if self.kind == .Dereference {
         return true
     } else if self.kind == .Symbol {
         return self.as(^Symbol_Expression).symbol.kind == .Variable
@@ -53,6 +57,22 @@ proc new_address_of_expression(operand: ^Expression, type: ^Type) -> ^Address_Of
     result.^ = Address_Of_Expression(
         super: Expression(kind: .Address_Of, type: type)
         operand: operand
+    )
+    return result
+}
+
+type Array_Access_Expression = struct {
+    super: Expression
+    operand: ^Expression
+    index: ^Expression
+}
+
+proc new_array_access_expression(operand: ^Expression, index: ^Expression, type: ^Type) -> ^Array_Access_Expression {
+    let result = allocator.alloc(size: type_size(Array_Access_Expression), alignment: type_alignment(Array_Access_Expression)).as(^Array_Access_Expression)
+    result.^ = Array_Access_Expression(
+        super: Expression(kind: .Array_Access, type: type)
+        operand: operand
+        index: index
     )
     return result
 }
@@ -124,6 +144,20 @@ proc new_cast_expression(operand: ^Expression, type: ^Type) -> ^Cast_Expression 
     result.^ = Cast_Expression(
         super: Expression(kind: .Cast, type: type)
         operand: operand
+    )
+    return result
+}
+
+type Character_Expression = struct {
+    super: Expression
+    token: ^lexer.Character
+}
+
+proc new_character_expression(token: ^lexer.Character, type: ^Type) -> ^Character_Expression {
+    let result = allocator.alloc(size: type_size(Character_Expression), alignment: type_alignment(Character_Expression)).as(^Character_Expression)
+    result.^ = Character_Expression(
+        super: Expression(kind: .Character, type: type)
+        token: token
     )
     return result
 }

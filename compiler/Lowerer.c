@@ -722,7 +722,7 @@ IR_Value *Lowerer__lower_expression(Lowerer *self, Checked_Expression *expressio
     case CHECKED_EXPRESSION_KIND__TYPE_ALIGNMENT: {
         Checked_Type_Alignment_Expression *type_alignment_expression = (Checked_Type_Alignment_Expression *)expression;
         Checked_Type *aligned_type = type_alignment_expression->aligned_type;
-        while (aligned_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
+        if (aligned_type->kind == CHECKED_TYPE_KIND__MULTI_POINTER) {
             aligned_type = ((Checked_Multi_Pointer_Type *)aligned_type)->item_type;
         }
         uint64_t alignment = IR_Type__alignment(Lowerer__lower_type(self, aligned_type));

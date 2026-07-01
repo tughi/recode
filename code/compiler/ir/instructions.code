@@ -21,6 +21,7 @@ type Instruction_Kind = enum {
     Multiply
     Neg
     Not
+    Offset
     Phi
     Ret
     Store
@@ -249,6 +250,26 @@ proc new_not_instruction(name: str, type: ^Type, operand: ^Value) -> ^Not_Instru
             next_instruction: null
         )
         operand: operand
+    )
+    return allocated
+}
+
+type Offset_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    index: ^Value
+}
+
+proc new_offset_instruction(name: str, type: ^Type, pointer: ^Value, index: ^Value) -> ^Offset_Instruction {
+    let allocated = allocator.alloc(size: type_size(Offset_Instruction), alignment: type_alignment(Offset_Instruction)).as(^Offset_Instruction)
+    allocated.^ = Offset_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Offset
+            next_instruction: null
+        )
+        pointer: pointer
+        index: index
     )
     return allocated
 }

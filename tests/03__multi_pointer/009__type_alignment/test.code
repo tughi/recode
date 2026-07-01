@@ -8,5 +8,8 @@ proc main() -> i32 {
     if type_alignment([^]^i32) != 8 {
         return 3
     }
+    if type_alignment([^][^]u8) != 8 {
+        return 4
+    }
     return 0
 }

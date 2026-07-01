@@ -146,16 +146,14 @@ proc new_loop_statement(location: source.Source_Location, body: ^Statement) -> ^
 }
 
 type Procedure_Parameter = struct {
-    label: ^lexer.Identifier
     name: ^lexer.Identifier
     parameter_type: ^Type
     next: ^Procedure_Parameter
 }
 
-proc new_procedure_parameter(label: ^lexer.Identifier, name: ^lexer.Identifier, parameter_type: ^Type) -> ^Procedure_Parameter {
+proc new_procedure_parameter(name: ^lexer.Identifier, parameter_type: ^Type) -> ^Procedure_Parameter {
     let result = allocator.alloc(size: type_size(Procedure_Parameter), alignment: type_alignment(Procedure_Parameter)).as(^Procedure_Parameter)
     result.^ = Procedure_Parameter(
-        label: label
         name: name
         parameter_type: parameter_type
         next: null

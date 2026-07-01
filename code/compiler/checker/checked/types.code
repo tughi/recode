@@ -9,6 +9,7 @@ type Type_Kind = enum {
     i64
     i8
     isize
+    Multi_Pointer
     Null
     Pointer
     Procedure
@@ -22,6 +23,20 @@ type Type_Kind = enum {
 
 type Type = struct {
     kind: Type_Kind
+}
+
+type Multi_Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
+    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
+    result.^ = Multi_Pointer_Type(
+        super: Type(kind: .Multi_Pointer)
+        pointee: pointee
+    )
+    return result
 }
 
 type Named_Type = struct {
@@ -39,6 +54,9 @@ proc (^Type).equals(self, other: ^Type) -> bool {
     }
     if self.kind == .External {
         return self.name().equals(other.name())
+    }
+    if self.kind == .Multi_Pointer {
+        return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
     }
     if self.kind == .Pointer {
         return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)

@@ -111,6 +111,13 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
         self.write_value_definition(not_instruction.as(^ir.Value))
         self.write(" = not ")
         self.write_value_reference(not_instruction.operand)
+    } else if instruction.kind == .Offset {
+        let offset_instruction = instruction.as(^ir.Offset_Instruction)
+        self.write_value_definition(offset_instruction.as(^ir.Value))
+        self.write(" = offset ")
+        self.write_value_reference(offset_instruction.pointer)
+        self.write_char(char: ' ')
+        self.write_value_reference(offset_instruction.index)
     } else if instruction.kind == .Phi {
         let phi_instruction = instruction.as(^ir.Phi_Instruction)
         self.write_value_definition(phi_instruction.as(^ir.Value))
@@ -218,6 +225,9 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
         self.write("i8")
     } else if type.kind == .isize {
         self.write("isize")
+    } else if type.kind == .Multi_Pointer {
+        self.write("[*]")
+        self.write_type(type.as(^ir.Multi_Pointer_Type).pointee)
     } else if type.kind == .Nothing {
         panic
     } else if type.kind == .Opaque {

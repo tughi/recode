@@ -221,7 +221,7 @@ proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> ^pars
         self.consume_space(0)
         if receiver != null {
             let name = self.consume_identifier()
-            first_parameter = parsed.new_procedure_parameter(label: null, name: name, parameter_type: receiver)
+            first_parameter = parsed.new_procedure_parameter(name: name, parameter_type: receiver)
             last_parameter = first_parameter
             self.consume_space(0)
             if self.lexer.matches_one(match.other(')')) {
@@ -231,17 +231,12 @@ proc (^Parser).parse_procedure_parameters(self, receiver: ^parsed.Type) -> ^pars
             self.consume_space(1)
         }
         loop {
-            let label: ^lexer.Identifier = null
-            if self.lexer.matches_three(match.identifier, match.optional_space, match.identifier) {
-                label = self.consume_identifier()
-                self.consume_space(1)
-            }
             let name = self.consume_identifier()
             self.consume_space(0)
             self.consume_other(':')
             self.consume_space(1)
             let parameter_type = self.parse_type()
-            let parameter = parsed.new_procedure_parameter(label: label, name: name, parameter_type: parameter_type)
+            let parameter = parsed.new_procedure_parameter(name: name, parameter_type: parameter_type)
             if last_parameter == null {
                 first_parameter = parameter
             } else {
@@ -264,13 +259,13 @@ proc (^Parser).parse_procedure_pointer_parameters(self) -> ^parsed.Procedure_Par
     let last_parameter: ^parsed.Procedure_Parameter = null
     if not self.lexer.matches_two(match.optional_space, match.other(')')) {
         self.consume_space(0)
-        first_parameter = parsed.new_procedure_parameter(label: null, name: null, parameter_type: self.parse_type())
+        first_parameter = parsed.new_procedure_parameter(name: null, parameter_type: self.parse_type())
         last_parameter = first_parameter
         while self.lexer.matches_two(match.optional_space, match.other(',')) {
             self.consume_space(0)
             self.consume_other(',')
             self.consume_space(1)
-            last_parameter.next = parsed.new_procedure_parameter(label: null, name: null, parameter_type: self.parse_type())
+            last_parameter.next = parsed.new_procedure_parameter(name: null, parameter_type: self.parse_type())
             last_parameter = last_parameter.next
         }
     }
@@ -988,9 +983,7 @@ proc (^Parser).consume_other(self, expected: u8) -> ^lexer.Other {
         self.lexer.advance()
         return token.as(^lexer.Other)
     }
-    let error_message = string.new_builder()
-    error_message.append("Expected '").append_char(expected).append("'")
-    libc.stderr.write(error_message.build()).end_line()
+    self.error(token.location, "Unexpected token")
     panic
 }
 
@@ -1004,9 +997,7 @@ proc (^Parser).consume_two_other(self, first: u8, second: u8) -> ^lexer.Other {
             return first_token.as(^lexer.Other).merge_with(another: second_token.as(^lexer.Other))
         }
     }
-    let error_message = string.new_builder()
-    error_message.append("Expected '").append_char(first).append_char(second).append("'")
-    libc.stderr.write(error_message.build()).end_line()
+    self.error(first_token.location, "Unexpected token")
     panic
 }
 
@@ -1016,7 +1007,8 @@ proc (^Parser).consume_character(self) -> ^lexer.Character {
         self.lexer.advance()
         return token.as(^lexer.Character)
     }
-    panic "Expected character literal"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_comment(self) -> ^lexer.Comment {
@@ -1025,7 +1017,8 @@ proc (^Parser).consume_comment(self) -> ^lexer.Comment {
         self.lexer.advance()
         return token.as(^lexer.Comment)
     }
-    panic "Expected comment"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_empty_line(self, alignment: i32) {
@@ -1053,7 +1046,8 @@ proc (^Parser).consume_end_of_line(self) -> ^lexer.End_Of_Line {
         self.lexer.advance()
         return token.as(^lexer.End_Of_Line)
     }
-    panic "Expected end of line"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_identifier(self) -> ^lexer.Identifier {
@@ -1062,7 +1056,8 @@ proc (^Parser).consume_identifier(self) -> ^lexer.Identifier {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
     }
-    panic "Expected identifier"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_keyword(self, lexeme: str) -> ^lexer.Identifier {
@@ -1071,9 +1066,7 @@ proc (^Parser).consume_keyword(self, lexeme: str) -> ^lexer.Identifier {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
     }
-    let error_message = string.new_builder()
-    error_message.append("Expected \"").append(lexeme).append("\"")
-    libc.stderr.write(error_message.build()).end_line()
+    self.error(token.location, "Unexpected token")
     panic
 }
 
@@ -1083,7 +1076,8 @@ proc (^Parser).consume_integer(self) -> ^lexer.Integer {
         self.lexer.advance()
         return token.as(^lexer.Integer)
     }
-    panic "Expected integer literal"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_string(self) -> ^lexer.String {
@@ -1092,7 +1086,8 @@ proc (^Parser).consume_string(self) -> ^lexer.String {
         self.lexer.advance()
         return token.as(^lexer.String)
     }
-    panic "Expected string literal"
+    self.error(token.location, "Unexpected token")
+    panic
 }
 
 proc (^Parser).consume_space(self, count: i32) -> ^lexer.Space {

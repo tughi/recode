@@ -24,8 +24,16 @@ $test.main(): i32 {
   %12: i32 = const 3
   ret %12
 @7:
-  %13: i32 = const 0
-  ret %13
+  %13: usize = const 8
+  %14: usize = const 8
+  %15: bool = cmp_ne %13 %14
+  br %15 @8 @9
+@8:
+  %16: i32 = const 4
+  ret %16
+@9:
+  %17: i32 = const 0
+  ret %17
 }
 
 $main(): i32 {
