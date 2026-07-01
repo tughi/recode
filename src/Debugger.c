@@ -2,6 +2,7 @@
 #include "IR.h"
 #include "Interpreter.h"
 #include "String.h"
+#include <limits.h>
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -797,6 +798,13 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
 }
 
 Font load_bitmap_font(const char *path) {
+    char resolved_path[PATH_MAX];
+    const char *runner_home = getenv("RUNNER_HOME");
+    if (runner_home != NULL && runner_home[0] != '\0') {
+        snprintf(resolved_path, sizeof(resolved_path), "%s/%s", runner_home, path);
+        path = resolved_path;
+    }
+
     FILE *file = fopen(path, "r");
     if (file == NULL) {
         fprintf(stderr, "Cannot open font file: %s\n", path);
