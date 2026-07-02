@@ -213,11 +213,84 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
 
     self.lower_statement(procedure_symbol.body)
 
-    if not self.current_block.is_terminated() {
+    if procedure.return_type.kind == .Nothing and not self.current_block.is_terminated() {
         self.current_block.append_instruction(ir.new_ret_instruction(value: null).as(^ir.Instruction))
     }
 
     return procedure
+}
+
+proc (^Lowerer).lower_panic_statement(self, panic_statement: ^checked.Panic_Statement) {
+    let message = string.new_builder()
+    message.append(panic_statement.location.source.path)
+    message.append_char(':').append_decimal(panic_statement.location.line.as(usize))
+    message.append(": Panic!")
+    if panic_statement.message != null {
+        message.append_char(' ').append(panic_statement.message.value)
+    }
+    message.append_char('\n')
+    let text = message.build()
+
+    let buffer_instruction = ir.new_cast_instruction(
+        name: self.fresh_name()
+        type: ir.new_pointer_type(ir.new_primitive_type(.Any)).as(^ir.Type)
+        value: self.string_global(text)
+    )
+    self.current_block.append_instruction(buffer_instruction.as(^ir.Instruction))
+    let size_instruction = ir.new_const_instruction(
+        name: self.fresh_name()
+        type: ir.new_primitive_type(.usize)
+        value: 1
+        lexeme: ""
+    )
+    self.current_block.append_instruction(size_instruction.as(^ir.Instruction))
+    let count_instruction = ir.new_const_instruction(
+        name: self.fresh_name()
+        type: ir.new_primitive_type(.usize)
+        value: text.length.as(u64)
+        lexeme: ""
+    )
+    self.current_block.append_instruction(count_instruction.as(^ir.Instruction))
+    let stderr_global = self.find_global("stderr")
+    let file_instruction = ir.new_load_instruction(
+        name: self.fresh_name()
+        type: stderr_global.type.as(^ir.Pointer_Type).pointee
+        pointer: stderr_global
+    )
+    self.current_block.append_instruction(file_instruction.as(^ir.Instruction))
+
+    let fwrite_callee = self.find_global("fwrite")
+    let fwrite_return_type = fwrite_callee.type.as(^ir.Pointer_Type).pointee.as(^ir.Procedure_Type).return_type
+    let fwrite_name = ""
+    if fwrite_return_type.kind != .Nothing {
+        fwrite_name = self.fresh_name()
+    }
+    let fwrite_call = ir.new_call_instruction(name: fwrite_name, type: fwrite_return_type, callee: fwrite_callee)
+    let buffer_argument = ir.new_argument(buffer_instruction.as(^ir.Value))
+    let size_argument = ir.new_argument(size_instruction.as(^ir.Value))
+    let count_argument = ir.new_argument(count_instruction.as(^ir.Value))
+    buffer_argument.next = size_argument
+    size_argument.next = count_argument
+    count_argument.next = ir.new_argument(file_instruction.as(^ir.Value))
+    fwrite_call.first_argument = buffer_argument
+    self.current_block.append_instruction(fwrite_call.as(^ir.Instruction))
+
+    let status_instruction = ir.new_const_instruction(
+        name: self.fresh_name()
+        type: ir.new_primitive_type(.i32)
+        value: 1
+        lexeme: ""
+    )
+    self.current_block.append_instruction(status_instruction.as(^ir.Instruction))
+    let exit_callee = self.find_global("exit")
+    let exit_return_type = exit_callee.type.as(^ir.Pointer_Type).pointee.as(^ir.Procedure_Type).return_type
+    let exit_name = ""
+    if exit_return_type.kind != .Nothing {
+        exit_name = self.fresh_name()
+    }
+    let exit_call = ir.new_call_instruction(name: exit_name, type: exit_return_type, callee: exit_callee)
+    exit_call.first_argument = ir.new_argument(status_instruction.as(^ir.Value))
+    self.current_block.append_instruction(exit_call.as(^ir.Instruction))
 }
 
 proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
@@ -281,6 +354,8 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
         self.lower_if_statement(statement.as(^checked.If_Statement))
     } else if statement.kind == .Loop {
         self.lower_loop_statement(statement.as(^checked.Loop_Statement))
+    } else if statement.kind == .Panic {
+        self.lower_panic_statement(statement.as(^checked.Panic_Statement))
     } else if statement.kind == .Return {
         let return_statement = statement.as(^checked.Return_Statement)
         let value: ^ir.Value = null

@@ -1,4 +1,6 @@
 import allocator
+import compiler.lexer
+import compiler.source
 
 type Statement_Kind = enum {
     Assignment
@@ -7,6 +9,7 @@ type Statement_Kind = enum {
     Expression
     If
     Loop
+    Panic
     Return
     Variable
     While
@@ -101,6 +104,22 @@ proc new_loop_statement(body: ^Statement) -> ^Loop_Statement {
     result.^ = Loop_Statement(
         super: Statement(kind: .Loop, next: null)
         body: body
+    )
+    return result
+}
+
+type Panic_Statement = struct {
+    super: Statement
+    location: source.Source_Location
+    message: ^lexer.String
+}
+
+proc new_panic_statement(location: source.Source_Location, message: ^lexer.String) -> ^Panic_Statement {
+    let result = allocator.alloc(size: type_size(Panic_Statement), alignment: type_alignment(Panic_Statement)).as(^Panic_Statement)
+    result.^ = Panic_Statement(
+        super: Statement(kind: .Panic, next: null)
+        location: location
+        message: message
     )
     return result
 }

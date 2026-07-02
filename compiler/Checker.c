@@ -1711,7 +1711,7 @@ void Checker__check_struct_type(Checker *self, Checker_Context *context, Checked
                 pWriter__end_location_message(stderr_writer);
                 panic();
             }
-            if (parsed_member == parsed_type_specifier->first_member && String__ends_with_cstring(parsed_member->name->lexeme, "super")) {
+            if (parsed_member == parsed_type_specifier->first_member && String__equals_cstring(parsed_member->name->lexeme, "super")) {
                 if (struct_member_type->kind != CHECKED_TYPE_KIND__STRUCT) {
                     pWriter__begin_location_message(stderr_writer, parsed_member->type->location, WRITER_STYLE__ERROR);
                     pWriter__write__cstring(stderr_writer, "Not a struct type");
