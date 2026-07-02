@@ -505,6 +505,8 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_logic_expression(expression.as(^checked.Binary_Expression))
     } else if expression.kind == .Logic_Or {
         return self.lower_logic_expression(expression.as(^checked.Binary_Expression))
+    } else if expression.kind == .Make_Array {
+        return self.lower_make_array_expression(expression.as(^checked.Make_Array_Expression))
     } else if expression.kind == .Make_Struct {
         return self.lower_make_struct_expression(expression.as(^checked.Make_Struct_Expression))
     } else if expression.kind == .Member_Access {
@@ -721,7 +723,12 @@ proc (^Lowerer).lower_binary_expression(self, binary_expression: ^checked.Binary
 }
 
 proc (^Lowerer).lower_array_offset(self, array_access_expression: ^checked.Array_Access_Expression) -> ^ir.Value {
-    let array = self.lower_expression(array_access_expression.operand)
+    let array: ^ir.Value = null
+    if array_access_expression.operand.type.kind == .Array {
+        array = self.lower_object_pointer(array_access_expression.operand)
+    } else {
+        array = self.lower_expression(array_access_expression.operand)
+    }
     let index = self.lower_expression(array_access_expression.index)
     let item_type = self.lower_type(array_access_expression.type)
     let offset_instruction = ir.new_offset_instruction(
@@ -780,6 +787,46 @@ proc (^Lowerer).lower_logic_expression(self, binary_expression: ^checked.Binary_
     phi.append_entry(block: right_end_block, value: right)
     self.current_block.append_instruction(phi.as(^ir.Instruction))
     return phi.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_make_array_expression(self, make_array_expression: ^checked.Make_Array_Expression) -> ^ir.Value {
+    let array_type = self.lower_type(make_array_expression.type)
+    let item_type = array_type.as(^ir.Array_Type).item_type
+
+    let variable = ir.new_variable(name: self.fresh_name(), type: array_type, symbol: null)
+    let alloc_instruction = ir.new_alloc_instruction(variable)
+    self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
+
+    let index = 0u64
+    let argument = make_array_expression.first_argument
+    while argument != null {
+        let item = self.lower_expression(argument.expression)
+        let index_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: ir.new_primitive_type(.i32)
+            value: index
+            lexeme: ""
+        )
+        self.current_block.append_instruction(index_instruction.as(^ir.Instruction))
+        let offset_instruction = ir.new_offset_instruction(
+            name: self.fresh_name()
+            type: ir.new_pointer_type(item_type).as(^ir.Type)
+            pointer: alloc_instruction.as(^ir.Value)
+            index: index_instruction.as(^ir.Value)
+        )
+        self.current_block.append_instruction(offset_instruction.as(^ir.Instruction))
+        self.current_block.append_instruction(ir.new_store_instruction(pointer: offset_instruction.as(^ir.Value), value: item).as(^ir.Instruction))
+        index = index + 1
+        argument = argument.next
+    }
+
+    let load_instruction = ir.new_load_instruction(
+        name: self.fresh_name()
+        type: array_type
+        pointer: alloc_instruction.as(^ir.Value)
+    )
+    self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
+    return load_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).lower_make_struct_expression(self, make_struct_expression: ^checked.Make_Struct_Expression) -> ^ir.Value {
@@ -946,6 +993,9 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
     }
     if type.kind == .Any {
         return ir.new_primitive_type(.Any)
+    } else if type.kind == .Array {
+        let array_type = type.as(^checked.Array_Type)
+        return ir.new_array_type(item_type: self.lower_type(array_type.item_type), size: array_type.size).as(^ir.Type)
     } else if type.kind == .bool {
         return ir.new_primitive_type(.bool)
     } else if type.kind == .External {

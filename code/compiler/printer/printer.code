@@ -257,6 +257,10 @@ proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
 proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
     if type.kind == .Any {
         self.write("Any")
+    } else if type.kind == .Array {
+        let array_type = type.as(^ir.Array_Type)
+        self.write_char(char: '[').write_u64(value: array_type.size).write_char(char: ']')
+        self.write_type(array_type.item_type)
     } else if type.kind == .bool {
         self.write("bool")
     } else if type.kind == .i16 {

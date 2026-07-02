@@ -703,7 +703,9 @@ proc (^Checker).check_alloc_expression(self, unary_expression: ^parsed.Unary_Exp
 proc (^Checker).check_array_access_expression(self, array_access_expression: ^parsed.Array_Access_Expression) -> ^checked.Expression {
     let operand = self.check_expression(array_access_expression.operand, expected_type: null)
     let item_type: ^checked.Type = null
-    if operand.type.kind == .Multi_Pointer {
+    if operand.type.kind == .Array {
+        item_type = operand.type.as(^checked.Array_Type).item_type
+    } else if operand.type.kind == .Multi_Pointer {
         item_type = operand.type.as(^checked.Multi_Pointer_Type).pointee
     } else {
         self.error(array_access_expression.operand.location, "Not an array")
@@ -727,6 +729,12 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         let symbol = self.current_scope.find(call_expression.operand.as(^parsed.Identifier_Expression).name.lexeme)
         if symbol != null and symbol.kind == .Type {
             return self.check_make_expression(type: symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
+        }
+    }
+    if call_expression.operand.kind == .Type {
+        let make_type = self.resolve_type(call_expression.operand.as(^parsed.Type_Expression).type)
+        if make_type.kind == .Array {
+            return self.check_make_array_expression(array_type: make_type.as(^checked.Array_Type), call_expression: call_expression)
         }
     }
     let receiver: ^checked.Expression = null
@@ -875,6 +883,34 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
         self.error(integer_expression.location, "Cannot infer type of integer literal")
     }
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_make_array_expression(self, array_type: ^checked.Array_Type, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    let first_argument: ^checked.Call_Argument = null
+    let last_argument: ^checked.Call_Argument = null
+    let argument_count = 0u64
+    let parsed_argument = call_expression.first_argument
+    while parsed_argument != null {
+        if parsed_argument.label != null {
+            self.error(parsed_argument.label.location, "Array items cannot be named")
+        }
+        let item_expression = self.check_expression(parsed_argument.expression, expected_type: array_type.item_type)
+        let argument = checked.new_call_argument(item_expression)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        argument_count = argument_count + 1
+        parsed_argument = parsed_argument.next
+    }
+    if argument_count != array_type.size {
+        let message = string.new_builder()
+        message.append("Expected ").append_decimal(array_type.size.as(usize)).append(" array items but got ").append_decimal(argument_count.as(usize))
+        self.error(call_expression.operand.location, message.build())
+    }
+    return checked.new_make_array_expression(array_type: array_type, first_argument: first_argument).as(^checked.Expression)
 }
 
 proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
@@ -1132,6 +1168,10 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
             return symbol.as(^checked.Type_Symbol).type
         }
         self.error(named_type.location, "Symbol is not a type")
+    } else if parsed_type.kind == .Array {
+        let array_type = parsed_type.as(^parsed.Array_Type)
+        let item_type = self.resolve_type(array_type.item_type)
+        return checked.new_array_type(item_type: item_type, size: array_type.size.value).as(^checked.Type)
     } else if parsed_type.kind == .Multi_Pointer {
         let multi_pointer_type = parsed_type.as(^parsed.Multi_Pointer_Type)
         let pointee = self.resolve_type(multi_pointer_type.pointee)

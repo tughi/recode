@@ -114,6 +114,7 @@ proc new_block(label: usize) -> ^Block {
 
 type Type_Kind = enum {
     Any
+    Array
     bool
     i16
     i32
@@ -146,6 +147,10 @@ proc new_primitive_type(kind: Type_Kind) -> ^Type {
 proc (^Type).name_string(self) -> str {
     if self.kind == .Any {
         return "Any"
+    } else if self.kind == .Array {
+        let array_type = self.as(^Array_Type)
+        let builder = string.new_builder()
+        return builder.append_char('[').append_decimal(array_type.size.as(usize)).append_char(']').append(array_type.item_type.name_string()).build()
     } else if self.kind == .bool {
         return "bool"
     } else if self.kind == .i16 {
@@ -187,6 +192,9 @@ proc align_up(size: usize, alignment: usize) -> usize {
 }
 
 proc (^Type).alignment(self) -> usize {
+    if self.kind == .Array {
+        return self.as(^Array_Type).item_type.alignment()
+    }
     if self.kind == .Struct {
         let alignment = 1usize
         let member = self.as(^Struct_Type).first_member
@@ -207,7 +215,10 @@ proc (^Type).alignment(self) -> usize {
 }
 
 proc (^Type).size(self) -> usize {
-    if self.kind == .bool {
+    if self.kind == .Array {
+        let array_type = self.as(^Array_Type)
+        return array_type.size.as(usize) * array_type.item_type.size()
+    } else if self.kind == .bool {
         return 1
     } else if self.kind == .i16 {
         return 2
@@ -251,6 +262,18 @@ proc (^Type).size(self) -> usize {
         return 8
     }
     panic "Lowering not supported yet: size of type"
+}
+
+type Array_Type = struct {
+    super: Type
+    item_type: ^Type
+    size: u64
+}
+
+proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
+    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
+    result.^ = Array_Type(super: Type(kind: .Array), item_type: item_type, size: size)
+    return result
 }
 
 type Multi_Pointer_Type = struct {

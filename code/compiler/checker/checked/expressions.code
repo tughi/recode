@@ -21,6 +21,7 @@ type Expression_Kind = enum {
     Less_Or_Equals
     Logic_And
     Logic_Or
+    Make_Array
     Make_Struct
     Member_Access
     Modulo
@@ -239,6 +240,20 @@ type Make_Struct_Argument = struct {
 proc new_make_struct_argument(member: ^Struct_Member, expression: ^Expression) -> ^Make_Struct_Argument {
     let result = allocator.alloc(size: type_size(Make_Struct_Argument), alignment: type_alignment(Make_Struct_Argument)).as(^Make_Struct_Argument)
     result.^ = Make_Struct_Argument(member: member, expression: expression, next: null)
+    return result
+}
+
+type Make_Array_Expression = struct {
+    super: Expression
+    first_argument: ^Call_Argument
+}
+
+proc new_make_array_expression(array_type: ^Array_Type, first_argument: ^Call_Argument) -> ^Make_Array_Expression {
+    let result = allocator.alloc(size: type_size(Make_Array_Expression), alignment: type_alignment(Make_Array_Expression)).as(^Make_Array_Expression)
+    result.^ = Make_Array_Expression(
+        super: Expression(kind: .Make_Array, type: array_type.as(^Type))
+        first_argument: first_argument
+    )
     return result
 }
 
