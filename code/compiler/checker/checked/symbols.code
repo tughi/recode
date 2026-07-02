@@ -1,6 +1,7 @@
 import allocator
 
 type Symbol_Kind = enum {
+    Constant
     Import
     Parameter
     Procedure
@@ -11,6 +12,20 @@ type Symbol_Kind = enum {
 type Symbol = struct {
     kind: Symbol_Kind
     name: str
+}
+
+type Constant_Symbol = struct {
+    super: Symbol
+    expression: ^Expression
+}
+
+proc new_constant_symbol(name: str, expression: ^Expression) -> ^Constant_Symbol {
+    let result = allocator.alloc(size: type_size(Constant_Symbol), alignment: type_alignment(Constant_Symbol)).as(^Constant_Symbol)
+    result.^ = Constant_Symbol(
+        super: Symbol(kind: .Constant, name: name)
+        expression: expression
+    )
+    return result
 }
 
 type Import_Symbol = struct {

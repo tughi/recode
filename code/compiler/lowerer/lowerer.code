@@ -593,6 +593,9 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
     } else if expression.kind == .Symbol {
         let symbol_expression = expression.as(^checked.Symbol_Expression)
         let symbol = symbol_expression.symbol
+        if symbol.kind == .Constant {
+            return self.lower_expression(symbol.as(^checked.Constant_Symbol).expression)
+        }
         if symbol.kind == .Variable {
             if symbol.as(^checked.Variable_Symbol).is_global {
                 let global_pointer = self.find_global(self.variable_name(symbol.as(^checked.Variable_Symbol)))

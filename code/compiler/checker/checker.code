@@ -227,7 +227,9 @@ proc (^Checker).check_all_declarations(self) {
 
             let statement = module.first_statement
             while statement != null {
-                if statement.kind == .Import {
+                if statement.kind == .Const {
+                    self.check_const_statement(statement.as(^parsed.Const_Statement))
+                } else if statement.kind == .Import {
                     // Already checked.
                 } else if statement.kind == .Procedure {
                     self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
@@ -263,6 +265,34 @@ proc (^Checker).check_all_procedure_bodies(self) {
         }
         package = package.next_package
     }
+}
+
+proc (^Checker).check_const_statement(self, const_statement: ^parsed.Const_Statement) {
+    self.current_scope = self.global_symbols
+    let expression = self.check_expression(const_statement.expression, expected_type: null)
+    self.require_constant(expression: expression, parsed_expression: const_statement.expression)
+    let name = const_statement.name.lexeme
+    self.global_symbols.append(name: name, symbol: checked.new_constant_symbol(name: name, expression: expression).as(^checked.Symbol))
+}
+
+proc (^Checker).require_constant(self, expression: ^checked.Expression, parsed_expression: ^parsed.Expression) {
+    if expression.kind == .Bool or expression.kind == .Character or expression.kind == .Integer or expression.kind == .String {
+        return
+    }
+    if expression.kind == .Add or expression.kind == .Divide or expression.kind == .Modulo or expression.kind == .Multiply or expression.kind == .Subtract {
+        let binary_expression = expression.as(^checked.Binary_Expression)
+        let parsed_binary_expression = parsed_expression.as(^parsed.Binary_Expression)
+        self.require_constant(expression: binary_expression.left, parsed_expression: parsed_binary_expression.left)
+        self.require_constant(expression: binary_expression.right, parsed_expression: parsed_binary_expression.right)
+        return
+    }
+    if expression.kind == .Symbol {
+        if expression.as(^checked.Symbol_Expression).symbol.kind != .Constant {
+            self.error(parsed_expression.location, "Expected constant symbol")
+        }
+        return
+    }
+    self.error(parsed_expression.location, "Expected constant expression")
 }
 
 proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
@@ -775,7 +805,9 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
 }
 
 proc (^Checker).symbol_expression(self, symbol: ^checked.Symbol) -> ^checked.Expression {
-    if symbol.kind == .Import {
+    if symbol.kind == .Constant {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Constant_Symbol).expression.type).as(^checked.Expression)
+    } else if symbol.kind == .Import {
         return checked.new_symbol_expression(symbol: symbol, type: self.module_type).as(^checked.Expression)
     } else if symbol.kind == .Parameter {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
