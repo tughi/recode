@@ -347,6 +347,11 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
             if member_type == struct_type.as(^checked.Type) {
                 self.error(parsed_member.member_type.location, "Struct member cannot be of its own type")
             }
+            if parsed_member == struct_specifier.first_member and parsed_member.name.lexeme.equals("super") {
+                if member_type.kind != .Struct {
+                    self.error(parsed_member.member_type.location, "Not a struct type")
+                }
+            }
             struct_type.append_member(checked.new_struct_member(name: parsed_member.name.lexeme, type: member_type))
             parsed_member = parsed_member.next
         }
@@ -578,7 +583,34 @@ proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_State
     return checked.new_while_statement(condition: condition, body: body).as(^checked.Statement)
 }
 
+proc (^Checker).assure_expression_pointer_type(self, expression: ^checked.Expression, expected_type: ^checked.Type, location: source.Source_Location) -> ^checked.Expression {
+    if expression.type.kind == .Pointer {
+        let expression_pointee = expression.type.as(^checked.Pointer_Type).pointee
+        let expected_pointee = expected_type.as(^checked.Pointer_Type).pointee
+        if expression_pointee != expected_pointee and expression_pointee.kind == .Struct and expected_pointee.kind == .Struct {
+            let expression_struct_type = expression_pointee.as(^checked.Struct_Type)
+            let expected_struct_type = expected_pointee.as(^checked.Struct_Type)
+            while expression_struct_type.first_member != null and expression_struct_type.first_member.name.equals("super") {
+                expression_struct_type = expression_struct_type.first_member.type.as(^checked.Struct_Type)
+                if expression_struct_type == expected_struct_type {
+                    return checked.new_cast_expression(operand: expression, type: expected_type).as(^checked.Expression)
+                }
+            }
+        }
+    }
+    self.require_same_type(expected_type, expression.type, location)
+    return expression
+}
+
 proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let expression = self.dispatch_expression(parsed_expression, expected_type: expected_type)
+    if expected_type != null and expected_type.kind == .Pointer {
+        expression = self.assure_expression_pointer_type(expression: expression, expected_type: expected_type, location: parsed_expression.location)
+    }
+    return expression
+}
+
+proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
     if parsed_expression.kind == .Add {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
     } else if parsed_expression.kind == .Address_Of {
@@ -733,6 +765,12 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     let last_argument: ^checked.Call_Argument = null
     let parameter = procedure_type.first_parameter
     if receiver != null {
+        let receiver_location = call_expression.operand.as(^parsed.Member_Access_Expression).operand.location
+        if parameter.parameter_type.kind == .Pointer {
+            receiver = self.assure_expression_pointer_type(expression: receiver, expected_type: parameter.parameter_type, location: receiver_location)
+        } else {
+            self.require_same_type(parameter.parameter_type, receiver.type, receiver_location)
+        }
         first_argument = checked.new_call_argument(receiver)
         last_argument = first_argument
         parameter = parameter.next
@@ -851,6 +889,9 @@ proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression
         if member == null {
             self.error(parsed_argument.label.location, "No such struct member")
         }
+        if member.struct_type != struct_type {
+            self.error(parsed_argument.label.location, "Super struct member must be initialized in super member")
+        }
         let earlier = call_expression.first_argument
         while earlier != parsed_argument {
             if earlier.label != null and earlier.label.lexeme.equals(parsed_argument.label.lexeme) {
@@ -933,8 +974,19 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
         }
     }
     if object_type.kind == .Struct {
-        let struct_member = object_type.as(^checked.Struct_Type).find_member(member.lexeme)
+        let struct_type = object_type.as(^checked.Struct_Type)
+        let struct_member = struct_type.find_member(member.lexeme)
         if struct_member != null {
+            if struct_member.struct_type != struct_type {
+                let super_struct = struct_type
+                while super_struct != null {
+                    object_expression = checked.new_member_access_expression(operand: object_expression, member: super_struct.first_member).as(^checked.Expression)
+                    super_struct = super_struct.first_member.type.as(^checked.Struct_Type)
+                    if super_struct == struct_member.struct_type {
+                        break
+                    }
+                }
+            }
             return checked.new_member_access_expression(operand: object_expression, member: struct_member).as(^checked.Expression)
         }
     }
@@ -1037,6 +1089,16 @@ proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: 
             return method.symbol
         }
         method = method.next
+    }
+    if receiver_type.kind == .Pointer {
+        let pointee = receiver_type.as(^checked.Pointer_Type).pointee
+        if pointee.kind == .Struct {
+            let struct_type = pointee.as(^checked.Struct_Type)
+            if struct_type.first_member != null and struct_type.first_member.name.equals("super") {
+                let super_receiver_type = checked.new_pointer_type(pointee: struct_type.first_member.type).as(^checked.Type)
+                return self.resolve_method_symbol(receiver_type: super_receiver_type, name: name)
+            }
+        }
     }
     return null
 }

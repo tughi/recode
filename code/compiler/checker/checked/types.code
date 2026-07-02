@@ -169,12 +169,13 @@ proc new_procedure_type(first_parameter: ^Procedure_Parameter, return_type: ^Typ
 type Struct_Member = struct {
     name: str
     type: ^Type
+    struct_type: ^Struct_Type
     next: ^Struct_Member
 }
 
 proc new_struct_member(name: str, type: ^Type) -> ^Struct_Member {
     let result = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
-    result.^ = Struct_Member(name: name, type: type, next: null)
+    result.^ = Struct_Member(name: name, type: type, struct_type: null, next: null)
     return result
 }
 
@@ -202,10 +203,14 @@ proc (^Struct_Type).find_member(self, name: str) -> ^Struct_Member {
         }
         member = member.next
     }
+    if self.first_member != null and self.first_member.name.equals("super") {
+        return self.first_member.type.as(^Struct_Type).find_member(name)
+    }
     return null
 }
 
 proc (^Struct_Type).append_member(self, member: ^Struct_Member) {
+    member.struct_type = self
     if self.first_member == null {
         self.first_member = member
     } else {
