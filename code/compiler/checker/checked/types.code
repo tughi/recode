@@ -5,6 +5,7 @@ type Type_Kind = enum {
     Any
     Array
     bool
+    Enum
     External
     i16
     i32
@@ -43,6 +44,54 @@ proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
         size: size
     )
     return result
+}
+
+type Enum_Member = struct {
+    name: str
+    value: u64
+    next: ^Enum_Member
+}
+
+proc new_enum_member(name: str, value: u64) -> ^Enum_Member {
+    let result = allocator.alloc(size: type_size(Enum_Member), alignment: type_alignment(Enum_Member)).as(^Enum_Member)
+    result.^ = Enum_Member(name: name, value: value, next: null)
+    return result
+}
+
+type Enum_Type = struct {
+    super: Named_Type
+    first_member: ^Enum_Member
+    last_member: ^Enum_Member
+}
+
+proc new_enum_type(name: str, package_name: str) -> ^Enum_Type {
+    let result = allocator.alloc(size: type_size(Enum_Type), alignment: type_alignment(Enum_Type)).as(^Enum_Type)
+    result.^ = Enum_Type(
+        super: Named_Type(super: Type(kind: .Enum), name: name, package_name: package_name)
+        first_member: null
+        last_member: null
+    )
+    return result
+}
+
+proc (^Enum_Type).find_member(self, name: str) -> ^Enum_Member {
+    let member = self.first_member
+    while member != null {
+        if member.name.equals(name) {
+            return member
+        }
+        member = member.next
+    }
+    return null
+}
+
+proc (^Enum_Type).append_member(self, member: ^Enum_Member) {
+    if self.first_member == null {
+        self.first_member = member
+    } else {
+        self.last_member.next = member
+    }
+    self.last_member = member
 }
 
 type Multi_Pointer_Type = struct {
@@ -114,6 +163,11 @@ proc (^Type).equals(self, other: ^Type) -> bool {
     }
     if self.kind == .Array {
         return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
+    }
+    if self.kind == .Enum {
+        let self_named = self.as(^Named_Type)
+        let other_named = other.as(^Named_Type)
+        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
     }
     if self.kind == .External {
         return self.name().equals(other.name())

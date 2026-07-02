@@ -12,6 +12,9 @@ type Expression_Kind = enum {
     Character
     Dereference
     Divide
+    Enum_Member
+    Enum_Name
+    Enum_Value
     Equals
     Greater
     Greater_Or_Equals
@@ -198,6 +201,48 @@ proc new_dereference_expression(operand: ^Expression, type: ^Type) -> ^Dereferen
     let result = allocator.alloc(size: type_size(Dereference_Expression), alignment: type_alignment(Dereference_Expression)).as(^Dereference_Expression)
     result.^ = Dereference_Expression(
         super: Expression(kind: .Dereference, type: type)
+        operand: operand
+    )
+    return result
+}
+
+type Enum_Member_Expression = struct {
+    super: Expression
+    member: ^Enum_Member
+}
+
+proc new_enum_member_expression(member: ^Enum_Member, type: ^Type) -> ^Enum_Member_Expression {
+    let result = allocator.alloc(size: type_size(Enum_Member_Expression), alignment: type_alignment(Enum_Member_Expression)).as(^Enum_Member_Expression)
+    result.^ = Enum_Member_Expression(
+        super: Expression(kind: .Enum_Member, type: type)
+        member: member
+    )
+    return result
+}
+
+type Enum_Name_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_enum_name_expression(operand: ^Expression, type: ^Type) -> ^Enum_Name_Expression {
+    let result = allocator.alloc(size: type_size(Enum_Name_Expression), alignment: type_alignment(Enum_Name_Expression)).as(^Enum_Name_Expression)
+    result.^ = Enum_Name_Expression(
+        super: Expression(kind: .Enum_Name, type: type)
+        operand: operand
+    )
+    return result
+}
+
+type Enum_Value_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_enum_value_expression(operand: ^Expression, type: ^Type) -> ^Enum_Value_Expression {
+    let result = allocator.alloc(size: type_size(Enum_Value_Expression), alignment: type_alignment(Enum_Value_Expression)).as(^Enum_Value_Expression)
+    result.^ = Enum_Value_Expression(
+        super: Expression(kind: .Enum_Value, type: type)
         operand: operand
     )
     return result

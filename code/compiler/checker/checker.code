@@ -336,7 +336,22 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
         // Type checked already (on demand).
         return
     }
-    if type_statement.specifier.kind == .External {
+    if type_statement.specifier.kind == .Enum {
+        let enum_specifier = type_statement.specifier.as(^parsed.Enum_Type_Specifier)
+        let enum_type = checked.new_enum_type(name: name, package_name: self.package_name)
+        let symbol = checked.new_type_symbol(name: name, type: enum_type.as(^checked.Type)).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+        let value = 0u64
+        let parsed_member = enum_specifier.first_member
+        while parsed_member != null {
+            if enum_type.find_member(parsed_member.name.lexeme) != null {
+                self.error(parsed_member.name.location, "Duplicate enum member declaration")
+            }
+            enum_type.append_member(checked.new_enum_member(name: parsed_member.name.lexeme, value: value))
+            value = value + 1
+            parsed_member = parsed_member.next
+        }
+    } else if type_statement.specifier.kind == .External {
         let type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name).as(^checked.Type)
         let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
         self.global_symbols.append(name: name, symbol: symbol)
@@ -681,6 +696,8 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
         return self.check_string_expression(parsed_expression.as(^parsed.String_Expression))
     } else if parsed_expression.kind == .Subtract {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
+    } else if parsed_expression.kind == .Symbol {
+        return self.check_dot_member_expression(parsed_expression.as(^parsed.Symbol_Expression), expected_type: expected_type)
     } else if parsed_expression.kind == .Type_Alignment {
         return self.check_type_alignment_expression(parsed_expression.as(^parsed.Type_Alignment_Expression))
     } else if parsed_expression.kind == .Type_Size {
@@ -851,6 +868,27 @@ proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Una
     return checked.new_dereference_expression(operand: operand, type: pointee_type).as(^checked.Expression)
 }
 
+proc (^Checker).check_dot_member_expression(self, symbol_expression: ^parsed.Symbol_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    if expected_type == null or expected_type.kind != .Enum {
+        let message = string.new_builder()
+        message.append("Cannot infer enum type for `.").append(symbol_expression.name.lexeme).append("`")
+        self.error(symbol_expression.location, message.build())
+    }
+    return self.check_enum_member_expression(enum_type: expected_type.as(^checked.Enum_Type), member: symbol_expression.name)
+}
+
+proc (^Checker).check_enum_member_expression(self, enum_type: ^checked.Enum_Type, member: ^lexer.Identifier) -> ^checked.Expression {
+    let enum_member = enum_type.find_member(member.lexeme)
+    if enum_member == null {
+        let message = string.new_builder()
+        message.append("Enum `")
+        enum_type.as(^checked.Type).append_name(^message)
+        message.append("` has no member: ").append(member.lexeme)
+        self.error(member.location, message.build())
+    }
+    return checked.new_enum_member_expression(member: enum_member, type: enum_type.as(^checked.Type)).as(^checked.Expression)
+}
+
 proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {
     let name = identifier_expression.name.lexeme
     let symbol = self.current_scope.find(name)
@@ -976,6 +1014,9 @@ proc (^Checker).check_member_access_expression(self, member_access_expression: ^
     }
     let operand_type = self.resolve_expression_type(operand_expression)
     if operand_type != null {
+        if group_depth == 0 and operand_type.kind == .Enum {
+            return self.check_enum_member_expression(enum_type: operand_type.as(^checked.Enum_Type), member: member_access_expression.member)
+        }
         if group_depth != 1 {
             let message = string.new_builder()
             message.append("Did you mean: `(")
@@ -1014,6 +1055,14 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
     let object_type = object_expression.type
     if object_type.kind == .Pointer {
         object_type = object_type.as(^checked.Pointer_Type).pointee
+    }
+    if object_type.kind == .Enum {
+        if member.lexeme.equals("value") {
+            return checked.new_enum_value_expression(operand: object_expression, type: self.i32_type).as(^checked.Expression)
+        }
+        if member.lexeme.equals("name") {
+            return checked.new_enum_name_expression(operand: object_expression, type: self.str_type).as(^checked.Expression)
+        }
     }
     if object_type.kind == .str {
         if member.lexeme.equals("length") {

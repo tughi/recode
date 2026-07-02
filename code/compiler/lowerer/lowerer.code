@@ -14,12 +14,25 @@ proc new_scope_entry(value: ^ir.Value, next: ^Scope_Entry) -> ^Scope_Entry {
     return result
 }
 
+type Enum_Name_Entry = struct {
+    enum_type: ^checked.Enum_Type
+    next: ^Enum_Name_Entry
+}
+
+proc new_enum_name_entry(enum_type: ^checked.Enum_Type) -> ^Enum_Name_Entry {
+    let result = allocator.alloc(size: type_size(Enum_Name_Entry), alignment: type_alignment(Enum_Name_Entry)).as(^Enum_Name_Entry)
+    result.^ = Enum_Name_Entry(enum_type: enum_type, next: null)
+    return result
+}
+
 type Lowerer = struct {
     program: ^ir.Program
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
     break_block: ^ir.Block
     scope: ^Scope_Entry
+    first_enum_name: ^Enum_Name_Entry
+    last_enum_name: ^Enum_Name_Entry
     string_type: ^checked.Struct_Type
     string_counter: usize
     next_value_id: usize
@@ -33,6 +46,8 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         current_block: null
         break_block: null
         scope: null
+        first_enum_name: null
+        last_enum_name: null
         string_type: null
         string_counter: 0
         next_value_id: 0
@@ -89,6 +104,13 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
             entry = entry.next
         }
         package = package.next_package
+    }
+
+    // Fill in the bodies of the `<Enum>.name` helpers declared on demand above.
+    let enum_name_entry = lowerer.first_enum_name
+    while enum_name_entry != null {
+        lowerer.define_enum_name_procedure(enum_name_entry.enum_type)
+        enum_name_entry = enum_name_entry.next
     }
 
     if main_procedure != null {
@@ -218,6 +240,81 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     }
 
     return procedure
+}
+
+proc (^Lowerer).enum_name_procedure_name(self, enum_type: ^checked.Enum_Type) -> str {
+    let builder = string.new_builder()
+    return builder.append(self.type_name(enum_type.as(^checked.Named_Type))).append(".name").build()
+}
+
+proc (^Lowerer).enum_name_procedure(self, enum_type: ^checked.Enum_Type) -> ^ir.Procedure {
+    let name = self.enum_name_procedure_name(enum_type)
+    let procedure = self.program.find_procedure(name)
+    if procedure != null {
+        return procedure
+    }
+    procedure = ir.new_procedure(name: name, return_type: self.lower_type(self.string_type.as(^checked.Type)))
+    procedure.append_parameter(ir.new_value(kind: .Parameter, name: "value", type: ir.new_primitive_type(.i32)))
+    self.program.append_procedure(procedure)
+
+    // Remember this enum so its body gets generated once all bodies are lowered.
+    let entry = new_enum_name_entry(enum_type)
+    if self.first_enum_name == null {
+        self.first_enum_name = entry
+    } else {
+        self.last_enum_name.next = entry
+    }
+    self.last_enum_name = entry
+
+    return procedure
+}
+
+proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) {
+    let procedure = self.program.find_procedure(self.enum_name_procedure_name(enum_type))
+    let parameter = procedure.first_parameter
+
+    self.current_procedure = procedure
+    self.next_value_id = 0
+    self.block_counter = 0
+    self.break_block = null
+    let block = self.create_block()
+    procedure.append_block(block)
+    self.current_block = block
+
+    let member = enum_type.first_member
+    while member != null {
+        let member_value = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: ir.new_primitive_type(.i32)
+            value: member.value
+            lexeme: ""
+        )
+        self.current_block.append_instruction(member_value.as(^ir.Instruction))
+        let matches = ir.new_binary_instruction(
+            kind: .Compare_Equal
+            name: self.fresh_name()
+            type: ir.new_primitive_type(.bool)
+            left: parameter
+            right: member_value.as(^ir.Value)
+        )
+        self.current_block.append_instruction(matches.as(^ir.Instruction))
+
+        let match_block = self.create_block()
+        let next_block = self.create_block()
+        self.current_block.append_instruction(ir.new_br_instruction(condition: matches.as(^ir.Value), true_block: match_block, false_block: next_block).as(^ir.Instruction))
+
+        self.current_procedure.append_block(match_block)
+        self.current_block = match_block
+        let name_value = self.lower_string_struct(member.name)
+        self.current_block.append_instruction(ir.new_ret_instruction(value: name_value).as(^ir.Instruction))
+
+        self.current_procedure.append_block(next_block)
+        self.current_block = next_block
+        member = member.next
+    }
+    // No member matched: return an empty string.
+    let empty_value = self.lower_string_struct("")
+    self.current_block.append_instruction(ir.new_ret_instruction(value: empty_value).as(^ir.Instruction))
 }
 
 proc (^Lowerer).lower_panic_statement(self, panic_statement: ^checked.Panic_Statement) {
@@ -554,6 +651,31 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_dereference_expression(expression.as(^checked.Dereference_Expression))
     } else if expression.kind == .Divide {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Divide)
+    } else if expression.kind == .Enum_Member {
+        let enum_member_expression = expression.as(^checked.Enum_Member_Expression)
+        let const_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+            value: enum_member_expression.member.value
+            lexeme: ""
+        )
+        self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
+        return const_instruction.as(^ir.Value)
+    } else if expression.kind == .Enum_Name {
+        let enum_name_expression = expression.as(^checked.Enum_Name_Expression)
+        let enum_type = enum_name_expression.operand.type.as(^checked.Enum_Type)
+        let value = self.lower_expression(enum_name_expression.operand)
+        let procedure = self.enum_name_procedure(enum_type)
+        let call_instruction = ir.new_call_instruction(
+            name: self.fresh_name()
+            type: procedure.return_type
+            callee: ir.new_value(kind: .Procedure, name: procedure.name, type: procedure.return_type)
+        )
+        call_instruction.first_argument = ir.new_argument(value)
+        self.current_block.append_instruction(call_instruction.as(^ir.Instruction))
+        return call_instruction.as(^ir.Value)
+    } else if expression.kind == .Enum_Value {
+        return self.lower_expression(expression.as(^checked.Enum_Value_Expression).operand)
     } else if expression.kind == .Equals {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Compare_Equal)
     } else if expression.kind == .Greater {
@@ -613,39 +735,7 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
     } else if expression.kind == .String {
-        let string_expression = expression.as(^checked.String_Expression)
-        let data_member = self.string_type.first_member
-        let length_member = data_member.next
-        let value = string_expression.token.value
-        let data: ^ir.Value = null
-        if value.length == 0 {
-            let null_instruction = ir.new_const_instruction(
-                name: self.fresh_name()
-                type: self.lower_type(data_member.type)
-                value: 0u64
-                lexeme: ""
-            )
-            self.current_block.append_instruction(null_instruction.as(^ir.Instruction))
-            data = null_instruction.as(^ir.Value)
-        } else {
-            data = self.string_global(value)
-        }
-        let length_instruction = ir.new_const_instruction(
-            name: self.fresh_name()
-            type: self.lower_type(length_member.type)
-            value: value.length.as(u64)
-            lexeme: ""
-        )
-        self.current_block.append_instruction(length_instruction.as(^ir.Instruction))
-        let struct_instruction = ir.new_struct_instruction(
-            name: self.fresh_name()
-            type: self.lower_type(expression.type)
-        )
-        let data_field = ir.new_struct_instruction_field(name: data_member.name, value: data)
-        data_field.next = ir.new_struct_instruction_field(name: length_member.name, value: length_instruction.as(^ir.Value))
-        struct_instruction.first_field = data_field
-        self.current_block.append_instruction(struct_instruction.as(^ir.Instruction))
-        return struct_instruction.as(^ir.Value)
+        return self.lower_string_struct(expression.as(^checked.String_Expression).token.value)
     } else if expression.kind == .String_Length {
         let string_length_expression = expression.as(^checked.String_Length_Expression)
         let length_member = self.string_type.first_member.next
@@ -995,6 +1085,40 @@ proc (^Lowerer).lower_temporary_pointer(self, expression: ^checked.Expression) -
     return alloc_instruction.as(^ir.Value)
 }
 
+proc (^Lowerer).lower_string_struct(self, value: str) -> ^ir.Value {
+    let data_member = self.string_type.first_member
+    let length_member = data_member.next
+    let data: ^ir.Value = null
+    if value.length == 0 {
+        let null_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(data_member.type)
+            value: 0u64
+            lexeme: ""
+        )
+        self.current_block.append_instruction(null_instruction.as(^ir.Instruction))
+        data = null_instruction.as(^ir.Value)
+    } else {
+        data = self.string_global(value)
+    }
+    let length_instruction = ir.new_const_instruction(
+        name: self.fresh_name()
+        type: self.lower_type(length_member.type)
+        value: value.length.as(u64)
+        lexeme: ""
+    )
+    self.current_block.append_instruction(length_instruction.as(^ir.Instruction))
+    let struct_instruction = ir.new_struct_instruction(
+        name: self.fresh_name()
+        type: self.lower_type(self.string_type.as(^checked.Type))
+    )
+    let data_field = ir.new_struct_instruction_field(name: data_member.name, value: data)
+    data_field.next = ir.new_struct_instruction_field(name: length_member.name, value: length_instruction.as(^ir.Value))
+    struct_instruction.first_field = data_field
+    self.current_block.append_instruction(struct_instruction.as(^ir.Instruction))
+    return struct_instruction.as(^ir.Value)
+}
+
 proc (^Lowerer).string_global(self, value: str) -> ^ir.Value {
     let global = self.program.first_global
     while global != null {
@@ -1073,6 +1197,8 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
         return ir.new_array_type(item_type: self.lower_type(array_type.item_type), size: array_type.size).as(^ir.Type)
     } else if type.kind == .bool {
         return ir.new_primitive_type(.bool)
+    } else if type.kind == .Enum {
+        return ir.new_primitive_type(.i32)
     } else if type.kind == .External {
         return self.lower_external_type(type.name())
     } else if type.kind == .i16 {
