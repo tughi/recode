@@ -16,7 +16,6 @@ proc new_scope_entry(value: ^ir.Value, next: ^Scope_Entry) -> ^Scope_Entry {
 
 type Lowerer = struct {
     program: ^ir.Program
-    package_name: str
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
     break_block: ^ir.Block
@@ -30,7 +29,6 @@ type Lowerer = struct {
 proc lower(checked_package: ^checked.Package) -> ^ir.Program {
     let lowerer = Lowerer(
         program: ir.new_program()
-        package_name: checked_package.name
         current_procedure: null
         current_block: null
         break_block: null
@@ -57,32 +55,40 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
     }
 
     // Declare all procedures first, so calls can reference any procedure.
-    let entry = checked_package.symbols.first
-    while entry != null {
-        if entry.symbol.kind == .Procedure {
-            lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
-        } else if entry.symbol.kind == .Variable {
-            let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
-            if variable_symbol.is_external {
-                lowerer.declare_external_variable(variable_symbol)
-            } else {
-                lowerer.declare_global_variable(variable_symbol)
+    let package = checked_package
+    while package != null {
+        let entry = package.symbols.first
+        while entry != null {
+            if entry.symbol.kind == .Procedure {
+                lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
+            } else if entry.symbol.kind == .Variable {
+                let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
+                if variable_symbol.is_external {
+                    lowerer.declare_external_variable(variable_symbol)
+                } else {
+                    lowerer.declare_global_variable(variable_symbol)
+                }
             }
+            entry = entry.next
         }
-        entry = entry.next
+        package = package.next_package
     }
 
     let main_procedure: ^ir.Procedure = null
-    entry = checked_package.symbols.first
-    while entry != null {
-        if entry.symbol.kind == .Procedure {
-            let procedure_symbol = entry.symbol.as(^checked.Procedure_Symbol)
-            let procedure = lowerer.define_procedure(procedure_symbol)
-            if procedure_symbol.receiver_type == null and procedure_symbol.name.equals("main") {
-                main_procedure = procedure
+    package = checked_package
+    while package != null {
+        let entry = package.symbols.first
+        while entry != null {
+            if entry.symbol.kind == .Procedure {
+                let procedure_symbol = entry.symbol.as(^checked.Procedure_Symbol)
+                let procedure = lowerer.define_procedure(procedure_symbol)
+                if package == checked_package and procedure_symbol.receiver_type == null and procedure_symbol.name.equals("main") {
+                    main_procedure = procedure
+                }
             }
+            entry = entry.next
         }
-        entry = entry.next
+        package = package.next_package
     }
 
     if main_procedure != null {
@@ -92,21 +98,16 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
     return lowerer.program
 }
 
-proc (^Lowerer).qualified_name(self, name: str) -> str {
-    let builder = string.new_builder()
-    return builder.append(self.package_name).append_char('.').append(name).build()
-}
-
 proc (^Lowerer).procedure_name(self, procedure_symbol: ^checked.Procedure_Symbol) -> str {
     if procedure_symbol.is_external {
         return procedure_symbol.name
     }
+    let builder = string.new_builder()
     if procedure_symbol.receiver_type != null {
-        let builder = string.new_builder()
         builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string())
         return builder.append(").").append(procedure_symbol.name).build()
     }
-    return self.qualified_name(procedure_symbol.name)
+    return builder.append(procedure_symbol.package_name).append_char('.').append(procedure_symbol.name).build()
 }
 
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
@@ -186,7 +187,8 @@ proc (^Lowerer).variable_name(self, variable_symbol: ^checked.Variable_Symbol) -
         }
         return variable_symbol.name
     }
-    return self.qualified_name(variable_symbol.name)
+    let builder = string.new_builder()
+    return builder.append(variable_symbol.package_name).append_char('.').append(variable_symbol.name).build()
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {

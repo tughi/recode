@@ -117,14 +117,16 @@ proc new_if_statement(location: source.Source_Location, condition: ^Expression, 
 
 type Import_Statement = struct {
     super: Statement
+    name: ^lexer.Identifier
     package: ^Package
     alias: ^lexer.Identifier
 }
 
-proc new_import_statement(location: source.Source_Location, package: ^Package, alias: ^lexer.Identifier) -> ^Statement {
+proc new_import_statement(location: source.Source_Location, name: ^lexer.Identifier, package: ^Package, alias: ^lexer.Identifier) -> ^Statement {
     let result = allocator.alloc(size: type_size(Import_Statement), alignment: type_alignment(Import_Statement)).as(^Import_Statement)
     result.^ = Import_Statement(
         super: Statement(kind: .Import, location: location, next: null)
+        name: name
         package: package
         alias: alias
     )

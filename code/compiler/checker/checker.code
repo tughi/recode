@@ -10,11 +10,14 @@ type Checker = struct {
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
     package_name: str
+    first_package: ^checked.Package
+    last_package: ^checked.Package
     first_method: ^checked.Method
     last_method: ^checked.Method
     return_type: ^checked.Type
     bool_type: ^checked.Type
     i32_type: ^checked.Type
+    module_type: ^checked.Type
     null_type: ^checked.Type
     str_type: ^checked.Type
     u8_type: ^checked.Type
@@ -28,11 +31,14 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         global_symbols: null
         current_scope: null
         package_name: ""
+        first_package: null
+        last_package: null
         first_method: null
         last_method: null
         return_type: null
         bool_type: null
         i32_type: null
+        module_type: checked.new_named_type(kind: .Module, name: "Module", package_name: "").as(^checked.Type)
         null_type: checked.new_null_type()
         str_type: null
         u8_type: null
@@ -43,7 +49,31 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
     checker.global_symbols = checker.builtin_symbols
     checker.check_builtin_package(builtin_package)
 
-    return checker.check_package(main_package)
+    let main_checked_package = checker.create_package(main_package)
+    checker.check_all_import_statements()
+    checker.check_all_types()
+    checker.check_all_declarations()
+    checker.check_all_procedure_bodies()
+
+    main_checked_package.first_method = checker.first_method
+
+    return main_checked_package
+}
+
+proc (^Checker).create_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
+    let checked_package = checked.new_package(name: parsed_package.name, parsed_package: parsed_package, symbols: checked.new_symbols(self.builtin_symbols))
+    if self.first_package == null {
+        self.first_package = checked_package
+    } else {
+        self.last_package.next_package = checked_package
+    }
+    self.last_package = checked_package
+    return checked_package
+}
+
+proc (^Checker).enter_package(self, package: ^checked.Package) {
+    self.global_symbols = package.symbols
+    self.package_name = package.name
 }
 
 proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
@@ -116,70 +146,123 @@ proc (^Checker).builtin_type_kind(self, name: str) -> checked.Type_Kind {
     panic "Unknown builtin type"
 }
 
-proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
-    let global_symbols = checked.new_symbols(self.builtin_symbols)
-    self.global_symbols = global_symbols
-    self.package_name = parsed_package.name
-
-    let checked_package = checked.new_package(name: parsed_package.name, symbols: global_symbols)
-
-    // Declare all types first, so signatures can reference types declared anywhere.
-    let module = parsed_package.first_module
-    let last_checked_module: ^checked.Module = null
-    while module != null {
-        let checked_module = checked.new_module(source: module.source)
-        if last_checked_module == null {
-            checked_package.first_module = checked_module
-        } else {
-            last_checked_module.next_module = checked_module
-        }
-        last_checked_module = checked_module
-
-        let statement = module.first_statement
-        while statement != null {
-            if statement.kind == .Type {
-                self.check_global_type_statement(statement.as(^parsed.Type_Statement))
+proc (^Checker).check_all_import_statements(self) {
+    // The package list grows while imports are checked; new packages are visited too.
+    let package = self.first_package
+    while package != null {
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Import {
+                    self.check_import_statement(package: package, import_statement: statement.as(^parsed.Import_Statement))
+                }
+                statement = statement.next
             }
-            statement = statement.next
+            module = module.next_module
         }
-        module = module.next_module
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_import_statement(self, package: ^checked.Package, import_statement: ^parsed.Import_Statement) {
+    let name = import_statement.name.lexeme
+    let existing = package.symbols.find(name)
+    if existing != null {
+        if existing.kind == .Import {
+            if existing.as(^checked.Import_Symbol).package.name.equals(import_statement.package.name) {
+                return
+            }
+        }
+        self.error(import_statement.location, "Import symbol conflicts with existing symbol")
     }
 
-    // Declare all procedure signatures and global variables, so bodies can reference any procedure.
-    module = parsed_package.first_module
-    while module != null {
-        let statement = module.first_statement
-        while statement != null {
-            if statement.kind == .Procedure {
-                self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
-            } else if statement.kind == .Type {
-                // Already checked.
-            } else if statement.kind == .Variable {
-                self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
+    let imported_package = self.first_package
+    while imported_package != null {
+        if imported_package.parsed_package == import_statement.package {
+            break
+        }
+        imported_package = imported_package.next_package
+    }
+    if imported_package == null {
+        imported_package = self.create_package(import_statement.package)
+    }
+
+    package.symbols.append(name: name, symbol: checked.new_import_symbol(name: name, package: imported_package).as(^checked.Symbol))
+}
+
+proc (^Checker).check_all_types(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Type {
+                    self.check_global_type_statement(statement.as(^parsed.Type_Statement))
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_all_declarations(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let last_checked_module: ^checked.Module = null
+        let module = package.parsed_package.first_module
+        while module != null {
+            let checked_module = checked.new_module(source: module.source)
+            if last_checked_module == null {
+                package.first_module = checked_module
             } else {
-                panic "Not supported yet: package statement"
+                last_checked_module.next_module = checked_module
             }
-            statement = statement.next
-        }
-        module = module.next_module
-    }
+            last_checked_module = checked_module
 
-    // Check all procedure bodies.
-    module = parsed_package.first_module
-    while module != null {
-        let statement = module.first_statement
-        while statement != null {
-            if statement.kind == .Procedure {
-                self.check_procedure_body(statement.as(^parsed.Procedure_Statement))
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Import {
+                    // Already checked.
+                } else if statement.kind == .Procedure {
+                    self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
+                } else if statement.kind == .Type {
+                    // Already checked.
+                } else if statement.kind == .Variable {
+                    self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
+                } else {
+                    panic "Not supported yet: package statement"
+                }
+                statement = statement.next
             }
-            statement = statement.next
+            module = module.next_module
         }
-        module = module.next_module
+        package = package.next_package
     }
+}
 
-    checked_package.first_method = self.first_method
-
-    return checked_package
+proc (^Checker).check_all_procedure_bodies(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Procedure {
+                    self.check_procedure_body(statement.as(^parsed.Procedure_Statement))
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
 }
 
 proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
@@ -208,12 +291,17 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
     if variable_statement.external_name != null {
         external_name = variable_statement.external_name.value
     }
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
+    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
     self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
     let name = type_statement.name.lexeme
+    let existing = self.global_symbols.find_local(name)
+    if existing != null and existing.kind == .Type {
+        // Type checked already (on demand).
+        return
+    }
     if type_statement.specifier.kind == .External {
         let type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name).as(^checked.Type)
         let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
@@ -276,7 +364,7 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     }
 
     let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let procedure_symbol = checked.new_procedure_symbol(name: name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, package_name: self.package_name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external)
     if receiver_type != null {
         self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
     }
@@ -446,7 +534,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     }
 
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
+    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
     return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }
@@ -580,19 +668,27 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     if call_expression.operand.kind == .Member_Access {
         let member_access = call_expression.operand.as(^parsed.Member_Access_Expression)
         let object = self.check_expression(member_access.operand, expected_type: null)
-        let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
-        if method_symbol == null and object.type.kind != .Pointer {
-            let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
-            method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member_access.member.lexeme)
-            if method_symbol != null {
-                object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
+        if object.type.kind == .Module {
+            let package_symbol = self.resolve_package_member(object: object, member: member_access.member, location: member_access.location)
+            if package_symbol.kind == .Type {
+                return self.check_make_expression(type: package_symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
             }
-        }
-        if method_symbol != null {
-            receiver = object
-            callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+            callee = self.symbol_expression(package_symbol)
         } else {
-            callee = self.check_object_member_access(object: object, member: member_access.member, location: member_access.location)
+            let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
+            if method_symbol == null and object.type.kind != .Pointer {
+                let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member_access.member.lexeme)
+                if method_symbol != null {
+                    object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
+                }
+            }
+            if method_symbol != null {
+                receiver = object
+                callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+            } else {
+                callee = self.check_object_member_access(object: object, member: member_access.member, location: member_access.location)
+            }
         }
     }
     if callee == null {
@@ -675,14 +771,20 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
         let message = string.new_builder()
         self.error(identifier_expression.location, message.append("Undefined symbol: ").append(name).build())
     }
-    if symbol.kind == .Parameter {
+    return self.symbol_expression(symbol)
+}
+
+proc (^Checker).symbol_expression(self, symbol: ^checked.Symbol) -> ^checked.Expression {
+    if symbol.kind == .Import {
+        return checked.new_symbol_expression(symbol: symbol, type: self.module_type).as(^checked.Expression)
+    } else if symbol.kind == .Parameter {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
     } else if symbol.kind == .Procedure {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Procedure_Symbol).procedure_type.as(^checked.Type)).as(^checked.Expression)
     } else if symbol.kind == .Variable {
         return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
     }
-    panic "Not supported yet: identifier symbol"
+    panic "Not supported yet: symbol expression"
 }
 
 proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
@@ -767,10 +869,27 @@ proc (^Checker).check_member_access_expression(self, member_access_expression: ^
     return self.check_object_member_access(object: operand, member: member_access_expression.member, location: member_access_expression.location)
 }
 
+proc (^Checker).resolve_package_member(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Symbol {
+    if object.kind != .Symbol or object.as(^checked.Symbol_Expression).symbol.kind != .Import {
+        self.error(location, "Not an import")
+    }
+    let package = object.as(^checked.Symbol_Expression).symbol.as(^checked.Import_Symbol).package
+    let symbol = package.symbols.find(member.lexeme)
+    if symbol == null {
+        let message = string.new_builder()
+        message.append("Module `").append(package.name).append("` has no `").append(member.lexeme).append("` symbol")
+        self.error(member.location, message.build())
+    }
+    return symbol
+}
+
 proc (^Checker).check_object_member_access(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Expression {
     let object_expression = object
     while object_expression.kind == .Group {
         object_expression = object_expression.as(^checked.Group_Expression).operand
+    }
+    if object_expression.type.kind == .Module {
+        return self.symbol_expression(self.resolve_package_member(object: object_expression, member: member, location: location))
     }
     let object_type = object_expression.type
     if object_type.kind == .Pointer {
@@ -893,6 +1012,16 @@ proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: 
 proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
     if parsed_type.kind == .Named {
         let named_type = parsed_type.as(^parsed.Named_Type)
+        if named_type.module != null {
+            let module_symbol = self.global_symbols.find(named_type.module.lexeme)
+            if module_symbol == null {
+                self.error(named_type.module.location, "Undefined package")
+            }
+            if module_symbol.kind != .Import {
+                self.error(named_type.module.location, "Not a package")
+            }
+            return self.resolve_package_type(package: module_symbol.as(^checked.Import_Symbol).package, name: named_type.name)
+        }
         let name = named_type.name.lexeme
         let symbol = self.global_symbols.find(name)
         if symbol == null {
@@ -936,6 +1065,39 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
         return checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type).as(^checked.Type)
     }
     panic "Not supported yet: type"
+}
+
+proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lexer.Identifier) -> ^checked.Type {
+    let symbol = package.symbols.find(name.lexeme)
+    if symbol != null {
+        if symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+        self.error(name.location, "Symbol is not a type")
+    }
+    // The type may not have been checked yet - check it on demand.
+    let module = package.parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Type {
+                let type_statement = statement.as(^parsed.Type_Statement)
+                if type_statement.name.lexeme.equals(name.lexeme) {
+                    let saved_symbols = self.global_symbols
+                    let saved_package_name = self.package_name
+                    self.enter_package(package)
+                    self.check_global_type_statement(type_statement)
+                    self.global_symbols = saved_symbols
+                    self.package_name = saved_package_name
+                    return package.symbols.find(name.lexeme).as(^checked.Type_Symbol).type
+                }
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+    self.error(name.location, "Unknown type")
+    return null
 }
 
 proc (^Checker).error(self, location: source.Source_Location, message: str) {

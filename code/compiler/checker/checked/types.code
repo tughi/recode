@@ -10,6 +10,7 @@ type Type_Kind = enum {
     i64
     i8
     isize
+    Module
     Multi_Pointer
     Null
     Pointer
@@ -100,7 +101,9 @@ proc (^Type).equals(self, other: ^Type) -> bool {
         return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
     }
     if self.kind == .Struct {
-        return self.name().equals(other.name())
+        let self_named = self.as(^Named_Type)
+        let other_named = other.as(^Named_Type)
+        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
     }
     return true
 }

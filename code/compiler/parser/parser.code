@@ -55,6 +55,9 @@ proc (^Parser).parse_package(self, source_dir: str, package: ^parsed.Package) {
 
     let package_dir = libc.open_dir(package_path.data())
     if package_dir == null {
+        if package.import_location.line > 0 {
+            self.error(package.import_location, "Package does not exist")
+        }
         libc.stderr.write("Package does not exist: ").write(package_path).end_line()
         panic
     }
@@ -929,11 +932,13 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement {
     self.consume_keyword("import")
     self.consume_space(1)
     let package_name = self.consume_identifier()
+    let import_name = package_name
     while self.lexer.matches_two(match.optional_space, match.other('.')) {
         self.consume_space(0)
         let dot = self.consume_other('.')
         self.consume_space(0)
-        package_name = package_name.merge_with(separator: dot, another: self.consume_identifier())
+        import_name = self.consume_identifier()
+        package_name = package_name.merge_with(separator: dot, another: import_name)
     }
     let alias: ^lexer.Identifier = null
     if self.lexer.matches_two(match.optional_space, match.keyword("as")) {
@@ -941,6 +946,7 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement {
         self.consume_keyword("as")
         self.consume_space(1)
         alias = self.consume_identifier()
+        import_name = alias
     }
 
     // Find or enqueue the package
@@ -953,12 +959,12 @@ proc (^Parser).parse_import_statement(self) -> ^parsed.Statement {
     }
     if package == null {
         package = parsed.new_package(name: package_name.lexeme, is_root: false)
-        package.import_location = location
+        package.import_location = package_name.location
         self.last_package.next_package = package
         self.last_package = package
     }
 
-    return parsed.new_import_statement(location: location, package: package, alias: alias)
+    return parsed.new_import_statement(location: location, name: import_name, package: package, alias: alias)
 }
 
 proc (^Parser).parse_type_statement(self) -> ^parsed.Statement {
