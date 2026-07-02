@@ -15,6 +15,7 @@ type Expression_Kind = enum {
     Equals
     Greater
     Greater_Or_Equals
+    Group
     Integer
     Less
     Less_Or_Equals
@@ -194,6 +195,20 @@ proc new_dereference_expression(operand: ^Expression, type: ^Type) -> ^Dereferen
     let result = allocator.alloc(size: type_size(Dereference_Expression), alignment: type_alignment(Dereference_Expression)).as(^Dereference_Expression)
     result.^ = Dereference_Expression(
         super: Expression(kind: .Dereference, type: type)
+        operand: operand
+    )
+    return result
+}
+
+type Group_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_group_expression(operand: ^Expression, type: ^Type) -> ^Group_Expression {
+    let result = allocator.alloc(size: type_size(Group_Expression), alignment: type_alignment(Group_Expression)).as(^Group_Expression)
+    result.^ = Group_Expression(
+        super: Expression(kind: .Group, type: type)
         operand: operand
     )
     return result

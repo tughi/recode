@@ -670,12 +670,16 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression {
         let name_token = self.consume_identifier()
         return parsed.new_symbol_expression(location: location, name: name_token)
     } else if self.lexer.matches_one(match.other('(')) {
+        let location = self.lexer.location()
         self.consume_other('(')
         self.consume_space(0)
         let expression = self.parse_expression()
         self.consume_space(0)
         self.consume_other(')')
-        return expression
+        return parsed.new_unary_expression(.Group, location, expression)
+    } else if self.lexer.matches_one(match.other('[')) {
+        let type = self.parse_type()
+        return parsed.new_type_expression(location: type.location, type: type)
     } else if self.lexer.matches_one(match.character) {
         let character_token = self.consume_character()
         return parsed.new_character_expression(character_token)

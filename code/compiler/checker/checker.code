@@ -9,6 +9,7 @@ type Checker = struct {
     builtin_symbols: ^checked.Symbols
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
+    package_name: str
     first_method: ^checked.Method
     last_method: ^checked.Method
     return_type: ^checked.Type
@@ -25,6 +26,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         builtin_symbols: checked.new_symbols(null)
         global_symbols: null
         current_scope: null
+        package_name: ""
         first_method: null
         last_method: null
         return_type: null
@@ -63,7 +65,7 @@ proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_
     }
     let name = type_statement.name.lexeme
     let kind = self.builtin_type_kind(name)
-    let type = checked.new_named_type(kind: kind, name: name).as(^checked.Type)
+    let type = checked.new_named_type(kind: kind, name: name, package_name: "").as(^checked.Type)
     let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
     self.builtin_symbols.append(name: name, symbol: symbol)
     if kind == .bool {
@@ -109,12 +111,13 @@ proc (^Checker).builtin_type_kind(self, name: str) -> checked.Type_Kind {
 }
 
 proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
-    let global_symbols = checked.new_symbols(null)
+    let global_symbols = checked.new_symbols(self.builtin_symbols)
     self.global_symbols = global_symbols
+    self.package_name = parsed_package.name
 
     let checked_package = checked.new_package(name: parsed_package.name, symbols: global_symbols)
 
-    // Declare all procedure signatures first, so bodies can reference any procedure.
+    // Declare all types first, so signatures can reference types declared anywhere.
     let module = parsed_package.first_module
     let last_checked_module: ^checked.Module = null
     while module != null {
@@ -128,10 +131,23 @@ proc (^Checker).check_package(self, parsed_package: ^parsed.Package) -> ^checked
 
         let statement = module.first_statement
         while statement != null {
+            if statement.kind == .Type {
+                self.check_global_type_statement(statement.as(^parsed.Type_Statement))
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+
+    // Declare all procedure signatures and global variables, so bodies can reference any procedure.
+    module = parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
             if statement.kind == .Procedure {
                 self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
             } else if statement.kind == .Type {
-                self.check_global_type_statement(statement.as(^parsed.Type_Statement))
+                // Already checked.
             } else if statement.kind == .Variable {
                 self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
             } else {
@@ -180,12 +196,12 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
 proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
     let name = type_statement.name.lexeme
     if type_statement.specifier.kind == .External {
-        let type = checked.new_named_type(kind: .External, name: name).as(^checked.Type)
+        let type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name).as(^checked.Type)
         let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
         self.global_symbols.append(name: name, symbol: symbol)
     } else if type_statement.specifier.kind == .Struct {
         let struct_specifier = type_statement.specifier.as(^parsed.Struct_Type_Specifier)
-        let struct_type = checked.new_struct_type(name)
+        let struct_type = checked.new_struct_type(name: name, package_name: self.package_name)
         let symbol = checked.new_type_symbol(name: name, type: struct_type.as(^checked.Type)).as(^checked.Symbol)
         self.global_symbols.append(name: name, symbol: symbol)
         let parsed_member = struct_specifier.first_member
@@ -452,6 +468,9 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater)
     } else if parsed_expression.kind == .Greater_Or_Equals {
         return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater_Or_Equals)
+    } else if parsed_expression.kind == .Group {
+        let operand = self.check_expression(parsed_expression.as(^parsed.Unary_Expression).operand, expected_type: expected_type)
+        return checked.new_group_expression(operand: operand, type: operand.type).as(^checked.Expression)
     } else if parsed_expression.kind == .Identifier {
         return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
     } else if parsed_expression.kind == .Integer {
@@ -552,7 +571,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
             receiver = object
             callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
         } else {
-            callee = self.check_object_member_access(object: object, member: member_access.member)
+            callee = self.check_object_member_access(object: object, member: member_access.member, location: member_access.location)
         }
     }
     if callee == null {
@@ -706,20 +725,49 @@ proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression
 }
 
 proc (^Checker).check_member_access_expression(self, member_access_expression: ^parsed.Member_Access_Expression) -> ^checked.Expression {
+    let operand_expression = member_access_expression.operand
+    let group_depth = 0
+    while operand_expression.kind == .Group {
+        operand_expression = operand_expression.as(^parsed.Unary_Expression).operand
+        group_depth = group_depth + 1
+    }
+    let operand_type = self.resolve_expression_type(operand_expression)
+    if operand_type != null {
+        if group_depth != 1 {
+            let message = string.new_builder()
+            message.append("Did you mean: `(")
+            operand_type.append_name(^message)
+            message.append(").").append(member_access_expression.member.lexeme).append("`?")
+            self.error(member_access_expression.location, message.build())
+        }
+        return self.check_type_member_access(receiver_type: operand_type, member: member_access_expression.member)
+    }
     let operand = self.check_expression(member_access_expression.operand, expected_type: null)
-    return self.check_object_member_access(object: operand, member: member_access_expression.member)
+    return self.check_object_member_access(object: operand, member: member_access_expression.member, location: member_access_expression.location)
 }
 
-proc (^Checker).check_object_member_access(self, object: ^checked.Expression, member: ^lexer.Identifier) -> ^checked.Expression {
-    let object_type = object.type
+proc (^Checker).check_object_member_access(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Expression {
+    let object_expression = object
+    while object_expression.kind == .Group {
+        object_expression = object_expression.as(^checked.Group_Expression).operand
+    }
+    let object_type = object_expression.type
     if object_type.kind == .Pointer {
         object_type = object_type.as(^checked.Pointer_Type).pointee
     }
     if object_type.kind == .Struct {
         let struct_member = object_type.as(^checked.Struct_Type).find_member(member.lexeme)
         if struct_member != null {
-            return checked.new_member_access_expression(operand: object, member: struct_member).as(^checked.Expression)
+            return checked.new_member_access_expression(operand: object_expression, member: struct_member).as(^checked.Expression)
         }
+    }
+    let method_symbol = self.resolve_method_symbol(receiver_type: object_expression.type, name: member.lexeme)
+    if method_symbol == null and object_expression.type.kind != .Pointer {
+        let pointer_type = checked.new_pointer_type(pointee: object_expression.type).as(^checked.Type)
+        method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member.lexeme)
+    }
+    if method_symbol != null {
+        self.error(location, "Code does not have closures")
     }
     panic "Not supported yet: member access"
 }
@@ -755,6 +803,18 @@ proc (^Checker).check_type_alignment_expression(self, type_alignment_expression:
     return checked.new_type_alignment_expression(aligned_type: aligned_type, type: self.usize_type).as(^checked.Expression)
 }
 
+proc (^Checker).check_type_member_access(self, receiver_type: ^checked.Type, member: ^lexer.Identifier) -> ^checked.Expression {
+    let method_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: member.lexeme)
+    if method_symbol == null {
+        let message = string.new_builder()
+        message.append("Type `")
+        receiver_type.append_name(^message)
+        message.append("` doesn't have method: ").append(member.lexeme)
+        self.error(member.location, message.build())
+    }
+    return checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+}
+
 proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.Type_Size_Expression) -> ^checked.Expression {
     let sized_type = self.resolve_type(type_size_expression.target_type)
     if sized_type.kind == .Any {
@@ -770,6 +830,23 @@ proc (^Checker).append_method(self, method: ^checked.Method) {
         self.last_method.next = method
     }
     self.last_method = method
+}
+
+proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) -> ^checked.Type {
+    if expression.kind == .Address_Of {
+        let pointee = self.resolve_expression_type(expression.as(^parsed.Unary_Expression).operand)
+        if pointee != null {
+            return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+        }
+    } else if expression.kind == .Identifier {
+        let symbol = self.current_scope.find(expression.as(^parsed.Identifier_Expression).name.lexeme)
+        if symbol != null and symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+    } else if expression.kind == .Type {
+        return self.resolve_type(expression.as(^parsed.Type_Expression).type)
+    }
+    return null
 }
 
 proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: str) -> ^checked.Procedure_Symbol {

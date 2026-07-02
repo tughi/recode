@@ -428,6 +428,8 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Compare_Greater)
     } else if expression.kind == .Greater_Or_Equals {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Compare_Greater_Or_Equal)
+    } else if expression.kind == .Group {
+        return self.lower_expression(expression.as(^checked.Group_Expression).operand)
     } else if expression.kind == .Integer {
         let integer_expression = expression.as(^checked.Integer_Expression)
         let const_instruction = ir.new_const_instruction(
@@ -555,7 +557,7 @@ proc (^Lowerer).lower_address_of_expression(self, address_of_expression: ^checke
     if operand.kind == .Member_Access {
         return self.lower_struct_offset(operand.as(^checked.Member_Access_Expression))
     }
-    panic "Lowering not supported yet: address-of operand"
+    return self.lower_temporary_pointer(operand)
 }
 
 proc (^Lowerer).lower_alloc_expression(self, alloc_expression: ^checked.Alloc_Expression) -> ^ir.Value {
@@ -733,7 +735,7 @@ proc (^Lowerer).lower_object_pointer(self, expression: ^checked.Expression) -> ^
             return self.find_scope(symbol)
         }
     }
-    panic "Lowering not supported yet: object pointer"
+    return self.lower_temporary_pointer(expression)
 }
 
 proc (^Lowerer).lower_struct_offset(self, member_access_expression: ^checked.Member_Access_Expression) -> ^ir.Value {
@@ -747,6 +749,15 @@ proc (^Lowerer).lower_struct_offset(self, member_access_expression: ^checked.Mem
     )
     self.current_block.append_instruction(offset_instruction.as(^ir.Instruction))
     return offset_instruction.as(^ir.Value)
+}
+
+proc (^Lowerer).lower_temporary_pointer(self, expression: ^checked.Expression) -> ^ir.Value {
+    let value = self.lower_expression(expression)
+    let variable = ir.new_variable(name: self.fresh_name(), type: self.lower_type(expression.type), symbol: null)
+    let alloc_instruction = ir.new_alloc_instruction(variable)
+    self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
+    self.current_block.append_instruction(ir.new_store_instruction(pointer: alloc_instruction.as(^ir.Value), value: value).as(^ir.Instruction))
+    return alloc_instruction.as(^ir.Value)
 }
 
 proc (^Lowerer).push_scope(self, value: ^ir.Value) {

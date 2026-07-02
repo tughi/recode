@@ -1,4 +1,5 @@
 import allocator
+import string.builder
 
 type Type_Kind = enum {
     Any
@@ -43,6 +44,42 @@ proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
 type Named_Type = struct {
     super: Type
     name: str
+    package_name: str
+}
+
+proc (^Type).append_name(self, message: ^builder.Builder) {
+    if self.kind == .Multi_Pointer {
+        message.append("[^]")
+        self.as(^Multi_Pointer_Type).pointee.append_name(message)
+    } else if self.kind == .Null {
+        message.append("null")
+    } else if self.kind == .Pointer {
+        message.append_char('^')
+        self.as(^Pointer_Type).pointee.append_name(message)
+    } else if self.kind == .Procedure {
+        let procedure_type = self.as(^Procedure_Type)
+        message.append("proc (")
+        let parameter = procedure_type.first_parameter
+        while parameter != null {
+            parameter.parameter_type.append_name(message)
+            parameter = parameter.next
+            if parameter != null {
+                message.append(", ")
+            }
+        }
+        if procedure_type.return_type != null {
+            message.append(") -> ")
+            procedure_type.return_type.append_name(message)
+        } else {
+            message.append_char(')')
+        }
+    } else {
+        let named_type = self.as(^Named_Type)
+        if named_type.package_name.length > 0 {
+            message.append(named_type.package_name).append_char('.')
+        }
+        message.append(named_type.name)
+    }
 }
 
 proc (^Type).name(self) -> str {
@@ -68,11 +105,12 @@ proc (^Type).equals(self, other: ^Type) -> bool {
     return true
 }
 
-proc new_named_type(kind: Type_Kind, name: str) -> ^Named_Type {
+proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Type {
     let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
     result.^ = Named_Type(
         super: Type(kind: kind)
         name: name
+        package_name: package_name
     )
     return result
 }
@@ -143,10 +181,10 @@ type Struct_Type = struct {
     last_member: ^Struct_Member
 }
 
-proc new_struct_type(name: str) -> ^Struct_Type {
+proc new_struct_type(name: str, package_name: str) -> ^Struct_Type {
     let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
     result.^ = Struct_Type(
-        super: Named_Type(super: Type(kind: .Struct), name: name)
+        super: Named_Type(super: Type(kind: .Struct), name: name, package_name: package_name)
         first_member: null
         last_member: null
     )
