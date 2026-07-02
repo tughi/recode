@@ -1,0 +1,72 @@
+; character literal escape decoding: \0 \e \n \r \t \\ \' \"
+; returns the index of the first mismatch, or 0 when all match
+
+$main(): i32 {
+@1:
+  %1: u8 = const '\0'
+  %2: u8 = const 0
+  %3: bool = cmp_ne %1 %2
+  br %3 @10 @2
+@2:
+  %4: u8 = const '\e'
+  %5: u8 = const 27
+  %6: bool = cmp_ne %4 %5
+  br %6 @11 @3
+@3:
+  %7: u8 = const '\n'
+  %8: u8 = const 10
+  %9: bool = cmp_ne %7 %8
+  br %9 @12 @4
+@4:
+  %10: u8 = const '\r'
+  %11: u8 = const 13
+  %12: bool = cmp_ne %10 %11
+  br %12 @13 @5
+@5:
+  %13: u8 = const '\t'
+  %14: u8 = const 9
+  %15: bool = cmp_ne %13 %14
+  br %15 @14 @6
+@6:
+  %16: u8 = const '\\'
+  %17: u8 = const 92
+  %18: bool = cmp_ne %16 %17
+  br %18 @15 @7
+@7:
+  %19: u8 = const '\''
+  %20: u8 = const 39
+  %21: bool = cmp_ne %19 %20
+  br %21 @16 @8
+@8:
+  %22: u8 = const '\"'
+  %23: u8 = const 34
+  %24: bool = cmp_ne %22 %23
+  br %24 @17 @9
+@9:
+  %25: i32 = const 0
+  ret %25
+@10:
+  %26: i32 = const 1
+  ret %26
+@11:
+  %27: i32 = const 2
+  ret %27
+@12:
+  %28: i32 = const 3
+  ret %28
+@13:
+  %29: i32 = const 4
+  ret %29
+@14:
+  %30: i32 = const 5
+  ret %30
+@15:
+  %31: i32 = const 6
+  ret %31
+@16:
+  %32: i32 = const 7
+  ret %32
+@17:
+  %33: i32 = const 8
+  ret %33
+}

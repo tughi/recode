@@ -101,6 +101,9 @@ static Token scan_character(Lexer *lexer) {
             case '0':
                 token.character.value = '\0';
                 break;
+            case 'e':
+                token.character.value = 0x1B;
+                break;
             case 'n':
                 token.character.value = '\n';
                 break;
@@ -131,30 +134,53 @@ static Token scan_string(Lexer *lexer) {
     size_t length = lexer->source.length;
     size_t start = lexer->source_position;
     size_t position = start + 1;
-    while (position < length && source[position] != '"' && source[position] != '\n') {
-        if (source[position] == '\\') {
-            position++;
-        }
-        if (position < length) {
-            position++;
-        }
-    }
     Source_Location location = {
         .source = lexer->source_path,
         .line = lexer->source_line,
         .column = lexer->source_column,
     };
     Token token;
+    while (position < length && source[position] != '"' && source[position] != '\n') {
+        if (source[position] == '\\') {
+            char escape = position + 1 < length ? source[position + 1] : '\n';
+            if (escape == '\n') {
+                position++;
+                break;
+            }
+            position += 2;
+            switch (escape) {
+            case '0':
+            case 'e':
+            case 'n':
+            case 't':
+            case '\\':
+            case '\'':
+            case '"':
+                break;
+            default:
+                token.kind = TOKEN_KIND__ERROR;
+                token.error.lexeme = (String){.content = source + start, .length = position - start};
+                token.error.location = location;
+                lexer_advance(lexer, start, position);
+                return token;
+            }
+        } else {
+            position++;
+        }
+    }
     if (position < length && source[position] == '"') {
         position++;
         char *value_data = malloc(position - start - 1);
         size_t value_size = 0;
         for (size_t i = start + 1; i + 1 < position; i++) {
-            if (source[i] == '\\' && i + 2 < position) {
+            if (source[i] == '\\') {
                 i++;
                 switch (source[i]) {
                 case '0':
                     value_data[value_size++] = '\0';
+                    break;
+                case 'e':
+                    value_data[value_size++] = 0x1B;
                     break;
                 case 'n':
                     value_data[value_size++] = '\n';
@@ -162,18 +188,9 @@ static Token scan_string(Lexer *lexer) {
                 case 't':
                     value_data[value_size++] = '\t';
                     break;
-                case '\\':
-                case '\'':
-                case '"':
+                default:
                     value_data[value_size++] = source[i];
                     break;
-                default:
-                    free(value_data);
-                    token.kind = TOKEN_KIND__ERROR;
-                    token.error.lexeme = (String){.content = source + start, .length = position - start};
-                    token.error.location = location;
-                    lexer_advance(lexer, start, position);
-                    return token;
                 }
             } else {
                 value_data[value_size++] = source[i];

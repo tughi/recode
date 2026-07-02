@@ -1,0 +1,33 @@
+; string literal escape decoding: \" \t \\ \e \n
+
+; output: \"quoted\"\t\\backslash\\ \x1b?\n
+
+type File = opaque
+
+$stdout: [[File]] = external
+$fputc: [proc (i32, [File]): i32] = external
+
+$message: [*]u8 = "\"quoted\"\t\\backslash\\ \e?\n"
+
+$main(): i32 {
+@1:
+  %out: [File] = load $stdout
+  %0: usize = const 0
+  jmp @2
+@2:
+  %i: usize = phi @1 %0 @3 %i.1
+  %p: [u8] = offset $message %i
+  %b: u8 = load %p
+  %1: u8 = const 0
+  %2: bool = cmp_eq %b %1
+  br %2 @4 @3
+@3:
+  %3: i32 = cast %b
+  %4: i32 = call $fputc %3 %out
+  %5: usize = const 1
+  %i.1: usize = add %i %5
+  jmp @2
+@4:
+  %6: i32 = const 0
+  ret %6
+}

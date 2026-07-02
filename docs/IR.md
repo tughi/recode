@@ -112,7 +112,7 @@ $message: [*]u8 = "Hello!\n"
 
 Declares a module-level byte payload. The declared type must be `[*]u8`; the literal's decoded bytes are stored once at module load and the global's value is a `[*]u8` pointer to them. The decoded bytes are always implicitly null-terminated (the trailing `\0` is appended automatically and is not counted by callers who track length separately), so byte-walking loops terminating on `0` work without an explicit `"\0"` in the source.
 
-Recognised escape sequences: `\0`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
+Recognised escape sequences: `\0`, `\e`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
 
 ### Constant-initialized global
 

@@ -38,24 +38,6 @@ typedef struct {
     IR_Type *receiver_type;
 } IR_Value_Name;
 
-static Token fetch_token(Parser *parser) {
-    if (parser->cursor < parser->lexed_source->tokens_size) {
-        return parser->lexed_source->tokens[parser->cursor++];
-    }
-    return parser->lexed_source->tokens[parser->lexed_source->tokens_size - 1];
-}
-
-static void advance(Parser *parser) {
-    parser->current = parser->next;
-    parser->next = fetch_token(parser);
-}
-
-static void skip_end_of_lines(Parser *parser) {
-    while (parser->current.kind == TOKEN_KIND__COMMENT || parser->current.kind == TOKEN_KIND__END_OF_LINE || (parser->current.kind == TOKEN_KIND__SPACE && (parser->next.kind == TOKEN_KIND__COMMENT || parser->next.kind == TOKEN_KIND__END_OF_LINE))) {
-        advance(parser);
-    }
-}
-
 static Source_Location current_location(Parser *parser) {
     return parser->current.identifier.location;
 }
@@ -80,6 +62,30 @@ static void print_parse_error(Parser *parser, Source_Location location, const ch
         print_parse_error(parser, current_location(parser), __VA_ARGS__); \
         panic();                                                          \
     } while (0)
+
+static Token fetch_token(Parser *parser) {
+    Token token;
+    if (parser->cursor < parser->lexed_source->tokens_size) {
+        token = parser->lexed_source->tokens[parser->cursor++];
+    } else {
+        token = parser->lexed_source->tokens[parser->lexed_source->tokens_size - 1];
+    }
+    if (token.kind == TOKEN_KIND__ERROR) {
+        parse_error(parser, token.error.location, "Invalid token '%.*s'", STRING(token.error.lexeme));
+    }
+    return token;
+}
+
+static void advance(Parser *parser) {
+    parser->current = parser->next;
+    parser->next = fetch_token(parser);
+}
+
+static void skip_end_of_lines(Parser *parser) {
+    while (parser->current.kind == TOKEN_KIND__COMMENT || parser->current.kind == TOKEN_KIND__END_OF_LINE || (parser->current.kind == TOKEN_KIND__SPACE && (parser->next.kind == TOKEN_KIND__COMMENT || parser->next.kind == TOKEN_KIND__END_OF_LINE))) {
+        advance(parser);
+    }
+}
 
 static String expect_other(Parser *parser, char c) {
     if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != c) {
