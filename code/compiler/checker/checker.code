@@ -7,6 +7,7 @@ import string
 
 type Checker = struct {
     builtin_symbols: ^checked.Symbols
+    builtin_package: ^checked.Package
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
     package_name: str
@@ -28,6 +29,7 @@ type Checker = struct {
 proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
     let checker = Checker(
         builtin_symbols: checked.new_symbols(null)
+        builtin_package: null
         global_symbols: null
         current_scope: null
         package_name: ""
@@ -48,6 +50,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
 
     checker.global_symbols = checker.builtin_symbols
     checker.check_builtin_package(builtin_package)
+    checker.builtin_package = checked.new_package(name: "builtin", parsed_package: builtin_package, symbols: checker.builtin_symbols)
 
     let main_checked_package = checker.create_package(main_package)
     checker.check_all_import_statements()
@@ -62,6 +65,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
 
 proc (^Checker).create_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
     let checked_package = checked.new_package(name: parsed_package.name, parsed_package: parsed_package, symbols: checked.new_symbols(self.builtin_symbols))
+    checked_package.symbols.append(name: "builtin", symbol: checked.new_import_symbol(name: "builtin", package: self.builtin_package).as(^checked.Symbol))
     if self.first_package == null {
         self.first_package = checked_package
     } else {
