@@ -21,6 +21,8 @@ type Lowerer = struct {
     current_block: ^ir.Block
     break_block: ^ir.Block
     scope: ^Scope_Entry
+    string_type: ^checked.Struct_Type
+    string_counter: usize
     next_value_id: usize
     block_counter: usize
 }
@@ -33,9 +35,26 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
         current_block: null
         break_block: null
         scope: null
+        string_type: null
+        string_counter: 0
         next_value_id: 0
         block_counter: 0
     )
+
+    let symbols = checked_package.symbols
+    while symbols != null {
+        let symbol_entry = symbols.first
+        while symbol_entry != null {
+            if symbol_entry.symbol.kind == .Type {
+                let type = symbol_entry.symbol.as(^checked.Type_Symbol).type
+                if type.kind == .Struct and type.name().equals("String") {
+                    lowerer.string_type = type.as(^checked.Struct_Type)
+                }
+            }
+            symbol_entry = symbol_entry.next
+        }
+        symbols = symbols.parent
+    }
 
     // Declare all procedures first, so calls can reference any procedure.
     let entry = checked_package.symbols.first
@@ -514,6 +533,59 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
         )
         self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
         return const_instruction.as(^ir.Value)
+    } else if expression.kind == .String {
+        let string_expression = expression.as(^checked.String_Expression)
+        let data_member = self.string_type.first_member
+        let length_member = data_member.next
+        let value = string_expression.token.value
+        let data: ^ir.Value = null
+        if value.length == 0 {
+            let null_instruction = ir.new_const_instruction(
+                name: self.fresh_name()
+                type: self.lower_type(data_member.type)
+                value: 0u64
+                lexeme: ""
+            )
+            self.current_block.append_instruction(null_instruction.as(^ir.Instruction))
+            data = null_instruction.as(^ir.Value)
+        } else {
+            data = self.string_global(value)
+        }
+        let length_instruction = ir.new_const_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(length_member.type)
+            value: value.length.as(u64)
+            lexeme: ""
+        )
+        self.current_block.append_instruction(length_instruction.as(^ir.Instruction))
+        let struct_instruction = ir.new_struct_instruction(
+            name: self.fresh_name()
+            type: self.lower_type(expression.type)
+        )
+        let data_field = ir.new_struct_instruction_field(name: data_member.name, value: data)
+        data_field.next = ir.new_struct_instruction_field(name: length_member.name, value: length_instruction.as(^ir.Value))
+        struct_instruction.first_field = data_field
+        self.current_block.append_instruction(struct_instruction.as(^ir.Instruction))
+        return struct_instruction.as(^ir.Value)
+    } else if expression.kind == .String_Length {
+        let string_length_expression = expression.as(^checked.String_Length_Expression)
+        let length_member = self.string_type.first_member.next
+        let object_pointer = self.lower_object_pointer(string_length_expression.operand)
+        let member_type = self.lower_type(expression.type)
+        let offset_instruction = ir.new_struct_offset_instruction(
+            name: self.fresh_name()
+            type: ir.new_pointer_type(member_type).as(^ir.Type)
+            pointer: object_pointer
+            member: length_member.name
+        )
+        self.current_block.append_instruction(offset_instruction.as(^ir.Instruction))
+        let load_instruction = ir.new_load_instruction(
+            name: self.fresh_name()
+            type: member_type
+            pointer: offset_instruction.as(^ir.Value)
+        )
+        self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
+        return load_instruction.as(^ir.Value)
     } else if expression.kind == .Subtract {
         return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Subtract)
     } else if expression.kind == .Symbol {
@@ -796,6 +868,22 @@ proc (^Lowerer).lower_temporary_pointer(self, expression: ^checked.Expression) -
     return alloc_instruction.as(^ir.Value)
 }
 
+proc (^Lowerer).string_global(self, value: str) -> ^ir.Value {
+    let global = self.program.first_global
+    while global != null {
+        if global.literal.length > 0 and global.literal.equals(value) {
+            return global.as(^ir.Value)
+        }
+        global = global.next_global
+    }
+    self.string_counter = self.string_counter + 1
+    let name_builder = string.new_builder()
+    let name = name_builder.append("str_").append_decimal(self.string_counter).build()
+    let string_global = ir.new_string_global(name: name, type: ir.new_multi_pointer_type(ir.new_primitive_type(.u8)).as(^ir.Type), literal: value)
+    self.program.append_global(string_global)
+    return string_global.as(^ir.Value)
+}
+
 proc (^Lowerer).push_scope(self, value: ^ir.Value) {
     self.scope = new_scope_entry(value: value, next: self.scope)
 }
@@ -874,7 +962,7 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
     } else if type.kind == .Procedure {
         return ir.new_pointer_type(self.lower_procedure_type(type.as(^checked.Procedure_Type)).as(^ir.Type)).as(^ir.Type)
     } else if type.kind == .str {
-        return ir.new_primitive_type(.str)
+        return self.lower_type(self.string_type.as(^checked.Type))
     } else if type.kind == .Struct {
         return self.lower_struct_type(type.as(^checked.Struct_Type))
     } else if type.kind == .u16 {
@@ -904,8 +992,16 @@ proc (^Lowerer).lower_external_type(self, name: str) -> ^ir.Type {
     return opaque_type.as(^ir.Type)
 }
 
+proc (^Lowerer).type_name(self, named_type: ^checked.Named_Type) -> str {
+    if named_type.package_name.length == 0 {
+        return named_type.name
+    }
+    let builder = string.new_builder()
+    return builder.append(named_type.package_name).append_char('.').append(named_type.name).build()
+}
+
 proc (^Lowerer).lower_struct_type(self, checked_struct_type: ^checked.Struct_Type) -> ^ir.Type {
-    let name = self.qualified_name(checked_struct_type.name)
+    let name = self.type_name(checked_struct_type.as(^checked.Named_Type))
     let existing_type = self.program.first_type
     while existing_type != null {
         if existing_type.name.equals(name) {

@@ -16,6 +16,7 @@ type Checker = struct {
     bool_type: ^checked.Type
     i32_type: ^checked.Type
     null_type: ^checked.Type
+    str_type: ^checked.Type
     u8_type: ^checked.Type
     usize_type: ^checked.Type
     is_unreachable: bool
@@ -33,11 +34,13 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         bool_type: null
         i32_type: null
         null_type: checked.new_null_type()
+        str_type: null
         u8_type: null
         usize_type: null
         is_unreachable: false
     )
 
+    checker.global_symbols = checker.builtin_symbols
     checker.check_builtin_package(builtin_package)
 
     return checker.check_package(main_package)
@@ -61,6 +64,7 @@ proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
 
 proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_Statement) {
     if type_statement.specifier.kind != .Builtin {
+        self.check_global_type_statement(type_statement)
         return
     }
     let name = type_statement.name.lexeme
@@ -72,6 +76,8 @@ proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_
         self.bool_type = type
     } else if kind == .i32 {
         self.i32_type = type
+    } else if kind == .str {
+        self.str_type = type
     } else if kind == .u8 {
         self.u8_type = type
     } else if kind == .usize {
@@ -510,6 +516,8 @@ proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, ex
         return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Not_Equals)
     } else if parsed_expression.kind == .Null {
         return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .String {
+        return self.check_string_expression(parsed_expression.as(^parsed.String_Expression))
     } else if parsed_expression.kind == .Subtract {
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
     } else if parsed_expression.kind == .Type_Alignment {
@@ -768,6 +776,11 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
     if object_type.kind == .Pointer {
         object_type = object_type.as(^checked.Pointer_Type).pointee
     }
+    if object_type.kind == .str {
+        if member.lexeme.equals("length") {
+            return checked.new_string_length_expression(operand: object_expression, type: self.usize_type).as(^checked.Expression)
+        }
+    }
     if object_type.kind == .Struct {
         let struct_member = object_type.as(^checked.Struct_Type).find_member(member.lexeme)
         if struct_member != null {
@@ -806,6 +819,10 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
         self.error(null_expression.location, message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_string_expression(self, string_expression: ^parsed.String_Expression) -> ^checked.Expression {
+    return checked.new_string_expression(token: string_expression.token, type: self.str_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_type_alignment_expression(self, type_alignment_expression: ^parsed.Type_Alignment_Expression) -> ^checked.Expression {

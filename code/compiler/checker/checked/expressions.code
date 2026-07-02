@@ -29,6 +29,8 @@ type Expression_Kind = enum {
     Not
     Not_Equals
     Null
+    String
+    String_Length
     Subtract
     Symbol
     Type_Alignment
@@ -306,6 +308,34 @@ proc new_null_expression(type: ^Type) -> ^Null_Expression {
     let result = allocator.alloc(size: type_size(Null_Expression), alignment: type_alignment(Null_Expression)).as(^Null_Expression)
     result.^ = Null_Expression(
         super: Expression(kind: .Null, type: type)
+    )
+    return result
+}
+
+type String_Expression = struct {
+    super: Expression
+    token: ^lexer.String
+}
+
+proc new_string_expression(token: ^lexer.String, type: ^Type) -> ^String_Expression {
+    let result = allocator.alloc(size: type_size(String_Expression), alignment: type_alignment(String_Expression)).as(^String_Expression)
+    result.^ = String_Expression(
+        super: Expression(kind: .String, type: type)
+        token: token
+    )
+    return result
+}
+
+type String_Length_Expression = struct {
+    super: Expression
+    operand: ^Expression
+}
+
+proc new_string_length_expression(operand: ^Expression, type: ^Type) -> ^String_Length_Expression {
+    let result = allocator.alloc(size: type_size(String_Length_Expression), alignment: type_alignment(String_Length_Expression)).as(^String_Length_Expression)
+    result.^ = String_Length_Expression(
+        super: Expression(kind: .String_Length, type: type)
+        operand: operand
     )
     return result
 }

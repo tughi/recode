@@ -125,7 +125,6 @@ type Type_Kind = enum {
     Opaque
     Pointer
     Procedure
-    str
     Struct
     u16
     u32
@@ -167,8 +166,6 @@ proc (^Type).name_string(self) -> str {
     } else if self.kind == .Pointer {
         let builder = string.new_builder()
         return builder.append_char('[').append(self.as(^Pointer_Type).pointee.name_string()).append_char(']').build()
-    } else if self.kind == .str {
-        return "str"
     } else if self.kind == .Struct {
         return self.as(^Named_Type).name
     } else if self.kind == .u16 {
@@ -409,6 +406,7 @@ proc new_const_payload(value: u64, lexeme: str) -> ^Const_Payload {
 
 type Global = struct {
     super: Symbol
+    literal: str
     constant: ^Const_Payload
     is_external: bool
     next_global: ^Global
@@ -418,6 +416,7 @@ proc new_global(name: str, type: ^Type) -> ^Global {
     let result = allocator.alloc(size: type_size(Global), alignment: type_alignment(Global)).as(^Global)
     result.^ = Global(
         super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
+        literal: ""
         constant: null
         is_external: false
         next_global: null
@@ -434,6 +433,12 @@ proc new_constant_global(name: str, type: ^Type, constant: ^Const_Payload) -> ^G
 proc new_external_global(name: str, type: ^Type) -> ^Global {
     let result = new_global(name: name, type: type)
     result.is_external = true
+    return result
+}
+
+proc new_string_global(name: str, type: ^Type, literal: str) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.literal = literal
     return result
 }
 

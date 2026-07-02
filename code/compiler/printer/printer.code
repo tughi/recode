@@ -29,7 +29,7 @@ proc (^libc.FILE).write_const(self, value: u64, type: ^ir.Type, lexeme: str) -> 
         }
         return self.write("false")
     }
-    if type.kind == .Pointer {
+    if type.kind == .Multi_Pointer or type.kind == .Pointer {
         return self.write("null")
     }
     if lexeme.length > 0 {
@@ -198,11 +198,32 @@ proc (^libc.FILE).write_procedure(self, procedure: ^ir.Procedure) -> ^libc.FILE 
 
 proc (^libc.FILE).write_global(self, global: ^ir.Global) -> ^libc.FILE {
     self.write_value_definition(global.as(^ir.Value))
-    if global.is_external {
-        self.write(" = external")
+    if global.literal.length > 0 {
+        self.write(" = \"")
+        let index = 0usize
+        while index < global.literal.length {
+            let char = global.literal.char_at(index)
+            if char == '\0' {
+                self.write("\\0")
+            } else if char == '\n' {
+                self.write("\\n")
+            } else if char == '\t' {
+                self.write("\\t")
+            } else if char == '\\' {
+                self.write("\\\\")
+            } else if char == '"' {
+                self.write("\\\"")
+            } else {
+                self.write_char(char: char)
+            }
+            index = index + 1
+        }
+        self.write_char(char: '"')
     } else if global.constant != null {
         self.write(" = ")
         self.write_const(value: global.constant.value, type: global.type.as(^ir.Pointer_Type).pointee, lexeme: global.constant.lexeme)
+    } else if global.is_external {
+        self.write(" = external")
     }
     return self.end_line()
 }
@@ -277,8 +298,6 @@ proc (^libc.FILE).write_type(self, type: ^ir.Type) -> ^libc.FILE {
             self.write(": ")
             self.write_type(procedure_type.return_type)
         }
-    } else if type.kind == .str {
-        self.write("str")
     } else if type.kind == .Struct {
         self.write(type.as(^ir.Named_Type).name)
     } else if type.kind == .u16 {
