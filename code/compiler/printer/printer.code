@@ -200,6 +200,9 @@ proc (^libc.FILE).write_global(self, global: ^ir.Global) -> ^libc.FILE {
     self.write_value_definition(global.as(^ir.Value))
     if global.is_external {
         self.write(" = external")
+    } else if global.constant != null {
+        self.write(" = ")
+        self.write_const(value: global.constant.value, type: global.type.as(^ir.Pointer_Type).pointee, lexeme: global.constant.lexeme)
     }
     return self.end_line()
 }

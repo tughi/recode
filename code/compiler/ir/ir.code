@@ -396,19 +396,44 @@ type Symbol = struct {
     super: Value
 }
 
+type Const_Payload = struct {
+    value: u64
+    lexeme: str
+}
+
+proc new_const_payload(value: u64, lexeme: str) -> ^Const_Payload {
+    let result = allocator.alloc(size: type_size(Const_Payload), alignment: type_alignment(Const_Payload)).as(^Const_Payload)
+    result.^ = Const_Payload(value: value, lexeme: lexeme)
+    return result
+}
+
 type Global = struct {
     super: Symbol
+    constant: ^Const_Payload
     is_external: bool
     next_global: ^Global
 }
 
-proc new_external_global(name: str, type: ^Type) -> ^Global {
+proc new_global(name: str, type: ^Type) -> ^Global {
     let result = allocator.alloc(size: type_size(Global), alignment: type_alignment(Global)).as(^Global)
     result.^ = Global(
         super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
-        is_external: true
+        constant: null
+        is_external: false
         next_global: null
     )
+    return result
+}
+
+proc new_constant_global(name: str, type: ^Type, constant: ^Const_Payload) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.constant = constant
+    return result
+}
+
+proc new_external_global(name: str, type: ^Type) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.is_external = true
     return result
 }
 

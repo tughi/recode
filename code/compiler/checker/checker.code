@@ -181,6 +181,19 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
     if variable_statement.variable_type != null {
         variable_type = self.resolve_type(variable_statement.variable_type)
     }
+
+    let expression: ^checked.Expression = null
+    if variable_statement.expression != null {
+        self.current_scope = self.global_symbols
+        expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
+        if variable_type == null {
+            if expression.type.kind == .Null {
+                self.error(variable_statement.expression.location, "Cannot infer type from null expression")
+            }
+            variable_type = expression.type
+        }
+    }
+
     if variable_type == null {
         self.error(variable_statement.location, "Missing type")
     }
@@ -189,7 +202,7 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
     if variable_statement.external_name != null {
         external_name = variable_statement.external_name.value
     }
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
     self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
 }
 
@@ -427,7 +440,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     }
 
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, is_global: false, is_external: false, external_name: "")
+    let variable_symbol = checked.new_variable_symbol(name: name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
     return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }

@@ -46,6 +46,8 @@ proc lower(checked_package: ^checked.Package) -> ^ir.Program {
             let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
             if variable_symbol.is_external {
                 lowerer.declare_external_variable(variable_symbol)
+            } else {
+                lowerer.declare_global_variable(variable_symbol)
             }
         }
         entry = entry.next
@@ -126,6 +128,35 @@ proc (^Lowerer).lower_procedure_type(self, checked_procedure_type: ^checked.Proc
 proc (^Lowerer).declare_external_variable(self, variable_symbol: ^checked.Variable_Symbol) {
     let pointer_type = ir.new_pointer_type(self.lower_type(variable_symbol.type)).as(^ir.Type)
     let global = ir.new_external_global(name: self.variable_name(variable_symbol), type: pointer_type)
+    self.program.append_global(global)
+}
+
+proc (^Lowerer).lower_constant(self, expression: ^checked.Expression) -> ^ir.Const_Payload {
+    if expression.kind == .Bool {
+        if expression.as(^checked.Bool_Expression).value {
+            return ir.new_const_payload(value: 1u64, lexeme: "")
+        }
+        return ir.new_const_payload(value: 0u64, lexeme: "")
+    } else if expression.kind == .Character {
+        let token = expression.as(^checked.Character_Expression).token
+        return ir.new_const_payload(value: token.value.as(u64), lexeme: token.lexeme)
+    } else if expression.kind == .Integer {
+        let token = expression.as(^checked.Integer_Expression).token
+        return ir.new_const_payload(value: token.value, lexeme: token.lexeme)
+    } else if expression.kind == .Null {
+        return ir.new_const_payload(value: 0u64, lexeme: "")
+    }
+    panic "Lowering not supported yet: non-constant global initializer"
+}
+
+proc (^Lowerer).declare_global_variable(self, variable_symbol: ^checked.Variable_Symbol) {
+    let pointer_type = ir.new_pointer_type(self.lower_type(variable_symbol.type)).as(^ir.Type)
+    let global: ^ir.Global = null
+    if variable_symbol.expression == null {
+        global = ir.new_global(name: self.variable_name(variable_symbol), type: pointer_type)
+    } else {
+        global = ir.new_constant_global(name: self.variable_name(variable_symbol), type: pointer_type, constant: self.lower_constant(variable_symbol.expression))
+    }
     self.program.append_global(global)
 }
 
@@ -253,7 +284,12 @@ proc (^Lowerer).lower_assignment_statement(self, assignment_statement: ^checked.
     } else if object.kind == .Member_Access {
         pointer = self.lower_struct_offset(object.as(^checked.Member_Access_Expression))
     } else if object.kind == .Symbol {
-        pointer = self.find_scope(object.as(^checked.Symbol_Expression).symbol)
+        let symbol = object.as(^checked.Symbol_Expression).symbol
+        if symbol.kind == .Variable and symbol.as(^checked.Variable_Symbol).is_global {
+            pointer = self.find_global(self.variable_name(symbol.as(^checked.Variable_Symbol)))
+        } else {
+            pointer = self.find_scope(symbol)
+        }
     } else {
         panic "Lowering not supported yet: assignment object"
     }
