@@ -1,0 +1,37 @@
+type test.Node = struct {
+  kind: i32
+  span: test.Span
+}
+
+type test.Span = struct {
+  start: i32
+  end: i32
+}
+
+$test.main(): i32 {
+@1:
+  %node.ptr: [test.Node] = alloc test.Node
+  %1: i32 = const 1
+  %2: i32 = const 2
+  %3: i32 = const 3
+  %4: test.Span = struct .start %2 .end %3
+  %5: test.Node = struct .kind %1 .span %4
+  store %node.ptr %5
+  %6: [test.Span] = offset %node.ptr .span
+  %7: [i32] = offset %6 .end
+  %8: i32 = load %7
+  %9: [test.Span] = offset %node.ptr .span
+  %10: [i32] = offset %9 .start
+  %11: i32 = load %10
+  %12: i32 = sub %8 %11
+  %13: [i32] = offset %node.ptr .kind
+  %14: i32 = load %13
+  %15: i32 = sub %12 %14
+  ret %15
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

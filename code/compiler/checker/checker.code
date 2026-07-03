@@ -10,6 +10,7 @@ type Checker = struct {
     builtin_package: ^checked.Package
     global_symbols: ^checked.Symbols
     current_scope: ^checked.Symbols
+    current_package: ^checked.Package
     package_name: str
     first_package: ^checked.Package
     last_package: ^checked.Package
@@ -32,6 +33,7 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         builtin_package: null
         global_symbols: null
         current_scope: null
+        current_package: null
         package_name: ""
         first_package: null
         last_package: null
@@ -77,6 +79,7 @@ proc (^Checker).create_package(self, parsed_package: ^parsed.Package) -> ^checke
 
 proc (^Checker).enter_package(self, package: ^checked.Package) {
     self.global_symbols = package.symbols
+    self.current_package = package
     self.package_name = package.name
 }
 
@@ -1218,7 +1221,11 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
             symbol = self.builtin_symbols.find(name)
         }
         if symbol == null {
-            self.error(named_type.location, "Unknown type")
+            if self.current_package == null {
+                self.error(named_type.location, "Unknown type")
+            }
+            // The type may be declared later in the current package - check it on demand.
+            return self.resolve_package_type(package: self.current_package, name: named_type.name)
         }
         if symbol.kind == .Type {
             return symbol.as(^checked.Type_Symbol).type
@@ -1278,10 +1285,12 @@ proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lex
                 let type_statement = statement.as(^parsed.Type_Statement)
                 if type_statement.name.lexeme.equals(name.lexeme) {
                     let saved_symbols = self.global_symbols
+                    let saved_package = self.current_package
                     let saved_package_name = self.package_name
                     self.enter_package(package)
                     self.check_global_type_statement(type_statement)
                     self.global_symbols = saved_symbols
+                    self.current_package = saved_package
                     self.package_name = saved_package_name
                     return package.symbols.find(name.lexeme).as(^checked.Type_Symbol).type
                 }

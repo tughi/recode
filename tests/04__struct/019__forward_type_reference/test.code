@@ -1,0 +1,14 @@
+type Node = struct {
+    kind: i32
+    span: Span
+}
+
+type Span = struct {
+    start: i32
+    end: i32
+}
+
+proc main() -> i32 {
+    let node = Node(kind: 1, span: Span(start: 2, end: 3))
+    return node.span.end - node.span.start - node.kind
+}
