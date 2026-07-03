@@ -56,7 +56,8 @@ proc (^Parser).parse_package(self, source_dir: str, package: ^parsed.Package) {
     let package_dir = libc.open_dir(package_path.data())
     if package_dir == null {
         if package.import_location.line > 0 {
-            self.error(package.import_location, "Package does not exist")
+            libc.stderr.begin_location_message(package.import_location, style: .Error).write("Package does not exist").end_location_message()
+            panic
         }
         libc.stderr.write("Package does not exist: ").write(package_path).end_line()
         panic
@@ -200,7 +201,8 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement {
             external_name = self.consume_string()
         }
     } else if not self.lexer.matches_two(match.optional_space, match.other('{')) {
-        self.error(self.lexer.peek_token(1).location, "Missing procedure body")
+        libc.stderr.begin_location_message(self.lexer.peek_token(1).location, style: .Error).write("Missing procedure body").end_location_message()
+        panic
     } else {
         self.consume_space(1)
         body = self.parse_block_statement()
@@ -743,7 +745,7 @@ proc (^Parser).parse_call_arguments(self) -> ^parsed.Call_Argument {
         if self.lexer.matches_two(match.optional_space, match.comment) or self.lexer.matches_two(match.optional_space, match.end_of_line) {
             self.consume_end_of_line()
             if not multiline {
-                self.warning(first_argument.expression.location, "Multi-line argument list must start on a new line")
+                libc.stderr.begin_location_message(first_argument.expression.location, style: .Warning).write("Multi-line argument list must start on a new line").end_location_message()
                 multiline = true
                 self.increase_alignment()
             }
@@ -752,7 +754,7 @@ proc (^Parser).parse_call_arguments(self) -> ^parsed.Call_Argument {
             }
         } else if multiline {
             if self.lexer.matches_two(match.optional_space, match.other(')')) {
-                self.warning(self.lexer.peek_token(1).location, "Multi-line argument list must end on a new line")
+                libc.stderr.begin_location_message(self.lexer.peek_token(1).location, style: .Warning).write("Multi-line argument list must end on a new line").end_location_message()
                 multiline = false
                 self.decrease_alignment()
             }
@@ -993,7 +995,7 @@ proc (^Parser).consume_other(self, expected: u8) -> ^lexer.Other {
         self.lexer.advance()
         return token.as(^lexer.Other)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1007,7 +1009,7 @@ proc (^Parser).consume_two_other(self, first: u8, second: u8) -> ^lexer.Other {
             return first_token.as(^lexer.Other).merge_with(another: second_token.as(^lexer.Other))
         }
     }
-    self.error(first_token.location, "Unexpected token")
+    libc.stderr.begin_location_message(first_token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1017,7 +1019,7 @@ proc (^Parser).consume_character(self) -> ^lexer.Character {
         self.lexer.advance()
         return token.as(^lexer.Character)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1027,7 +1029,7 @@ proc (^Parser).consume_comment(self) -> ^lexer.Comment {
         self.lexer.advance()
         return token.as(^lexer.Comment)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1056,7 +1058,7 @@ proc (^Parser).consume_end_of_line(self) -> ^lexer.End_Of_Line {
         self.lexer.advance()
         return token.as(^lexer.End_Of_Line)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1066,7 +1068,7 @@ proc (^Parser).consume_identifier(self) -> ^lexer.Identifier {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1076,7 +1078,7 @@ proc (^Parser).consume_keyword(self, lexeme: str) -> ^lexer.Identifier {
         self.lexer.advance()
         return token.as(^lexer.Identifier)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1086,7 +1088,7 @@ proc (^Parser).consume_integer(self) -> ^lexer.Integer {
         self.lexer.advance()
         return token.as(^lexer.Integer)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1096,7 +1098,7 @@ proc (^Parser).consume_string(self) -> ^lexer.String {
         self.lexer.advance()
         return token.as(^lexer.String)
     }
-    self.error(token.location, "Unexpected token")
+    libc.stderr.begin_location_message(token.location, style: .Error).write("Unexpected token").end_location_message()
     panic
 }
 
@@ -1106,25 +1108,12 @@ proc (^Parser).consume_space(self, count: i32) -> ^lexer.Space {
         self.lexer.advance()
         let space = token.as(^lexer.Space)
         if space.count != count {
-            let message = string.new_builder()
-            message.append("Consumed ").append_decimal(space.count.as(usize)).append(" spaces where ").append_decimal(count.as(usize)).append(" were expected")
-            self.warning(self.lexer.peek_token(1).location, message.build())
+            libc.stderr.begin_location_message(self.lexer.peek_token(1).location, style: .Warning).write("Consumed ").write_i64(value: space.count.as(i64)).write(" spaces where ").write_i64(value: count.as(i64)).write(" were expected").end_location_message()
         }
         return space
     }
     if count > 0 {
-        let message = string.new_builder()
-        message.append("Consumed 0 spaces where ").append_decimal(count.as(usize)).append(" were expected")
-        self.warning(token.location, message.build())
+        libc.stderr.begin_location_message(token.location, style: .Warning).write("Consumed 0 spaces where ").write_i64(value: count.as(i64)).write(" were expected").end_location_message()
     }
     return lexer.new_space(lexeme: "", location: token.location, count: 0)
-}
-
-proc (^Parser).warning(self, location: source.Source_Location, message: str) {
-    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
-}
-
-proc (^Parser).error(self, location: source.Source_Location, message: str) {
-    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
-    panic
 }

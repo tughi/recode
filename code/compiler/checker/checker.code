@@ -3,7 +3,6 @@ import compiler.lexer
 import compiler.parser.parsed
 import compiler.source
 import libc
-import string
 
 type Checker = struct {
     builtin_symbols: ^checked.Symbols
@@ -181,7 +180,8 @@ proc (^Checker).check_import_statement(self, package: ^checked.Package, import_s
                 return
             }
         }
-        self.error(import_statement.location, "Import symbol conflicts with existing symbol")
+        libc.stderr.begin_location_message(import_statement.location, style: .Error).write("Import symbol conflicts with existing symbol").end_location_message()
+        panic
     }
 
     let imported_package = self.first_package
@@ -295,11 +295,13 @@ proc (^Checker).require_constant(self, expression: ^checked.Expression, parsed_e
     }
     if expression.kind == .Symbol {
         if expression.as(^checked.Symbol_Expression).symbol.kind != .Constant {
-            self.error(parsed_expression.location, "Expected constant symbol")
+            libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant symbol").end_location_message()
+            panic
         }
         return
     }
-    self.error(parsed_expression.location, "Expected constant expression")
+    libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant expression").end_location_message()
+    panic
 }
 
 proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
@@ -314,14 +316,16 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
         expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
         if variable_type == null {
             if expression.type.kind == .Null {
-                self.error(variable_statement.expression.location, "Cannot infer type from null expression")
+                libc.stderr.begin_location_message(variable_statement.expression.location, style: .Error).write("Cannot infer type from null expression").end_location_message()
+                panic
             }
             variable_type = expression.type
         }
     }
 
     if variable_type == null {
-        self.error(variable_statement.location, "Missing type")
+        libc.stderr.begin_location_message(variable_statement.location, style: .Error).write("Missing type").end_location_message()
+        panic
     }
     let name = variable_statement.name.lexeme
     let external_name = ""
@@ -348,7 +352,8 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
         let parsed_member = enum_specifier.first_member
         while parsed_member != null {
             if enum_type.find_member(parsed_member.name.lexeme) != null {
-                self.error(parsed_member.name.location, "Duplicate enum member declaration")
+                libc.stderr.begin_location_message(parsed_member.name.location, style: .Error).write("Duplicate enum member declaration").end_location_message()
+                panic
             }
             enum_type.append_member(checked.new_enum_member(name: parsed_member.name.lexeme, value: value))
             value = value + 1
@@ -367,11 +372,13 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
         while parsed_member != null {
             let member_type = self.resolve_type(parsed_member.member_type)
             if member_type == struct_type.as(^checked.Type) {
-                self.error(parsed_member.member_type.location, "Struct member cannot be of its own type")
+                libc.stderr.begin_location_message(parsed_member.member_type.location, style: .Error).write("Struct member cannot be of its own type").end_location_message()
+                panic
             }
             if parsed_member == struct_specifier.first_member and parsed_member.name.lexeme.equals("super") {
                 if member_type.kind != .Struct {
-                    self.error(parsed_member.member_type.location, "Not a struct type")
+                    libc.stderr.begin_location_message(parsed_member.member_type.location, style: .Error).write("Not a struct type").end_location_message()
+                    panic
                 }
             }
             struct_type.append_member(checked.new_struct_member(name: parsed_member.name.lexeme, type: member_type))
@@ -394,9 +401,11 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     if procedure_statement.return_type != null {
         return_type = self.resolve_type(procedure_statement.return_type)
         if return_type.kind == .Any {
-            self.error(procedure_statement.return_type.location, "Cannot use Any as return type")
+            libc.stderr.begin_location_message(procedure_statement.return_type.location, style: .Error).write("Cannot use Any as return type").end_location_message()
+            panic
         } else if return_type.kind == .External {
-            self.error(procedure_statement.return_type.location, "Cannot use external type as return type")
+            libc.stderr.begin_location_message(procedure_statement.return_type.location, style: .Error).write("Cannot use external type as return type").end_location_message()
+            panic
         }
     }
 
@@ -406,9 +415,11 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     while parsed_parameter != null {
         let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
         if parameter_type.kind == .Any {
-            self.error(parsed_parameter.parameter_type.location, "Cannot use Any as parameter type")
+            libc.stderr.begin_location_message(parsed_parameter.parameter_type.location, style: .Error).write("Cannot use Any as parameter type").end_location_message()
+            panic
         } else if parameter_type.kind == .External {
-            self.error(parsed_parameter.parameter_type.location, "Cannot use external types as procedure parameters")
+            libc.stderr.begin_location_message(parsed_parameter.parameter_type.location, style: .Error).write("Cannot use external types as procedure parameters").end_location_message()
+            panic
         }
         let parameter = checked.new_procedure_parameter(name: parsed_parameter.name.lexeme, parameter_type: parameter_type)
         if last_parameter == null {
@@ -465,7 +476,8 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
 
 proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
     if self.is_unreachable {
-        self.error(parsed_statement.location, "Unreachable statement")
+        libc.stderr.begin_location_message(parsed_statement.location, style: .Error).write("Unreachable statement").end_location_message()
+        panic
     }
     if parsed_statement.kind == .Assignment {
         return self.check_assignment_statement(parsed_statement.as(^parsed.Assignment_Statement))
@@ -494,7 +506,8 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
 proc (^Checker).check_assignment_statement(self, assignment_statement: ^parsed.Assignment_Statement) -> ^checked.Statement {
     let object = self.check_expression(assignment_statement.object, expected_type: null)
     if not object.is_mutable() {
-        self.error(assignment_statement.object.location, "Cannot assign to immutable expression")
+        libc.stderr.begin_location_message(assignment_statement.object.location, style: .Error).write("Cannot assign to immutable expression").end_location_message()
+        panic
     }
     let value = self.check_expression(assignment_statement.value, expected_type: object.type)
     return checked.new_assignment_statement(object: object, value: value).as(^checked.Statement)
@@ -561,7 +574,8 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
             self.require_same_type(self.return_type, expression.type, return_statement.expression.location)
         }
     } else if self.return_type != null {
-        self.error(return_statement.location, "Missing return expression")
+        libc.stderr.begin_location_message(return_statement.location, style: .Error).write("Missing return expression").end_location_message()
+        panic
     }
     self.is_unreachable = true
     return checked.new_return_statement(expression: expression).as(^checked.Statement)
@@ -574,12 +588,8 @@ proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_typ
         }
     }
     if not expected_type.equals(actual_type) {
-        let message = string.new_builder()
-        message.append("Expected type ")
-        expected_type.append_name(^message)
-        message.append(" but got ")
-        actual_type.append_name(^message)
-        self.error(location, message.build())
+        libc.stderr.begin_location_message(location, style: .Error).write("Expected type ").write_checked_type(expected_type).write(" but got ").write_checked_type(actual_type).end_location_message()
+        panic
     }
 }
 
@@ -594,14 +604,16 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
         expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
         if variable_type == null {
             if expression.type.kind == .Null {
-                self.error(variable_statement.expression.location, "Cannot infer type from null expression")
+                libc.stderr.begin_location_message(variable_statement.expression.location, style: .Error).write("Cannot infer type from null expression").end_location_message()
+                panic
             }
             variable_type = expression.type
         }
     }
 
     if variable_type == null {
-        self.error(variable_statement.location, "Missing type")
+        libc.stderr.begin_location_message(variable_statement.location, style: .Error).write("Missing type").end_location_message()
+        panic
     }
 
     let name = variable_statement.name.lexeme
@@ -719,7 +731,8 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
 proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
     let operand = self.check_expression(unary_expression.operand, expected_type: null)
     if not operand.is_mutable() {
-        self.error(unary_expression.operand.location, "Cannot take address of this expression")
+        libc.stderr.begin_location_message(unary_expression.operand.location, style: .Error).write("Cannot take address of this expression").end_location_message()
+        panic
     }
     let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
@@ -742,7 +755,8 @@ proc (^Checker).check_array_access_expression(self, array_access_expression: ^pa
     } else if operand.type.kind == .Multi_Pointer {
         item_type = operand.type.as(^checked.Multi_Pointer_Type).pointee
     } else {
-        self.error(array_access_expression.operand.location, "Not an array")
+        libc.stderr.begin_location_message(array_access_expression.operand.location, style: .Error).write("Not an array").end_location_message()
+        panic
     }
     let index = self.check_expression(array_access_expression.index, expected_type: null)
     return checked.new_array_access_expression(operand: operand, index: index, type: item_type).as(^checked.Expression)
@@ -803,7 +817,8 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         callee = self.check_expression(call_expression.operand, expected_type: null)
     }
     if callee.type.kind != .Procedure {
-        self.error(call_expression.operand.location, "Not a procedure")
+        libc.stderr.begin_location_message(call_expression.operand.location, style: .Error).write("Not a procedure").end_location_message()
+        panic
     }
     let procedure_type = callee.type.as(^checked.Procedure_Type)
 
@@ -824,15 +839,17 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     let parsed_argument = call_expression.first_argument
     while parameter != null {
         if parsed_argument == null {
-            self.error(call_expression.location, "Too few arguments")
+            libc.stderr.begin_location_message(call_expression.location, style: .Error).write("Too few arguments").end_location_message()
+            panic
         }
         if parsed_argument.label != null {
             if parameter.name.length == 0 {
-                self.error(parsed_argument.label.location, "Unexpected argument name: a procedure pointer has no parameter names")
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Unexpected argument name: a procedure pointer has no parameter names").end_location_message()
+                panic
             }
             if not parsed_argument.label.lexeme.equals(parameter.name) {
-                let message = string.new_builder()
-                self.error(parsed_argument.label.location, message.append("Expected argument name: ").append(parameter.name).build())
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Expected argument name: ").write(parameter.name).end_location_message()
+                panic
             }
         }
         let argument_expression = self.check_expression(parsed_argument.expression, expected_type: parameter.parameter_type)
@@ -847,7 +864,8 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         parsed_argument = parsed_argument.next
     }
     if parsed_argument != null {
-        self.error(parsed_argument.expression.location, "Too many arguments")
+        libc.stderr.begin_location_message(parsed_argument.expression.location, style: .Error).write("Too many arguments").end_location_message()
+        panic
     }
 
     return checked.new_call_expression(callee: callee, type: procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
@@ -872,7 +890,8 @@ proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Bin
 proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
     let operand = self.check_expression(unary_expression.operand, expected_type: null)
     if operand.type.kind != .Pointer {
-        self.error(unary_expression.location, "Not a pointer")
+        libc.stderr.begin_location_message(unary_expression.location, style: .Error).write("Not a pointer").end_location_message()
+        panic
     }
     let pointee_type = operand.type.as(^checked.Pointer_Type).pointee
     return checked.new_dereference_expression(operand: operand, type: pointee_type).as(^checked.Expression)
@@ -880,9 +899,8 @@ proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Una
 
 proc (^Checker).check_dot_member_expression(self, symbol_expression: ^parsed.Symbol_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
     if expected_type == null or expected_type.kind != .Enum {
-        let message = string.new_builder()
-        message.append("Cannot infer enum type for `.").append(symbol_expression.name.lexeme).append("`")
-        self.error(symbol_expression.location, message.build())
+        libc.stderr.begin_location_message(symbol_expression.location, style: .Error).write("Cannot infer enum type for `.").write(symbol_expression.name.lexeme).write("`").end_location_message()
+        panic
     }
     return self.check_enum_member_expression(enum_type: expected_type.as(^checked.Enum_Type), member: symbol_expression.name)
 }
@@ -890,11 +908,8 @@ proc (^Checker).check_dot_member_expression(self, symbol_expression: ^parsed.Sym
 proc (^Checker).check_enum_member_expression(self, enum_type: ^checked.Enum_Type, member: ^lexer.Identifier) -> ^checked.Expression {
     let enum_member = enum_type.find_member(member.lexeme)
     if enum_member == null {
-        let message = string.new_builder()
-        message.append("Enum `")
-        enum_type.as(^checked.Type).append_name(^message)
-        message.append("` has no member: ").append(member.lexeme)
-        self.error(member.location, message.build())
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Enum `").write_checked_type(enum_type.as(^checked.Type)).write("` has no member: ").write(member.lexeme).end_location_message()
+        panic
     }
     return checked.new_enum_member_expression(member: enum_member, type: enum_type.as(^checked.Type)).as(^checked.Expression)
 }
@@ -903,8 +918,8 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
     let name = identifier_expression.name.lexeme
     let symbol = self.current_scope.find(name)
     if symbol == null {
-        let message = string.new_builder()
-        self.error(identifier_expression.location, message.append("Undefined symbol: ").append(name).build())
+        libc.stderr.begin_location_message(identifier_expression.location, style: .Error).write("Undefined symbol: ").write(name).end_location_message()
+        panic
     }
     return self.symbol_expression(symbol)
 }
@@ -935,7 +950,8 @@ proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integ
         expression_type = self.i32_type
     }
     if expression_type == null {
-        self.error(integer_expression.location, "Cannot infer type of integer literal")
+        libc.stderr.begin_location_message(integer_expression.location, style: .Error).write("Cannot infer type of integer literal").end_location_message()
+        panic
     }
     return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
 }
@@ -947,7 +963,8 @@ proc (^Checker).check_make_array_expression(self, array_type: ^checked.Array_Typ
     let parsed_argument = call_expression.first_argument
     while parsed_argument != null {
         if parsed_argument.label != null {
-            self.error(parsed_argument.label.location, "Array items cannot be named")
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Array items cannot be named").end_location_message()
+            panic
         }
         let item_expression = self.check_expression(parsed_argument.expression, expected_type: array_type.item_type)
         let argument = checked.new_call_argument(item_expression)
@@ -961,9 +978,8 @@ proc (^Checker).check_make_array_expression(self, array_type: ^checked.Array_Typ
         parsed_argument = parsed_argument.next
     }
     if argument_count != array_type.size {
-        let message = string.new_builder()
-        message.append("Expected ").append_decimal(array_type.size.as(usize)).append(" array items but got ").append_decimal(argument_count.as(usize))
-        self.error(call_expression.operand.location, message.build())
+        libc.stderr.begin_location_message(call_expression.operand.location, style: .Error).write("Expected ").write_u64(value: array_type.size).write(" array items but got ").write_u64(value: argument_count).end_location_message()
+        panic
     }
     return checked.new_make_array_expression(array_type: array_type, first_argument: first_argument).as(^checked.Expression)
 }
@@ -978,24 +994,23 @@ proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression
     let parsed_argument = call_expression.first_argument
     while parsed_argument != null {
         if parsed_argument.label == null {
-            self.error(parsed_argument.expression.location, "Expected named argument")
+            libc.stderr.begin_location_message(parsed_argument.expression.location, style: .Error).write("Expected named argument").end_location_message()
+            panic
         }
         let member = struct_type.find_member(parsed_argument.label.lexeme)
         if member == null {
-            self.error(parsed_argument.label.location, "No such struct member")
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("No such struct member").end_location_message()
+            panic
         }
         if member.struct_type != struct_type {
-            self.error(parsed_argument.label.location, "Super struct member must be initialized in super member")
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Super struct member must be initialized in super member").end_location_message()
+            panic
         }
         let earlier = call_expression.first_argument
         while earlier != parsed_argument {
             if earlier.label != null and earlier.label.lexeme.equals(parsed_argument.label.lexeme) {
-                let message = string.new_builder()
-                message.append("Struct member already initialized here: ")
-                message.append(earlier.label.location.source.path)
-                message.append_char(':').append_decimal(earlier.label.location.line.as(usize))
-                message.append_char(':').append_decimal(earlier.label.location.column.as(usize))
-                self.error(parsed_argument.label.location, message.build())
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Struct member already initialized here: ").write_location(earlier.label.location).end_location_message()
+                panic
             }
             earlier = earlier.next
         }
@@ -1028,11 +1043,8 @@ proc (^Checker).check_member_access_expression(self, member_access_expression: ^
             return self.check_enum_member_expression(enum_type: operand_type.as(^checked.Enum_Type), member: member_access_expression.member)
         }
         if group_depth != 1 {
-            let message = string.new_builder()
-            message.append("Did you mean: `(")
-            operand_type.append_name(^message)
-            message.append(").").append(member_access_expression.member.lexeme).append("`?")
-            self.error(member_access_expression.location, message.build())
+            libc.stderr.begin_location_message(member_access_expression.location, style: .Error).write("Did you mean: `(").write_checked_type(operand_type).write(").").write(member_access_expression.member.lexeme).write("`?").end_location_message()
+            panic
         }
         return self.check_type_member_access(receiver_type: operand_type, member: member_access_expression.member)
     }
@@ -1042,14 +1054,14 @@ proc (^Checker).check_member_access_expression(self, member_access_expression: ^
 
 proc (^Checker).resolve_package_member(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Symbol {
     if object.kind != .Symbol or object.as(^checked.Symbol_Expression).symbol.kind != .Import {
-        self.error(location, "Not an import")
+        libc.stderr.begin_location_message(location, style: .Error).write("Not an import").end_location_message()
+        panic
     }
     let package = object.as(^checked.Symbol_Expression).symbol.as(^checked.Import_Symbol).package
     let symbol = package.symbols.find_local(member.lexeme)
     if symbol == null {
-        let message = string.new_builder()
-        message.append("Module `").append(package.name).append("` has no `").append(member.lexeme).append("` symbol")
-        self.error(member.location, message.build())
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Module `").write(package.name).write("` has no `").write(member.lexeme).write("` symbol").end_location_message()
+        panic
     }
     return symbol
 }
@@ -1102,7 +1114,8 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
         method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member.lexeme)
     }
     if method_symbol != null {
-        self.error(location, "Code does not have closures")
+        libc.stderr.begin_location_message(location, style: .Error).write("Code does not have closures").end_location_message()
+        panic
     }
     panic "Not supported yet: member access"
 }
@@ -1122,10 +1135,8 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
     if expression_type == null {
         expression_type = self.null_type
     } else if expression_type.kind != .Multi_Pointer and expression_type.kind != .Pointer and expression_type.kind != .Procedure {
-        let message = string.new_builder()
-        message.append("\"null\" cannot be used with non-pointer type: ")
-        expression_type.append_name(^message)
-        self.error(null_expression.location, message.build())
+        libc.stderr.begin_location_message(null_expression.location, style: .Error).write("\"null\" cannot be used with non-pointer type: ").write_checked_type(expression_type).end_location_message()
+        panic
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
 }
@@ -1137,7 +1148,8 @@ proc (^Checker).check_string_expression(self, string_expression: ^parsed.String_
 proc (^Checker).check_type_alignment_expression(self, type_alignment_expression: ^parsed.Type_Alignment_Expression) -> ^checked.Expression {
     let aligned_type = self.resolve_type(type_alignment_expression.target_type)
     if aligned_type.kind == .Any {
-        self.error(type_alignment_expression.target_type.location, "Type Any has no alignment")
+        libc.stderr.begin_location_message(type_alignment_expression.target_type.location, style: .Error).write("Type Any has no alignment").end_location_message()
+        panic
     }
     return checked.new_type_alignment_expression(aligned_type: aligned_type, type: self.usize_type).as(^checked.Expression)
 }
@@ -1145,11 +1157,8 @@ proc (^Checker).check_type_alignment_expression(self, type_alignment_expression:
 proc (^Checker).check_type_member_access(self, receiver_type: ^checked.Type, member: ^lexer.Identifier) -> ^checked.Expression {
     let method_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: member.lexeme)
     if method_symbol == null {
-        let message = string.new_builder()
-        message.append("Type `")
-        receiver_type.append_name(^message)
-        message.append("` doesn't have method: ").append(member.lexeme)
-        self.error(member.location, message.build())
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Type `").write_checked_type(receiver_type).write("` doesn't have method: ").write(member.lexeme).end_location_message()
+        panic
     }
     return checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
 }
@@ -1157,7 +1166,8 @@ proc (^Checker).check_type_member_access(self, receiver_type: ^checked.Type, mem
 proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.Type_Size_Expression) -> ^checked.Expression {
     let sized_type = self.resolve_type(type_size_expression.target_type)
     if sized_type.kind == .Any {
-        self.error(type_size_expression.target_type.location, "Type Any has no size")
+        libc.stderr.begin_location_message(type_size_expression.target_type.location, style: .Error).write("Type Any has no size").end_location_message()
+        panic
     }
     return checked.new_type_size_expression(sized_type: sized_type, type: self.usize_type).as(^checked.Expression)
 }
@@ -1215,10 +1225,12 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
         if named_type.module != null {
             let module_symbol = self.global_symbols.find(named_type.module.lexeme)
             if module_symbol == null {
-                self.error(named_type.module.location, "Undefined package")
+                libc.stderr.begin_location_message(named_type.module.location, style: .Error).write("Undefined package").end_location_message()
+                panic
             }
             if module_symbol.kind != .Import {
-                self.error(named_type.module.location, "Not a package")
+                libc.stderr.begin_location_message(named_type.module.location, style: .Error).write("Not a package").end_location_message()
+                panic
             }
             return self.resolve_package_type(package: module_symbol.as(^checked.Import_Symbol).package, name: named_type.name)
         }
@@ -1229,7 +1241,8 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
         }
         if symbol == null {
             if self.current_package == null {
-                self.error(named_type.location, "Unknown type")
+                libc.stderr.begin_location_message(named_type.location, style: .Error).write("Unknown type").end_location_message()
+                panic
             }
             // The type may be declared later in the current package - check it on demand.
             return self.resolve_package_type(package: self.current_package, name: named_type.name)
@@ -1237,7 +1250,8 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
         if symbol.kind == .Type {
             return symbol.as(^checked.Type_Symbol).type
         }
-        self.error(named_type.location, "Symbol is not a type")
+        libc.stderr.begin_location_message(named_type.location, style: .Error).write("Symbol is not a type").end_location_message()
+        panic
     } else if parsed_type.kind == .Array {
         let array_type = parsed_type.as(^parsed.Array_Type)
         let item_type = self.resolve_type(array_type.item_type)
@@ -1281,7 +1295,8 @@ proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lex
         if symbol.kind == .Type {
             return symbol.as(^checked.Type_Symbol).type
         }
-        self.error(name.location, "Symbol is not a type")
+        libc.stderr.begin_location_message(name.location, style: .Error).write("Symbol is not a type").end_location_message()
+        panic
     }
     // The type may not have been checked yet - check it on demand.
     let module = package.parsed_package.first_module
@@ -1306,11 +1321,6 @@ proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lex
         }
         module = module.next_module
     }
-    self.error(name.location, "Unknown type")
-    return null
-}
-
-proc (^Checker).error(self, location: source.Source_Location, message: str) {
-    libc.stderr.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64)).write(": ").write(message).end_line()
+    libc.stderr.begin_location_message(name.location, style: .Error).write("Unknown type").end_location_message()
     panic
 }

@@ -1,5 +1,35 @@
+import libc
+
 type Source_Location = struct {
     source: Source
     line: u32
     column: u32
+}
+
+type Writer_Style = enum {
+    Default
+    Error
+    Warning
+}
+
+proc (^libc.FILE).begin_location_message(file, location: Source_Location, style: Writer_Style) -> ^libc.FILE {
+    return file.write_location(location).write(": ").style(style)
+}
+
+proc (^libc.FILE).end_location_message(file) -> ^libc.FILE {
+    return file.style(.Default).end_line()
+}
+
+proc (^libc.FILE).style(file, style: Writer_Style) -> ^libc.FILE {
+    if style == .Error {
+        return file.write("\e[0;91m")
+    }
+    if style == .Warning {
+        return file.write("\e[0;93m")
+    }
+    return file.write("\e[0m")
+}
+
+proc (^libc.FILE).write_location(file, location: Source_Location) -> ^libc.FILE {
+    return file.write(location.source.path).write_char(char: ':').write_u64(value: location.line.as(u64)).write_char(char: ':').write_u64(value: location.column.as(u64))
 }
