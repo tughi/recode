@@ -17,8 +17,15 @@ typedef enum {
 typedef struct Panel Panel;
 
 typedef struct {
+    String content;
+    String *lines;
+    size_t lines_size;
+} Source_Text;
+
+typedef struct {
     Observer observer;
     IR_Module *module;
+    Source_Text *origin_sources;
     Debugger_Mode mode;
     size_t next_depth;
     double last_render_time;
@@ -44,6 +51,11 @@ typedef struct {
     float drag_offset;
     float opacity;
 } Scrollbar;
+
+typedef struct {
+    Panel panel;
+    Scrollbar scrollbar;
+} IR_Panel;
 
 typedef struct {
     Panel panel;
@@ -99,6 +111,25 @@ static IR_Instruction *find_instruction_at_line(IR_Module *module, size_t line) 
     return NULL;
 }
 
+static IR_Instruction *find_instruction_at_origin_line(IR_Module *module, String source, size_t line) {
+    for (size_t f = 0; f < module->functions.size; f++) {
+        IR_Function *function = module->functions.items[f];
+        if (function->is_external) {
+            continue;
+        }
+        for (size_t b = 0; b < function->blocks.size; b++) {
+            IR_Block *block = function->blocks.items[b];
+            for (size_t i = 0; i < block->instructions.size; i++) {
+                IR_Instruction *instruction = block->instructions.items[i];
+                if (instruction->origin.line == line && string_equals(instruction->origin.source, source)) {
+                    return instruction;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
 static void toggle_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         if (debugger->breakpoints.items[i] == instruction) {
@@ -109,9 +140,20 @@ static void toggle_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     ir_instruction_list_add(&debugger->breakpoints, instruction);
 }
 
-static bool line_has_breakpoint(Debugger *debugger, size_t line) {
+static bool ir_line_has_breakpoint(Debugger *debugger, size_t line) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         if (debugger->breakpoints.items[i]->location.line == line) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool source_line_has_breakpoint(Debugger *debugger, size_t line) {
+    String source = debugger->current_frame->instruction->origin.source;
+    for (size_t i = 0; i < debugger->breakpoints.size; i++) {
+        IR_Instruction *breakpoint = debugger->breakpoints.items[i];
+        if (breakpoint->origin.line == line && string_equals(breakpoint->origin.source, source)) {
             return true;
         }
     }
@@ -126,9 +168,9 @@ static size_t frame_depth(Call_Frame *frame) {
     return depth;
 }
 
-static bool draw_token_text(Font font, Token *token, Color color, Vector2 *position, float max_right) {
-    for (size_t i = 0; i < token->lexeme.length; i++) {
-        int codepoint = token->lexeme.content[i];
+static bool draw_text(Font font, String text, Color color, Vector2 *position, float max_right) {
+    for (size_t i = 0; i < text.length; i++) {
+        int codepoint = text.content[i];
         int glyph_index = GetGlyphIndex(font, codepoint);
         DrawTextCodepoint(font, codepoint, *position, font.baseSize, color);
         position->x += (float)font.glyphs[glyph_index].advanceX;
@@ -137,6 +179,10 @@ static bool draw_token_text(Font font, Token *token, Color color, Vector2 *posit
         }
     }
     return true;
+}
+
+static bool draw_token_text(Font font, Token *token, Color color, Vector2 *position, float max_right) {
+    return draw_text(font, token->lexeme, color, position, max_right);
 }
 
 static void draw_panel_scrollbar(Rectangle bounds, float content_height, Scrollbar *scrollbar) {
@@ -194,9 +240,8 @@ static void draw_panel_scrollbar(Rectangle bounds, float content_height, Scrollb
     DrawRectangle((int)track_x, (int)thumb_y, (int)scrollbar_width, (int)thumb_height, thumb_color);
 }
 
-static float source_panel_gutter_width(Debugger *debugger) {
+static float text_panel_gutter_width(Debugger *debugger, size_t lines_size) {
     Font font = debugger->font;
-    size_t lines_size = debugger->module->lexed_source.lines_size;
     int gutter_digits = 1;
     for (size_t n = lines_size; n >= 10; n /= 10) {
         gutter_digits++;
@@ -205,73 +250,115 @@ static float source_panel_gutter_width(Debugger *debugger) {
     return (float)(gutter_digits * digit_advance) + digit_advance;
 }
 
-static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
-    (void)position;
-    return &source_panel->panel;
-}
-
-static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
-    int line_height = debugger->font.baseSize;
-    float panel_height = source_panel->panel.bounds.height;
-    float line_y = (float)(debugger->current_frame->instruction->location.line - 1) * line_height;
-    if (line_y < source_panel->scrollbar.scroll_y) {
-        source_panel->scrollbar.scroll_y = line_y;
-    } else if (line_y + line_height > source_panel->scrollbar.scroll_y + panel_height) {
-        source_panel->scrollbar.scroll_y = line_y + line_height - panel_height;
+static void text_panel_scroll_to_line(Scrollbar *scrollbar, float panel_height, size_t line, int line_height) {
+    if (line == 0) {
+        return;
+    }
+    float line_y = (float)(line - 1) * line_height;
+    if (line_y < scrollbar->scroll_y) {
+        scrollbar->scroll_y = line_y;
+    } else if (line_y + line_height > scrollbar->scroll_y + panel_height) {
+        scrollbar->scroll_y = line_y + line_height - panel_height;
     }
 }
 
-static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debugger) {
+static size_t text_panel_scroll_input(Debugger *debugger, Panel *panel, Scrollbar *scrollbar, size_t lines_size) {
     int line_height = debugger->font.baseSize;
-    float panel_height = source_panel->panel.bounds.height;
-    float content_height = (float)debugger->module->lexed_source.lines_size * line_height;
+    float panel_height = panel->bounds.height;
+    float content_height = (float)lines_size * line_height;
     float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
 
     float wheel = GetMouseWheelMove();
     if (wheel != 0) {
-        source_panel->scrollbar.scroll_y -= wheel * line_height * 3;
+        scrollbar->scroll_y -= wheel * line_height * 3;
     }
     if (IsKeyDown(KEY_UP)) {
-        source_panel->scrollbar.scroll_y -= line_height * 0.5f;
+        scrollbar->scroll_y -= line_height * 0.5f;
     }
     if (IsKeyDown(KEY_DOWN)) {
-        source_panel->scrollbar.scroll_y += line_height * 0.5f;
+        scrollbar->scroll_y += line_height * 0.5f;
     }
     if (IsKeyPressed(KEY_PAGE_UP) || IsKeyPressedRepeat(KEY_PAGE_UP)) {
-        source_panel->scrollbar.scroll_y -= panel_height;
+        scrollbar->scroll_y -= panel_height;
     }
     if (IsKeyPressed(KEY_PAGE_DOWN) || IsKeyPressedRepeat(KEY_PAGE_DOWN)) {
-        source_panel->scrollbar.scroll_y += panel_height;
+        scrollbar->scroll_y += panel_height;
     }
     if (IsKeyPressed(KEY_HOME)) {
-        source_panel->scrollbar.scroll_y = 0;
+        scrollbar->scroll_y = 0;
     }
     if (IsKeyPressed(KEY_END)) {
-        source_panel->scrollbar.scroll_y = max_scroll;
+        scrollbar->scroll_y = max_scroll;
     }
-    if (source_panel->scrollbar.scroll_y > max_scroll) {
-        source_panel->scrollbar.scroll_y = max_scroll;
+    if (scrollbar->scroll_y > max_scroll) {
+        scrollbar->scroll_y = max_scroll;
     }
-    if (source_panel->scrollbar.scroll_y < 0) {
-        source_panel->scrollbar.scroll_y = 0;
+    if (scrollbar->scroll_y < 0) {
+        scrollbar->scroll_y = 0;
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         Vector2 mouse = GetMousePosition();
-        Rectangle bounds = source_panel->panel.bounds;
-        float gutter_width = source_panel_gutter_width(debugger);
+        Rectangle bounds = panel->bounds;
+        float gutter_width = text_panel_gutter_width(debugger, lines_size);
         if (mouse.x >= bounds.x && mouse.x < bounds.x + gutter_width && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
-            size_t line = (size_t)((mouse.y - bounds.y + source_panel->scrollbar.scroll_y) / line_height) + 1;
-            IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
-            if (instruction != NULL) {
-                toggle_breakpoint(debugger, instruction);
-            }
+            return (size_t)((mouse.y - bounds.y + scrollbar->scroll_y) / line_height) + 1;
+        }
+    }
+    return 0;
+}
+
+static float text_panel_draw_gutter(Debugger *debugger, Rectangle bounds, float row_y, size_t line, size_t current_line, int gutter_digits, float gutter_width, bool has_breakpoint) {
+    Font font = debugger->font;
+    int line_height = font.baseSize;
+    if (line == current_line) {
+        DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKBLUE);
+    }
+    if (has_breakpoint) {
+        DrawRectangle((int)bounds.x, (int)row_y, (int)gutter_width, line_height, MAROON);
+    }
+
+    char number_text[32];
+    snprintf(number_text, sizeof(number_text), "%0*zu", gutter_digits, line);
+    size_t leading = 0;
+    while (leading + 1 < (size_t)gutter_digits && number_text[leading] == '0') {
+        leading++;
+    }
+    int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
+    Color number_color = line == current_line ? GRAY : DARKGRAY;
+    Color dim_color = {number_color.r, number_color.g, number_color.b, number_color.a / 2};
+    Vector2 number_position = {bounds.x, row_y};
+    for (int j = 0; number_text[j] != '\0'; j++) {
+        int codepoint = number_text[j];
+        Color color = (size_t)j < leading ? dim_color : number_color;
+        DrawTextCodepoint(font, codepoint, number_position, font.baseSize, color);
+        number_position.x += digit_advance;
+    }
+    return bounds.x + gutter_width;
+}
+
+static Panel *ir_panel_pick(IR_Panel *ir_panel, Vector2 position) {
+    (void)position;
+    return &ir_panel->panel;
+}
+
+static void ir_panel_handle_step(IR_Panel *ir_panel, Debugger *debugger) {
+    size_t line = debugger->current_frame->instruction->location.line;
+    text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->font.baseSize);
+}
+
+static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
+    size_t lines_size = debugger->module->lexed_source.lines_size;
+    size_t line = text_panel_scroll_input(debugger, &ir_panel->panel, &ir_panel->scrollbar, lines_size);
+    if (line != 0) {
+        IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
+        if (instruction != NULL) {
+            toggle_breakpoint(debugger, instruction);
         }
     }
 }
 
-static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
-    size_t current_line = debugger->current_frame->instruction->location.line;
+static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle bounds) {
     static const Color colors[TOKEN_KINDS] = {
         [TOKEN_KIND__CHARACTER] = BEIGE,
         [TOKEN_KIND__COMMENT] = GRAY,
@@ -284,49 +371,29 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         [TOKEN_KIND__STRING] = BEIGE,
     };
     Lexed_Source *lexed_source = &debugger->module->lexed_source;
+    size_t lines_size = lexed_source->lines_size;
+    size_t current_line = debugger->current_frame->instruction->location.line;
     Font font = debugger->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
     float bottom = bounds.y + bounds.height;
-    size_t first_line = (size_t)(source_panel->scrollbar.scroll_y / line_height);
-    float y_origin = bounds.y - (source_panel->scrollbar.scroll_y - (float)first_line * line_height);
+    Scrollbar *scrollbar = &ir_panel->scrollbar;
+    size_t first_line = (size_t)(scrollbar->scroll_y / line_height);
+    float y_origin = bounds.y - (scrollbar->scroll_y - (float)first_line * line_height);
 
     int gutter_digits = 1;
-    for (size_t n = lexed_source->lines_size; n >= 10; n /= 10) {
+    for (size_t n = lines_size; n >= 10; n /= 10) {
         gutter_digits++;
     }
-    int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
-    float gutter_width = source_panel_gutter_width(debugger);
-    float source_x = bounds.x + gutter_width;
+    float gutter_width = text_panel_gutter_width(debugger, lines_size);
 
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    for (size_t i = first_line; i < lexed_source->lines_size; i++) {
+    for (size_t i = first_line; i < lines_size; i++) {
         float row_y = y_origin + (float)(i - first_line) * line_height;
         if (row_y >= bottom) {
             break;
         }
-        if (i + 1 == current_line) {
-            DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKBLUE);
-        }
-        if (line_has_breakpoint(debugger, i + 1)) {
-            DrawRectangle((int)bounds.x, (int)row_y, (int)gutter_width, line_height, MAROON);
-        }
-
-        char number_text[32];
-        snprintf(number_text, sizeof(number_text), "%0*zu", gutter_digits, i + 1);
-        size_t leading = 0;
-        while (leading + 1 < (size_t)gutter_digits && number_text[leading] == '0') {
-            leading++;
-        }
-        Color number_color = i + 1 == current_line ? GRAY : DARKGRAY;
-        Color dim_color = {number_color.r, number_color.g, number_color.b, number_color.a / 2};
-        Vector2 number_position = {bounds.x, row_y};
-        for (int j = 0; number_text[j] != '\0'; j++) {
-            int codepoint = number_text[j];
-            Color color = (size_t)j < leading ? dim_color : number_color;
-            DrawTextCodepoint(font, codepoint, number_position, font.baseSize, color);
-            number_position.x += digit_advance;
-        }
+        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
 
         Vector2 position = {source_x, row_y};
         Token *line_token = lexed_source->lines[i];
@@ -335,8 +402,12 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
             first_token++;
         }
         bool is_liveness_line = first_token->kind == TOKEN_KIND__OTHER && first_token->other.value == '[';
+        bool is_annotation = false;
         while (line_token->kind != TOKEN_KIND__END_OF_LINE && line_token->kind != TOKEN_KIND__END_OF_FILE) {
-            Color color = is_liveness_line ? DARKGRAY : colors[line_token->kind];
+            if (line_token->kind == TOKEN_KIND__OTHER && line_token->other.value == '^') {
+                is_annotation = true;
+            }
+            Color color = is_liveness_line || is_annotation ? DARKGRAY : colors[line_token->kind];
             if (!draw_token_text(font, line_token, color, &position, right)) {
                 break;
             }
@@ -345,8 +416,97 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     }
     EndScissorMode();
 
-    float content_height = (float)lexed_source->lines_size * line_height;
-    draw_panel_scrollbar(bounds, content_height, &source_panel->scrollbar);
+    draw_panel_scrollbar(bounds, (float)lines_size * line_height, scrollbar);
+}
+
+static IR_Panel make_ir_panel(float weight) {
+    return (IR_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))ir_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))ir_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))ir_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) ir_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
+static Source_Text *source_panel_text(Debugger *debugger) {
+    if (debugger->current_frame == NULL) {
+        return NULL;
+    }
+    Source_Location origin = debugger->current_frame->instruction->origin;
+    if (origin.line == 0) {
+        return NULL;
+    }
+    IR_Source_File_List *source_files = &debugger->module->source_files;
+    for (size_t i = 0; i < source_files->size; i++) {
+        if (string_equals(source_files->items[i], origin.source)) {
+            Source_Text *text = &debugger->origin_sources[i];
+            return text->lines != NULL ? text : NULL;
+        }
+    }
+    return NULL;
+}
+
+static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
+    (void)position;
+    return &source_panel->panel;
+}
+
+static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
+    size_t line = debugger->current_frame->instruction->origin.line;
+    text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, debugger->font.baseSize);
+}
+
+static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debugger) {
+    Source_Text *text = source_panel_text(debugger);
+    if (text == NULL) {
+        return;
+    }
+    size_t line = text_panel_scroll_input(debugger, &source_panel->panel, &source_panel->scrollbar, text->lines_size);
+    if (line != 0) {
+        IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, debugger->current_frame->instruction->origin.source, line);
+        if (instruction != NULL) {
+            toggle_breakpoint(debugger, instruction);
+        }
+    }
+}
+
+static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
+    Source_Text *text = source_panel_text(debugger);
+    if (text == NULL) {
+        return;
+    }
+    size_t lines_size = text->lines_size;
+    size_t current_line = debugger->current_frame->instruction->origin.line;
+    Font font = debugger->font;
+    int line_height = font.baseSize;
+    float right = bounds.x + bounds.width;
+    float bottom = bounds.y + bounds.height;
+    Scrollbar *scrollbar = &source_panel->scrollbar;
+    size_t first_line = (size_t)(scrollbar->scroll_y / line_height);
+    float y_origin = bounds.y - (scrollbar->scroll_y - (float)first_line * line_height);
+
+    int gutter_digits = 1;
+    for (size_t n = lines_size; n >= 10; n /= 10) {
+        gutter_digits++;
+    }
+    float gutter_width = text_panel_gutter_width(debugger, lines_size);
+
+    BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
+    for (size_t i = first_line; i < lines_size; i++) {
+        float row_y = y_origin + (float)(i - first_line) * line_height;
+        if (row_y >= bottom) {
+            break;
+        }
+        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, gutter_digits, gutter_width, source_line_has_breakpoint(debugger, i + 1));
+        Vector2 position = {source_x, row_y};
+        draw_text(font, text->lines[i], LIGHTGRAY, &position, right);
+    }
+    EndScissorMode();
+
+    draw_panel_scrollbar(bounds, (float)lines_size * line_height, scrollbar);
 }
 
 static Source_Panel make_source_panel(float weight) {
@@ -521,7 +681,8 @@ static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Recta
         }
         char name[128];
         snprintf(name, sizeof(name), "%.*s", STRING(f->function->name));
-        String source = f->instruction->location.source;
+        Source_Location frame_location = f->instruction->origin.line != 0 ? f->instruction->origin : f->instruction->location;
+        String source = frame_location.source;
         for (size_t i = source.length; i > 0; i--) {
             if (source.content[i - 1] == '/') {
                 source.content += i;
@@ -530,7 +691,7 @@ static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Recta
             }
         }
         char location[128];
-        snprintf(location, sizeof(location), "%.*s:%zu", STRING(source), f->instruction->location.line);
+        snprintf(location, sizeof(location), "%.*s:%zu", STRING(source), frame_location.line);
         Vector2 location_size = MeasureTextEx(font, location, line_height, 0);
         DrawTextEx(font, name, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
         DrawTextEx(font, location, (Vector2){bounds.x + bounds.width - location_size.x, y}, line_height, 0, GRAY);
@@ -888,21 +1049,83 @@ Font load_bitmap_font(const char *path) {
     return font;
 }
 
+static Source_Text make_source_text(String content) {
+    Source_Text text = {.content = content};
+    size_t capacity = 0;
+    size_t start = 0;
+    for (size_t i = 0; i <= content.length; i++) {
+        if (i < content.length && content.content[i] != '\n') {
+            continue;
+        }
+        if (i == content.length && start == content.length && text.lines_size > 0) {
+            break; // drop the empty line after a trailing newline
+        }
+        if (text.lines_size == capacity) {
+            capacity = capacity == 0 ? 16 : capacity * 2;
+            text.lines = realloc(text.lines, capacity * sizeof(String));
+        }
+        text.lines[text.lines_size++] = (String){content.content + start, i - start};
+        start = i + 1;
+    }
+    return text;
+}
+
+static Source_Text *load_origin_sources(IR_Module *module) {
+    if (module->source_files.size == 0) {
+        return NULL;
+    }
+    Source_Text *origin_sources = calloc(module->source_files.size, sizeof(Source_Text));
+    String ir_path = module->lexed_source.source.path;
+    size_t dir_length = 0;
+    for (size_t i = ir_path.length; i > 0; i--) {
+        if (ir_path.content[i - 1] == '/') {
+            dir_length = i;
+            break;
+        }
+    }
+    for (size_t i = 0; i < module->source_files.size; i++) {
+        String path = module->source_files.items[i];
+        char *resolved = malloc(dir_length + path.length + 1);
+        size_t resolved_length = 0;
+        if (path.length > 0 && path.content[0] != '/') {
+            memcpy(resolved, ir_path.content, dir_length);
+            resolved_length = dir_length;
+        }
+        memcpy(resolved + resolved_length, path.content, path.length);
+        resolved_length += path.length;
+        resolved[resolved_length] = '\0';
+        FILE *file = fopen(resolved, "r");
+        if (file == NULL) {
+            fprintf(stderr, "Cannot open source file: %s\n", resolved);
+            free(resolved);
+            continue;
+        }
+        fclose(file);
+        origin_sources[i] = make_source_text(load_source((String){resolved, resolved_length}).content);
+    }
+    return origin_sources;
+}
+
 int64_t debug(IR_Module *module, int argc, char *argv[]) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "Code IR Debugger");
     SetTargetFPS(60);
 
+    bool has_origins = module->source_files.size > 0;
     Source_Panel source_panel = make_source_panel(0.5f);
+    IR_Panel ir_panel = make_ir_panel(has_origins ? 1.0f : 0.5f);
+    Panel *left_panel_children[] = {&source_panel.panel, &ir_panel.panel};
+    Split_Panel left_panel = make_split_panel(0.5f, SPLIT_DIRECTION__VERTICAL, left_panel_children, 2);
     Stack_Panel stack_panel = make_stack_panel(0.3f);
     Variables_Panel variables_panel = make_variables_panel(1.0f);
     Panel *right_panel_children[] = {&stack_panel.panel, &variables_panel.panel};
     Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 2);
-    Panel *split_children[] = {&source_panel.panel, &right_panel.panel};
+    Panel *split_children[] = {has_origins ? &left_panel.panel : &ir_panel.panel, &right_panel.panel};
     Split_Panel split_panel = make_split_panel(1.0f, SPLIT_DIRECTION__HORIZONTAL, split_children, sizeof(split_children) / sizeof(*split_children));
     Debugger debugger = {
         .observer = {.on_step = debugger_on_step},
         .module = module,
+        .origin_sources = load_origin_sources(module),
         .mode = DEBUGGER_MODE__STEP,
         .next_depth = 0,
         .font = load_bitmap_font("fonts/Code.font"),

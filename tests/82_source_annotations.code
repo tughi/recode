@@ -1,0 +1,5 @@
+proc main() -> i32 {
+    let a = 30
+    let b = 12
+    return a + b
+}

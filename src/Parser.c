@@ -14,6 +14,8 @@ typedef struct {
     Token current;
     Token next;
     IR_Type_List *types;
+    IR_Source_File_List *source_files;
+    Source_Location current_origin;
     IR_Value_List function_values;
     IR_Value_List global_values;
     IR_Instruction_List forward_references;
@@ -611,6 +613,7 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
     instruction->location = result_name.location;
+    instruction->origin = parser->current_origin;
     instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
     instruction->result.type = result_type;
     instruction->result.slot = reserve_frame_slot(&parser->function_frame_size, result_type);
@@ -935,6 +938,45 @@ static IR_Instruction *parse_store_instruction(Parser *parser) {
     return instruction;
 }
 
+static void parse_debug_annotation(Parser *parser, IR_Instruction *instruction) {
+    expect_space(parser, 3);
+    expect_other(parser, '^');
+    Source_Location index_location = current_location(parser);
+    if (parser->current.kind != TOKEN_KIND__INTEGER) {
+        parse_error_current(parser, "Expected source file index");
+    }
+    uint64_t file_index = parser->current.integer.value;
+    advance(parser);
+    if (file_index == 0 || file_index > parser->source_files->size) {
+        parse_error(parser, index_location, "Undeclared source file index %llu", (unsigned long long)file_index);
+    }
+    expect_other(parser, ':');
+    Source_Location line_location = current_location(parser);
+    if (parser->current.kind != TOKEN_KIND__INTEGER) {
+        parse_error_current(parser, "Expected source line");
+    }
+    size_t line = parser->current.integer.value;
+    advance(parser);
+    if (line == 0) {
+        parse_error(parser, line_location, "Source line must be positive");
+    }
+    size_t column = 0;
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') {
+        advance(parser);
+        if (parser->current.kind != TOKEN_KIND__INTEGER) {
+            parse_error_current(parser, "Expected source column");
+        }
+        column = parser->current.integer.value;
+        advance(parser);
+    }
+    parser->current_origin = (Source_Location){
+        .source = parser->source_files->items[file_index - 1],
+        .line = line,
+        .column = column,
+    };
+    instruction->origin = parser->current_origin;
+}
+
 static IR_Instruction *parse_instruction(Parser *parser) {
     if (is_local_value_name_start(parser)) {
         return parse_value_instruction(parser);
@@ -970,6 +1012,7 @@ static IR_Instruction *parse_instruction(Parser *parser) {
             parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
         }
         instruction->location = mnemonic_location;
+        instruction->origin = parser->current_origin;
         return instruction;
     }
 
@@ -1590,6 +1633,8 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
     expect_other(parser, '{');
     advance(parser);
 
+    parser->current_origin = (Source_Location){0};
+
     while (true) {
         skip_end_of_lines(parser);
         expect_space(parser, 0);
@@ -1631,12 +1676,36 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
                 continue;
             }
 
-            ir_instruction_list_add(&block->instructions, parse_instruction(parser));
+            IR_Instruction *instruction = parse_instruction(parser);
+            ir_instruction_list_add(&block->instructions, instruction);
+            if (parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == '^') {
+                parse_debug_annotation(parser, instruction);
+            }
         }
     }
 
     function->frame_size = parser->function_frame_size;
     return function;
+}
+
+static void parse_source_declaration(Parser *parser) {
+    advance(parser);
+    expect_space(parser, 1);
+    Source_Location index_location = current_location(parser);
+    if (parser->current.kind != TOKEN_KIND__INTEGER) {
+        parse_error_current(parser, "Expected source file index");
+    }
+    uint64_t index = parser->current.integer.value;
+    advance(parser);
+    if (index != parser->source_files->size + 1) {
+        parse_error(parser, index_location, "Expected source file index %zu, got %llu", parser->source_files->size + 1, (unsigned long long)index);
+    }
+    expect_space(parser, 1);
+    if (parser->current.kind != TOKEN_KIND__STRING) {
+        parse_error_current(parser, "Expected source file path");
+    }
+    ir_source_file_list_add(parser->source_files, parser->current.string.value);
+    advance(parser);
 }
 
 IR_Module *parse(Lexed_Source lexed_source) {
@@ -1647,6 +1716,8 @@ IR_Module *parse(Lexed_Source lexed_source) {
     parser.source = module->lexed_source.source;
     parser.lexed_source = &module->lexed_source;
     parser.cursor = 0;
+    parser.source_files = &module->source_files;
+    parser.current_origin = (Source_Location){0};
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
@@ -1663,6 +1734,11 @@ IR_Module *parse(Lexed_Source lexed_source) {
         expect_space(&parser, 0);
         if (parser.current.kind == TOKEN_KIND__END_OF_FILE) {
             break;
+        }
+
+        if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "source")) {
+            parse_source_declaration(&parser);
+            continue;
         }
 
         if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "type")) {

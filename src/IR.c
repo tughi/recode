@@ -432,3 +432,11 @@ void ir_global_variable_list_add(IR_Global_Variable_List *list, IR_Global_Variab
     }
     list->items[list->size++] = global;
 }
+
+void ir_source_file_list_add(IR_Source_File_List *list, String path) {
+    if (list->size == list->capacity) {
+        list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
+        list->items = realloc(list->items, list->capacity * sizeof(String));
+    }
+    list->items[list->size++] = path;
+}

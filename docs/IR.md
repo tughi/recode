@@ -67,6 +67,26 @@ Numeric labels mark basic block entry points and serve as branch targets within 
 
 Lists the variables whose values are still needed by subsequent instructions at a given point.
 
+### Source annotations
+
+```
+source 1 "test.code"
+
+$main(): i32 {
+@1:
+  %a: i32 = const 30   ^1:2:9
+  %b: i32 = const 12
+  %0: i32 = add %a %b   ^1:4:12
+  ret %0
+}
+```
+
+Optional debug metadata mapping instructions back to the original source they were compiled from. A top-level `source <index> "<path>"` declaration registers an original source file; indices are 1-based and must be declared sequentially. Paths are resolved relative to the IR file's directory when the debugger loads them.
+
+An instruction may carry a trailing `^<file>:<line>[:<column>]` annotation, separated from the instruction by three spaces (a clear visual break). The location is *sticky*: it applies to the annotated instruction and to every following unannotated instruction in the same function, so an emitter only needs to annotate the first instruction of each source statement.
+
+Annotations have no effect on execution. Referencing an undeclared file index, a non-sequential `source` index, or a malformed annotation is a parse error.
+
 ### Type declaration
 
 ```

@@ -198,6 +198,7 @@ struct IR_Instruction {
     IR_Value result;
     IR_Instruction_Kind kind;
     Source_Location location;
+    Source_Location origin;
     IR_Value_List arguments;
     union {
         IR_Alloc_Instruction alloc_instruction;
@@ -309,8 +310,17 @@ typedef struct {
 
 void ir_global_variable_list_add(IR_Global_Variable_List *list, IR_Global_Variable *global);
 
+typedef struct {
+    String *items;
+    size_t size;
+    size_t capacity;
+} IR_Source_File_List;
+
+void ir_source_file_list_add(IR_Source_File_List *list, String path);
+
 typedef struct IR_Module {
     Lexed_Source lexed_source;
+    IR_Source_File_List source_files;
     IR_Function_List functions;
     IR_Global_Variable_List global_variables;
     IR_Type_List types;
