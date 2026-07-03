@@ -17,15 +17,9 @@ typedef enum {
 typedef struct Panel Panel;
 
 typedef struct {
-    String content;
-    String *lines;
-    size_t lines_size;
-} Source_Text;
-
-typedef struct {
     Observer observer;
     IR_Module *module;
-    Source_Text *origin_sources;
+    File *sources;
     Debugger_Mode mode;
     size_t next_depth;
     double last_render_time;
@@ -348,7 +342,7 @@ static void ir_panel_handle_step(IR_Panel *ir_panel, Debugger *debugger) {
 }
 
 static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
-    size_t lines_size = debugger->module->lexed_source.lines_size;
+    size_t lines_size = debugger->module->lexed_file.lines_size;
     size_t line = text_panel_scroll_input(debugger, &ir_panel->panel, &ir_panel->scrollbar, lines_size);
     if (line != 0) {
         IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
@@ -370,8 +364,8 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
         [TOKEN_KIND__SPACE] = DARKGRAY,
         [TOKEN_KIND__STRING] = BEIGE,
     };
-    Lexed_Source *lexed_source = &debugger->module->lexed_source;
-    size_t lines_size = lexed_source->lines_size;
+    Lexed_File *lexed_file = &debugger->module->lexed_file;
+    size_t lines_size = lexed_file->lines_size;
     size_t current_line = debugger->current_frame->instruction->location.line;
     Font font = debugger->font;
     int line_height = font.baseSize;
@@ -396,7 +390,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
         float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
 
         Vector2 position = {source_x, row_y};
-        Token *line_token = lexed_source->lines[i];
+        Token *line_token = lexed_file->lines[i];
         Token *first_token = line_token;
         if (first_token->kind == TOKEN_KIND__SPACE) {
             first_token++;
@@ -431,7 +425,7 @@ static IR_Panel make_ir_panel(float weight) {
     };
 }
 
-static Source_Text *source_panel_text(Debugger *debugger) {
+static File *source_panel_text(Debugger *debugger) {
     if (debugger->current_frame == NULL) {
         return NULL;
     }
@@ -442,8 +436,8 @@ static Source_Text *source_panel_text(Debugger *debugger) {
     IR_Source_File_List *source_files = &debugger->module->source_files;
     for (size_t i = 0; i < source_files->size; i++) {
         if (string_equals(source_files->items[i], origin.source)) {
-            Source_Text *text = &debugger->origin_sources[i];
-            return text->lines != NULL ? text : NULL;
+            File *file = &debugger->sources[i];
+            return file->lines != NULL ? file : NULL;
         }
     }
     return NULL;
@@ -460,7 +454,7 @@ static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debug
 }
 
 static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debugger) {
-    Source_Text *text = source_panel_text(debugger);
+    File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
     }
@@ -474,7 +468,7 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
 }
 
 static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
-    Source_Text *text = source_panel_text(debugger);
+    File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
     }
@@ -1049,33 +1043,12 @@ Font load_bitmap_font(const char *path) {
     return font;
 }
 
-static Source_Text make_source_text(String content) {
-    Source_Text text = {.content = content};
-    size_t capacity = 0;
-    size_t start = 0;
-    for (size_t i = 0; i <= content.length; i++) {
-        if (i < content.length && content.content[i] != '\n') {
-            continue;
-        }
-        if (i == content.length && start == content.length && text.lines_size > 0) {
-            break; // drop the empty line after a trailing newline
-        }
-        if (text.lines_size == capacity) {
-            capacity = capacity == 0 ? 16 : capacity * 2;
-            text.lines = realloc(text.lines, capacity * sizeof(String));
-        }
-        text.lines[text.lines_size++] = (String){content.content + start, i - start};
-        start = i + 1;
-    }
-    return text;
-}
-
-static Source_Text *load_origin_sources(IR_Module *module) {
+static File *load_sources(IR_Module *module) {
     if (module->source_files.size == 0) {
         return NULL;
     }
-    Source_Text *origin_sources = calloc(module->source_files.size, sizeof(Source_Text));
-    String ir_path = module->lexed_source.source.path;
+    File *sources = calloc(module->source_files.size, sizeof(File));
+    String ir_path = module->lexed_file.file.path;
     size_t dir_length = 0;
     for (size_t i = ir_path.length; i > 0; i--) {
         if (ir_path.content[i - 1] == '/') {
@@ -1094,16 +1067,16 @@ static Source_Text *load_origin_sources(IR_Module *module) {
         memcpy(resolved + resolved_length, path.content, path.length);
         resolved_length += path.length;
         resolved[resolved_length] = '\0';
-        FILE *file = fopen(resolved, "r");
-        if (file == NULL) {
+        FILE *stream = fopen(resolved, "r");
+        if (stream == NULL) {
             fprintf(stderr, "Cannot open source file: %s\n", resolved);
             free(resolved);
             continue;
         }
-        fclose(file);
-        origin_sources[i] = make_source_text(load_source((String){resolved, resolved_length}).content);
+        fclose(stream);
+        sources[i] = load_file((String){resolved, resolved_length});
     }
-    return origin_sources;
+    return sources;
 }
 
 int64_t debug(IR_Module *module, int argc, char *argv[]) {
@@ -1125,7 +1098,7 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
     Debugger debugger = {
         .observer = {.on_step = debugger_on_step},
         .module = module,
-        .origin_sources = load_origin_sources(module),
+        .sources = load_sources(module),
         .mode = DEBUGGER_MODE__STEP,
         .next_depth = 0,
         .font = load_bitmap_font("fonts/Code.font"),

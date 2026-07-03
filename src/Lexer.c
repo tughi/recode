@@ -9,10 +9,10 @@ struct Lexer {
     size_t source_column;
 };
 
-Lexer *lexer_create(Source source) {
+Lexer *lexer_create(File file) {
     Lexer *lexer = malloc(sizeof(Lexer));
-    lexer->source = source.content;
-    lexer->source_path = source.path;
+    lexer->source = file.content;
+    lexer->source_path = file.path;
     lexer->source_position = 0;
     lexer->source_line = 1;
     lexer->source_column = 1;

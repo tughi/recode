@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Source.h"
+#include "File.h"
 #include "Token.h"
 
 typedef struct Lexer Lexer;
 
-Lexer *lexer_create(Source source);
+Lexer *lexer_create(File file);
 void lexer_destroy(Lexer *lexer);
 Token lexer_next(Lexer *lexer);

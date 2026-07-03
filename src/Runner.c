@@ -1,7 +1,7 @@
 #include "Debugger.h"
+#include "File.h"
 #include "Interpreter.h"
 #include "Parser.h"
-#include "Source.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -18,19 +18,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Source source;
+    File file;
     String path = string_from(argv[arg_index]);
     if (string_equals_cstr(path, "-")) {
-        source = load_source_from_stdin();
+        file = load_file_from_stdin();
     } else {
         if (!string_ends_with(path, string_from(".ir"))) {
             fprintf(stderr, "Runner: file must have .ir extension\n");
             return 1;
         }
-        source = load_source(path);
+        file = load_file(path);
     }
 
-    IR_Module *module = parse(tokenize(source));
+    IR_Module *module = parse(tokenize(file));
 
     if (debug_mode) {
         return (int)debug(module, argc - arg_index, argv + arg_index);

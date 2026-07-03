@@ -19,7 +19,7 @@ typedef struct {
 } Interpreter;
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
-    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(interpreter->module->lexed_source.source.path), location.line, location.column);
+    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(interpreter->module->lexed_file.file.path), location.line, location.column);
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -1137,11 +1137,11 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
     Interpreter interpreter = {.module = module, .observer = observer};
     IR_Function *main_function = find_function(&interpreter, main_name);
     if (main_function == NULL) {
-        fprintf(stderr, "%.*s: No $main function\n", STRING(module->lexed_source.source.path));
+        fprintf(stderr, "%.*s: No $main function\n", STRING(module->lexed_file.file.path));
         panic();
     }
     if (main_function->return_type->kind != IR_TYPE__I32 && main_function->return_type->kind != IR_TYPE__VOID) {
-        fprintf(stderr, "%.*s:%zu:%zu: Unsupported return type", STRING(module->lexed_source.source.path), main_function->location.line, main_function->location.column);
+        fprintf(stderr, "%.*s:%zu:%zu: Unsupported return type", STRING(module->lexed_file.file.path), main_function->location.line, main_function->location.column);
         fprint_ir_type(stderr, main_function->return_type);
         fputc('\n', stderr);
         panic();
@@ -1181,7 +1181,7 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
     char **main_argv = argv;
     if (main_arguments_count > 0) {
         if (main_function->parameters.items[0]->type != ir_type_i32()) {
-            fprintf(stderr, "%.*s:%zu:%zu: $main first parameter must be i32, got ", STRING(module->lexed_source.source.path), main_function->location.line, main_function->location.column);
+            fprintf(stderr, "%.*s:%zu:%zu: $main first parameter must be i32, got ", STRING(module->lexed_file.file.path), main_function->location.line, main_function->location.column);
             fprint_ir_type(stderr, main_function->parameters.items[0]->type);
             fputc('\n', stderr);
             panic();
@@ -1189,14 +1189,14 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
         main_argument_addresses[0] = (uint8_t *)&main_argc;
         if (main_arguments_count > 1) {
             if (main_function->parameters.items[1]->type != ir_type_multipointer(&module->types, ir_type_multipointer(&module->types, ir_type_u8()))) {
-                fprintf(stderr, "%.*s:%zu:%zu: $main second parameter must be [*][*]u8, got ", STRING(module->lexed_source.source.path), main_function->location.line, main_function->location.column);
+                fprintf(stderr, "%.*s:%zu:%zu: $main second parameter must be [*][*]u8, got ", STRING(module->lexed_file.file.path), main_function->location.line, main_function->location.column);
                 fprint_ir_type(stderr, main_function->parameters.items[1]->type);
                 fputc('\n', stderr);
                 panic();
             }
             main_argument_addresses[1] = (uint8_t *)&main_argv;
             if (main_arguments_count > 2) {
-                fprintf(stderr, "%.*s:%zu:%zu: $main has too many parameters\n", STRING(module->lexed_source.source.path), main_function->location.line, main_function->location.column);
+                fprintf(stderr, "%.*s:%zu:%zu: $main has too many parameters\n", STRING(module->lexed_file.file.path), main_function->location.line, main_function->location.column);
                 panic();
             }
         }

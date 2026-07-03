@@ -8,8 +8,8 @@
 #include <string.h>
 
 typedef struct {
-    Source source;
-    Lexed_Source *lexed_source;
+    File file;
+    Lexed_File *lexed_file;
     size_t cursor;
     Token current;
     Token next;
@@ -45,7 +45,7 @@ static Source_Location current_location(Parser *parser) {
 }
 
 static void print_parse_error(Parser *parser, Source_Location location, const char *format, ...) {
-    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->source.path), location.line, location.column);
+    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->file.path), location.line, location.column);
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -67,10 +67,10 @@ static void print_parse_error(Parser *parser, Source_Location location, const ch
 
 static Token fetch_token(Parser *parser) {
     Token token;
-    if (parser->cursor < parser->lexed_source->tokens_size) {
-        token = parser->lexed_source->tokens[parser->cursor++];
+    if (parser->cursor < parser->lexed_file->tokens_size) {
+        token = parser->lexed_file->tokens[parser->cursor++];
     } else {
-        token = parser->lexed_source->tokens[parser->lexed_source->tokens_size - 1];
+        token = parser->lexed_file->tokens[parser->lexed_file->tokens_size - 1];
     }
     if (token.kind == TOKEN_KIND__ERROR) {
         parse_error(parser, token.error.location, "Invalid token '%.*s'", STRING(token.error.lexeme));
@@ -427,7 +427,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
 }
 
 static void error_prefix(Parser *parser, Source_Location location) {
-    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->source.path), location.line, location.column);
+    fprintf(stderr, "%.*s:%zu:%zu: ", STRING(parser->file.path), location.line, location.column);
 }
 
 static void expect_type(Parser *parser, Source_Location location, const char *what, IR_Type *expected, IR_Type *actual) {
@@ -1708,13 +1708,13 @@ static void parse_source_declaration(Parser *parser) {
     advance(parser);
 }
 
-IR_Module *parse(Lexed_Source lexed_source) {
+IR_Module *parse(Lexed_File lexed_file) {
     IR_Module *module = calloc(1, sizeof(IR_Module));
-    module->lexed_source = lexed_source;
+    module->lexed_file = lexed_file;
 
     Parser parser;
-    parser.source = module->lexed_source.source;
-    parser.lexed_source = &module->lexed_source;
+    parser.file = module->lexed_file.file;
+    parser.lexed_file = &module->lexed_file;
     parser.cursor = 0;
     parser.source_files = &module->source_files;
     parser.current_origin = (Source_Location){0};

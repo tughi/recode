@@ -2,4 +2,4 @@
 
 #include "IR.h"
 
-IR_Module *parse(Lexed_Source lexed_source);
+IR_Module *parse(Lexed_File lexed_file);
