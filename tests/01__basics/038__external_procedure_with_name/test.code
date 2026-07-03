@@ -1,0 +1,6 @@
+proc terminate(status: i32) = external "exit"
+
+proc main() -> i32 {
+    terminate(0)
+    return 1
+}

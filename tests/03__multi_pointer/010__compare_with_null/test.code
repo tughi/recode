@@ -1,0 +1,13 @@
+proc main() -> i32 {
+    let content = malloc(8).as([^]u8)
+    if content == null {
+        return 1
+    }
+    let empty: [^]u8 = null
+    if empty != null {
+        return 2
+    }
+    return 0
+}
+
+proc malloc(size: usize) -> ^Any = external

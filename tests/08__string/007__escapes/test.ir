@@ -1,0 +1,69 @@
+type FILE = opaque
+
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$stdout: [[FILE]] = external
+
+$fputc: [proc (i32, [FILE]): i32] = external
+
+$str_1: [*]u8 = "\"quoted\"\t\\backslash\\ ?\n"
+
+$test.main(): i32 {
+@1:
+  %text.ptr: [String] = alloc String
+  %1: usize = const 24
+  %2: String = struct .data $str_1 .length %1
+  store %text.ptr %2
+  %3: [usize] = offset %text.ptr .length
+  %4: usize = load %3
+  %5: usize = const 24
+  %6: bool = cmp_ne %4 %5
+  br %6 @2 @3
+@2:
+  %7: i32 = const 1
+  ret %7
+@3:
+  %text_copy.ptr: [String] = alloc String
+  %text.1: String = load %text.ptr
+  store %text_copy.ptr %text.1
+  %data.ptr: [[*]u8] = alloc [*]u8
+  %8: [String] = cast %text_copy.ptr
+  %9: [[*]u8] = offset %8 .data
+  %10: [*]u8 = load %9
+  store %data.ptr %10
+  %index.ptr: [usize] = alloc usize
+  %11: usize = const 0
+  store %index.ptr %11
+  jmp @4
+@4:
+  %index.1: usize = load %index.ptr
+  %12: [usize] = offset %text.ptr .length
+  %13: usize = load %12
+  %14: bool = cmp_lt %index.1 %13
+  br %14 @5 @6
+@5:
+  %data.1: [*]u8 = load %data.ptr
+  %index.2: usize = load %index.ptr
+  %15: [u8] = offset %data.1 %index.2
+  %16: u8 = load %15
+  %17: i32 = cast %16
+  %18: [FILE] = load $stdout
+  %19: i32 = call $fputc %17 %18
+  %index.3: usize = load %index.ptr
+  %20: usize = const 1
+  %21: usize = add %index.3 %20
+  store %index.ptr %21
+  jmp @4
+@6:
+  %22: i32 = const 0
+  ret %22
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

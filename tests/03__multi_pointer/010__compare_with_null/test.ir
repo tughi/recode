@@ -1,0 +1,37 @@
+$malloc: [proc (usize): [Any]] = external
+
+$test.main(): i32 {
+@1:
+  %content.ptr: [[*]u8] = alloc [*]u8
+  %1: usize = const 8
+  %2: [Any] = call $malloc %1
+  %3: [*]u8 = cast %2
+  store %content.ptr %3
+  %content.1: [*]u8 = load %content.ptr
+  %4: [*]u8 = const null
+  %5: bool = cmp_eq %content.1 %4
+  br %5 @2 @3
+@2:
+  %6: i32 = const 1
+  ret %6
+@3:
+  %empty.ptr: [[*]u8] = alloc [*]u8
+  %7: [*]u8 = const null
+  store %empty.ptr %7
+  %empty.1: [*]u8 = load %empty.ptr
+  %8: [*]u8 = const null
+  %9: bool = cmp_ne %empty.1 %8
+  br %9 @4 @5
+@4:
+  %10: i32 = const 2
+  ret %10
+@5:
+  %11: i32 = const 0
+  ret %11
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

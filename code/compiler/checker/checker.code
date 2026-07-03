@@ -420,8 +420,12 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
         parsed_parameter = parsed_parameter.next
     }
 
+    let external_name = ""
+    if procedure_statement.external_name != null {
+        external_name = procedure_statement.external_name.value
+    }
     let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let procedure_symbol = checked.new_procedure_symbol(name: name, package_name: self.package_name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, package_name: self.package_name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
     if receiver_type != null {
         self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
     }
@@ -565,13 +569,16 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
 
 proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_type: ^checked.Type, location: source.Source_Location) {
     if actual_type.kind == .Null {
-        if expected_type.kind == .Pointer or expected_type.kind == .Procedure {
+        if expected_type.kind == .Multi_Pointer or expected_type.kind == .Pointer or expected_type.kind == .Procedure {
             return
         }
     }
     if not expected_type.equals(actual_type) {
         let message = string.new_builder()
-        message.append("Expected type ").append(expected_type.name()).append(" but got ").append(actual_type.name())
+        message.append("Expected type ")
+        expected_type.append_name(^message)
+        message.append(" but got ")
+        actual_type.append_name(^message)
         self.error(location, message.build())
     }
 }
@@ -1038,7 +1045,7 @@ proc (^Checker).resolve_package_member(self, object: ^checked.Expression, member
         self.error(location, "Not an import")
     }
     let package = object.as(^checked.Symbol_Expression).symbol.as(^checked.Import_Symbol).package
-    let symbol = package.symbols.find(member.lexeme)
+    let symbol = package.symbols.find_local(member.lexeme)
     if symbol == null {
         let message = string.new_builder()
         message.append("Module `").append(package.name).append("` has no `").append(member.lexeme).append("` symbol")
@@ -1114,10 +1121,10 @@ proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expres
     let expression_type = expected_type
     if expression_type == null {
         expression_type = self.null_type
-    } else if expression_type.kind != .Pointer and expression_type.kind != .Procedure {
+    } else if expression_type.kind != .Multi_Pointer and expression_type.kind != .Pointer and expression_type.kind != .Procedure {
         let message = string.new_builder()
         message.append("\"null\" cannot be used with non-pointer type: ")
-        message.append(expression_type.name())
+        expression_type.append_name(^message)
         self.error(null_expression.location, message.build())
     }
     return checked.new_null_expression(type: expression_type).as(^checked.Expression)
@@ -1269,7 +1276,7 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
 }
 
 proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lexer.Identifier) -> ^checked.Type {
-    let symbol = package.symbols.find(name.lexeme)
+    let symbol = package.symbols.find_local(name.lexeme)
     if symbol != null {
         if symbol.kind == .Type {
             return symbol.as(^checked.Type_Symbol).type

@@ -1,0 +1,11 @@
+import ast
+import token
+
+proc main() -> i32 {
+    let name = token.String(value: "hi")
+    let node = ast.Node(text: ^name)
+    if node.text.value.length == 2 {
+        return 0
+    }
+    return 1
+}

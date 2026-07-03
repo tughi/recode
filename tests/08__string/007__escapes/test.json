@@ -1,0 +1,10 @@
+{
+    "execute": {
+        "args": [],
+        "stdout": [
+            "\"quoted\"\t\\backslash\\ \u001b?"
+        ],
+        "stderr": [],
+        "error": 0
+    }
+}

@@ -87,6 +87,15 @@ Defines a named struct type or declares an opaque (externally defined) type. Typ
 
 Type names may also carry generic type parameters, written as `Name<T1, T2, ...>` (e.g. `Map<i32, str>`). The IR has no generics of its own — the parameter list is parsed only to validate that each argument is a well-formed type and is then folded into the type's nominal name. As with namespaced names, the full spelling including the parameters is what identifies the type, so it must match byte-for-byte (including spacing: one space after each comma, none before) at the declaration and every use.
 
+A struct may declare no fields:
+
+```
+type Empty = struct {
+}
+```
+
+An empty struct has a size of 1 byte (so distinct instances occupy distinct addresses) and an alignment of 1.
+
 ### External global variable
 
 ```
@@ -103,7 +112,7 @@ $message: [*]u8 = "Hello!\n"
 
 Declares a module-level byte payload. The declared type must be `[*]u8`; the literal's decoded bytes are stored once at module load and the global's value is a `[*]u8` pointer to them. The decoded bytes are always implicitly null-terminated (the trailing `\0` is appended automatically and is not counted by callers who track length separately), so byte-walking loops terminating on `0` work without an explicit `"\0"` in the source.
 
-Recognised escape sequences: `\0`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
+Recognised escape sequences: `\0`, `\e`, `\n`, `\t`, `\\`, `\'`, `\"`. Any other escape is a lex error.
 
 ### Constant-initialized global
 

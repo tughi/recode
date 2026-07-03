@@ -1,0 +1,5 @@
+import token
+
+type Node = struct {
+    text: ^token.String
+}

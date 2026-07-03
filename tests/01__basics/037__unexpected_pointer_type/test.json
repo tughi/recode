@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/037__unexpected_pointer_type/test.code:3:24: Expected type ^u8 but got ^i32"
+        ]
+    }
+}

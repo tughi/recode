@@ -1,0 +1,5 @@
+proc main() -> i32 {
+    let value = 42
+    let pointer: ^u8 = ^value
+    return 0
+}
