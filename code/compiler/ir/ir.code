@@ -3,6 +3,8 @@ import compiler.checker.checked
 import string
 
 type Program = struct {
+    first_source_file: ^Source_File
+    last_source_file: ^Source_File
     first_type: ^Named_Type
     last_type: ^Named_Type
     first_global: ^Global
@@ -13,7 +15,7 @@ type Program = struct {
 
 proc new_program() -> ^Program {
     let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
-    result.^ = Program(first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null)
+    result.^ = Program(first_source_file: null, last_source_file: null, first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null)
     return result
 }
 
@@ -51,6 +53,40 @@ proc (^Program).find_procedure(self, name: str) -> ^Procedure {
             return procedure
         }
         procedure = procedure.next
+    }
+    return null
+}
+
+type Source_File = struct {
+    index: usize
+    path: str
+    ir_path: str
+    next: ^Source_File
+}
+
+proc (^Program).append_source_file(self, path: str, ir_path: str) -> ^Source_File {
+    let index = 1usize
+    if self.last_source_file != null {
+        index = self.last_source_file.index + 1
+    }
+    let source_file = allocator.alloc(size: type_size(Source_File), alignment: type_alignment(Source_File)).as(^Source_File)
+    source_file.^ = Source_File(index: index, path: path, ir_path: ir_path, next: null)
+    if self.first_source_file == null {
+        self.first_source_file = source_file
+    } else {
+        self.last_source_file.next = source_file
+    }
+    self.last_source_file = source_file
+    return source_file
+}
+
+proc (^Program).find_source_file(self, path: str) -> ^Source_File {
+    let source_file = self.first_source_file
+    while source_file != null {
+        if source_file.path.equals(path) {
+            return source_file
+        }
+        source_file = source_file.next
     }
     return null
 }

@@ -4,6 +4,7 @@ import string
 type Instruction_Kind = enum {
     Add
     Alloc
+    Bind
     Br
     Call
     Cast
@@ -16,6 +17,7 @@ type Instruction_Kind = enum {
     Const
     Divide
     Jmp
+    Line
     Load
     Modulo
     Multiply
@@ -100,6 +102,28 @@ proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left
         )
         left: left
         right: right
+    )
+    return allocated
+}
+
+type Bind_Instruction = struct {
+    super: Instruction
+    name: str
+    indirect: bool
+    value: ^Value
+}
+
+proc new_bind_instruction(name: str, indirect: bool, value: ^Value) -> ^Bind_Instruction {
+    let allocated = allocator.alloc(size: type_size(Bind_Instruction), alignment: type_alignment(Bind_Instruction)).as(^Bind_Instruction)
+    allocated.^ = Bind_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Bind
+            next_instruction: null
+        )
+        name: name
+        indirect: indirect
+        value: value
     )
     return allocated
 }
@@ -198,6 +222,28 @@ proc new_jmp_instruction(block: ^Block) -> ^Jmp_Instruction {
             next_instruction: null
         )
         block: block
+    )
+    return allocated
+}
+
+type Line_Instruction = struct {
+    super: Instruction
+    source_file: ^Source_File
+    line: u32
+    column: u32
+}
+
+proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> ^Line_Instruction {
+    let allocated = allocator.alloc(size: type_size(Line_Instruction), alignment: type_alignment(Line_Instruction)).as(^Line_Instruction)
+    allocated.^ = Line_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Line
+            next_instruction: null
+        )
+        source_file: source_file
+        line: line
+        column: column
     )
     return allocated
 }

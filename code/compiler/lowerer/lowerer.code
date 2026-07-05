@@ -1,6 +1,7 @@
 import allocator
 import compiler.checker.checked
 import compiler.ir
+import compiler.source
 import string
 
 type Scope_Entry = struct {
@@ -27,6 +28,8 @@ proc new_enum_name_entry(enum_type: ^checked.Enum_Type) -> ^Enum_Name_Entry {
 
 type Lowerer = struct {
     program: ^ir.Program
+    debug_info: bool
+    output_dir: str
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
     break_block: ^ir.Block
@@ -39,9 +42,11 @@ type Lowerer = struct {
     block_counter: usize
 }
 
-proc lower(checked_package: ^checked.Package) -> ^ir.Program {
+proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str) -> ^ir.Program {
     let lowerer = Lowerer(
         program: ir.new_program()
+        debug_info: debug_info
+        output_dir: output_dir
         current_procedure: null
         current_block: null
         break_block: null
@@ -235,6 +240,14 @@ proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symb
     let block = self.create_block()
     procedure.append_block(block)
     self.current_block = block
+
+    if self.debug_info {
+        parameter = procedure.first_parameter
+        while parameter != null {
+            self.current_block.append_instruction(ir.new_bind_instruction(name: parameter.name, indirect: false, value: parameter).as(^ir.Instruction))
+            parameter = parameter.next
+        }
+    }
 
     self.lower_statement(procedure_symbol.body)
 
@@ -436,6 +449,9 @@ proc (^Lowerer).lower_main_wrapper(self, main_procedure: ^ir.Procedure) {
 }
 
 proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
+    if statement.kind != .Block and statement.kind != .Loop and statement.kind != .While {
+        self.emit_line_instruction(statement.location)
+    }
     if statement.kind == .Assignment {
         self.lower_assignment_statement(statement.as(^checked.Assignment_Statement))
     } else if statement.kind == .Block {
@@ -530,6 +546,7 @@ proc (^Lowerer).lower_loop_statement(self, loop_statement: ^checked.Loop_Stateme
     self.current_block.append_instruction(ir.new_jmp_instruction(block: body_block).as(^ir.Instruction))
     self.current_procedure.append_block(body_block)
     self.current_block = body_block
+    self.emit_line_instruction(loop_statement.location)
     let outer_break_block = self.break_block
     self.break_block = end_block
     self.lower_statement(loop_statement.body)
@@ -546,6 +563,9 @@ proc (^Lowerer).lower_variable_statement(self, variable_statement: ^checked.Vari
     let variable = self.declare_variable(symbol: variable_statement.symbol.as(^checked.Symbol), type: pointee_type)
     let alloc_instruction = ir.new_alloc_instruction(variable)
     self.current_block.append_instruction(alloc_instruction.as(^ir.Instruction))
+    if self.debug_info {
+        self.current_block.append_instruction(ir.new_bind_instruction(name: variable_statement.symbol.name, indirect: true, value: alloc_instruction.as(^ir.Value)).as(^ir.Instruction))
+    }
     self.push_scope(alloc_instruction.as(^ir.Value))
     if variable_statement.expression != null {
         let value = self.lower_expression(variable_statement.expression)
@@ -560,6 +580,7 @@ proc (^Lowerer).lower_while_statement(self, while_statement: ^checked.While_Stat
     self.current_block.append_instruction(ir.new_jmp_instruction(block: condition_block).as(^ir.Instruction))
     self.current_procedure.append_block(condition_block)
     self.current_block = condition_block
+    self.emit_line_instruction(while_statement.location)
     let condition = self.lower_expression(while_statement.condition)
     self.current_block.append_instruction(ir.new_br_instruction(condition: condition, true_block: body_block, false_block: end_block).as(^ir.Instruction))
     self.current_procedure.append_block(body_block)
@@ -1140,6 +1161,20 @@ proc (^Lowerer).string_global(self, value: str) -> ^ir.Value {
 
 proc (^Lowerer).push_scope(self, value: ^ir.Value) {
     self.scope = new_scope_entry(value: value, next: self.scope)
+}
+
+proc (^Lowerer).emit_line_instruction(self, location: source.Source_Location) {
+    if self.debug_info {
+        self.current_block.append_instruction(ir.new_line_instruction(source_file: self.source_file(location.source.path), line: location.line, column: location.column).as(^ir.Instruction))
+    }
+}
+
+proc (^Lowerer).source_file(self, path: str) -> ^ir.Source_File {
+    let source_file = self.program.find_source_file(path)
+    if source_file == null {
+        source_file = self.program.append_source_file(path: path, ir_path: source.relative_path(from_dir: self.output_dir, to_path: path))
+    }
+    return source_file
 }
 
 proc (^Lowerer).find_global(self, name: str) -> ^ir.Value {

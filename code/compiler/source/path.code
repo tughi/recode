@@ -1,0 +1,69 @@
+import string
+
+type Path_Cursor = struct {
+    path: str
+    start: usize
+    stop: usize
+}
+
+proc (^Path_Cursor).advance(self) -> bool {
+    let start = self.stop
+    while start < self.path.length {
+        while start < self.path.length and self.path.char_at(start) == '/' {
+            start = start + 1
+        }
+        let stop = start
+        while stop < self.path.length and self.path.char_at(stop) != '/' {
+            stop = stop + 1
+        }
+        if stop - start == 1 and self.path.char_at(start) == '.' {
+            start = stop
+        } else if stop > start {
+            self.start = start
+            self.stop = stop
+            return true
+        }
+    }
+    return false
+}
+
+proc (^Path_Cursor).component(self) -> str {
+    return self.path.slice(self.start, self.stop)
+}
+
+proc relative_path(from_dir: str, to_path: str) -> str {
+    let from_is_absolute = from_dir.length > 0 and from_dir.char_at(0) == '/'
+    let to_is_absolute = to_path.length > 0 and to_path.char_at(0) == '/'
+    if from_is_absolute != to_is_absolute {
+        return to_path
+    }
+
+    let from_cursor = Path_Cursor(path: from_dir, start: 0, stop: 0)
+    let to_cursor = Path_Cursor(path: to_path, start: 0, stop: 0)
+    let from_has_component = from_cursor.advance()
+    let to_has_component = to_cursor.advance()
+    while from_has_component and to_has_component and from_cursor.component().equals(to_cursor.component()) {
+        from_has_component = from_cursor.advance()
+        to_has_component = to_cursor.advance()
+    }
+
+    let builder = string.new_builder()
+    while from_has_component {
+        builder.append("../")
+        from_has_component = from_cursor.advance()
+    }
+    let first = true
+    while to_has_component {
+        if not first {
+            builder.append_char('/')
+        }
+        first = false
+        builder.append(to_cursor.component())
+        to_has_component = to_cursor.advance()
+    }
+    let result = builder.build()
+    if result.length == 0 {
+        return "."
+    }
+    return result
+}

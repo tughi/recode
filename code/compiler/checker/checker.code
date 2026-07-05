@@ -510,7 +510,7 @@ proc (^Checker).check_assignment_statement(self, assignment_statement: ^parsed.A
         panic
     }
     let value = self.check_expression(assignment_statement.value, expected_type: object.type)
-    return checked.new_assignment_statement(object: object, value: value).as(^checked.Statement)
+    return checked.new_assignment_statement(location: assignment_statement.location, object: object, value: value).as(^checked.Statement)
 }
 
 proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statement) -> ^checked.Statement {
@@ -530,17 +530,17 @@ proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statemen
         statement = statement.next
     }
     self.is_unreachable = false
-    return checked.new_block_statement(first_statement: first_statement).as(^checked.Statement)
+    return checked.new_block_statement(location: parsed_block.location, first_statement: first_statement).as(^checked.Statement)
 }
 
 proc (^Checker).check_break_statement(self, break_statement: ^parsed.Break_Statement) -> ^checked.Statement {
     self.is_unreachable = true
-    return checked.new_break_statement().as(^checked.Statement)
+    return checked.new_break_statement(location: break_statement.location).as(^checked.Statement)
 }
 
 proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.Expression_Statement) -> ^checked.Statement {
     let expression = self.check_expression(expression_statement.expression, expected_type: null)
-    return checked.new_expression_statement(expression).as(^checked.Statement)
+    return checked.new_expression_statement(location: expression_statement.location, expression: expression).as(^checked.Statement)
 }
 
 proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> ^checked.Statement {
@@ -553,12 +553,12 @@ proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> 
     if if_statement.false_statement != null {
         false_statement = self.check_statement(if_statement.false_statement)
     }
-    return checked.new_if_statement(condition: condition, true_block: true_block, false_statement: false_statement).as(^checked.Statement)
+    return checked.new_if_statement(location: if_statement.location, condition: condition, true_block: true_block, false_statement: false_statement).as(^checked.Statement)
 }
 
 proc (^Checker).check_loop_statement(self, loop_statement: ^parsed.Loop_Statement) -> ^checked.Statement {
     let body = self.check_statement(loop_statement.body)
-    return checked.new_loop_statement(body: body).as(^checked.Statement)
+    return checked.new_loop_statement(location: loop_statement.location, body: body).as(^checked.Statement)
 }
 
 proc (^Checker).check_panic_statement(self, panic_statement: ^parsed.Panic_Statement) -> ^checked.Statement {
@@ -578,7 +578,7 @@ proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_St
         panic
     }
     self.is_unreachable = true
-    return checked.new_return_statement(expression: expression).as(^checked.Statement)
+    return checked.new_return_statement(location: return_statement.location, expression: expression).as(^checked.Statement)
 }
 
 proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_type: ^checked.Type, location: source.Source_Location) {
@@ -619,7 +619,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     let name = variable_statement.name.lexeme
     let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
-    return checked.new_variable_statement(symbol: variable_symbol, expression: expression).as(^checked.Statement)
+    return checked.new_variable_statement(location: variable_statement.location, symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }
 
 proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_Statement) -> ^checked.Statement {
@@ -628,7 +628,7 @@ proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_State
     let condition = self.check_expression(while_statement.condition, expected_type: self.bool_type)
     let body = self.check_statement(while_statement.body)
     self.current_scope = scope.parent
-    return checked.new_while_statement(condition: condition, body: body).as(^checked.Statement)
+    return checked.new_while_statement(location: while_statement.location, condition: condition, body: body).as(^checked.Statement)
 }
 
 proc (^Checker).assure_expression_pointer_type(self, expression: ^checked.Expression, expected_type: ^checked.Type, location: source.Source_Location) -> ^checked.Expression {

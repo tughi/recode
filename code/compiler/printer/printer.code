@@ -46,6 +46,14 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
         self.write_value_definition(alloc_instruction.as(^ir.Value))
         self.write(" = alloc ")
         self.write_type(alloc_instruction.allocated_type)
+    } else if instruction.kind == .Bind {
+        let bind_instruction = instruction.as(^ir.Bind_Instruction)
+        self.write(".bind ")
+        if bind_instruction.indirect {
+            self.write_char(char: '&')
+        }
+        self.write(bind_instruction.name).write_char(char: ' ')
+        self.write_value_reference(bind_instruction.value)
     } else if instruction.kind == .Br {
         let br_instruction = instruction.as(^ir.Br_Instruction)
         self.write("br ")
@@ -92,6 +100,11 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
     } else if instruction.kind == .Jmp {
         let jmp_instruction = instruction.as(^ir.Jmp_Instruction)
         self.write("jmp @").write_u64(value: jmp_instruction.block.label.as(u64))
+    } else if instruction.kind == .Line {
+        let line_instruction = instruction.as(^ir.Line_Instruction)
+        self.write(".line ").write_u64(value: line_instruction.source_file.index.as(u64))
+        self.write_char(char: ':').write_u64(value: line_instruction.line.as(u64))
+        self.write_char(char: ':').write_u64(value: line_instruction.column.as(u64))
     } else if instruction.kind == .Load {
         let load_instruction = instruction.as(^ir.Load_Instruction)
         self.write_value_definition(load_instruction.as(^ir.Value))
@@ -229,6 +242,14 @@ proc (^libc.FILE).write_global(self, global: ^ir.Global) -> ^libc.FILE {
 }
 
 proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
+    let source_file = program.first_source_file
+    while source_file != null {
+        self.write(".source ").write_u64(value: source_file.index.as(u64)).write(" \"").write(source_file.ir_path).write_char(char: '"').end_line()
+        source_file = source_file.next
+        if source_file == null {
+            self.end_line()
+        }
+    }
     let named_type = program.first_type
     while named_type != null {
         self.write_type_declaration(named_type)
