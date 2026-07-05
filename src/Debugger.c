@@ -45,6 +45,7 @@ typedef struct {
     size_t frame_states_capacity;
     Panel *root_panel;
     Panel *active_panel;
+    double last_interaction_time;
 } Debugger;
 
 struct Panel {
@@ -435,7 +436,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
     };
     Lexed_File *lexed_file = &debugger->module->lexed_file;
     size_t lines_size = lexed_file->lines_size;
-    size_t current_line = debugger->current_frame->instruction->location.line;
+    size_t current_line = debugger->current_frame == NULL ? 0 : debugger->current_frame->instruction->location.line;
     Font font = debugger->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
@@ -979,17 +980,21 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     }
     bool running = debugger->mode == DEBUGGER_MODE__CONTINUE || (debugger->mode == DEBUGGER_MODE__NEXT && depth > debugger->next_depth);
     if (running && !at_breakpoint) {
-        // Render a UI frame at ~60 Hz while running.
+        // Redraw every 0.25s to keep the window responsive, at 60 Hz around mouse activity.
         double now = GetTime();
-        if (now - debugger->last_render_time < 1.0 / 60) {
+        double interval = now - debugger->last_interaction_time < 1.0 ? 1.0 / 60 : 0.25;
+        if (now - debugger->last_render_time < interval) {
             return;
         }
         debugger->last_render_time = now;
         if (WindowShouldClose()) {
             exit(0);
         }
-        debugger->current_frame = current_frame;
         debugger_render_frame(debugger);
+        Vector2 mouse_delta = GetMouseDelta();
+        if (mouse_delta.x != 0 || mouse_delta.y != 0 || GetMouseWheelMove() != 0 || IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            debugger->last_interaction_time = now;
+        }
         if (IsKeyPressed(KEY_SPACE)) {
             debugger->mode = DEBUGGER_MODE__STEP;
         } else if (IsKeyPressed(KEY_Q)) {
@@ -1013,10 +1018,12 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
         if (IsKeyPressed(KEY_N)) {
             debugger->mode = DEBUGGER_MODE__NEXT;
             debugger->next_depth = depth;
+            debugger->current_frame = NULL;
             return;
         }
         if (IsKeyPressed(KEY_C)) {
             debugger->mode = DEBUGGER_MODE__CONTINUE;
+            debugger->current_frame = NULL;
             return;
         }
         if (IsKeyPressed(KEY_Q)) {
