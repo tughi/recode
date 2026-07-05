@@ -125,6 +125,8 @@ typedef struct {
 
 void ir_value_list_add(IR_Value_List *list, IR_Value *value);
 
+typedef struct IR_Block IR_Block;
+
 typedef struct IR_Alloc_Instruction {
     IR_Type *element_type;
     Frame_Slot payload_slot;
@@ -133,6 +135,8 @@ typedef struct IR_Alloc_Instruction {
 typedef struct IR_Br_Instruction {
     size_t true_label;
     size_t false_label;
+    IR_Block *true_block;
+    IR_Block *false_block;
 } IR_Br_Instruction;
 
 typedef struct IR_Const_Instruction {
@@ -150,18 +154,23 @@ typedef struct IR_Dbg_Line_Instruction {
 
 typedef struct IR_Jmp_Instruction {
     size_t label;
+    IR_Block *block;
 } IR_Jmp_Instruction;
 
 typedef struct IR_Offset_Instruction {
     IR_Struct_Field *struct_field;
+    size_t field_offset;
+    size_t item_size;
 } IR_Offset_Instruction;
 
 typedef struct IR_Phi_Instruction {
     size_t *labels;
+    IR_Block **blocks;
 } IR_Phi_Instruction;
 
 typedef struct IR_Struct_Instruction {
     IR_Struct_Field **fields;
+    size_t *field_offsets;
 } IR_Struct_Instruction;
 
 typedef enum IR_Instruction_Kind {
@@ -222,8 +231,6 @@ struct IR_Instruction {
         IR_Struct_Instruction struct_instruction;
     };
 };
-
-typedef struct IR_Block IR_Block;
 
 typedef struct {
     IR_Block **items;

@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -std=c11 -Wall -Wextra -g
+CFLAGS = -std=c11 -Wall -Wextra -g -O2 -fno-strict-aliasing
 RAYLIB_CFLAGS := $(shell pkg-config --cflags raylib)
 RAYLIB_LIBS := $(shell pkg-config --libs raylib)
 SDL_CFLAGS := $(shell pkg-config --cflags sdl2)

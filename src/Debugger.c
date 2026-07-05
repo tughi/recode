@@ -840,7 +840,7 @@ static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *addre
 static void draw_binding_line(Font font, Rectangle bounds, float y, Call_Frame *frame, Dbg_Binding *binding) {
     int line_height = font.baseSize;
     IR_Value *value = binding->value;
-    uint8_t *base = value->name.length > 0 && value->name.content[0] == '$' ? frame->globals_data : frame->frame_data;
+    uint8_t *base = value->kind <= IR_VALUE__GLOBAL_VARIABLE ? frame->globals_data : frame->frame_data;
     uint8_t *slot = base + value->slot.offset;
 
     IR_Type *display_type;

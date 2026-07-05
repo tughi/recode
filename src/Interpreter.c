@@ -11,9 +11,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#define INTERPRETER_STACK_SIZE (8 * 1024 * 1024)
+
 typedef struct {
     IR_Module *module;
     uint8_t *globals_data;
+    uint8_t *stack_data;
+    size_t stack_used;
     Observer *observer;
     Call_Frame *current_frame;
 } Interpreter;
@@ -33,8 +37,28 @@ static void print_runtime_error(Interpreter *interpreter, Source_Location locati
         panic();                                                 \
     } while (0)
 
+static inline void copy_slot(uint8_t *destination, const uint8_t *source, size_t size) {
+    switch (size) {
+    case 1:
+        *destination = *source;
+        break;
+    case 2:
+        *(uint16_t *)destination = *(const uint16_t *)source;
+        break;
+    case 4:
+        *(uint32_t *)destination = *(const uint32_t *)source;
+        break;
+    case 8:
+        *(uint64_t *)destination = *(const uint64_t *)source;
+        break;
+    default:
+        memcpy(destination, source, size);
+        break;
+    }
+}
+
 static uint8_t *value_address(Interpreter *interpreter, uint8_t *frame_data, IR_Value *value) {
-    uint8_t *base = value->name.content[0] == '$' ? interpreter->globals_data : frame_data;
+    uint8_t *base = value->kind <= IR_VALUE__GLOBAL_VARIABLE ? interpreter->globals_data : frame_data;
     return base + value->slot.offset;
 }
 
@@ -55,7 +79,7 @@ typedef enum {
 
 typedef struct {
     Step_Kind kind;
-    size_t jump_label;
+    IR_Block *jump_block;
 } Step;
 
 static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location);
@@ -106,24 +130,23 @@ static Step execute_alloc_instruction(Interpreter *interpreter, IR_Instruction *
 
 static Step execute_br_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     bool condition = *(bool *)value_address(interpreter, frame_data, instruction->arguments.items[0]);
-    size_t target = condition ? instruction->br_instruction.true_label : instruction->br_instruction.false_label;
-    return (Step){.kind = STEP_JUMP, .jump_label = target};
+    IR_Block *target = condition ? instruction->br_instruction.true_block : instruction->br_instruction.false_block;
+    return (Step){.kind = STEP_JUMP, .jump_block = target};
 }
 
 static Step execute_call_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     IR_Value *callee_value = instruction->arguments.items[0];
     IR_Function *callee = *(IR_Function **)value_address(interpreter, frame_data, callee_value);
     size_t argument_count = instruction->arguments.size - 1;
-    uint8_t **argument_addresses = argument_count == 0 ? NULL : malloc(argument_count * sizeof(uint8_t *));
+    uint8_t *argument_addresses[instruction->arguments.size];
     for (size_t i = 0; i < argument_count; i++) {
         argument_addresses[i] = value_address(interpreter, frame_data, instruction->arguments.items[i + 1]);
     }
     uint8_t *return_address = NULL;
-    if (instruction->result.type != NULL && instruction->result.type != ir_type_void()) {
+    if (instruction->result.type != NULL && instruction->result.type->kind != IR_TYPE__VOID) {
         return_address = value_address(interpreter, frame_data, &instruction->result);
     }
     run_function(interpreter, callee, argument_addresses, argument_count, return_address, instruction->location);
-    free(argument_addresses);
     return (Step){.kind = STEP_NEXT};
 }
 
@@ -488,7 +511,9 @@ static Step execute_div_instruction(Interpreter *interpreter, IR_Instruction *in
     uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
     uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    if (*(int64_t *)right_address == 0) {
+    int64_t divisor = 0;
+    copy_slot((uint8_t *)&divisor, right_address, instruction->arguments.items[1]->slot.size);
+    if (divisor == 0) {
         runtime_error(interpreter, instruction->location, "Division by zero");
     }
     switch (instruction->result.type->kind) {
@@ -525,13 +550,13 @@ static Step execute_div_instruction(Interpreter *interpreter, IR_Instruction *in
 }
 
 static Step execute_jmp_instruction(IR_Instruction *instruction) {
-    return (Step){.kind = STEP_JUMP, .jump_label = instruction->jmp_instruction.label};
+    return (Step){.kind = STEP_JUMP, .jump_block = instruction->jmp_instruction.block};
 }
 
 static Step execute_load_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     uint8_t *address = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    memcpy(result_address, address, instruction->result.slot.size);
+    copy_slot(result_address, address, instruction->result.slot.size);
     return (Step){.kind = STEP_NEXT};
 }
 
@@ -539,7 +564,9 @@ static Step execute_mod_instruction(Interpreter *interpreter, IR_Instruction *in
     uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
     uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-    if (*(int64_t *)right_address == 0) {
+    int64_t divisor = 0;
+    copy_slot((uint8_t *)&divisor, right_address, instruction->arguments.items[1]->slot.size);
+    if (divisor == 0) {
         runtime_error(interpreter, instruction->location, "Modulo by zero");
     }
     switch (instruction->result.type->kind) {
@@ -648,38 +675,25 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
     if (instruction->offset_instruction.struct_field == NULL) {
         // indexed form: base + index * sizeof(item)
-        IR_Type *item_type = instruction->arguments.items[0]->type->pointee;
-        if (item_type->kind == IR_TYPE__ARRAY) {
-            item_type = item_type->item_type;
-        }
         size_t index = 0;
-        memcpy(&index, value_address(interpreter, frame_data, instruction->arguments.items[1]), instruction->arguments.items[1]->slot.size);
-        *(uint8_t **)result_address = base + index * ir_type_size(item_type);
+        copy_slot((uint8_t *)&index, value_address(interpreter, frame_data, instruction->arguments.items[1]), instruction->arguments.items[1]->slot.size);
+        *(uint8_t **)result_address = base + index * instruction->offset_instruction.item_size;
     } else {
-        IR_Type *struct_type = instruction->arguments.items[0]->type->pointee;
-        String field_name = instruction->offset_instruction.struct_field->name;
-        size_t field_offset = 0;
-        for (size_t i = 0; i < struct_type->struct_field_count; i++) {
-            if (string_equals(struct_type->struct_fields[i]->name, field_name)) {
-                field_offset = ir_struct_field_offset(struct_type, i);
-                break;
-            }
-        }
-        *(uint8_t **)result_address = base + field_offset;
+        *(uint8_t **)result_address = base + instruction->offset_instruction.field_offset;
     }
     return (Step){.kind = STEP_NEXT};
 }
 
-static Step execute_phi_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, size_t previous_label) {
+static Step execute_phi_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, IR_Block *previous_block) {
     for (size_t i = 0; i < instruction->arguments.size; i++) {
-        if (instruction->phi_instruction.labels[i] == previous_label) {
+        if (instruction->phi_instruction.blocks[i] == previous_block) {
             uint8_t *source_address = value_address(interpreter, frame_data, instruction->arguments.items[i]);
             uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
-            memcpy(result_address, source_address, instruction->result.slot.size);
+            copy_slot(result_address, source_address, instruction->result.slot.size);
             return (Step){.kind = STEP_NEXT};
         }
     }
-    runtime_error(interpreter, instruction->location, "Phi '%.*s' has no entry for predecessor @%zu", STRING(instruction->result.name), previous_label);
+    runtime_error(interpreter, instruction->location, "Phi '%.*s' has no entry for predecessor @%zu", STRING(instruction->result.name), previous_block == NULL ? 0 : previous_block->label);
 }
 
 static Step execute_placeholder_instruction(Interpreter *interpreter, IR_Instruction *instruction) {
@@ -689,7 +703,7 @@ static Step execute_placeholder_instruction(Interpreter *interpreter, IR_Instruc
 static Step execute_ret_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address) {
     if (instruction->arguments.size > 0 && return_address != NULL) {
         IR_Value *source_value = instruction->arguments.items[0];
-        memcpy(return_address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
+        copy_slot(return_address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
     }
     return (Step){.kind = STEP_RETURN};
 }
@@ -697,24 +711,15 @@ static Step execute_ret_instruction(Interpreter *interpreter, IR_Instruction *in
 static Step execute_store_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
     uint8_t *address = *(uint8_t **)value_address(interpreter, frame_data, instruction->arguments.items[0]);
     IR_Value *source_value = instruction->arguments.items[1];
-    memcpy(address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
+    copy_slot(address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
     return (Step){.kind = STEP_NEXT};
 }
 
 static Step execute_struct_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data) {
-    IR_Type *struct_type = instruction->result.type;
     uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
     for (size_t i = 0; i < instruction->arguments.size; i++) {
-        IR_Struct_Field *field = instruction->struct_instruction.fields[i];
-        size_t field_offset = 0;
-        for (size_t j = 0; j < struct_type->struct_field_count; j++) {
-            if (struct_type->struct_fields[j] == field) {
-                field_offset = ir_struct_field_offset(struct_type, j);
-                break;
-            }
-        }
         IR_Value *source_value = instruction->arguments.items[i];
-        memcpy(result_address + field_offset, value_address(interpreter, frame_data, source_value), source_value->slot.size);
+        copy_slot(result_address + instruction->struct_instruction.field_offsets[i], value_address(interpreter, frame_data, source_value), source_value->slot.size);
     }
     return (Step){.kind = STEP_NEXT};
 }
@@ -756,7 +761,7 @@ static Step execute_sub_instruction(Interpreter *interpreter, IR_Instruction *in
     return (Step){.kind = STEP_NEXT};
 }
 
-static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, size_t previous_label) {
+static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
         return execute_add_instruction(interpreter, instruction, frame_data);
@@ -802,7 +807,7 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
     case IR_INSTRUCTION__OFFSET:
         return execute_offset_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__PHI:
-        return execute_phi_instruction(interpreter, instruction, frame_data, previous_label);
+        return execute_phi_instruction(interpreter, instruction, frame_data, previous_block);
     case IR_INSTRUCTION__PLACEHOLDER:
         return execute_placeholder_instruction(interpreter, instruction);
     case IR_INSTRUCTION__RET:
@@ -815,15 +820,6 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         return execute_sub_instruction(interpreter, instruction, frame_data);
     }
     runtime_error(interpreter, instruction->location, "Unknown instruction kind %d", instruction->kind);
-}
-
-static IR_Block *find_block(IR_Function *function, size_t label) {
-    for (size_t i = 0; i < function->blocks.size; i++) {
-        if (function->blocks.items[i]->label == label) {
-            return function->blocks.items[i];
-        }
-    }
-    return NULL;
 }
 
 static void call_external(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, uint8_t *return_address, Source_Location call_location) {
@@ -1085,10 +1081,16 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
         runtime_error(interpreter, function->location, "'%.*s' has no blocks", STRING(function->name));
     }
 
-    uint8_t *frame_data = function->frame_size > 0 ? calloc(function->frame_size, 1) : NULL;
+    size_t frame_size = (function->frame_size + 7) & ~(size_t)7;
+    if (interpreter->stack_used + frame_size > INTERPRETER_STACK_SIZE) {
+        runtime_error(interpreter, call_location, "Stack overflow calling '%.*s'", STRING(function->name));
+    }
+    uint8_t *frame_data = interpreter->stack_data + interpreter->stack_used;
+    interpreter->stack_used += frame_size;
+    memset(frame_data, 0, function->frame_size);
     for (size_t i = 0; i < argument_count; i++) {
         IR_Value *parameter_value = function->parameters.items[i];
-        memcpy(frame_data + parameter_value->slot.offset, argument_addresses[i], parameter_value->slot.size);
+        copy_slot(frame_data + parameter_value->slot.offset, argument_addresses[i], parameter_value->slot.size);
     }
 
     Call_Frame frame = {
@@ -1101,7 +1103,7 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
     };
     interpreter->current_frame = &frame;
 
-    size_t previous_label = SIZE_MAX;
+    IR_Block *previous_block = NULL;
     while (true) {
         bool terminated = false;
         for (size_t i = 0; i < frame.block->instructions.size; i++) {
@@ -1110,23 +1112,19 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
             if (interpreter->observer != NULL) {
                 interpreter->observer->on_step(interpreter->observer, &frame);
             }
-            Step step = execute_instruction(interpreter, instruction, frame_data, return_address, previous_label);
+            Step step = execute_instruction(interpreter, instruction, frame_data, return_address, previous_block);
             if (step.kind == STEP_NEXT) {
                 continue;
             }
             if (step.kind == STEP_JUMP) {
-                IR_Block *target = find_block(function, step.jump_label);
-                if (target == NULL) {
-                    runtime_error(interpreter, instruction->location, "'%.*s' has no block @%zu", STRING(function->name), step.jump_label);
-                }
-                previous_label = frame.block->label;
-                frame.block = target;
+                previous_block = frame.block;
+                frame.block = step.jump_block;
                 terminated = true;
                 break;
             }
             // STEP_RETURN
             interpreter->current_frame = frame.caller;
-            free(frame_data);
+            interpreter->stack_used -= frame_size;
             return;
         }
         if (!terminated) {
@@ -1150,6 +1148,8 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
         panic();
     }
     interpreter.globals_data = module->globals_size > 0 ? calloc(module->globals_size, 1) : NULL;
+    interpreter.stack_data = malloc(INTERPRETER_STACK_SIZE);
+    interpreter.stack_used = 0;
     for (size_t i = 0; i < module->global_variables.size; i++) {
         IR_Global_Variable *global_variable = module->global_variables.items[i];
         if (global_variable->is_external) {
@@ -1208,6 +1208,7 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer)
     uint8_t *main_return_address = main_function->return_type->kind == IR_TYPE__I32 ? (uint8_t *)&main_return : NULL;
     run_function(&interpreter, main_function, main_argument_addresses, main_arguments_count, main_return_address, main_function->location);
     free(main_argument_addresses);
+    free(interpreter.stack_data);
     free(interpreter.globals_data);
     return main_function->return_type->kind == IR_TYPE__I32 ? (int64_t)main_return : 0;
 }

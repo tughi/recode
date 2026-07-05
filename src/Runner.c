@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         file = load_file(path);
     }
 
-    IR_Module *module = parse(tokenize(file));
+    IR_Module *module = parse(tokenize(file), debug_mode);
 
     if (debug_mode) {
         return (int)debug(module, argc - arg_index, argv + arg_index);

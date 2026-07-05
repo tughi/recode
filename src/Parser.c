@@ -20,6 +20,7 @@ typedef struct {
     IR_Instruction_List forward_references;
     uint32_t function_frame_size;
     uint32_t globals_frame_size;
+    bool debug;
 } Parser;
 
 typedef union {
@@ -419,6 +420,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
         IR_Global *global = calloc(1, sizeof(IR_Global));
         global->value.kind = IR_VALUE__UNRESOLVED;
         global->value.name = value_name.lexeme;
+        global->location = value_name.location;
         ir_value_list_add(&parser->global_values, &global->value);
         value = &global->value;
     }
@@ -1050,6 +1052,15 @@ static IR_Instruction *parse_instruction(Parser *parser) {
     parse_error_current(parser, "Unexpected token in instruction");
 }
 
+static IR_Block *expect_block(Parser *parser, IR_Function *function, Source_Location location, size_t label) {
+    for (size_t i = 0; i < function->blocks.size; i++) {
+        if (function->blocks.items[i]->label == label) {
+            return function->blocks.items[i];
+        }
+    }
+    parse_error(parser, location, "'%.*s' has no block @%zu", STRING(function->name), label);
+}
+
 static void check_instruction(Parser *parser, IR_Function *function, IR_Instruction *instruction) {
     Source_Location location = instruction->location;
     switch (instruction->kind) {
@@ -1073,6 +1084,8 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     }
     case IR_INSTRUCTION__BR:
         expect_type(parser, location, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
+        instruction->br_instruction.true_block = expect_block(parser, function, location, instruction->br_instruction.true_label);
+        instruction->br_instruction.false_block = expect_block(parser, function, location, instruction->br_instruction.false_label);
         return;
     case IR_INSTRUCTION__CALL: {
         IR_Type *callee_type = instruction->arguments.items[0]->type;
@@ -1136,6 +1149,7 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     case IR_INSTRUCTION__DBG_LINE:
         return;
     case IR_INSTRUCTION__JMP:
+        instruction->jmp_instruction.block = expect_block(parser, function, location, instruction->jmp_instruction.label);
         return;
     case IR_INSTRUCTION__LOAD: {
         IR_Type *pointee = expect_pointer_type(parser, location, "load pointer", instruction->arguments.items[0]->type);
@@ -1175,6 +1189,7 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
             }
             IR_Type *expected = ir_type_pointer(parser->types, item_type);
             expect_type(parser, location, "offset result", expected, instruction->result.type);
+            instruction->offset_instruction.item_size = ir_type_size(item_type);
         } else {
             // struct form: [T] Struct.field → [T_field]
             IR_Type *pointee = expect_pointer_type(parser, location, "offset struct pointer", arg_type);
@@ -1184,12 +1199,20 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
             IR_Type *field_type = instruction->offset_instruction.struct_field->type;
             IR_Type *expected = ir_type_pointer(parser->types, field_type);
             expect_type(parser, location, "offset result", expected, instruction->result.type);
+            for (size_t i = 0; i < pointee->struct_field_count; i++) {
+                if (pointee->struct_fields[i] == instruction->offset_instruction.struct_field) {
+                    instruction->offset_instruction.field_offset = ir_struct_field_offset(pointee, i);
+                    break;
+                }
+            }
         }
         return;
     }
     case IR_INSTRUCTION__PHI:
+        instruction->phi_instruction.blocks = malloc(instruction->arguments.size * sizeof(IR_Block *));
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             expect_type(parser, location, "phi incoming", instruction->result.type, instruction->arguments.items[i]->type);
+            instruction->phi_instruction.blocks[i] = expect_block(parser, function, location, instruction->phi_instruction.labels[i]);
         }
         return;
     case IR_INSTRUCTION__PLACEHOLDER:
@@ -1209,13 +1232,20 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         return;
     }
     case IR_INSTRUCTION__STRUCT: {
-        // IR_Type *struct_type = instruction->result.type;
+        IR_Type *struct_type = instruction->result.type;
         // if (instruction->arguments.size != struct_type->struct_field_count) {
         //     parse_error(parser, location, "Expecting %zu fields, not just %zu", struct_type->struct_field_count, instruction->arguments.size);
         // }
+        instruction->struct_instruction.field_offsets = malloc(instruction->arguments.size * sizeof(size_t));
         for (size_t i = 0; i < instruction->arguments.size; i++) {
             IR_Struct_Field *field = instruction->struct_instruction.fields[i];
             expect_type(parser, location, "struct field value", field->type, instruction->arguments.items[i]->type);
+            for (size_t j = 0; j < struct_type->struct_field_count; j++) {
+                if (struct_type->struct_fields[j] == field) {
+                    instruction->struct_instruction.field_offsets[i] = ir_struct_field_offset(struct_type, j);
+                    break;
+                }
+            }
         }
         return;
     }
@@ -1227,6 +1257,16 @@ static void check_function(Parser *parser, IR_Function *function) {
         IR_Block *block = function->blocks.items[b];
         for (size_t i = 0; i < block->instructions.size; i++) {
             check_instruction(parser, function, block->instructions.items[i]);
+        }
+        if (!parser->debug) {
+            size_t kept = 0;
+            for (size_t i = 0; i < block->instructions.size; i++) {
+                IR_Instruction *instruction = block->instructions.items[i];
+                if (instruction->kind != IR_INSTRUCTION__DBG_BIND && instruction->kind != IR_INSTRUCTION__DBG_LINE) {
+                    block->instructions.items[kept++] = instruction;
+                }
+            }
+            block->instructions.size = kept;
         }
     }
 }
@@ -1743,7 +1783,7 @@ static void parse_source_declaration(Parser *parser) {
     advance(parser);
 }
 
-IR_Module *parse(Lexed_File lexed_file) {
+IR_Module *parse(Lexed_File lexed_file, bool debug) {
     IR_Module *module = calloc(1, sizeof(IR_Module));
     module->lexed_file = lexed_file;
 
@@ -1757,6 +1797,7 @@ IR_Module *parse(Lexed_File lexed_file) {
     parser.forward_references = (IR_Instruction_List){0};
     parser.function_frame_size = 0;
     parser.globals_frame_size = 0;
+    parser.debug = debug;
 
     parser.current = fetch_token(&parser);
     parser.next = fetch_token(&parser);
@@ -1800,6 +1841,14 @@ IR_Module *parse(Lexed_File lexed_file) {
         }
 
         parse_error_current(&parser, "Unexpected top-level token");
+    }
+
+    for (size_t i = 0; i < parser.global_values.size; i++) {
+        IR_Value *global_value = parser.global_values.items[i];
+        if (global_value->kind == IR_VALUE__UNRESOLVED) {
+            IR_Global *global = (IR_Global *)global_value;
+            parse_error(&parser, global->location, "Undefined global '%.*s'", STRING(global_value->name));
+        }
     }
 
     for (size_t i = 0; i < module->functions.size; i++) {
