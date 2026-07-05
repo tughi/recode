@@ -782,6 +782,9 @@ static Step execute_instruction(Interpreter *interpreter, IR_Instruction *instru
         return execute_cmp_ne_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__CONST:
         return execute_const_instruction(instruction, frame_data);
+    case IR_INSTRUCTION__DBG_BIND:
+    case IR_INSTRUCTION__DBG_LINE:
+        return (Step){.kind = STEP_NEXT};
     case IR_INSTRUCTION__DIV:
         return execute_div_instruction(interpreter, instruction, frame_data);
     case IR_INSTRUCTION__JMP:

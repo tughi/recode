@@ -139,6 +139,15 @@ typedef struct IR_Const_Instruction {
     int64_t value;
 } IR_Const_Instruction;
 
+typedef struct IR_Dbg_Bind_Instruction {
+    String variable_name;
+    bool indirect;
+} IR_Dbg_Bind_Instruction;
+
+typedef struct IR_Dbg_Line_Instruction {
+    Source_Location location;
+} IR_Dbg_Line_Instruction;
+
 typedef struct IR_Jmp_Instruction {
     size_t label;
 } IR_Jmp_Instruction;
@@ -168,6 +177,8 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__CMP_LT,
     IR_INSTRUCTION__CMP_NE,
     IR_INSTRUCTION__CONST,
+    IR_INSTRUCTION__DBG_BIND,
+    IR_INSTRUCTION__DBG_LINE,
     IR_INSTRUCTION__DIV,
     IR_INSTRUCTION__JMP,
     IR_INSTRUCTION__LOAD,
@@ -198,12 +209,13 @@ struct IR_Instruction {
     IR_Value result;
     IR_Instruction_Kind kind;
     Source_Location location;
-    Source_Location origin;
     IR_Value_List arguments;
     union {
         IR_Alloc_Instruction alloc_instruction;
         IR_Br_Instruction br_instruction;
         IR_Const_Instruction const_instruction;
+        IR_Dbg_Bind_Instruction dbg_bind_instruction;
+        IR_Dbg_Line_Instruction dbg_line_instruction;
         IR_Jmp_Instruction jmp_instruction;
         IR_Offset_Instruction offset_instruction;
         IR_Phi_Instruction phi_instruction;

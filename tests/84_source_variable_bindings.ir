@@ -1,0 +1,60 @@
+; exit: 42
+
+.source 1 "84_source_variable_bindings.code"
+
+type Point = struct {
+  x: i32
+  y: i32
+}
+
+$scale(%p: Point, %factor: i32): i32 {
+@1:
+  .line 1:6:1
+  .bind factor %factor
+  %p.ptr: [Point] = alloc Point
+  store %p.ptr %p
+  .bind &p %p.ptr
+  .line 1:7:12
+  %0: [i32] = offset %p.ptr .x
+  %x: i32 = load %0
+  %1: i32 = mul %x %factor
+  %2: [i32] = offset %p.ptr .y
+  %y: i32 = load %2
+  %3: i32 = mul %y %factor
+  %4: i32 = add %1 %3
+  ret %4
+}
+
+$log(): void {
+@1:
+  .line 1:11:1
+  ret
+}
+
+$main(): i32 {
+@1:
+  .line 1:14:5
+  call $log
+  .line 1:15:9
+  %0: i32 = const 3
+  %1: i32 = const 4
+  %p: Point = struct .x %0 .y %1
+  .bind p %p
+  .line 1:16:9
+  %factor: i32 = const 6
+  .bind factor %factor
+  .line 1:17:9
+  %result.0: i32 = const 0
+  .line 1:18:8
+  %2: bool = cmp_lt %0 %1
+  br %2 @2 @3
+@2:
+  .line 1:19:18
+  %result.1: i32 = call $scale %p %factor
+  jmp @3
+@3:
+  .line 1:21:12
+  %result: i32 = phi @1 %result.0 @2 %result.1
+  .bind result %result
+  ret %result
+}

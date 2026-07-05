@@ -15,7 +15,6 @@ typedef struct {
     Token next;
     IR_Type_List *types;
     IR_Source_File_List *source_files;
-    Source_Location current_origin;
     IR_Value_List function_values;
     IR_Value_List global_values;
     IR_Instruction_List forward_references;
@@ -613,7 +612,6 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         ir_value_list_add(&parser->function_values, &instruction->result);
     }
     instruction->location = result_name.location;
-    instruction->origin = parser->current_origin;
     instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
     instruction->result.type = result_type;
     instruction->result.slot = reserve_frame_slot(&parser->function_frame_size, result_type);
@@ -641,10 +639,10 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
 
         while (parser->current.kind == TOKEN_KIND__SPACE) {
-            expect_space(parser, 1);
-            if (!is_value_name_start(parser)) {
+            if (parser->next.kind != TOKEN_KIND__OTHER || (parser->next.other.value != '%' && parser->next.other.value != '$')) {
                 break;
             }
+            expect_space(parser, 1);
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         }
 
@@ -815,10 +813,10 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         instruction->phi_instruction.labels = NULL;
         size_t count = 0;
         while (parser->current.kind == TOKEN_KIND__SPACE) {
-            expect_space(parser, 1);
-            if (parser->current.kind != TOKEN_KIND__LABEL) {
+            if (parser->next.kind != TOKEN_KIND__LABEL) {
                 break;
             }
+            expect_space(parser, 1);
             size_t label = expect_label(parser);
             expect_space(parser, 1);
             IR_Value *value = expect_value_reference(parser);
@@ -918,7 +916,7 @@ static IR_Instruction *parse_ret_instruction(Parser *parser) {
     IR_Instruction *instruction = alloc_instruction();
     instruction->result = (IR_Value){0};
     instruction->kind = IR_INSTRUCTION__RET;
-    if (parser->current.kind == TOKEN_KIND__SPACE) {
+    if (parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && (parser->next.other.value == '%' || parser->next.other.value == '$')) {
         expect_space(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
     }
@@ -938,48 +936,82 @@ static IR_Instruction *parse_store_instruction(Parser *parser) {
     return instruction;
 }
 
-static void parse_debug_annotation(Parser *parser, IR_Instruction *instruction) {
-    expect_space(parser, 3);
-    expect_other(parser, '^');
-    Source_Location index_location = current_location(parser);
-    if (parser->current.kind != TOKEN_KIND__INTEGER) {
-        parse_error_current(parser, "Expected source file index");
-    }
-    uint64_t file_index = parser->current.integer.value;
-    advance(parser);
-    if (file_index == 0 || file_index > parser->source_files->size) {
-        parse_error(parser, index_location, "Undeclared source file index %llu", (unsigned long long)file_index);
-    }
-    expect_other(parser, ':');
-    Source_Location line_location = current_location(parser);
-    if (parser->current.kind != TOKEN_KIND__INTEGER) {
-        parse_error_current(parser, "Expected source line");
-    }
-    size_t line = parser->current.integer.value;
-    advance(parser);
-    if (line == 0) {
-        parse_error(parser, line_location, "Source line must be positive");
-    }
-    size_t column = 0;
-    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') {
-        advance(parser);
+static IR_Instruction *parse_debug_directive(Parser *parser) {
+    Source_Location keyword_location = current_location(parser);
+    String keyword = expect_identifier(parser);
+
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+
+    if (string_equals_cstr(keyword, "line")) {
+        expect_space(parser, 1);
+        Source_Location index_location = current_location(parser);
         if (parser->current.kind != TOKEN_KIND__INTEGER) {
-            parse_error_current(parser, "Expected source column");
+            parse_error_current(parser, "Expected source file index");
         }
-        column = parser->current.integer.value;
+        uint64_t file_index = parser->current.integer.value;
         advance(parser);
+        if (file_index == 0 || file_index > parser->source_files->size) {
+            parse_error(parser, index_location, "Undeclared source file index %llu", (unsigned long long)file_index);
+        }
+        expect_other(parser, ':');
+        Source_Location line_location = current_location(parser);
+        if (parser->current.kind != TOKEN_KIND__INTEGER) {
+            parse_error_current(parser, "Expected source line");
+        }
+        size_t line = parser->current.integer.value;
+        advance(parser);
+        if (line == 0) {
+            parse_error(parser, line_location, "Source line must be positive");
+        }
+        size_t column = 0;
+        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == ':') {
+            advance(parser);
+            if (parser->current.kind != TOKEN_KIND__INTEGER) {
+                parse_error_current(parser, "Expected source column");
+            }
+            column = parser->current.integer.value;
+            advance(parser);
+        }
+        instruction->kind = IR_INSTRUCTION__DBG_LINE;
+        instruction->dbg_line_instruction.location = (Source_Location){
+            .source = parser->source_files->items[file_index - 1],
+            .line = line,
+            .column = column,
+        };
+        return instruction;
     }
-    parser->current_origin = (Source_Location){
-        .source = parser->source_files->items[file_index - 1],
-        .line = line,
-        .column = column,
-    };
-    instruction->origin = parser->current_origin;
+
+    if (string_equals_cstr(keyword, "bind")) {
+        expect_space(parser, 1);
+        bool indirect = false;
+        if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '&') {
+            indirect = true;
+            advance(parser);
+        }
+        String variable_name = expect_identifier(parser);
+        expect_space(parser, 1);
+        instruction->kind = IR_INSTRUCTION__DBG_BIND;
+        instruction->dbg_bind_instruction.variable_name = variable_name;
+        instruction->dbg_bind_instruction.indirect = indirect;
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        return instruction;
+    }
+
+    parse_error(parser, keyword_location, "Unknown directive '.%.*s'", STRING(keyword));
 }
 
 static IR_Instruction *parse_instruction(Parser *parser) {
     if (is_local_value_name_start(parser)) {
         return parse_value_instruction(parser);
+    }
+
+    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '.') {
+        Source_Location directive_location = current_location(parser);
+        advance(parser);
+        IR_Instruction *instruction = parse_debug_directive(parser);
+        instruction->location = directive_location;
+        return instruction;
     }
 
     if (parser->current.kind == TOKEN_KIND__IDENTIFIER) {
@@ -996,10 +1028,10 @@ static IR_Instruction *parse_instruction(Parser *parser) {
             instruction->kind = IR_INSTRUCTION__CALL;
             ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
             while (parser->current.kind == TOKEN_KIND__SPACE) {
-                expect_space(parser, 1);
-                if (!is_value_name_start(parser)) {
+                if (parser->next.kind != TOKEN_KIND__OTHER || (parser->next.other.value != '%' && parser->next.other.value != '$')) {
                     break;
                 }
+                expect_space(parser, 1);
                 ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
             }
         } else if (string_equals_cstr(mnemonic, "jmp")) {
@@ -1012,7 +1044,6 @@ static IR_Instruction *parse_instruction(Parser *parser) {
             parse_error(parser, mnemonic_location, "Unknown mnemonic '%.*s'", STRING(mnemonic));
         }
         instruction->location = mnemonic_location;
-        instruction->origin = parser->current_origin;
         return instruction;
     }
 
@@ -1093,6 +1124,16 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         return;
     }
     case IR_INSTRUCTION__CONST:
+        return;
+    case IR_INSTRUCTION__DBG_BIND:
+        if (instruction->dbg_bind_instruction.indirect) {
+            IR_Type *type = instruction->arguments.items[0]->type;
+            if (type == NULL || type->kind != IR_TYPE__PTR) {
+                parse_error(parser, location, ".bind '&' requires a single-pointer value");
+            }
+        }
+        return;
+    case IR_INSTRUCTION__DBG_LINE:
         return;
     case IR_INSTRUCTION__JMP:
         return;
@@ -1633,8 +1674,6 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
     expect_other(parser, '{');
     advance(parser);
 
-    parser->current_origin = (Source_Location){0};
-
     while (true) {
         skip_end_of_lines(parser);
         expect_space(parser, 0);
@@ -1678,9 +1717,6 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
 
             IR_Instruction *instruction = parse_instruction(parser);
             ir_instruction_list_add(&block->instructions, instruction);
-            if (parser->current.kind == TOKEN_KIND__SPACE && parser->next.kind == TOKEN_KIND__OTHER && parser->next.other.value == '^') {
-                parse_debug_annotation(parser, instruction);
-            }
         }
     }
 
@@ -1689,7 +1725,6 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
 }
 
 static void parse_source_declaration(Parser *parser) {
-    advance(parser);
     expect_space(parser, 1);
     Source_Location index_location = current_location(parser);
     if (parser->current.kind != TOKEN_KIND__INTEGER) {
@@ -1717,7 +1752,6 @@ IR_Module *parse(Lexed_File lexed_file) {
     parser.lexed_file = &module->lexed_file;
     parser.cursor = 0;
     parser.source_files = &module->source_files;
-    parser.current_origin = (Source_Location){0};
     parser.function_values = (IR_Value_List){0};
     parser.global_values = (IR_Value_List){0};
     parser.forward_references = (IR_Instruction_List){0};
@@ -1736,9 +1770,15 @@ IR_Module *parse(Lexed_File lexed_file) {
             break;
         }
 
-        if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "source")) {
-            parse_source_declaration(&parser);
-            continue;
+        if (parser.current.kind == TOKEN_KIND__OTHER && parser.current.other.value == '.') {
+            advance(&parser);
+            Source_Location keyword_location = current_location(&parser);
+            String keyword = expect_identifier(&parser);
+            if (string_equals_cstr(keyword, "source")) {
+                parse_source_declaration(&parser);
+                continue;
+            }
+            parse_error(&parser, keyword_location, "Unknown directive '.%.*s'", STRING(keyword));
         }
 
         if (parser.current.kind == TOKEN_KIND__IDENTIFIER && string_equals_cstr(parser.current.identifier.lexeme, "type")) {

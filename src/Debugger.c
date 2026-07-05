@@ -17,6 +17,20 @@ typedef enum {
 typedef struct Panel Panel;
 
 typedef struct {
+    String name;
+    IR_Value *value;
+    bool indirect;
+} Dbg_Binding;
+
+typedef struct {
+    Call_Frame *frame;
+    Source_Location origin;
+    Dbg_Binding *bindings;
+    size_t bindings_size;
+    size_t bindings_capacity;
+} Frame_Debug_State;
+
+typedef struct {
     Observer observer;
     IR_Module *module;
     File *sources;
@@ -26,6 +40,9 @@ typedef struct {
     IR_Instruction_List breakpoints;
     Font font;
     Call_Frame *current_frame;
+    Frame_Debug_State *frame_states;
+    size_t frame_states_size;
+    size_t frame_states_capacity;
     Panel *root_panel;
     Panel *active_panel;
 } Debugger;
@@ -115,7 +132,7 @@ static IR_Instruction *find_instruction_at_origin_line(IR_Module *module, String
             IR_Block *block = function->blocks.items[b];
             for (size_t i = 0; i < block->instructions.size; i++) {
                 IR_Instruction *instruction = block->instructions.items[i];
-                if (instruction->origin.line == line && string_equals(instruction->origin.source, source)) {
+                if (instruction->kind == IR_INSTRUCTION__DBG_LINE && instruction->dbg_line_instruction.location.line == line && string_equals(instruction->dbg_line_instruction.location.source, source)) {
                     return instruction;
                 }
             }
@@ -134,6 +151,58 @@ static void toggle_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     ir_instruction_list_add(&debugger->breakpoints, instruction);
 }
 
+static Frame_Debug_State *debugger_frame_state(Debugger *debugger, Call_Frame *frame) {
+    for (size_t i = debugger->frame_states_size; i > 0; i--) {
+        if (debugger->frame_states[i - 1].frame == frame) {
+            return &debugger->frame_states[i - 1];
+        }
+    }
+    return NULL;
+}
+
+static Source_Location debugger_current_origin(Debugger *debugger) {
+    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
+    if (state == NULL) {
+        return (Source_Location){0};
+    }
+    return state->origin;
+}
+
+static Frame_Debug_State *sync_frame_states(Debugger *debugger, Call_Frame *frame, size_t depth) {
+    while (debugger->frame_states_size > depth) {
+        free(debugger->frame_states[--debugger->frame_states_size].bindings);
+    }
+    if (debugger->frame_states_size == depth && debugger->frame_states[depth - 1].frame != frame) {
+        free(debugger->frame_states[--debugger->frame_states_size].bindings);
+    }
+    while (debugger->frame_states_size < depth) {
+        if (debugger->frame_states_size == debugger->frame_states_capacity) {
+            debugger->frame_states_capacity = debugger->frame_states_capacity == 0 ? 8 : debugger->frame_states_capacity * 2;
+            debugger->frame_states = realloc(debugger->frame_states, debugger->frame_states_capacity * sizeof(Frame_Debug_State));
+        }
+        debugger->frame_states[debugger->frame_states_size++] = (Frame_Debug_State){.frame = frame};
+    }
+    return &debugger->frame_states[depth - 1];
+}
+
+static void record_binding(Frame_Debug_State *state, IR_Instruction *instruction) {
+    String name = instruction->dbg_bind_instruction.variable_name;
+    IR_Value *value = instruction->arguments.items[0];
+    bool indirect = instruction->dbg_bind_instruction.indirect;
+    for (size_t i = 0; i < state->bindings_size; i++) {
+        if (string_equals(state->bindings[i].name, name)) {
+            state->bindings[i].value = value;
+            state->bindings[i].indirect = indirect;
+            return;
+        }
+    }
+    if (state->bindings_size == state->bindings_capacity) {
+        state->bindings_capacity = state->bindings_capacity == 0 ? 8 : state->bindings_capacity * 2;
+        state->bindings = realloc(state->bindings, state->bindings_capacity * sizeof(Dbg_Binding));
+    }
+    state->bindings[state->bindings_size++] = (Dbg_Binding){.name = name, .value = value, .indirect = indirect};
+}
+
 static bool ir_line_has_breakpoint(Debugger *debugger, size_t line) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         if (debugger->breakpoints.items[i]->location.line == line) {
@@ -144,10 +213,10 @@ static bool ir_line_has_breakpoint(Debugger *debugger, size_t line) {
 }
 
 static bool source_line_has_breakpoint(Debugger *debugger, size_t line) {
-    String source = debugger->current_frame->instruction->origin.source;
+    String source = debugger_current_origin(debugger).source;
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         IR_Instruction *breakpoint = debugger->breakpoints.items[i];
-        if (breakpoint->origin.line == line && string_equals(breakpoint->origin.source, source)) {
+        if (breakpoint->kind == IR_INSTRUCTION__DBG_LINE && breakpoint->dbg_line_instruction.location.line == line && string_equals(breakpoint->dbg_line_instruction.location.source, source)) {
             return true;
         }
     }
@@ -396,12 +465,9 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
             first_token++;
         }
         bool is_liveness_line = first_token->kind == TOKEN_KIND__OTHER && first_token->other.value == '[';
-        bool is_annotation = false;
+        bool is_directive_line = first_token->kind == TOKEN_KIND__OTHER && first_token->other.value == '.';
         while (line_token->kind != TOKEN_KIND__END_OF_LINE && line_token->kind != TOKEN_KIND__END_OF_FILE) {
-            if (line_token->kind == TOKEN_KIND__OTHER && line_token->other.value == '^') {
-                is_annotation = true;
-            }
-            Color color = is_liveness_line || is_annotation ? DARKGRAY : colors[line_token->kind];
+            Color color = is_liveness_line || is_directive_line ? DARKGRAY : colors[line_token->kind];
             if (!draw_token_text(font, line_token, color, &position, right)) {
                 break;
             }
@@ -429,7 +495,7 @@ static File *source_panel_text(Debugger *debugger) {
     if (debugger->current_frame == NULL) {
         return NULL;
     }
-    Source_Location origin = debugger->current_frame->instruction->origin;
+    Source_Location origin = debugger_current_origin(debugger);
     if (origin.line == 0) {
         return NULL;
     }
@@ -449,7 +515,7 @@ static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
 }
 
 static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
-    size_t line = debugger->current_frame->instruction->origin.line;
+    size_t line = debugger_current_origin(debugger).line;
     text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, debugger->font.baseSize);
 }
 
@@ -460,7 +526,7 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
     }
     size_t line = text_panel_scroll_input(debugger, &source_panel->panel, &source_panel->scrollbar, text->lines_size);
     if (line != 0) {
-        IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, debugger->current_frame->instruction->origin.source, line);
+        IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, debugger_current_origin(debugger).source, line);
         if (instruction != NULL) {
             toggle_breakpoint(debugger, instruction);
         }
@@ -473,7 +539,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         return;
     }
     size_t lines_size = text->lines_size;
-    size_t current_line = debugger->current_frame->instruction->origin.line;
+    size_t current_line = debugger_current_origin(debugger).line;
     Font font = debugger->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
@@ -675,7 +741,8 @@ static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Recta
         }
         char name[128];
         snprintf(name, sizeof(name), "%.*s", STRING(f->function->name));
-        Source_Location frame_location = f->instruction->origin.line != 0 ? f->instruction->origin : f->instruction->location;
+        Frame_Debug_State *frame_state = debugger_frame_state(debugger, f);
+        Source_Location frame_location = frame_state != NULL && frame_state->origin.line != 0 ? frame_state->origin : f->instruction->location;
         String source = frame_location.source;
         for (size_t i = source.length; i > 0; i--) {
             if (source.content[i - 1] == '/') {
@@ -769,84 +836,79 @@ static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *addre
     }
 }
 
-static void draw_variable_line(Font font, Rectangle bounds, float y, Call_Frame *frame, IR_Value *value) {
+static void draw_binding_line(Font font, Rectangle bounds, float y, Call_Frame *frame, Dbg_Binding *binding) {
     int line_height = font.baseSize;
-    uint8_t *base = value->name.content[0] == '$' ? frame->globals_data : frame->frame_data;
-    uint8_t *address = base + value->slot.offset;
+    IR_Value *value = binding->value;
+    uint8_t *base = value->name.length > 0 && value->name.content[0] == '$' ? frame->globals_data : frame->frame_data;
+    uint8_t *slot = base + value->slot.offset;
+
+    IR_Type *display_type;
+    uint8_t *address;
+    if (binding->indirect) {
+        address = *(uint8_t **)slot;
+        display_type = value->type->pointee;
+    } else {
+        address = slot;
+        display_type = value->type;
+    }
+
     char value_text[256];
-    format_typed(value_text, sizeof(value_text), value->type, address);
+    if (binding->indirect && address == NULL) {
+        snprintf(value_text, sizeof(value_text), "<uninitialized>");
+    } else {
+        format_typed(value_text, sizeof(value_text), display_type, address);
+    }
     Vector2 value_size = MeasureTextEx(font, value_text, line_height, 0);
+
     char name_text[64];
-    snprintf(name_text, sizeof(name_text), "%.*s", STRING(value->name));
+    snprintf(name_text, sizeof(name_text), "%.*s", STRING(binding->name));
     DrawTextEx(font, name_text, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
     Vector2 name_size = MeasureTextEx(font, name_text, line_height, 0);
+
     char type_text[128];
     FILE *f = fmemopen(type_text, sizeof(type_text), "w");
     fputs(": ", f);
-    fprint_ir_type(f, value->type);
+    fprint_ir_type(f, display_type);
     fclose(f);
     DrawTextEx(font, type_text, (Vector2){bounds.x + name_size.x, y}, line_height, 0, GRAY);
+
     DrawTextEx(font, value_text, (Vector2){bounds.x + bounds.width - value_size.x, y}, line_height, 0, RAYWHITE);
 }
 
-static size_t variables_panel_count(Call_Frame *frame) {
-    if (frame == NULL) {
-        return 0;
-    }
-    IR_Function *function = frame->function;
-    size_t count = function->parameters.size;
-    for (size_t b = 0; b < function->blocks.size; b++) {
-        IR_Block *block = function->blocks.items[b];
-        for (size_t k = 0; k < block->instructions.size; k++) {
-            IR_Value *result = &block->instructions.items[k]->result;
-            if (result->type == NULL || result->type->kind == IR_TYPE__VOID || result->name.length == 0) {
-                continue;
-            }
-            count++;
-        }
-    }
-    return count;
+static size_t variables_panel_count(Debugger *debugger) {
+    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
+    return state == NULL ? 0 : state->bindings_size;
 }
 
 static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *debugger, Rectangle bounds) {
     if (debugger->current_frame == NULL) {
         return;
     }
+    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
+    if (state == NULL) {
+        return;
+    }
     Font font = debugger->font;
     int line_height = font.baseSize;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    IR_Function *function = debugger->current_frame->function;
     Call_Frame *frame = debugger->current_frame;
     float y = bounds.y - variables_panel->scrollbar.scroll_y;
     float bottom = bounds.y + bounds.height;
-    for (size_t i = 0; i < function->parameters.size; i++) {
+    for (size_t i = 0; i < state->bindings_size; i++) {
         if (y + line_height > bounds.y && y < bottom) {
-            draw_variable_line(font, bounds, y, frame, function->parameters.items[i]);
+            draw_binding_line(font, bounds, y, frame, &state->bindings[i]);
         }
         y += line_height;
     }
-    for (size_t b = 0; b < function->blocks.size; b++) {
-        IR_Block *block = function->blocks.items[b];
-        for (size_t k = 0; k < block->instructions.size; k++) {
-            IR_Value *result = &block->instructions.items[k]->result;
-            if (result->type == NULL || result->type->kind == IR_TYPE__VOID || result->name.length == 0) {
-                continue;
-            }
-            if (y + line_height > bounds.y && y < bottom) {
-                draw_variable_line(font, bounds, y, frame, result);
-            }
-            y += line_height;
-        }
-    }
     EndScissorMode();
-    float content_height = (float)variables_panel_count(debugger->current_frame) * line_height;
+    float content_height = (float)state->bindings_size * line_height;
     draw_panel_scrollbar(bounds, content_height, &variables_panel->scrollbar);
 }
 
 static void variables_panel_handle_input(Variables_Panel *variables_panel, Debugger *debugger) {
     int line_height = debugger->font.baseSize;
     float panel_height = variables_panel->panel.bounds.height;
-    float content_height = (float)variables_panel_count(debugger->current_frame) * line_height;
+    float content_height = (float)variables_panel_count(debugger) * line_height;
     float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
 
     float wheel = GetMouseWheelMove();
@@ -902,7 +964,19 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     Debugger *debugger = (Debugger *)observer;
 
     size_t depth = frame_depth(current_frame);
-    bool at_breakpoint = is_breakpoint(debugger, current_frame->instruction);
+    Frame_Debug_State *state = sync_frame_states(debugger, current_frame, depth);
+
+    IR_Instruction *instruction = current_frame->instruction;
+    if (instruction->kind == IR_INSTRUCTION__DBG_LINE) {
+        state->origin = instruction->dbg_line_instruction.location;
+    } else if (instruction->kind == IR_INSTRUCTION__DBG_BIND) {
+        record_binding(state, instruction);
+    }
+
+    bool at_breakpoint = is_breakpoint(debugger, instruction);
+    if ((instruction->kind == IR_INSTRUCTION__DBG_LINE || instruction->kind == IR_INSTRUCTION__DBG_BIND) && !at_breakpoint) {
+        return;
+    }
     bool running = debugger->mode == DEBUGGER_MODE__CONTINUE || (debugger->mode == DEBUGGER_MODE__NEXT && depth > debugger->next_depth);
     if (running && !at_breakpoint) {
         // Render a UI frame at ~60 Hz while running.

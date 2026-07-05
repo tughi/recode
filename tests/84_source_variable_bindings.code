@@ -1,0 +1,22 @@
+struct Point {
+    x: i32
+    y: i32
+}
+
+proc scale(p: Point, factor: i32) -> i32 {
+    return p.x * factor + p.y * factor
+}
+
+proc log() {
+}
+
+proc main() -> i32 {
+    log()
+    let p = Point(x: 3, y: 4)
+    let factor = 6
+    var result = 0
+    if p.x < p.y {
+        result = scale(p, factor)
+    }
+    return result
+}

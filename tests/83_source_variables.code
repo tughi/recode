@@ -1,0 +1,7 @@
+proc main() -> i32 {
+    var sum = 0
+    let a = 30
+    let b = 12
+    sum = a + b
+    return sum
+}

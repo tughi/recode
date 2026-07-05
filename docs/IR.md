@@ -67,25 +67,40 @@ Numeric labels mark basic block entry points and serve as branch targets within 
 
 Lists the variables whose values are still needed by subsequent instructions at a given point.
 
-### Source annotations
+### Debug directives
 
 ```
-source 1 "test.code"
+.source 1 "test.code"
 
 $main(): i32 {
 @1:
-  %a: i32 = const 30   ^1:2:9
+  .line 1:2:9
+  %sum.ptr: [i32] = alloc i32
+  .bind &sum %sum.ptr
+  .line 1:3:9
+  %a: i32 = const 30
+  .bind a %a
+  .line 1:4:9
   %b: i32 = const 12
-  %0: i32 = add %a %b   ^1:4:12
+  .bind b %b
+  .line 1:5:11
+  %0: i32 = add %a %b
+  store %sum.ptr %0
   ret %0
 }
 ```
 
-Optional debug metadata mapping instructions back to the original source they were compiled from. A top-level `source <index> "<path>"` declaration registers an original source file; indices are 1-based and must be declared sequentially. Paths are resolved relative to the IR file's directory when the debugger loads them.
+Optional debug metadata mapping execution back to the original source it was compiled from. Directives are dot-prefixed lines; the in-function forms are *real instructions* that execute as no-ops — the debugger reacts to them as **events** when execution passes them, so they respect control flow (a directive on an untaken branch has no effect) and each call frame accumulates its own debug state.
 
-An instruction may carry a trailing `^<file>:<line>[:<column>]` annotation, separated from the instruction by three spaces (a clear visual break). The location is *sticky*: it applies to the annotated instruction and to every following unannotated instruction in the same function, so an emitter only needs to annotate the first instruction of each source statement.
+- **`.source <index> "<path>"`** (top-level): registers an original source file. Indices are 1-based and must be declared sequentially. Paths are resolved relative to the IR file's directory when the debugger loads them.
+- **`.line <file>:<line>[:<column>]`**: focuses a source location. The debugger's source panel highlights this line for the current frame from here until the next `.line` executes; a caller frame keeps its own focus, restored when a call returns. Source-line breakpoints anchor on `.line` directives. Emit one per source statement.
+- **`.bind [&]<name> <value>`**: binds source variable `name` to an IR value, from the moment the directive executes. Two forms:
+  - **`.bind name %value` (direct):** the value *is* the variable; the debugger reads it from the value's frame slot. Works for any value — including function parameters, `phi` merges, and whole `struct` values.
+  - **`.bind &name %value` (indirect):** the value is a `[T]` single pointer to the variable's storage (typically an `alloc`); the debugger loads through it to read the live value, so one binding tracks the variable across `store`s. The value's type must be `[T]` — `&` on a non-pointer value is a parse error.
 
-Annotations have no effect on execution. Referencing an undeclared file index, a non-sequential `source` index, or a malformed annotation is a parse error.
+A later `.bind` of the same name replaces the earlier one (rebinding as a variable moves between values). Typical placements: `.bind` a parameter at function entry, a merged variable after its `phi`, and a mutable local's spill slot (`&`) after its `alloc`.
+
+Directives have no effect on execution. Referencing an undeclared file index, a non-sequential `.source` index, or an unknown directive is a parse error.
 
 ### Type declaration
 
