@@ -214,9 +214,15 @@ typedef struct {
 
 void ir_instruction_list_add(IR_Instruction_List *list, IR_Instruction *instruction);
 
+// Interpreter and Step live in Interpreter.c; instructions only store the handler pointer.
+typedef struct Interpreter Interpreter;
+typedef struct Step Step;
+typedef Step (*IR_Instruction_Execute)(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block);
+
 struct IR_Instruction {
     IR_Value result;
     IR_Instruction_Kind kind;
+    IR_Instruction_Execute execute;
     Source_Location location;
     IR_Value_List arguments;
     union {
