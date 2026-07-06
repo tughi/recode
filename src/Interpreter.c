@@ -84,7 +84,6 @@ struct Step {
 
 static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location);
 
-
 static Step execute_add_i8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     (void)return_address;
     (void)previous_block;
@@ -1777,6 +1776,9 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
     }
     case IR_EXTERNAL_FUNCTION__free: {
         void *ptr = (void *)*(uint8_t **)argument_addresses[0];
+        if (interpreter->observer != NULL && ptr != NULL) {
+            interpreter->observer->on_heap_free(interpreter->observer, ptr);
+        }
         free(ptr);
         break;
     }
@@ -1812,6 +1814,9 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
     case IR_EXTERNAL_FUNCTION__malloc: {
         size_t size = *(size_t *)argument_addresses[0];
         uint8_t *result = malloc(size);
+        if (interpreter->observer != NULL && result != NULL) {
+            interpreter->observer->on_heap_alloc(interpreter->observer, result, size, call_location);
+        }
         *(uint8_t **)return_address = result;
         break;
     }
@@ -1831,6 +1836,14 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         void *ptr = (void *)*(uint8_t **)argument_addresses[0];
         size_t size = *(size_t *)argument_addresses[1];
         uint8_t *result = realloc(ptr, size);
+        if (interpreter->observer != NULL) {
+            if (ptr != NULL) {
+                interpreter->observer->on_heap_free(interpreter->observer, ptr);
+            }
+            if (result != NULL) {
+                interpreter->observer->on_heap_alloc(interpreter->observer, result, size, call_location);
+            }
+        }
         *(uint8_t **)return_address = result;
         break;
     }

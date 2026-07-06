@@ -16,6 +16,8 @@ struct Call_Frame {
 typedef struct Observer Observer;
 struct Observer {
     void (*on_step)(Observer *self, Call_Frame *current_frame);
+    void (*on_heap_alloc)(Observer *self, uint8_t *address, size_t size, Source_Location location);
+    void (*on_heap_free)(Observer *self, uint8_t *address);
 };
 
 int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *inspector);

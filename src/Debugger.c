@@ -33,6 +33,22 @@ typedef struct {
 } Frame_Debug_State;
 
 typedef struct {
+    uint8_t *address;
+    size_t size;
+    Source_Location location;
+} Heap_Allocation;
+
+typedef struct {
+    char path[256];
+    char name[64];
+    IR_Type *type;
+    uint8_t *address;
+    size_t depth;
+    bool expandable;
+    bool expanded;
+} Var_Node;
+
+typedef struct {
     Observer observer;
     IR_Module *module;
     File *sources;
@@ -46,6 +62,17 @@ typedef struct {
     Frame_Debug_State *frame_states;
     size_t frame_states_size;
     size_t frame_states_capacity;
+    Heap_Allocation *heap_allocations;
+    size_t heap_allocations_size;
+    size_t heap_allocations_capacity;
+    uint8_t *memory_target;
+    size_t memory_target_size;
+    char **expanded_paths;
+    size_t expanded_paths_size;
+    size_t expanded_paths_capacity;
+    Var_Node *var_nodes;
+    size_t var_nodes_size;
+    size_t var_nodes_capacity;
     Panel *root_panel;
     Panel *active_panel;
     Panel *ir_panel;
@@ -101,6 +128,11 @@ typedef struct {
     Panel panel;
     Scrollbar scrollbar;
 } Variables_Panel;
+
+typedef struct {
+    Panel panel;
+    Scrollbar scrollbar;
+} Memory_Panel;
 
 #define GUTTER_SIZE 4
 
@@ -208,6 +240,53 @@ static void record_binding(Frame_Debug_State *state, IR_Instruction *instruction
         state->bindings = realloc(state->bindings, state->bindings_capacity * sizeof(Dbg_Binding));
     }
     state->bindings[state->bindings_size++] = (Dbg_Binding){.name = name, .value = value, .indirect = indirect};
+}
+
+static Heap_Allocation *find_heap_allocation(Debugger *debugger, uint8_t *address) {
+    for (size_t i = 0; i < debugger->heap_allocations_size; i++) {
+        Heap_Allocation *allocation = &debugger->heap_allocations[i];
+        if (address >= allocation->address && address < allocation->address + allocation->size) {
+            return allocation;
+        }
+    }
+    return NULL;
+}
+
+static void set_memory_target(Debugger *debugger, uint8_t *pointer, IR_Type *pointer_type) {
+    if (pointer == NULL) {
+        return;
+    }
+    debugger->memory_target = pointer;
+    Heap_Allocation *allocation = find_heap_allocation(debugger, pointer);
+    if (allocation != NULL) {
+        debugger->memory_target_size = (size_t)(allocation->address + allocation->size - pointer);
+    } else {
+        debugger->memory_target_size = pointer_type->kind == IR_TYPE__PTR ? ir_type_size(pointer_type->pointee) : 256;
+    }
+}
+
+static void debugger_on_heap_alloc(Observer *observer, uint8_t *address, size_t size, Source_Location location) {
+    Debugger *debugger = (Debugger *)observer;
+    if (debugger->heap_allocations_size == debugger->heap_allocations_capacity) {
+        debugger->heap_allocations_capacity = debugger->heap_allocations_capacity == 0 ? 8 : debugger->heap_allocations_capacity * 2;
+        debugger->heap_allocations = realloc(debugger->heap_allocations, debugger->heap_allocations_capacity * sizeof(Heap_Allocation));
+    }
+    debugger->heap_allocations[debugger->heap_allocations_size++] = (Heap_Allocation){.address = address, .size = size, .location = location};
+}
+
+static void debugger_on_heap_free(Observer *observer, uint8_t *address) {
+    Debugger *debugger = (Debugger *)observer;
+    for (size_t i = 0; i < debugger->heap_allocations_size; i++) {
+        Heap_Allocation *allocation = &debugger->heap_allocations[i];
+        if (allocation->address == address) {
+            if (debugger->memory_target >= allocation->address && debugger->memory_target < allocation->address + allocation->size) {
+                debugger->memory_target = NULL;
+                debugger->memory_target_size = 0;
+            }
+            *allocation = debugger->heap_allocations[--debugger->heap_allocations_size];
+            return;
+        }
+    }
 }
 
 static bool ir_line_has_breakpoint(Debugger *debugger, size_t line) {
@@ -320,15 +399,34 @@ static float text_panel_gutter_width(Debugger *debugger, size_t lines_size) {
     return (float)(gutter_digits * digit_advance) + digit_advance;
 }
 
-static void text_panel_scroll_to_line(Scrollbar *scrollbar, float panel_height, size_t line, int line_height) {
+#define SCROLL_MARGIN_LINES 5
+
+static void text_panel_scroll_to_line(Scrollbar *scrollbar, float panel_height, size_t line, size_t lines_size, int line_height) {
     if (line == 0) {
         return;
     }
+    float margin = (float)(SCROLL_MARGIN_LINES * line_height);
+    if (margin > (panel_height - line_height) / 2) {
+        margin = (panel_height - line_height) / 2;
+        if (margin < 0) {
+            margin = 0;
+        }
+    }
     float line_y = (float)(line - 1) * line_height;
-    if (line_y < scrollbar->scroll_y) {
-        scrollbar->scroll_y = line_y;
-    } else if (line_y + line_height > scrollbar->scroll_y + panel_height) {
-        scrollbar->scroll_y = line_y + line_height - panel_height;
+    if (line_y - margin < scrollbar->scroll_y) {
+        scrollbar->scroll_y = line_y - margin;
+        if (scrollbar->scroll_y < 0) {
+            scrollbar->scroll_y = 0;
+        }
+    } else if (line_y + line_height + margin > scrollbar->scroll_y + panel_height) {
+        scrollbar->scroll_y = line_y + line_height + margin - panel_height;
+        float max_scroll = (float)lines_size * line_height - panel_height;
+        if (max_scroll < 0) {
+            max_scroll = 0;
+        }
+        if (scrollbar->scroll_y > max_scroll) {
+            scrollbar->scroll_y = max_scroll;
+        }
     }
 }
 
@@ -414,7 +512,7 @@ static Panel *ir_panel_pick(IR_Panel *ir_panel, Vector2 position) {
 
 static void ir_panel_handle_step(IR_Panel *ir_panel, Debugger *debugger) {
     size_t line = debugger->current_frame->instruction->location.line;
-    text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->font.baseSize);
+    text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->module->lexed_file.lines_size, debugger->font.baseSize);
 }
 
 static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
@@ -519,8 +617,12 @@ static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
 }
 
 static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
+    File *text = source_panel_text(debugger);
+    if (text == NULL) {
+        return;
+    }
     size_t line = debugger_current_origin(debugger).line;
-    text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, debugger->font.baseSize);
+    text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, text->lines_size, debugger->font.baseSize);
 }
 
 static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debugger) {
@@ -795,6 +897,25 @@ static Stack_Panel make_stack_panel(float weight) {
     };
 }
 
+static bool is_primitive_type(IR_Type *type) {
+    switch (type->kind) {
+    case IR_TYPE__BOOL:
+    case IR_TYPE__I8:
+    case IR_TYPE__I16:
+    case IR_TYPE__I32:
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+    case IR_TYPE__U8:
+    case IR_TYPE__U16:
+    case IR_TYPE__U32:
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *address) {
     switch (type->kind) {
     case IR_TYPE__BOOL:
@@ -823,12 +944,10 @@ static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *addre
         return (size_t)snprintf(buf, size, "%p", *(void **)address);
     case IR_TYPE__STRUCT: {
         size_t n = (size_t)snprintf(buf, size, "{");
-        size_t offset = 0;
         for (size_t i = 0; i < type->struct_field_count; i++) {
             IR_Struct_Field *field = type->struct_fields[i];
             n += (size_t)snprintf(buf + n, n < size ? size - n : 0, "%s .%.*s = ", i == 0 ? "" : ",", STRING(field->name));
-            n += format_typed(buf + n, n < size ? size - n : 0, field->type, address + offset);
-            offset += ir_type_size(field->type);
+            n += format_typed(buf + n, n < size ? size - n : 0, field->type, address + ir_struct_field_offset(type, i));
         }
         n += (size_t)snprintf(buf + n, n < size ? size - n : 0, " }");
         return n;
@@ -840,51 +959,128 @@ static size_t format_typed(char *buf, size_t size, IR_Type *type, uint8_t *addre
     }
 }
 
-static void draw_binding_line(Font font, Rectangle bounds, float y, Call_Frame *frame, Dbg_Binding *binding) {
-    int line_height = font.baseSize;
+static uint8_t *binding_address(Call_Frame *frame, Dbg_Binding *binding, IR_Type **display_type) {
     IR_Value *value = binding->value;
     uint8_t *base = value->kind <= IR_VALUE__GLOBAL_VARIABLE ? frame->globals_data : frame->frame_data;
     uint8_t *slot = base + value->slot.offset;
-
-    IR_Type *display_type;
-    uint8_t *address;
     if (binding->indirect) {
-        address = *(uint8_t **)slot;
-        display_type = value->type->pointee;
-    } else {
-        address = slot;
-        display_type = value->type;
+        *display_type = value->type->pointee;
+        return *(uint8_t **)slot;
     }
-
-    char value_text[256];
-    if (binding->indirect && address == NULL) {
-        snprintf(value_text, sizeof(value_text), "<uninitialized>");
-    } else {
-        format_typed(value_text, sizeof(value_text), display_type, address);
-    }
-    Vector2 value_size = MeasureTextEx(font, value_text, line_height, 0);
-
-    char name_text[64];
-    snprintf(name_text, sizeof(name_text), "%.*s", STRING(binding->name));
-    DrawTextEx(font, name_text, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
-    Vector2 name_size = MeasureTextEx(font, name_text, line_height, 0);
-
-    char type_text[128];
-    FILE *f = fmemopen(type_text, sizeof(type_text), "w");
-    fputs(": ", f);
-    fprint_ir_type(f, display_type);
-    fclose(f);
-    DrawTextEx(font, type_text, (Vector2){bounds.x + name_size.x, y}, line_height, 0, GRAY);
-
-    DrawTextEx(font, value_text, (Vector2){bounds.x + bounds.width - value_size.x, y}, line_height, 0, RAYWHITE);
+    *display_type = value->type;
+    return slot;
 }
 
-static size_t variables_panel_count(Debugger *debugger) {
-    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
-    return state == NULL ? 0 : state->bindings_size;
+static bool is_path_expanded(Debugger *debugger, const char *path) {
+    for (size_t i = 0; i < debugger->expanded_paths_size; i++) {
+        if (strcmp(debugger->expanded_paths[i], path) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
-static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *debugger, Rectangle bounds) {
+static void toggle_path_expanded(Debugger *debugger, const char *path) {
+    for (size_t i = 0; i < debugger->expanded_paths_size; i++) {
+        if (strcmp(debugger->expanded_paths[i], path) == 0) {
+            free(debugger->expanded_paths[i]);
+            debugger->expanded_paths[i] = debugger->expanded_paths[--debugger->expanded_paths_size];
+            return;
+        }
+    }
+    if (debugger->expanded_paths_size == debugger->expanded_paths_capacity) {
+        debugger->expanded_paths_capacity = debugger->expanded_paths_capacity == 0 ? 8 : debugger->expanded_paths_capacity * 2;
+        debugger->expanded_paths = realloc(debugger->expanded_paths, debugger->expanded_paths_capacity * sizeof(char *));
+    }
+    debugger->expanded_paths[debugger->expanded_paths_size++] = strdup(path);
+}
+
+static Var_Node *new_var_node(Debugger *debugger) {
+    if (debugger->var_nodes_size == debugger->var_nodes_capacity) {
+        debugger->var_nodes_capacity = debugger->var_nodes_capacity == 0 ? 16 : debugger->var_nodes_capacity * 2;
+        debugger->var_nodes = realloc(debugger->var_nodes, debugger->var_nodes_capacity * sizeof(Var_Node));
+    }
+    return &debugger->var_nodes[debugger->var_nodes_size++];
+}
+
+static void add_var_node(Debugger *debugger, const char *path, const char *name, IR_Type *type, uint8_t *address, size_t depth) {
+    Var_Node *node = new_var_node(debugger);
+    snprintf(node->path, sizeof(node->path), "%s", path);
+    snprintf(node->name, sizeof(node->name), "%s", name);
+    node->type = type;
+    node->address = address;
+    node->depth = depth;
+    bool is_pointer = type->kind == IR_TYPE__PTR || type->kind == IR_TYPE__MULTI_PTR;
+    IR_Type *target = is_pointer ? type->pointee : type;
+    uint8_t *target_address = is_pointer && address != NULL ? *(uint8_t **)address : address;
+    if (target_address == NULL) {
+        node->expandable = false;
+    } else if (target->kind == IR_TYPE__STRUCT) {
+        node->expandable = true;
+    } else {
+        node->expandable = is_pointer && ir_type_size(target) > 0;
+    }
+    node->expanded = node->expandable && is_path_expanded(debugger, node->path);
+    if (!node->expanded) {
+        return;
+    }
+    if (target->kind == IR_TYPE__STRUCT) {
+        for (size_t i = 0; i < target->struct_field_count; i++) {
+            IR_Struct_Field *field = target->struct_fields[i];
+            char field_name[64];
+            snprintf(field_name, sizeof(field_name), "%.*s", STRING(field->name));
+            char field_path[256];
+            snprintf(field_path, sizeof(field_path), "%s.%s", path, field_name);
+            add_var_node(debugger, field_path, field_name, field->type, target_address + ir_struct_field_offset(target, i), depth + 1);
+        }
+    } else if (type->kind == IR_TYPE__PTR) {
+        char child_path[256];
+        snprintf(child_path, sizeof(child_path), "%s.*", path);
+        add_var_node(debugger, child_path, "*", target, target_address, depth + 1);
+    } else {
+        size_t element_size = ir_type_size(target);
+        size_t count = 1;
+        Heap_Allocation *allocation = find_heap_allocation(debugger, target_address);
+        if (allocation != NULL) {
+            count = (size_t)(allocation->address + allocation->size - target_address) / element_size;
+            if (count > 1024) {
+                count = 1024;
+            }
+        }
+        size_t visible = 10;
+        char more_path[256];
+        while (visible < count) {
+            snprintf(more_path, sizeof(more_path), "%s[%zu..]", path, visible);
+            if (!is_path_expanded(debugger, more_path)) {
+                break;
+            }
+            visible += 10;
+        }
+        if (visible > count) {
+            visible = count;
+        }
+        for (size_t i = 0; i < visible; i++) {
+            char element_name[32];
+            snprintf(element_name, sizeof(element_name), "[%zu]", i);
+            char element_path[256];
+            snprintf(element_path, sizeof(element_path), "%s%s", path, element_name);
+            add_var_node(debugger, element_path, element_name, target, target_address + i * element_size, depth + 1);
+        }
+        if (visible < count) {
+            Var_Node *more = new_var_node(debugger);
+            snprintf(more->path, sizeof(more->path), "%s", more_path);
+            snprintf(more->name, sizeof(more->name), "... (%zu more)", count - visible);
+            more->type = NULL;
+            more->address = NULL;
+            more->depth = depth + 1;
+            more->expandable = true;
+            more->expanded = false;
+        }
+    }
+}
+
+static void build_var_nodes(Debugger *debugger) {
+    debugger->var_nodes_size = 0;
     if (debugger->current_frame == NULL) {
         return;
     }
@@ -892,27 +1088,79 @@ static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *deb
     if (state == NULL) {
         return;
     }
+    for (size_t i = 0; i < state->bindings_size; i++) {
+        Dbg_Binding *binding = &state->bindings[i];
+        IR_Type *display_type;
+        uint8_t *address = binding_address(debugger->current_frame, binding, &display_type);
+        char name[64];
+        snprintf(name, sizeof(name), "%.*s", STRING(binding->name));
+        add_var_node(debugger, name, name, display_type, address, 0);
+    }
+}
+
+static void draw_variable_line(Font font, Rectangle bounds, float y, Var_Node *node) {
+    int line_height = font.baseSize;
+    int advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
+    float x = bounds.x + (float)(node->depth * 2 * advance);
+    if (node->expandable) {
+        char marker[2] = {node->expanded ? '-' : '+', '\0'};
+        DrawTextEx(font, marker, (Vector2){x, y}, line_height, 0, GRAY);
+    }
+    x += 2 * advance;
+
+    if (node->type == NULL) {
+        DrawTextEx(font, node->name, (Vector2){x, y}, line_height, 0, GRAY);
+        return;
+    }
+
+    DrawTextEx(font, node->name, (Vector2){x, y}, line_height, 0, RAYWHITE);
+    Vector2 name_size = MeasureTextEx(font, node->name, line_height, 0);
+
+    char type_text[128];
+    FILE *f = fmemopen(type_text, sizeof(type_text), "w");
+    fputs(": ", f);
+    fprint_ir_type(f, node->type);
+    fclose(f);
+    DrawTextEx(font, type_text, (Vector2){x + name_size.x, y}, line_height, 0, GRAY);
+
+    char value_text[256];
+    if (node->address == NULL) {
+        snprintf(value_text, sizeof(value_text), "<uninitialized>");
+    } else if (is_primitive_type(node->type)) {
+        format_typed(value_text, sizeof(value_text), node->type, node->address);
+    } else {
+        return;
+    }
+    Vector2 value_size = MeasureTextEx(font, value_text, line_height, 0);
+    DrawTextEx(font, value_text, (Vector2){bounds.x + bounds.width - value_size.x, y}, line_height, 0, RAYWHITE);
+}
+
+static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *debugger, Rectangle bounds) {
+    if (debugger->current_frame == NULL) {
+        return;
+    }
+    build_var_nodes(debugger);
     Font font = debugger->font;
     int line_height = font.baseSize;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    Call_Frame *frame = debugger->current_frame;
     float y = bounds.y - variables_panel->scrollbar.scroll_y;
     float bottom = bounds.y + bounds.height;
-    for (size_t i = 0; i < state->bindings_size; i++) {
+    for (size_t i = 0; i < debugger->var_nodes_size; i++) {
         if (y + line_height > bounds.y && y < bottom) {
-            draw_binding_line(font, bounds, y, frame, &state->bindings[i]);
+            draw_variable_line(font, bounds, y, &debugger->var_nodes[i]);
         }
         y += line_height;
     }
     EndScissorMode();
-    float content_height = (float)state->bindings_size * line_height;
+    float content_height = (float)debugger->var_nodes_size * line_height;
     draw_panel_scrollbar(bounds, content_height, &variables_panel->scrollbar);
 }
 
 static void variables_panel_handle_input(Variables_Panel *variables_panel, Debugger *debugger) {
+    build_var_nodes(debugger);
     int line_height = debugger->font.baseSize;
     float panel_height = variables_panel->panel.bounds.height;
-    float content_height = (float)variables_panel_count(debugger) * line_height;
+    float content_height = (float)debugger->var_nodes_size * line_height;
     float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
 
     float wheel = GetMouseWheelMove();
@@ -924,6 +1172,28 @@ static void variables_panel_handle_input(Variables_Panel *variables_panel, Debug
     }
     if (variables_panel->scrollbar.scroll_y < 0) {
         variables_panel->scrollbar.scroll_y = 0;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 mouse = GetMousePosition();
+        Rectangle bounds = variables_panel->panel.bounds;
+        if (CheckCollisionPointRec(mouse, bounds) && mouse.x < bounds.x + bounds.width - 8) {
+            size_t row = (size_t)((mouse.y - bounds.y + variables_panel->scrollbar.scroll_y) / line_height);
+            if (row < debugger->var_nodes_size) {
+                Var_Node *node = &debugger->var_nodes[row];
+                if (node->expandable) {
+                    toggle_path_expanded(debugger, node->path);
+                }
+                if (node->address != NULL) {
+                    if (node->type->kind == IR_TYPE__PTR || node->type->kind == IR_TYPE__MULTI_PTR) {
+                        set_memory_target(debugger, *(uint8_t **)node->address, node->type);
+                    } else {
+                        debugger->memory_target = node->address;
+                        debugger->memory_target_size = ir_type_size(node->type);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -944,6 +1214,95 @@ static Variables_Panel make_variables_panel(float weight) {
             .handle_input = (void (*)(Panel *, Debugger *))variables_panel_handle_input,
             .handle_step = (void (*)(Panel *, Debugger *))variables_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) variables_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
+static void memory_panel_draw(Memory_Panel *memory_panel, Debugger *debugger, Rectangle bounds) {
+    if (debugger->memory_target == NULL) {
+        return;
+    }
+    Font font = debugger->font;
+    int line_height = font.baseSize;
+    int advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
+    size_t rows = (debugger->memory_target_size + 15) / 16;
+    BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
+    float y = bounds.y - memory_panel->scrollbar.scroll_y;
+    float bottom = bounds.y + bounds.height;
+    if (y + line_height > bounds.y && y < bottom) {
+        char header[64];
+        snprintf(header, sizeof(header), "%p, %zu bytes", (void *)debugger->memory_target, debugger->memory_target_size);
+        DrawTextEx(font, header, (Vector2){bounds.x, y}, line_height, 0, GRAY);
+    }
+    y += line_height;
+    for (size_t row = 0; row < rows; row++) {
+        if (y + line_height > bounds.y && y < bottom) {
+            char offset_text[8];
+            snprintf(offset_text, sizeof(offset_text), "%04zx", row * 16);
+            DrawTextEx(font, offset_text, (Vector2){bounds.x, y}, line_height, 0, DARKGRAY);
+            char bytes_text[3 * 16 + 1];
+            char ascii_text[16 + 3];
+            size_t ascii_size = 0;
+            ascii_text[ascii_size++] = '|';
+            for (size_t i = 0; i < 16; i++) {
+                size_t index = row * 16 + i;
+                if (index < debugger->memory_target_size) {
+                    uint8_t byte = debugger->memory_target[index];
+                    snprintf(bytes_text + i * 3, 4, "%02X ", byte);
+                    ascii_text[ascii_size++] = byte >= 32 && byte < 127 ? (char)byte : '.';
+                } else {
+                    memcpy(bytes_text + i * 3, "   ", 3);
+                }
+            }
+            bytes_text[3 * 16] = '\0';
+            ascii_text[ascii_size++] = '|';
+            ascii_text[ascii_size] = '\0';
+            DrawTextEx(font, bytes_text, (Vector2){bounds.x + 6 * advance, y}, line_height, 0, RAYWHITE);
+            DrawTextEx(font, ascii_text, (Vector2){bounds.x + (6 + 3 * 16 + 1) * advance, y}, line_height, 0, LIGHTGRAY);
+        }
+        y += line_height;
+    }
+    EndScissorMode();
+    draw_panel_scrollbar(bounds, (float)(rows + 1) * line_height, &memory_panel->scrollbar);
+}
+
+static void memory_panel_handle_input(Memory_Panel *memory_panel, Debugger *debugger) {
+    int line_height = debugger->font.baseSize;
+    float panel_height = memory_panel->panel.bounds.height;
+    size_t rows = debugger->memory_target == NULL ? 0 : (debugger->memory_target_size + 15) / 16 + 1;
+    float content_height = (float)rows * line_height;
+    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
+
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0) {
+        memory_panel->scrollbar.scroll_y -= wheel * line_height * 3;
+    }
+    if (memory_panel->scrollbar.scroll_y > max_scroll) {
+        memory_panel->scrollbar.scroll_y = max_scroll;
+    }
+    if (memory_panel->scrollbar.scroll_y < 0) {
+        memory_panel->scrollbar.scroll_y = 0;
+    }
+}
+
+static void memory_panel_handle_step(Memory_Panel *memory_panel, Debugger *debugger) {
+    (void)debugger;
+    memory_panel->scrollbar.scroll_y = 0;
+}
+
+static Panel *memory_panel_pick(Memory_Panel *memory_panel, Vector2 position) {
+    (void)position;
+    return &memory_panel->panel;
+}
+
+static Memory_Panel make_memory_panel(float weight) {
+    return (Memory_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, Debugger *, Rectangle))memory_panel_draw,
+            .handle_input = (void (*)(Panel *, Debugger *))memory_panel_handle_input,
+            .handle_step = (void (*)(Panel *, Debugger *))memory_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) memory_panel_pick,
             .weight = weight,
         },
     };
@@ -1189,14 +1548,15 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
     IR_Panel ir_panel = make_ir_panel(has_origins ? 1.0f : 0.5f);
     Panel *left_panel_children[] = {&source_panel.panel, &ir_panel.panel};
     Split_Panel left_panel = make_split_panel(0.5f, SPLIT_DIRECTION__VERTICAL, left_panel_children, 2);
-    Stack_Panel stack_panel = make_stack_panel(0.3f);
-    Variables_Panel variables_panel = make_variables_panel(1.0f);
-    Panel *right_panel_children[] = {&stack_panel.panel, &variables_panel.panel};
-    Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 2);
+    Stack_Panel stack_panel = make_stack_panel(0.25f);
+    Variables_Panel variables_panel = make_variables_panel(0.5f);
+    Memory_Panel memory_panel = make_memory_panel(1.0f);
+    Panel *right_panel_children[] = {&stack_panel.panel, &variables_panel.panel, &memory_panel.panel};
+    Split_Panel right_panel = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, right_panel_children, 3);
     Panel *split_children[] = {has_origins ? &left_panel.panel : &ir_panel.panel, &right_panel.panel};
     Split_Panel split_panel = make_split_panel(1.0f, SPLIT_DIRECTION__HORIZONTAL, split_children, sizeof(split_children) / sizeof(*split_children));
     Debugger debugger = {
-        .observer = {.on_step = debugger_on_step},
+        .observer = {.on_step = debugger_on_step, .on_heap_alloc = debugger_on_heap_alloc, .on_heap_free = debugger_on_heap_free},
         .module = module,
         .sources = load_sources(module),
         .mode = DEBUGGER_MODE__STEP,
@@ -1208,6 +1568,18 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         .source_stepping = has_origins,
     };
     int64_t result = interpret(module, argc, argv, &debugger.observer);
+
+    if (debugger.heap_allocations_size > 0) {
+        size_t total = 0;
+        for (size_t i = 0; i < debugger.heap_allocations_size; i++) {
+            total += debugger.heap_allocations[i].size;
+        }
+        fprintf(stderr, "Leaked %zu allocation(s), %zu bytes:\n", debugger.heap_allocations_size, total);
+        for (size_t i = 0; i < debugger.heap_allocations_size; i++) {
+            Heap_Allocation *allocation = &debugger.heap_allocations[i];
+            fprintf(stderr, "  %.*s:%zu:%zu: %zu bytes at %p\n", STRING(module->lexed_file.file.path), allocation->location.line, allocation->location.column, allocation->size, (void *)allocation->address);
+        }
+    }
 
     UnloadFont(debugger.font);
     CloseWindow();
