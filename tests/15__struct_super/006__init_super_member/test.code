@@ -17,7 +17,7 @@ type Sports_Car = struct {
 }
 
 proc main() -> i32 {
-    let my_vehicle = alloc Sports_Car(
+    let sports_car = Sports_Car(
         super: Car(
             super: Vehicle(
                 wheels: 4
@@ -26,5 +26,5 @@ proc main() -> i32 {
         )
         turbo: true
     )
-    return my_vehicle.get_wheels() - 4
+    return sports_car.get_wheels() - 4
 }

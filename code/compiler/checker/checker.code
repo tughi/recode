@@ -663,8 +663,6 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
         return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
     } else if parsed_expression.kind == .Address_Of {
         return self.check_address_of_expression(parsed_expression.as(^parsed.Unary_Expression))
-    } else if parsed_expression.kind == .Alloc {
-        return self.check_alloc_expression(parsed_expression.as(^parsed.Unary_Expression))
     } else if parsed_expression.kind == .Array_Access {
         return self.check_array_access_expression(parsed_expression.as(^parsed.Array_Access_Expression))
     } else if parsed_expression.kind == .Bool {
@@ -736,15 +734,6 @@ proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unar
     }
     let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
-}
-
-proc (^Checker).check_alloc_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
-    let operand = self.check_expression(unary_expression.operand, expected_type: null)
-    if operand.type.kind != .Struct {
-        panic "Not supported yet: alloc expression"
-    }
-    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
-    return checked.new_alloc_expression(operand: operand, type: pointer_type).as(^checked.Expression)
 }
 
 proc (^Checker).check_array_access_expression(self, array_access_expression: ^parsed.Array_Access_Expression) -> ^checked.Expression {

@@ -516,9 +516,12 @@ $([calculator.parser.Parser]).parse_additive_expression(%self): [calculator.sour
   %other_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
   %10: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
   store %other_expression.ptr %10
+  %addition.ptr: [[calculator.expression.Addition]] = alloc [calculator.expression.Addition]
   %11: usize = const 32
   %12: [Any] = call $malloc %11
   %13: [calculator.expression.Addition] = cast %12
+  store %addition.ptr %13
+  %addition.1: [calculator.expression.Addition] = load %addition.ptr
   %14: i32 = const 3
   %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
   %15: [calculator.source.Span] = offset %parsed_expression.1 .span
@@ -533,8 +536,9 @@ $([calculator.parser.Parser]).parse_additive_expression(%self): [calculator.sour
   %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
   %other_expression.2: [calculator.source.Node] = load %other_expression.ptr
   %23: calculator.expression.Addition = struct .super %22 .left %parsed_expression.2 .right %other_expression.2
-  store %13 %23
-  %24: [calculator.source.Node] = cast %13
+  store %addition.1 %23
+  %addition.2: [calculator.expression.Addition] = load %addition.ptr
+  %24: [calculator.source.Node] = cast %addition.2
   store %parsed_expression.ptr %24
   jmp @6
 @5:
@@ -550,9 +554,12 @@ $([calculator.parser.Parser]).parse_additive_expression(%self): [calculator.sour
   %other_expression.2.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
   %31: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_multiplicative_expression %self
   store %other_expression.2.ptr %31
+  %subtraction.ptr: [[calculator.expression.Subtraction]] = alloc [calculator.expression.Subtraction]
   %32: usize = const 32
   %33: [Any] = call $malloc %32
   %34: [calculator.expression.Subtraction] = cast %33
+  store %subtraction.ptr %34
+  %subtraction.1: [calculator.expression.Subtraction] = load %subtraction.ptr
   %35: i32 = const 6
   %parsed_expression.3: [calculator.source.Node] = load %parsed_expression.ptr
   %36: [calculator.source.Span] = offset %parsed_expression.3 .span
@@ -567,8 +574,9 @@ $([calculator.parser.Parser]).parse_additive_expression(%self): [calculator.sour
   %parsed_expression.4: [calculator.source.Node] = load %parsed_expression.ptr
   %other_expression.2.2: [calculator.source.Node] = load %other_expression.2.ptr
   %44: calculator.expression.Subtraction = struct .super %43 .left %parsed_expression.4 .right %other_expression.2.2
-  store %34 %44
-  %45: [calculator.source.Node] = cast %34
+  store %subtraction.1 %44
+  %subtraction.2: [calculator.expression.Subtraction] = load %subtraction.ptr
+  %45: [calculator.source.Node] = cast %subtraction.2
   store %parsed_expression.ptr %45
   jmp @9
 @8:
@@ -605,9 +613,12 @@ $([calculator.parser.Parser]).parse_multiplicative_expression(%self): [calculato
   %other_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
   %10: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_primary_expression %self
   store %other_expression.ptr %10
+  %multiplication.ptr: [[calculator.expression.Multiplication]] = alloc [calculator.expression.Multiplication]
   %11: usize = const 32
   %12: [Any] = call $malloc %11
   %13: [calculator.expression.Multiplication] = cast %12
+  store %multiplication.ptr %13
+  %multiplication.1: [calculator.expression.Multiplication] = load %multiplication.ptr
   %14: i32 = const 5
   %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
   %15: [calculator.source.Span] = offset %parsed_expression.1 .span
@@ -622,8 +633,9 @@ $([calculator.parser.Parser]).parse_multiplicative_expression(%self): [calculato
   %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
   %other_expression.2: [calculator.source.Node] = load %other_expression.ptr
   %23: calculator.expression.Multiplication = struct .super %22 .left %parsed_expression.2 .right %other_expression.2
-  store %13 %23
-  %24: [calculator.source.Node] = cast %13
+  store %multiplication.1 %23
+  %multiplication.2: [calculator.expression.Multiplication] = load %multiplication.ptr
+  %24: [calculator.source.Node] = cast %multiplication.2
   store %parsed_expression.ptr %24
   jmp @6
 @5:
@@ -639,9 +651,12 @@ $([calculator.parser.Parser]).parse_multiplicative_expression(%self): [calculato
   %other_expression.2.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
   %31: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_primary_expression %self
   store %other_expression.2.ptr %31
+  %division.ptr: [[calculator.expression.Division]] = alloc [calculator.expression.Division]
   %32: usize = const 32
   %33: [Any] = call $malloc %32
   %34: [calculator.expression.Division] = cast %33
+  store %division.ptr %34
+  %division.1: [calculator.expression.Division] = load %division.ptr
   %35: i32 = const 4
   %parsed_expression.3: [calculator.source.Node] = load %parsed_expression.ptr
   %36: [calculator.source.Span] = offset %parsed_expression.3 .span
@@ -656,8 +671,9 @@ $([calculator.parser.Parser]).parse_multiplicative_expression(%self): [calculato
   %parsed_expression.4: [calculator.source.Node] = load %parsed_expression.ptr
   %other_expression.2.2: [calculator.source.Node] = load %other_expression.2.ptr
   %44: calculator.expression.Division = struct .super %43 .left %parsed_expression.4 .right %other_expression.2.2
-  store %34 %44
-  %45: [calculator.source.Node] = cast %34
+  store %division.1 %44
+  %division.2: [calculator.expression.Division] = load %division.ptr
+  %45: [calculator.source.Node] = cast %division.2
   store %parsed_expression.ptr %45
   jmp @9
 @8:
@@ -687,9 +703,12 @@ $([calculator.parser.Parser]).parse_primary_expression(%self): [calculator.sourc
   %token.2: [calculator.source.Node] = load %token.ptr
   ret %token.2
 @3:
+  %error.ptr: [[calculator.source.Error]] = alloc [calculator.source.Error]
   %7: usize = const 32
   %8: [Any] = call $malloc %7
   %9: [calculator.source.Error] = cast %8
+  store %error.ptr %9
+  %error.1: [calculator.source.Error] = load %error.ptr
   %10: i32 = const 1
   %token.3: [calculator.source.Node] = load %token.ptr
   %11: [calculator.source.Span] = offset %token.3 .span
@@ -698,8 +717,9 @@ $([calculator.parser.Parser]).parse_primary_expression(%self): [calculator.sourc
   %14: usize = const 15
   %15: String = struct .data $str_11 .length %14
   %16: calculator.source.Error = struct .super %13 .message %15
-  store %9 %16
-  %17: [calculator.source.Node] = cast %9
+  store %error.1 %16
+  %error.2: [calculator.source.Error] = load %error.ptr
+  %17: [calculator.source.Node] = cast %error.2
   ret %17
 }
 
@@ -885,9 +905,12 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %21: bool = cmp_eq %ch.1 %20
   br %21 @5 @6
 @5:
+  %stop.ptr: [[calculator.tokenizer.Stop]] = alloc [calculator.tokenizer.Stop]
   %22: usize = const 12
   %23: [Any] = call $malloc %22
   %24: [calculator.tokenizer.Stop] = cast %23
+  store %stop.ptr %24
+  %stop.1: [calculator.tokenizer.Stop] = load %stop.ptr
   %25: i32 = const 11
   %26: [i32] = offset %self .index
   %27: i32 = load %26
@@ -896,8 +919,9 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %30: calculator.source.Span = struct .start %27 .end %29
   %31: calculator.source.Node = struct .kind %25 .span %30
   %32: calculator.tokenizer.Stop = struct .super %31
-  store %24 %32
-  %33: [calculator.source.Node] = cast %24
+  store %stop.1 %32
+  %stop.2: [calculator.tokenizer.Stop] = load %stop.ptr
+  %33: [calculator.source.Node] = cast %stop.2
   ret %33
 @6:
   %ch.2: u8 = load %ch.ptr
@@ -927,9 +951,12 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %46: bool = cmp_eq %ch.4 %45
   br %46 @11 @12
 @11:
+  %plus.ptr: [[calculator.tokenizer.Plus]] = alloc [calculator.tokenizer.Plus]
   %47: usize = const 12
   %48: [Any] = call $malloc %47
   %49: [calculator.tokenizer.Plus] = cast %48
+  store %plus.ptr %49
+  %plus.1: [calculator.tokenizer.Plus] = load %plus.ptr
   %50: i32 = const 7
   %51: [i32] = offset %self .index
   %52: i32 = load %51
@@ -940,8 +967,9 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %57: calculator.source.Span = struct .start %54 .end %56
   %58: calculator.source.Node = struct .kind %50 .span %57
   %59: calculator.tokenizer.Plus = struct .super %58
-  store %49 %59
-  %60: [calculator.source.Node] = cast %49
+  store %plus.1 %59
+  %plus.2: [calculator.tokenizer.Plus] = load %plus.ptr
+  %60: [calculator.source.Node] = cast %plus.2
   ret %60
 @12:
   %ch.5: u8 = load %ch.ptr
@@ -949,9 +977,12 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %62: bool = cmp_eq %ch.5 %61
   br %62 @13 @14
 @13:
+  %minus.ptr: [[calculator.tokenizer.Minus]] = alloc [calculator.tokenizer.Minus]
   %63: usize = const 12
   %64: [Any] = call $malloc %63
   %65: [calculator.tokenizer.Minus] = cast %64
+  store %minus.ptr %65
+  %minus.1: [calculator.tokenizer.Minus] = load %minus.ptr
   %66: i32 = const 8
   %67: [i32] = offset %self .index
   %68: i32 = load %67
@@ -962,8 +993,9 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %73: calculator.source.Span = struct .start %70 .end %72
   %74: calculator.source.Node = struct .kind %66 .span %73
   %75: calculator.tokenizer.Minus = struct .super %74
-  store %65 %75
-  %76: [calculator.source.Node] = cast %65
+  store %minus.1 %75
+  %minus.2: [calculator.tokenizer.Minus] = load %minus.ptr
+  %76: [calculator.source.Node] = cast %minus.2
   ret %76
 @14:
   %ch.6: u8 = load %ch.ptr
@@ -971,9 +1003,12 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %78: bool = cmp_eq %ch.6 %77
   br %78 @15 @16
 @15:
+  %multiply.ptr: [[calculator.tokenizer.Multiply]] = alloc [calculator.tokenizer.Multiply]
   %79: usize = const 12
   %80: [Any] = call $malloc %79
   %81: [calculator.tokenizer.Multiply] = cast %80
+  store %multiply.ptr %81
+  %multiply.1: [calculator.tokenizer.Multiply] = load %multiply.ptr
   %82: i32 = const 9
   %83: [i32] = offset %self .index
   %84: i32 = load %83
@@ -984,8 +1019,9 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %89: calculator.source.Span = struct .start %86 .end %88
   %90: calculator.source.Node = struct .kind %82 .span %89
   %91: calculator.tokenizer.Multiply = struct .super %90
-  store %81 %91
-  %92: [calculator.source.Node] = cast %81
+  store %multiply.1 %91
+  %multiply.2: [calculator.tokenizer.Multiply] = load %multiply.ptr
+  %92: [calculator.source.Node] = cast %multiply.2
   ret %92
 @16:
   %ch.7: u8 = load %ch.ptr
@@ -993,9 +1029,12 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %94: bool = cmp_eq %ch.7 %93
   br %94 @17 @18
 @17:
+  %divide.ptr: [[calculator.tokenizer.Divide]] = alloc [calculator.tokenizer.Divide]
   %95: usize = const 12
   %96: [Any] = call $malloc %95
   %97: [calculator.tokenizer.Divide] = cast %96
+  store %divide.ptr %97
+  %divide.1: [calculator.tokenizer.Divide] = load %divide.ptr
   %98: i32 = const 10
   %99: [i32] = offset %self .index
   %100: i32 = load %99
@@ -1006,13 +1045,17 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %105: calculator.source.Span = struct .start %102 .end %104
   %106: calculator.source.Node = struct .kind %98 .span %105
   %107: calculator.tokenizer.Divide = struct .super %106
-  store %97 %107
-  %108: [calculator.source.Node] = cast %97
+  store %divide.1 %107
+  %divide.2: [calculator.tokenizer.Divide] = load %divide.ptr
+  %108: [calculator.source.Node] = cast %divide.2
   ret %108
 @18:
+  %error.ptr: [[calculator.source.Error]] = alloc [calculator.source.Error]
   %109: usize = const 32
   %110: [Any] = call $malloc %109
   %111: [calculator.source.Error] = cast %110
+  store %error.ptr %111
+  %error.1: [calculator.source.Error] = load %error.ptr
   %112: i32 = const 1
   %113: [i32] = offset %self .index
   %114: i32 = load %113
@@ -1025,8 +1068,9 @@ $([calculator.tokenizer.Tokenizer]).scan_token(%self): [calculator.source.Node] 
   %121: usize = const 20
   %122: String = struct .data $str_18 .length %121
   %123: calculator.source.Error = struct .super %120 .message %122
-  store %111 %123
-  %124: [calculator.source.Node] = cast %111
+  store %error.1 %123
+  %error.2: [calculator.source.Error] = load %error.ptr
+  %124: [calculator.source.Node] = cast %error.2
   ret %124
 }
 
@@ -1081,9 +1125,12 @@ $([calculator.tokenizer.Tokenizer]).scan_number_token(%self): [calculator.source
   store %21 %25
   jmp @2
 @3:
+  %number.ptr: [[calculator.expression.Number]] = alloc [calculator.expression.Number]
   %26: usize = const 16
   %27: [Any] = call $malloc %26
   %28: [calculator.expression.Number] = cast %27
+  store %number.ptr %28
+  %number.1: [calculator.expression.Number] = load %number.ptr
   %29: i32 = const 2
   %start.1: i32 = load %start.ptr
   %30: [i32] = offset %self .index
@@ -1092,8 +1139,9 @@ $([calculator.tokenizer.Tokenizer]).scan_number_token(%self): [calculator.source
   %33: calculator.source.Node = struct .kind %29 .span %32
   %value.2: i32 = load %value.ptr
   %34: calculator.expression.Number = struct .super %33 .value %value.2
-  store %28 %34
-  %35: [calculator.source.Node] = cast %28
+  store %number.1 %34
+  %number.2: [calculator.expression.Number] = load %number.ptr
+  %35: [calculator.source.Node] = cast %number.2
   ret %35
 }
 
@@ -1185,19 +1233,21 @@ $os.init() {
   %1: usize = const 16
   %2: [Any] = call $malloc %1
   %3: [io.Writer] = cast %2
-  %4: [FILE] = load $stdout
-  %5: [Any] = cast %4
-  %6: io.Writer = struct .object %5 .write_char $os.file_write_char
-  store %3 %6
   store $os.stdout %3
-  %7: usize = const 16
-  %8: [Any] = call $malloc %7
-  %9: [io.Writer] = cast %8
-  %10: [FILE] = load $stderr
-  %11: [Any] = cast %10
-  %12: io.Writer = struct .object %11 .write_char $os.file_write_char
-  store %9 %12
-  store $os.stderr %9
+  %4: [io.Writer] = load $os.stdout
+  %5: [FILE] = load $stdout
+  %6: [Any] = cast %5
+  %7: io.Writer = struct .object %6 .write_char $os.file_write_char
+  store %4 %7
+  %8: usize = const 16
+  %9: [Any] = call $malloc %8
+  %10: [io.Writer] = cast %9
+  store $os.stderr %10
+  %11: [io.Writer] = load $os.stderr
+  %12: [FILE] = load $stderr
+  %13: [Any] = cast %12
+  %14: io.Writer = struct .object %13 .write_char $os.file_write_char
+  store %11 %14
   ret
 }
 

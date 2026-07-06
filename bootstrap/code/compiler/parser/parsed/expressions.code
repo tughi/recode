@@ -5,7 +5,6 @@ import compiler.source
 type Expression_Kind = enum {
     Add
     Address_Of
-    Alloc
     Array_Access
     Bool
     Call

@@ -90,10 +90,10 @@ let message: str
 Global variables cannot have non-constant initializers. If initialization requires a procedure call or any non-trivial expression, assign the value inside a procedure:
 
 ```code
-let stdout: ^Writer   // declared at file scope
+let log_file: ^FILE   // declared at file scope
 
 proc init() {
-    stdout = alloc Writer(...)
+    log_file = fopen(...)
 }
 ```
 
@@ -262,9 +262,12 @@ From highest to lowest:
 | Unary | `-` (negation), `not` |
 | Multiplicative | `*`, `/`, `%` |
 | Additive | `+`, `-` |
-| Comparison | `==`, `!=`, `<`, `<=`, `>`, `>=` |
+| Comparison | `<`, `<=`, `>`, `>=` |
+| Equality | `==`, `!=` |
 | Logic | `and` |
 | Logic | `or` |
+
+Equality binds looser than comparison — `a == b < c` parses as `a == (b < c)`.
 
 Use parentheses to override the default grouping:
 
@@ -360,8 +363,15 @@ Fields may be omitted (zero-initialized) or listed in any order.
 
 ### Heap Allocation
 
+There is no built-in allocation expression. Heap memory comes from an external allocator (e.g. libc `malloc`): allocate the right number of bytes, cast the pointer, and store a constructed value through it:
+
 ```code
-let p = alloc Point(x: 0, y: 0)   // returns ^Point
+let p = malloc(type_size(Point)).as(^Point)
+p.^ = Point(x: 0, y: 0)
+```
+
+```code
+proc malloc(size: usize) -> ^Any = external
 ```
 
 ### Member Access
@@ -410,6 +420,49 @@ type Sports_Car = struct {
 - A `^Sports_Car` is assignable to `^Vehicle` (implicit pointer narrowing)
 - Methods defined on `Vehicle` are resolved on `Sports_Car`
 - The `super` field must be a plain struct type (not a pointer)
+
+---
+
+## Enum Types
+
+```code
+type Direction = enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+```
+
+### Member Access
+
+Members are accessed through the type name:
+
+```code
+let d = Direction.NORTH
+```
+
+When the enum type is inferable from context, the type name may be omitted — a **dot shorthand**:
+
+```code
+let d: Direction = .WEST   // declared type provides the context
+d = .SOUTH                 // d is already a Direction
+if d == .SOUTH { ... }     // compared against a Direction
+```
+
+The shorthand requires an inferable type — `let d = .SOUTH` on its own is a compile error.
+
+Enum values are compared with `==` and `!=`.
+
+### Built-in Members
+
+Every enum value carries two read-only members:
+
+```code
+let d = Direction.SOUTH
+let v = d.value   // i32 ordinal of the member (NORTH = 0, EAST = 1, …)
+let n = d.name    // member name as str ("SOUTH")
+```
 
 ---
 

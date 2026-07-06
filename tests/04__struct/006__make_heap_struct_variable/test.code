@@ -9,7 +9,8 @@ type Line = struct {
 }
 
 proc main() -> i32 {
-    let line = alloc Line(
+    let line = malloc(type_size(Line)).as(^Line)
+    line.^ = Line(
         p1: Point(x: 16, y: 32)
         p2: Point(x: 48, y: 64)
     )

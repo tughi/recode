@@ -564,13 +564,7 @@ proc (^Parser).parse_multiplicative_expression(self) -> ^parsed.Expression {
 }
 
 proc (^Parser).parse_unary_expression(self) -> ^parsed.Expression {
-    if self.lexer.matches_one(match.keyword("alloc")) {
-        let location = self.lexer.location()
-        self.consume_keyword("alloc")
-        self.consume_space(1)
-        let operand = self.parse_expression()
-        return parsed.new_unary_expression(.Alloc, location, operand)
-    } else if self.lexer.matches_one(match.keyword("type_size")) {
+    if self.lexer.matches_one(match.keyword("type_size")) {
         let location = self.lexer.location()
         self.consume_keyword("type_size")
         self.consume_space(0)

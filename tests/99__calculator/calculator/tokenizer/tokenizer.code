@@ -1,5 +1,6 @@
 import calculator.expression
 import calculator.source
+import libc
 
 type Tokenizer = struct {
     data: [^]u8
@@ -27,28 +28,40 @@ proc (^Tokenizer).scan_token(self) -> ^source.Node {
     }
     let ch = self.data[self.index]
     if ch == 0 {
-        return alloc Stop(super: source.Node(kind: NODE_STOP, span: source.Span(start: self.index, end: self.index)))
+        let stop = libc.malloc(type_size(Stop)).as(^Stop)
+        stop.^ = Stop(super: source.Node(kind: NODE_STOP, span: source.Span(start: self.index, end: self.index)))
+        return stop
     }
     if ch >= '0' and ch <= '9' {
         return self.scan_number_token()
     }
     self.index = self.index + 1
     if ch == '+' {
-        return alloc Plus(super: source.Node(kind: NODE_PLUS, span: source.Span(start: self.index - 1, end: self.index)))
+        let plus = libc.malloc(type_size(Plus)).as(^Plus)
+        plus.^ = Plus(super: source.Node(kind: NODE_PLUS, span: source.Span(start: self.index - 1, end: self.index)))
+        return plus
     }
     if ch == '-' {
-        return alloc Minus(super: source.Node(kind: NODE_MINUS, span: source.Span(start: self.index - 1, end: self.index)))
+        let minus = libc.malloc(type_size(Minus)).as(^Minus)
+        minus.^ = Minus(super: source.Node(kind: NODE_MINUS, span: source.Span(start: self.index - 1, end: self.index)))
+        return minus
     }
     if ch == '*' {
-        return alloc Multiply(super: source.Node(kind: NODE_MULTIPLY, span: source.Span(start: self.index - 1, end: self.index)))
+        let multiply = libc.malloc(type_size(Multiply)).as(^Multiply)
+        multiply.^ = Multiply(super: source.Node(kind: NODE_MULTIPLY, span: source.Span(start: self.index - 1, end: self.index)))
+        return multiply
     }
     if ch == '/' {
-        return alloc Divide(super: source.Node(kind: NODE_DIVIDE, span: source.Span(start: self.index - 1, end: self.index)))
+        let divide = libc.malloc(type_size(Divide)).as(^Divide)
+        divide.^ = Divide(super: source.Node(kind: NODE_DIVIDE, span: source.Span(start: self.index - 1, end: self.index)))
+        return divide
     }
-    return alloc source.Error(
+    let error = libc.malloc(type_size(source.Error)).as(^source.Error)
+    error.^ = source.Error(
         super: source.Node(kind: source.NODE_ERROR, span: source.Span(start: self.index - 1, end: self.index))
         message: "Unexpected character"
     )
+    return error
 }
 
 proc (^Tokenizer).scan_number_token(self) -> ^source.Node {
@@ -62,8 +75,10 @@ proc (^Tokenizer).scan_number_token(self) -> ^source.Node {
         value = value * 10 + (c - '0').as(i32)
         self.index = self.index + 1
     }
-    return alloc expression.Number(
+    let number = libc.malloc(type_size(expression.Number)).as(^expression.Number)
+    number.^ = expression.Number(
         super: source.Node(kind: expression.NODE_NUMBER, span: source.Span(start: start, end: self.index))
         value: value
     )
+    return number
 }

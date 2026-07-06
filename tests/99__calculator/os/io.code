@@ -5,8 +5,10 @@ let stdout: ^io.Writer
 let stderr: ^io.Writer
 
 proc init() {
-    stdout = alloc io.Writer(object: libc.stdout.as(^Any), write_char: file_write_char)
-    stderr = alloc io.Writer(object: libc.stderr.as(^Any), write_char: file_write_char)
+    stdout = libc.malloc(type_size(io.Writer)).as(^io.Writer)
+    stdout.^ = io.Writer(object: libc.stdout.as(^Any), write_char: file_write_char)
+    stderr = libc.malloc(type_size(io.Writer)).as(^io.Writer)
+    stderr.^ = io.Writer(object: libc.stderr.as(^Any), write_char: file_write_char)
 }
 
 proc file_write_char(object: ^Any, c: u8) {

@@ -1,6 +1,7 @@
 import calculator.expression
 import calculator.source
 import calculator.tokenizer
+import libc
 
 type Parser = struct {
     tokenizer: tokenizer.Tokenizer
@@ -17,19 +18,23 @@ proc (^Parser).parse_additive_expression(self) -> ^source.Node {
         if token.kind == tokenizer.NODE_PLUS {
             self.tokenizer.next_token()
             let other_expression = self.parse_multiplicative_expression()
-            parsed_expression = alloc expression.Addition(
+            let addition = libc.malloc(type_size(expression.Addition)).as(^expression.Addition)
+            addition.^ = expression.Addition(
                 super: source.Node(kind: expression.NODE_ADDITION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
                 left: parsed_expression
                 right: other_expression
             )
+            parsed_expression = addition
         } else if token.kind == tokenizer.NODE_MINUS {
             self.tokenizer.next_token()
             let other_expression = self.parse_multiplicative_expression()
-            parsed_expression = alloc expression.Subtraction(
+            let subtraction = libc.malloc(type_size(expression.Subtraction)).as(^expression.Subtraction)
+            subtraction.^ = expression.Subtraction(
                 super: source.Node(kind: expression.NODE_SUBTRACTION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
                 left: parsed_expression
                 right: other_expression
             )
+            parsed_expression = subtraction
         } else {
             break
         }
@@ -44,19 +49,23 @@ proc (^Parser).parse_multiplicative_expression(self) -> ^source.Node {
         if token.kind == tokenizer.NODE_MULTIPLY {
             self.tokenizer.next_token()
             let other_expression = self.parse_primary_expression()
-            parsed_expression = alloc expression.Multiplication(
+            let multiplication = libc.malloc(type_size(expression.Multiplication)).as(^expression.Multiplication)
+            multiplication.^ = expression.Multiplication(
                 super: source.Node(kind: expression.NODE_MULTIPLICATION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
                 left: parsed_expression
                 right: other_expression
             )
+            parsed_expression = multiplication
         } else if token.kind == tokenizer.NODE_DIVIDE {
             self.tokenizer.next_token()
             let other_expression = self.parse_primary_expression()
-            parsed_expression = alloc expression.Division(
+            let division = libc.malloc(type_size(expression.Division)).as(^expression.Division)
+            division.^ = expression.Division(
                 super: source.Node(kind: expression.NODE_DIVISION, span: source.Span(start: parsed_expression.span.start, end: other_expression.span.end))
                 left: parsed_expression
                 right: other_expression
             )
+            parsed_expression = division
         } else {
             break
         }
@@ -69,8 +78,10 @@ proc (^Parser).parse_primary_expression(self) -> ^source.Node {
     if token.kind == expression.NODE_NUMBER {
         return token
     }
-    return alloc source.Error(
+    let error = libc.malloc(type_size(source.Error)).as(^source.Error)
+    error.^ = source.Error(
         super: source.Node(kind: source.NODE_ERROR, span: token.span)
         message: "Expected number"
     )
+    return error
 }

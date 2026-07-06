@@ -4,7 +4,6 @@ import compiler.lexer
 type Expression_Kind = enum {
     Add
     Address_Of
-    Alloc
     Array_Access
     Bool
     Call
@@ -72,20 +71,6 @@ proc new_address_of_expression(operand: ^Expression, type: ^Type) -> ^Address_Of
     let result = allocator.alloc(size: type_size(Address_Of_Expression), alignment: type_alignment(Address_Of_Expression)).as(^Address_Of_Expression)
     result.^ = Address_Of_Expression(
         super: Expression(kind: .Address_Of, type: type)
-        operand: operand
-    )
-    return result
-}
-
-type Alloc_Expression = struct {
-    super: Expression
-    operand: ^Expression
-}
-
-proc new_alloc_expression(operand: ^Expression, type: ^Type) -> ^Alloc_Expression {
-    let result = allocator.alloc(size: type_size(Alloc_Expression), alignment: type_alignment(Alloc_Expression)).as(^Alloc_Expression)
-    result.^ = Alloc_Expression(
-        super: Expression(kind: .Alloc, type: type)
         operand: operand
     )
     return result

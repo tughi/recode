@@ -16,8 +16,6 @@ type Sports_Car = struct {
 }
 
 proc main() -> i32 {
-    let my_vehicle = alloc Sports_Car(super: Car(super: Vehicle(wheels: 4)), turbo: true)
-    return my_vehicle.get_wheels() - 4
+    let sports_car = Sports_Car(super: Car(super: Vehicle(wheels: 4)), turbo: true)
+    return sports_car.get_wheels() - 4
 }
-
-proc malloc(size: usize) -> ^Any = external
