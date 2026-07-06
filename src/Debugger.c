@@ -11,6 +11,8 @@
 typedef enum {
     DEBUGGER_MODE__STEP,
     DEBUGGER_MODE__NEXT,
+    DEBUGGER_MODE__SOURCE_STEP,
+    DEBUGGER_MODE__SOURCE_NEXT,
     DEBUGGER_MODE__CONTINUE,
 } Debugger_Mode;
 
@@ -40,11 +42,15 @@ typedef struct {
     IR_Instruction_List breakpoints;
     Font font;
     Call_Frame *current_frame;
+    Source_Location last_origin;
     Frame_Debug_State *frame_states;
     size_t frame_states_size;
     size_t frame_states_capacity;
     Panel *root_panel;
     Panel *active_panel;
+    Panel *ir_panel;
+    Panel *source_panel;
+    bool source_stepping;
     double last_interaction_time;
 } Debugger;
 
@@ -164,7 +170,7 @@ static Frame_Debug_State *debugger_frame_state(Debugger *debugger, Call_Frame *f
 static Source_Location debugger_current_origin(Debugger *debugger) {
     Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
     if (state == NULL) {
-        return (Source_Location){0};
+        return debugger->last_origin;
     }
     return state->origin;
 }
@@ -493,9 +499,6 @@ static IR_Panel make_ir_panel(float weight) {
 }
 
 static File *source_panel_text(Debugger *debugger) {
-    if (debugger->current_frame == NULL) {
-        return NULL;
-    }
     Source_Location origin = debugger_current_origin(debugger);
     if (origin.line == 0) {
         return NULL;
@@ -540,7 +543,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         return;
     }
     size_t lines_size = text->lines_size;
-    size_t current_line = debugger_current_origin(debugger).line;
+    size_t current_line = debugger->current_frame == NULL ? 0 : debugger_current_origin(debugger).line;
     Font font = debugger->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
@@ -952,6 +955,11 @@ static void debugger_render_frame(Debugger *debugger) {
     if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         debugger->active_panel = debugger->root_panel->pick(debugger->root_panel, GetMousePosition());
     }
+    if (debugger->active_panel == debugger->source_panel) {
+        debugger->source_stepping = true;
+    } else if (debugger->active_panel == debugger->ir_panel) {
+        debugger->source_stepping = false;
+    }
     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     debugger->active_panel->handle_input(debugger->active_panel, debugger);
 
@@ -975,11 +983,16 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     }
 
     bool at_breakpoint = is_breakpoint(debugger, instruction);
-    if ((instruction->kind == IR_INSTRUCTION__DBG_LINE || instruction->kind == IR_INSTRUCTION__DBG_BIND) && !at_breakpoint) {
+    if (instruction->kind == IR_INSTRUCTION__DBG_LINE) {
+        bool source_pause = debugger->mode == DEBUGGER_MODE__SOURCE_STEP || (debugger->mode == DEBUGGER_MODE__SOURCE_NEXT && depth <= debugger->next_depth);
+        if (!at_breakpoint && !source_pause) {
+            return;
+        }
+    } else if (instruction->kind == IR_INSTRUCTION__DBG_BIND && !at_breakpoint) {
         return;
     }
-    bool running = debugger->mode == DEBUGGER_MODE__CONTINUE || (debugger->mode == DEBUGGER_MODE__NEXT && depth > debugger->next_depth);
-    if (running && !at_breakpoint) {
+    bool paused = at_breakpoint || instruction->kind == IR_INSTRUCTION__DBG_LINE || instruction->kind == IR_INSTRUCTION__DBG_BIND || debugger->mode == DEBUGGER_MODE__STEP || (debugger->mode == DEBUGGER_MODE__NEXT && depth <= debugger->next_depth);
+    if (!paused) {
         // Redraw every 0.25s to keep the window responsive, at 60 Hz around mouse activity.
         double now = GetTime();
         double interval = now - debugger->last_interaction_time < 1.0 ? 1.0 / 60 : 0.25;
@@ -1004,6 +1017,7 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     }
 
     debugger->current_frame = current_frame;
+    debugger->last_origin = debugger_current_origin(debugger);
 
     debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
     debugger->root_panel->handle_step(debugger->root_panel, debugger);
@@ -1012,11 +1026,16 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
         debugger_render_frame(debugger);
 
         if (IsKeyPressed(KEY_S)) {
-            debugger->mode = DEBUGGER_MODE__STEP;
+            if (debugger->source_stepping) {
+                debugger->mode = DEBUGGER_MODE__SOURCE_STEP;
+                debugger->current_frame = NULL;
+            } else {
+                debugger->mode = DEBUGGER_MODE__STEP;
+            }
             return;
         }
         if (IsKeyPressed(KEY_N)) {
-            debugger->mode = DEBUGGER_MODE__NEXT;
+            debugger->mode = debugger->source_stepping ? DEBUGGER_MODE__SOURCE_NEXT : DEBUGGER_MODE__NEXT;
             debugger->next_depth = depth;
             debugger->current_frame = NULL;
             return;
@@ -1184,6 +1203,9 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         .next_depth = 0,
         .font = load_bitmap_font("fonts/Code.font"),
         .root_panel = &split_panel.panel,
+        .ir_panel = &ir_panel.panel,
+        .source_panel = &source_panel.panel,
+        .source_stepping = has_origins,
     };
     int64_t result = interpret(module, argc, argv, &debugger.observer);
 
