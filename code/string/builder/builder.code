@@ -1,9 +1,14 @@
+import allocator
 import libc
+
+const ARENA_CAPACITY = 1usize * 1024 * 1024
+
+let builder_arena: allocator.Arena
 
 type Builder = struct {
     data: [^]u8
-    data_size: usize
     length: usize
+    start: usize
 }
 
 proc (^Builder).append(self, suffix: str) -> ^Builder {
@@ -11,14 +16,14 @@ proc (^Builder).append(self, suffix: str) -> ^Builder {
 }
 
 proc (^Builder).append_char(self, char: u8) -> ^Builder {
-    if self.length == self.data_size {
-        self.data_size = self.data_size + 8
-        self.data = libc.realloc(
-            self.data.as(^Any)
-            self.data_size
-        ).as([^]u8)
+    if builder_arena.offset != self.start + self.length {
+        panic "Interleaved builders"
+    }
+    if builder_arena.offset == builder_arena.capacity {
+        panic "Out of memory"
     }
     self.data[self.length] = char
+    builder_arena.offset = builder_arena.offset + 1
     self.length = self.length + 1
     return self
 }
@@ -41,17 +46,23 @@ proc (^Builder).append_decimal(self, value: usize) -> ^Builder {
 
 proc (^Builder).build(self) -> str {
     self.append_char(0)
+    let data = allocator.alloc(size: self.length, alignment: 1).as([^]u8)
+    libc.memcpy(data.as(^Any), self.data.as(^Any), self.length)
+    builder_arena.offset = self.start
     let string = String(
-        data: self.data
+        data: data
         length: self.length - 1
     )
     return (^string).as(^str).^
 }
 
 proc new() -> Builder {
+    if builder_arena.capacity == 0 {
+        builder_arena.reserve(ARENA_CAPACITY)
+    }
     return Builder(
-        data: null
-        data_size: 0
+        data: (^builder_arena.buffer[builder_arena.offset]).as(^Any).as([^]u8)
         length: 0
+        start: builder_arena.offset
     )
 }

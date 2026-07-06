@@ -1,3 +1,5 @@
+proc memcpy(destination: ^Any, source: ^Any, size: usize) -> ^Any = external
+
 proc strlen(s: [^]u8) -> usize = external
 
 proc ([^]u8).to_str(self) -> str {

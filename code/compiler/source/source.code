@@ -1,3 +1,4 @@
+import allocator
 import libc
 
 type Source = struct {
@@ -21,14 +22,9 @@ proc load(file_path: str) -> Source {
         panic "Failed to seek to start of file"
     }
 
-    let content = libc.malloc(file_size + 1).as([^]u8)
-    if content == null {
-        libc.fclose(file)
-        panic "Failed to allocate memory"
-    }
+    let content = allocator.alloc(size: file_size + 1, alignment: 1).as([^]u8)
     let read_size = libc.fread(content, 1, file_size, file)
     if read_size != file_size {
-        libc.free(content.as(^Any))
         libc.fclose(file)
         panic "Failed to read file to memory"
     }
