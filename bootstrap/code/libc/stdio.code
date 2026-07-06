@@ -1,0 +1,52 @@
+type FILE = external
+
+let stdin: ^FILE = external
+let stdout: ^FILE = external
+let stderr: ^FILE = external
+
+proc fclose(file: ^FILE) -> i32 = external
+proc fflush(file: ^FILE) -> i32 = external
+proc fopen(filename: [^]u8, mode: [^]u8) -> ^FILE = external
+proc fputc(c: i32, file: ^FILE) -> i32 = external
+proc fputs(str: [^]u8, file: ^FILE) -> i32 = external
+proc fwrite(buffer: ^Any, size: usize, count: usize, file: ^FILE) -> usize = external
+proc fread(data: [^]u8, size: usize, count: usize, file: ^FILE) -> usize = external
+proc fseek(file: ^FILE, offset: i64, whence: i32) -> i32 = external
+proc ftell(file: ^FILE) -> i64 = external
+
+const SEEK_SET = 0
+const SEEK_END = 2
+
+proc (^FILE).end_line(file) -> ^FILE {
+    return file.write_char('\n')
+}
+
+proc (^FILE).write_char(file, char: u8) -> ^FILE {
+    fputc(char.as(i32), file)
+    return file
+}
+
+proc (^FILE).write(file, string: str) -> ^FILE {
+    let copy = string
+    return file.write_string((^copy).as(^String).^)
+}
+
+proc (^FILE).write_string(file, string: String) -> ^FILE {
+    fwrite(string.data.as(^Any), type_size(u8), string.length, file)
+    return file
+}
+
+proc (^FILE).write_i64(file, value: i64) -> ^FILE {
+    if value < 0 {
+        file.write_char('-')
+        return file.write_u64((-value).as(u64))
+    }
+    return file.write_u64(value.as(u64))
+}
+
+proc (^FILE).write_u64(file, value: u64) -> ^FILE {
+    if value >= 10 {
+        file.write_u64(value / 10)
+    }
+    return file.write_char((value % 10).as(u8) + '0')
+}

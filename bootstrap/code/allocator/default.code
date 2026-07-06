@@ -1,0 +1,10 @@
+let default_allocator: Arena
+
+const DEFAULT_CAPACITY = 16usize * 1024 * 1024
+
+proc alloc(size: usize, alignment: usize) -> ^Any {
+    if default_allocator.capacity == 0 {
+        default_allocator.reserve(DEFAULT_CAPACITY)
+    }
+    return default_allocator.alloc(size: size, alignment: alignment)
+}

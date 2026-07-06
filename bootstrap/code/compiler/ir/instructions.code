@@ -1,0 +1,453 @@
+import allocator
+import string
+
+type Instruction_Kind = enum {
+    Add
+    Alloc
+    Bind
+    Br
+    Call
+    Cast
+    Compare_Equal
+    Compare_Greater
+    Compare_Greater_Or_Equal
+    Compare_Less
+    Compare_Less_Or_Equal
+    Compare_Not_Equal
+    Const
+    Divide
+    Jmp
+    Line
+    Load
+    Modulo
+    Multiply
+    Neg
+    Not
+    Offset
+    Phi
+    Ret
+    Store
+    Struct
+    Struct_Offset
+    Subtract
+}
+
+type Instruction = struct {
+    super: Value
+    kind: Instruction_Kind
+    next_instruction: ^Instruction
+}
+
+proc (^Block).append_instruction(self, instruction: ^Instruction) {
+    if self.first_instruction == null {
+        self.first_instruction = instruction
+    } else {
+        self.last_instruction.next_instruction = instruction
+    }
+    self.last_instruction = instruction
+}
+
+proc (^Block).is_terminated(self) -> bool {
+    if self.last_instruction == null {
+        return false
+    }
+    let kind = self.last_instruction.kind
+    return kind == .Br or kind == .Jmp or kind == .Ret
+}
+
+type Argument = struct {
+    value: ^Value
+    next: ^Argument
+}
+
+proc new_argument(value: ^Value) -> ^Argument {
+    let result = allocator.alloc(size: type_size(Argument), alignment: type_alignment(Argument)).as(^Argument)
+    result.^ = Argument(value: value, next: null)
+    return result
+}
+
+type Alloc_Instruction = struct {
+    super: Instruction
+    allocated_type: ^Type
+}
+
+proc new_alloc_instruction(variable: ^Variable) -> ^Alloc_Instruction {
+    let name_builder = string.new_builder()
+    let result_name = name_builder.append(variable.name).append(".ptr").build()
+    let allocated = allocator.alloc(size: type_size(Alloc_Instruction), alignment: type_alignment(Alloc_Instruction)).as(^Alloc_Instruction)
+    allocated.^ = Alloc_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: result_name, type: new_pointer_type(variable.type).as(^Type), variable: variable, next: null)
+            kind: .Alloc
+            next_instruction: null
+        )
+        allocated_type: variable.type
+    )
+    return allocated
+}
+
+type Binary_Instruction = struct {
+    super: Instruction
+    left: ^Value
+    right: ^Value
+}
+
+proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left: ^Value, right: ^Value) -> ^Binary_Instruction {
+    let allocated = allocator.alloc(size: type_size(Binary_Instruction), alignment: type_alignment(Binary_Instruction)).as(^Binary_Instruction)
+    allocated.^ = Binary_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: kind
+            next_instruction: null
+        )
+        left: left
+        right: right
+    )
+    return allocated
+}
+
+type Bind_Instruction = struct {
+    super: Instruction
+    name: str
+    indirect: bool
+    value: ^Value
+}
+
+proc new_bind_instruction(name: str, indirect: bool, value: ^Value) -> ^Bind_Instruction {
+    let allocated = allocator.alloc(size: type_size(Bind_Instruction), alignment: type_alignment(Bind_Instruction)).as(^Bind_Instruction)
+    allocated.^ = Bind_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Bind
+            next_instruction: null
+        )
+        name: name
+        indirect: indirect
+        value: value
+    )
+    return allocated
+}
+
+type Br_Instruction = struct {
+    super: Instruction
+    condition: ^Value
+    true_block: ^Block
+    false_block: ^Block
+}
+
+proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Block) -> ^Br_Instruction {
+    let allocated = allocator.alloc(size: type_size(Br_Instruction), alignment: type_alignment(Br_Instruction)).as(^Br_Instruction)
+    allocated.^ = Br_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Br
+            next_instruction: null
+        )
+        condition: condition
+        true_block: true_block
+        false_block: false_block
+    )
+    return allocated
+}
+
+type Call_Instruction = struct {
+    super: Instruction
+    callee: ^Value
+    first_argument: ^Argument
+}
+
+proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instruction {
+    let allocated = allocator.alloc(size: type_size(Call_Instruction), alignment: type_alignment(Call_Instruction)).as(^Call_Instruction)
+    allocated.^ = Call_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Call
+            next_instruction: null
+        )
+        callee: callee
+        first_argument: null
+    )
+    return allocated
+}
+
+type Cast_Instruction = struct {
+    super: Instruction
+    value: ^Value
+}
+
+proc new_cast_instruction(name: str, type: ^Type, value: ^Value) -> ^Cast_Instruction {
+    let allocated = allocator.alloc(size: type_size(Cast_Instruction), alignment: type_alignment(Cast_Instruction)).as(^Cast_Instruction)
+    allocated.^ = Cast_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Cast
+            next_instruction: null
+        )
+        value: value
+    )
+    return allocated
+}
+
+type Const_Instruction = struct {
+    super: Instruction
+    value: u64
+    lexeme: str
+}
+
+proc new_const_instruction(name: str, type: ^Type, value: u64, lexeme: str) -> ^Const_Instruction {
+    let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
+    allocated.^ = Const_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Const
+            next_instruction: null
+        )
+        value: value
+        lexeme: lexeme
+    )
+    return allocated
+}
+
+type Jmp_Instruction = struct {
+    super: Instruction
+    block: ^Block
+}
+
+proc new_jmp_instruction(block: ^Block) -> ^Jmp_Instruction {
+    let allocated = allocator.alloc(size: type_size(Jmp_Instruction), alignment: type_alignment(Jmp_Instruction)).as(^Jmp_Instruction)
+    allocated.^ = Jmp_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Jmp
+            next_instruction: null
+        )
+        block: block
+    )
+    return allocated
+}
+
+type Line_Instruction = struct {
+    super: Instruction
+    source_file: ^Source_File
+    line: u32
+    column: u32
+}
+
+proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> ^Line_Instruction {
+    let allocated = allocator.alloc(size: type_size(Line_Instruction), alignment: type_alignment(Line_Instruction)).as(^Line_Instruction)
+    allocated.^ = Line_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Line
+            next_instruction: null
+        )
+        source_file: source_file
+        line: line
+        column: column
+    )
+    return allocated
+}
+
+type Load_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+}
+
+proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Instruction {
+    let allocated = allocator.alloc(size: type_size(Load_Instruction), alignment: type_alignment(Load_Instruction)).as(^Load_Instruction)
+    allocated.^ = Load_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Load
+            next_instruction: null
+        )
+        pointer: pointer
+    )
+    return allocated
+}
+
+type Neg_Instruction = struct {
+    super: Instruction
+    operand: ^Value
+}
+
+proc new_neg_instruction(name: str, type: ^Type, operand: ^Value) -> ^Neg_Instruction {
+    let allocated = allocator.alloc(size: type_size(Neg_Instruction), alignment: type_alignment(Neg_Instruction)).as(^Neg_Instruction)
+    allocated.^ = Neg_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Neg
+            next_instruction: null
+        )
+        operand: operand
+    )
+    return allocated
+}
+
+type Not_Instruction = struct {
+    super: Instruction
+    operand: ^Value
+}
+
+proc new_not_instruction(name: str, type: ^Type, operand: ^Value) -> ^Not_Instruction {
+    let allocated = allocator.alloc(size: type_size(Not_Instruction), alignment: type_alignment(Not_Instruction)).as(^Not_Instruction)
+    allocated.^ = Not_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Not
+            next_instruction: null
+        )
+        operand: operand
+    )
+    return allocated
+}
+
+type Offset_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    index: ^Value
+}
+
+proc new_offset_instruction(name: str, type: ^Type, pointer: ^Value, index: ^Value) -> ^Offset_Instruction {
+    let allocated = allocator.alloc(size: type_size(Offset_Instruction), alignment: type_alignment(Offset_Instruction)).as(^Offset_Instruction)
+    allocated.^ = Offset_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Offset
+            next_instruction: null
+        )
+        pointer: pointer
+        index: index
+    )
+    return allocated
+}
+
+type Phi_Entry = struct {
+    block: ^Block
+    value: ^Value
+    next: ^Phi_Entry
+}
+
+proc new_phi_entry(block: ^Block, value: ^Value) -> ^Phi_Entry {
+    let result = allocator.alloc(size: type_size(Phi_Entry), alignment: type_alignment(Phi_Entry)).as(^Phi_Entry)
+    result.^ = Phi_Entry(block: block, value: value, next: null)
+    return result
+}
+
+type Phi_Instruction = struct {
+    super: Instruction
+    first_entry: ^Phi_Entry
+    last_entry: ^Phi_Entry
+}
+
+proc new_phi_instruction(name: str, type: ^Type) -> ^Phi_Instruction {
+    let allocated = allocator.alloc(size: type_size(Phi_Instruction), alignment: type_alignment(Phi_Instruction)).as(^Phi_Instruction)
+    allocated.^ = Phi_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Phi
+            next_instruction: null
+        )
+        first_entry: null
+        last_entry: null
+    )
+    return allocated
+}
+
+proc (^Phi_Instruction).append_entry(self, block: ^Block, value: ^Value) {
+    let entry = new_phi_entry(block: block, value: value)
+    if self.first_entry == null {
+        self.first_entry = entry
+    } else {
+        self.last_entry.next = entry
+    }
+    self.last_entry = entry
+}
+
+type Ret_Instruction = struct {
+    super: Instruction
+    value: ^Value
+}
+
+proc new_ret_instruction(value: ^Value) -> ^Ret_Instruction {
+    let allocated = allocator.alloc(size: type_size(Ret_Instruction), alignment: type_alignment(Ret_Instruction)).as(^Ret_Instruction)
+    allocated.^ = Ret_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Ret
+            next_instruction: null
+        )
+        value: value
+    )
+    return allocated
+}
+
+type Store_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    value: ^Value
+}
+
+proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction {
+    let allocated = allocator.alloc(size: type_size(Store_Instruction), alignment: type_alignment(Store_Instruction)).as(^Store_Instruction)
+    allocated.^ = Store_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Store
+            next_instruction: null
+        )
+        pointer: pointer
+        value: value
+    )
+    return allocated
+}
+
+type Struct_Instruction_Field = struct {
+    name: str
+    value: ^Value
+    next: ^Struct_Instruction_Field
+}
+
+proc new_struct_instruction_field(name: str, value: ^Value) -> ^Struct_Instruction_Field {
+    let result = allocator.alloc(size: type_size(Struct_Instruction_Field), alignment: type_alignment(Struct_Instruction_Field)).as(^Struct_Instruction_Field)
+    result.^ = Struct_Instruction_Field(name: name, value: value, next: null)
+    return result
+}
+
+type Struct_Instruction = struct {
+    super: Instruction
+    first_field: ^Struct_Instruction_Field
+}
+
+proc new_struct_instruction(name: str, type: ^Type) -> ^Struct_Instruction {
+    let allocated = allocator.alloc(size: type_size(Struct_Instruction), alignment: type_alignment(Struct_Instruction)).as(^Struct_Instruction)
+    allocated.^ = Struct_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Struct
+            next_instruction: null
+        )
+        first_field: null
+    )
+    return allocated
+}
+
+type Struct_Offset_Instruction = struct {
+    super: Instruction
+    pointer: ^Value
+    member: str
+}
+
+proc new_struct_offset_instruction(name: str, type: ^Type, pointer: ^Value, member: str) -> ^Struct_Offset_Instruction {
+    let allocated = allocator.alloc(size: type_size(Struct_Offset_Instruction), alignment: type_alignment(Struct_Offset_Instruction)).as(^Struct_Offset_Instruction)
+    allocated.^ = Struct_Offset_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            kind: .Struct_Offset
+            next_instruction: null
+        )
+        pointer: pointer
+        member: member
+    )
+    return allocated
+}

@@ -1,0 +1,164 @@
+import compiler.lexer
+
+type Match_Kind = enum {
+    Character
+    Comment
+    End_Of_File
+    End_Of_Line
+    Identifier
+    Integer
+    Integer_Type
+    Keyword
+    Other
+    Space
+    String
+}
+
+type Match = struct {
+    kind: Match_Kind
+    keyword: str
+    other: u8
+    required: bool
+}
+
+let character: Match
+let comment: Match
+let end_of_file: Match
+let end_of_line: Match
+let identifier: Match
+let integer: Match
+let integer_type: Match
+let optional_space: Match
+let required_space: Match
+
+proc init() {
+    character = Match(kind: .Character)
+    comment = Match(kind: .Comment)
+    end_of_file = Match(kind: .End_Of_File)
+    end_of_line = Match(kind: .End_Of_Line)
+    identifier = Match(kind: .Identifier)
+    integer = Match(kind: .Integer)
+    integer_type = Match(kind: .Integer_Type)
+    required_space = Match(kind: .Space, required: true)
+    optional_space = Match(kind: .Space)
+}
+
+
+proc keyword(lexeme: str) -> Match {
+    return Match(kind: .Keyword, keyword: lexeme)
+}
+
+proc other(lexeme: u8) -> Match {
+    return Match(kind: .Other, other: lexeme)
+}
+
+
+proc string_literal() -> Match {
+    return Match(kind: .String)
+}
+
+type Check_Result = enum {
+    No_Match
+    Optional
+    Match
+}
+
+proc (^Match).check(self, lexer: ^lexer.Lexer, lookahead: usize) -> Check_Result {
+    let token = lexer.peek_token(lookahead)
+    if self.kind == .Character {
+        if token.kind == .Character {
+            return .Match
+        }
+    } else if self.kind == .Comment {
+        if token.kind == .Comment {
+            return .Match
+        }
+    } else if self.kind == .End_Of_File {
+        if token.kind == .End_Of_File {
+            return .Match
+        }
+    } else if self.kind == .End_Of_Line {
+        if token.kind == .End_Of_Line or token.kind == .End_Of_File {
+            return .Match
+        }
+    } else if self.kind == .Identifier {
+        if token.kind == .Identifier {
+            return .Match
+        }
+    } else if self.kind == .Integer {
+        if token.kind == .Integer {
+            return .Match
+        }
+    } else if self.kind == .Integer_Type {
+        if token.kind == .Identifier {
+            let lexeme = token.lexeme
+            if lexeme.char_at(0) == 'i' and (lexeme.equals("i8") or lexeme.equals("i16") or lexeme.equals("i32") or lexeme.equals("i64") or lexeme.equals("isize")) {
+                return .Match
+            }
+            if lexeme.char_at(0) == 'u' and (lexeme.equals("u8") or lexeme.equals("u16") or lexeme.equals("u32") or lexeme.equals("u64") or lexeme.equals("usize")) {
+                return .Match
+            }
+        }
+    } else if self.kind == .Keyword {
+        if token.kind == .Identifier {
+            if token.lexeme.equals(self.keyword) {
+                return .Match
+            }
+        }
+    } else if self.kind == .Other {
+        if token.kind == .Other {
+            if token.lexeme.char_at(0) == self.other {
+                return .Match
+            }
+        }
+    } else if self.kind == .Space {
+        if not self.required {
+            if token.kind == .Space {
+                return .Match
+            }
+            return .Optional
+        } else if token.kind == .Space {
+            return .Match
+        }
+    } else if self.kind == .String {
+        if token.kind == .String {
+            return .Match
+        }
+    }
+    return .No_Match
+}
+
+proc (^lexer.Lexer).matches_one(self, first: Match) -> bool {
+    return first.check(self, 1) == .Match
+}
+
+proc (^lexer.Lexer).matches_two(self, first: Match, second: Match) -> bool {
+    let lookahead = 1usize
+    let first_result = first.check(self, lookahead)
+    if first_result == .No_Match {
+        return false
+    }
+    if first_result == .Match {
+        lookahead = lookahead + 1
+    }
+    return second.check(self, lookahead) == .Match
+}
+
+proc (^lexer.Lexer).matches_three(self, first: Match, second: Match, third: Match) -> bool {
+    let lookahead = 1usize
+    let first_result = first.check(self, lookahead)
+    if first_result == .No_Match {
+        return false
+    }
+    if first_result == .Match {
+        lookahead = lookahead + 1
+    }
+    let second_result = second.check(self, lookahead)
+    if second_result == .No_Match {
+        return false
+    }
+    if second_result == .Match {
+        lookahead = lookahead + 1
+    }
+    return third.check(self, lookahead) == .Match
+}

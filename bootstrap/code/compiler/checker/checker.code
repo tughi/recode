@@ -1,0 +1,1326 @@
+import compiler.checker.checked
+import compiler.lexer
+import compiler.parser.parsed
+import compiler.source
+import libc
+
+type Checker = struct {
+    builtin_symbols: ^checked.Symbols
+    builtin_package: ^checked.Package
+    global_symbols: ^checked.Symbols
+    current_scope: ^checked.Symbols
+    current_package: ^checked.Package
+    package_name: str
+    first_package: ^checked.Package
+    last_package: ^checked.Package
+    first_method: ^checked.Method
+    last_method: ^checked.Method
+    return_type: ^checked.Type
+    bool_type: ^checked.Type
+    i32_type: ^checked.Type
+    module_type: ^checked.Type
+    null_type: ^checked.Type
+    str_type: ^checked.Type
+    u8_type: ^checked.Type
+    usize_type: ^checked.Type
+    is_unreachable: bool
+}
+
+proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^checked.Package {
+    let checker = Checker(
+        builtin_symbols: checked.new_symbols(null)
+        builtin_package: null
+        global_symbols: null
+        current_scope: null
+        current_package: null
+        package_name: ""
+        first_package: null
+        last_package: null
+        first_method: null
+        last_method: null
+        return_type: null
+        bool_type: null
+        i32_type: null
+        module_type: checked.new_named_type(kind: .Module, name: "Module", package_name: "").as(^checked.Type)
+        null_type: checked.new_null_type()
+        str_type: null
+        u8_type: null
+        usize_type: null
+        is_unreachable: false
+    )
+
+    checker.global_symbols = checker.builtin_symbols
+    checker.check_builtin_package(builtin_package)
+    checker.builtin_package = checked.new_package(name: "builtin", parsed_package: builtin_package, symbols: checker.builtin_symbols)
+
+    let main_checked_package = checker.create_package(main_package)
+    checker.check_all_import_statements()
+    checker.check_all_types()
+    checker.check_all_declarations()
+    checker.check_all_procedure_bodies()
+
+    main_checked_package.first_method = checker.first_method
+
+    return main_checked_package
+}
+
+proc (^Checker).create_package(self, parsed_package: ^parsed.Package) -> ^checked.Package {
+    let checked_package = checked.new_package(name: parsed_package.name, parsed_package: parsed_package, symbols: checked.new_symbols(self.builtin_symbols))
+    checked_package.symbols.append(name: "builtin", symbol: checked.new_import_symbol(name: "builtin", package: self.builtin_package).as(^checked.Symbol))
+    if self.first_package == null {
+        self.first_package = checked_package
+    } else {
+        self.last_package.next_package = checked_package
+    }
+    self.last_package = checked_package
+    return checked_package
+}
+
+proc (^Checker).enter_package(self, package: ^checked.Package) {
+    self.global_symbols = package.symbols
+    self.current_package = package
+    self.package_name = package.name
+}
+
+proc (^Checker).check_builtin_package(self, parsed_package: ^parsed.Package) {
+    let module = parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Type {
+                self.check_builtin_type_statement(statement.as(^parsed.Type_Statement))
+            } else {
+                panic "Not supported yet: builtin statement"
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+}
+
+proc (^Checker).check_builtin_type_statement(self, type_statement: ^parsed.Type_Statement) {
+    if type_statement.specifier.kind != .Builtin {
+        self.check_global_type_statement(type_statement)
+        return
+    }
+    let name = type_statement.name.lexeme
+    let kind = self.builtin_type_kind(name)
+    let type = checked.new_named_type(kind: kind, name: name, package_name: "").as(^checked.Type)
+    let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
+    self.builtin_symbols.append(name: name, symbol: symbol)
+    if kind == .bool {
+        self.bool_type = type
+    } else if kind == .i32 {
+        self.i32_type = type
+    } else if kind == .str {
+        self.str_type = type
+    } else if kind == .u8 {
+        self.u8_type = type
+    } else if kind == .usize {
+        self.usize_type = type
+    }
+}
+
+proc (^Checker).builtin_type_kind(self, name: str) -> checked.Type_Kind {
+    if name.equals("Any") {
+        return .Any
+    } else if name.equals("bool") {
+        return .bool
+    } else if name.equals("i8") {
+        return .i8
+    } else if name.equals("i16") {
+        return .i16
+    } else if name.equals("i32") {
+        return .i32
+    } else if name.equals("i64") {
+        return .i64
+    } else if name.equals("isize") {
+        return .isize
+    } else if name.equals("str") {
+        return .str
+    } else if name.equals("u8") {
+        return .u8
+    } else if name.equals("u16") {
+        return .u16
+    } else if name.equals("u32") {
+        return .u32
+    } else if name.equals("u64") {
+        return .u64
+    } else if name.equals("usize") {
+        return .usize
+    }
+    panic "Unknown builtin type"
+}
+
+proc (^Checker).check_all_import_statements(self) {
+    // The package list grows while imports are checked; new packages are visited too.
+    let package = self.first_package
+    while package != null {
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Import {
+                    self.check_import_statement(package: package, import_statement: statement.as(^parsed.Import_Statement))
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_import_statement(self, package: ^checked.Package, import_statement: ^parsed.Import_Statement) {
+    let name = import_statement.name.lexeme
+    let existing = package.symbols.find(name)
+    if existing != null {
+        if existing.kind == .Import {
+            if existing.as(^checked.Import_Symbol).package.name.equals(import_statement.package.name) {
+                return
+            }
+        }
+        libc.stderr.begin_location_message(import_statement.location, style: .Error).write("Import symbol conflicts with existing symbol").end_location_message()
+        panic
+    }
+
+    let imported_package = self.first_package
+    while imported_package != null {
+        if imported_package.parsed_package == import_statement.package {
+            break
+        }
+        imported_package = imported_package.next_package
+    }
+    if imported_package == null {
+        imported_package = self.create_package(import_statement.package)
+    }
+
+    package.symbols.append(name: name, symbol: checked.new_import_symbol(name: name, package: imported_package).as(^checked.Symbol))
+}
+
+proc (^Checker).check_all_types(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Type {
+                    self.check_global_type_statement(statement.as(^parsed.Type_Statement))
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_all_declarations(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let last_checked_module: ^checked.Module = null
+        let module = package.parsed_package.first_module
+        while module != null {
+            let checked_module = checked.new_module(source: module.source)
+            if last_checked_module == null {
+                package.first_module = checked_module
+            } else {
+                last_checked_module.next_module = checked_module
+            }
+            last_checked_module = checked_module
+
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Const {
+                    self.check_const_statement(statement.as(^parsed.Const_Statement))
+                } else if statement.kind == .Import {
+                    // Already checked.
+                } else if statement.kind == .Procedure {
+                    self.check_procedure_signature(statement.as(^parsed.Procedure_Statement))
+                } else if statement.kind == .Type {
+                    // Already checked.
+                } else if statement.kind == .Variable {
+                    self.check_global_variable_statement(statement.as(^parsed.Variable_Statement))
+                } else {
+                    panic "Not supported yet: package statement"
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_all_procedure_bodies(self) {
+    let package = self.first_package
+    while package != null {
+        self.enter_package(package)
+        let module = package.parsed_package.first_module
+        while module != null {
+            let statement = module.first_statement
+            while statement != null {
+                if statement.kind == .Procedure {
+                    self.check_procedure_body(statement.as(^parsed.Procedure_Statement))
+                }
+                statement = statement.next
+            }
+            module = module.next_module
+        }
+        package = package.next_package
+    }
+}
+
+proc (^Checker).check_const_statement(self, const_statement: ^parsed.Const_Statement) {
+    self.current_scope = self.global_symbols
+    let expression = self.check_expression(const_statement.expression, expected_type: null)
+    self.require_constant(expression: expression, parsed_expression: const_statement.expression)
+    let name = const_statement.name.lexeme
+    self.global_symbols.append(name: name, symbol: checked.new_constant_symbol(name: name, expression: expression).as(^checked.Symbol))
+}
+
+proc (^Checker).require_constant(self, expression: ^checked.Expression, parsed_expression: ^parsed.Expression) {
+    if expression.kind == .Bool or expression.kind == .Character or expression.kind == .Integer or expression.kind == .String {
+        return
+    }
+    if expression.kind == .Add or expression.kind == .Divide or expression.kind == .Modulo or expression.kind == .Multiply or expression.kind == .Subtract {
+        let binary_expression = expression.as(^checked.Binary_Expression)
+        let parsed_binary_expression = parsed_expression.as(^parsed.Binary_Expression)
+        self.require_constant(expression: binary_expression.left, parsed_expression: parsed_binary_expression.left)
+        self.require_constant(expression: binary_expression.right, parsed_expression: parsed_binary_expression.right)
+        return
+    }
+    if expression.kind == .Symbol {
+        if expression.as(^checked.Symbol_Expression).symbol.kind != .Constant {
+            libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant symbol").end_location_message()
+            panic
+        }
+        return
+    }
+    libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant expression").end_location_message()
+    panic
+}
+
+proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
+    let variable_type: ^checked.Type = null
+    if variable_statement.variable_type != null {
+        variable_type = self.resolve_type(variable_statement.variable_type)
+    }
+
+    let expression: ^checked.Expression = null
+    if variable_statement.expression != null {
+        self.current_scope = self.global_symbols
+        expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
+        if variable_type == null {
+            if expression.type.kind == .Null {
+                libc.stderr.begin_location_message(variable_statement.expression.location, style: .Error).write("Cannot infer type from null expression").end_location_message()
+                panic
+            }
+            variable_type = expression.type
+        }
+    }
+
+    if variable_type == null {
+        libc.stderr.begin_location_message(variable_statement.location, style: .Error).write("Missing type").end_location_message()
+        panic
+    }
+    let name = variable_statement.name.lexeme
+    let external_name = ""
+    if variable_statement.external_name != null {
+        external_name = variable_statement.external_name.value
+    }
+    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
+    self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
+}
+
+proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
+    let name = type_statement.name.lexeme
+    let existing = self.global_symbols.find_local(name)
+    if existing != null and existing.kind == .Type {
+        // Type checked already (on demand).
+        return
+    }
+    if type_statement.specifier.kind == .Enum {
+        let enum_specifier = type_statement.specifier.as(^parsed.Enum_Type_Specifier)
+        let enum_type = checked.new_enum_type(name: name, package_name: self.package_name)
+        let symbol = checked.new_type_symbol(name: name, type: enum_type.as(^checked.Type)).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+        let value = 0u64
+        let parsed_member = enum_specifier.first_member
+        while parsed_member != null {
+            if enum_type.find_member(parsed_member.name.lexeme) != null {
+                libc.stderr.begin_location_message(parsed_member.name.location, style: .Error).write("Duplicate enum member declaration").end_location_message()
+                panic
+            }
+            enum_type.append_member(checked.new_enum_member(name: parsed_member.name.lexeme, value: value))
+            value = value + 1
+            parsed_member = parsed_member.next
+        }
+    } else if type_statement.specifier.kind == .External {
+        let type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name).as(^checked.Type)
+        let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+    } else if type_statement.specifier.kind == .Struct {
+        let struct_specifier = type_statement.specifier.as(^parsed.Struct_Type_Specifier)
+        let struct_type = checked.new_struct_type(name: name, package_name: self.package_name)
+        let symbol = checked.new_type_symbol(name: name, type: struct_type.as(^checked.Type)).as(^checked.Symbol)
+        self.global_symbols.append(name: name, symbol: symbol)
+        let parsed_member = struct_specifier.first_member
+        while parsed_member != null {
+            let member_type = self.resolve_type(parsed_member.member_type)
+            if member_type == struct_type.as(^checked.Type) {
+                libc.stderr.begin_location_message(parsed_member.member_type.location, style: .Error).write("Struct member cannot be of its own type").end_location_message()
+                panic
+            }
+            if parsed_member == struct_specifier.first_member and parsed_member.name.lexeme.equals("super") {
+                if member_type.kind != .Struct {
+                    libc.stderr.begin_location_message(parsed_member.member_type.location, style: .Error).write("Not a struct type").end_location_message()
+                    panic
+                }
+            }
+            struct_type.append_member(checked.new_struct_member(name: parsed_member.name.lexeme, type: member_type))
+            parsed_member = parsed_member.next
+        }
+    } else {
+        panic "Not supported yet: type specifier"
+    }
+}
+
+proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
+    let name = procedure_statement.name.lexeme
+
+    let receiver_type: ^checked.Type = null
+    if procedure_statement.receiver != null {
+        receiver_type = self.resolve_type(procedure_statement.receiver)
+    }
+
+    let return_type: ^checked.Type = null
+    if procedure_statement.return_type != null {
+        return_type = self.resolve_type(procedure_statement.return_type)
+        if return_type.kind == .Any {
+            libc.stderr.begin_location_message(procedure_statement.return_type.location, style: .Error).write("Cannot use Any as return type").end_location_message()
+            panic
+        } else if return_type.kind == .External {
+            libc.stderr.begin_location_message(procedure_statement.return_type.location, style: .Error).write("Cannot use external type as return type").end_location_message()
+            panic
+        }
+    }
+
+    let first_parameter: ^checked.Procedure_Parameter = null
+    let last_parameter: ^checked.Procedure_Parameter = null
+    let parsed_parameter = procedure_statement.first_parameter
+    while parsed_parameter != null {
+        let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
+        if parameter_type.kind == .Any {
+            libc.stderr.begin_location_message(parsed_parameter.parameter_type.location, style: .Error).write("Cannot use Any as parameter type").end_location_message()
+            panic
+        } else if parameter_type.kind == .External {
+            libc.stderr.begin_location_message(parsed_parameter.parameter_type.location, style: .Error).write("Cannot use external types as procedure parameters").end_location_message()
+            panic
+        }
+        let parameter = checked.new_procedure_parameter(name: parsed_parameter.name.lexeme, parameter_type: parameter_type)
+        if last_parameter == null {
+            first_parameter = parameter
+        } else {
+            last_parameter.next = parameter
+        }
+        last_parameter = parameter
+        parsed_parameter = parsed_parameter.next
+    }
+
+    let external_name = ""
+    if procedure_statement.external_name != null {
+        external_name = procedure_statement.external_name.value
+    }
+    let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, package_name: self.package_name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
+    if receiver_type != null {
+        self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
+    }
+    self.global_symbols.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
+}
+
+proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedure_Statement) {
+    if procedure_statement.is_external or procedure_statement.body == null {
+        return
+    }
+
+    let name = procedure_statement.name.lexeme
+    let procedure_symbol: ^checked.Procedure_Symbol = null
+    if procedure_statement.receiver != null {
+        let receiver_type = self.resolve_type(procedure_statement.receiver)
+        procedure_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: name)
+    } else {
+        procedure_symbol = self.global_symbols.find(name).as(^checked.Procedure_Symbol)
+    }
+
+    let scope = checked.new_symbols(self.global_symbols)
+    let parameter = procedure_symbol.procedure_type.first_parameter
+    while parameter != null {
+        let parameter_symbol = checked.new_parameter_symbol(name: parameter.name, type: parameter.parameter_type).as(^checked.Symbol)
+        scope.append(name: parameter.name, symbol: parameter_symbol)
+        parameter = parameter.next
+    }
+    self.current_scope = scope
+
+    self.return_type = procedure_symbol.procedure_type.return_type
+    if procedure_statement.body.kind == .Block {
+        procedure_symbol.body = self.check_block_statement(procedure_statement.body.as(^parsed.Block_Statement))
+    } else {
+        panic "Not supported yet: procedure body"
+    }
+}
+
+proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
+    if self.is_unreachable {
+        libc.stderr.begin_location_message(parsed_statement.location, style: .Error).write("Unreachable statement").end_location_message()
+        panic
+    }
+    if parsed_statement.kind == .Assignment {
+        return self.check_assignment_statement(parsed_statement.as(^parsed.Assignment_Statement))
+    } else if parsed_statement.kind == .Block {
+        return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
+    } else if parsed_statement.kind == .Break {
+        return self.check_break_statement(parsed_statement.as(^parsed.Break_Statement))
+    } else if parsed_statement.kind == .Expression {
+        return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
+    } else if parsed_statement.kind == .If {
+        return self.check_if_statement(parsed_statement.as(^parsed.If_Statement))
+    } else if parsed_statement.kind == .Loop {
+        return self.check_loop_statement(parsed_statement.as(^parsed.Loop_Statement))
+    } else if parsed_statement.kind == .Panic {
+        return self.check_panic_statement(parsed_statement.as(^parsed.Panic_Statement))
+    } else if parsed_statement.kind == .Return {
+        return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
+    } else if parsed_statement.kind == .Variable {
+        return self.check_variable_statement(parsed_statement.as(^parsed.Variable_Statement))
+    } else if parsed_statement.kind == .While {
+        return self.check_while_statement(parsed_statement.as(^parsed.While_Statement))
+    }
+    panic "Not supported yet: statement"
+}
+
+proc (^Checker).check_assignment_statement(self, assignment_statement: ^parsed.Assignment_Statement) -> ^checked.Statement {
+    let object = self.check_expression(assignment_statement.object, expected_type: null)
+    if not object.is_mutable() {
+        libc.stderr.begin_location_message(assignment_statement.object.location, style: .Error).write("Cannot assign to immutable expression").end_location_message()
+        panic
+    }
+    let value = self.check_expression(assignment_statement.value, expected_type: object.type)
+    return checked.new_assignment_statement(location: assignment_statement.location, object: object, value: value).as(^checked.Statement)
+}
+
+proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statement) -> ^checked.Statement {
+    let first_statement: ^checked.Statement = null
+    let last_statement: ^checked.Statement = null
+    let statement = parsed_block.first_statement
+    while statement != null {
+        let checked_statement = self.check_statement(statement)
+        if checked_statement != null {
+            if last_statement == null {
+                first_statement = checked_statement
+            } else {
+                last_statement.next = checked_statement
+            }
+            last_statement = checked_statement
+        }
+        statement = statement.next
+    }
+    self.is_unreachable = false
+    return checked.new_block_statement(location: parsed_block.location, first_statement: first_statement).as(^checked.Statement)
+}
+
+proc (^Checker).check_break_statement(self, break_statement: ^parsed.Break_Statement) -> ^checked.Statement {
+    self.is_unreachable = true
+    return checked.new_break_statement(location: break_statement.location).as(^checked.Statement)
+}
+
+proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.Expression_Statement) -> ^checked.Statement {
+    let expression = self.check_expression(expression_statement.expression, expected_type: null)
+    return checked.new_expression_statement(location: expression_statement.location, expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).check_if_statement(self, if_statement: ^parsed.If_Statement) -> ^checked.Statement {
+    let scope = checked.new_symbols(self.current_scope)
+    self.current_scope = scope
+    let condition = self.check_expression(if_statement.condition, expected_type: self.bool_type)
+    let true_block = self.check_statement(if_statement.true_block)
+    self.current_scope = scope.parent
+    let false_statement: ^checked.Statement = null
+    if if_statement.false_statement != null {
+        false_statement = self.check_statement(if_statement.false_statement)
+    }
+    return checked.new_if_statement(location: if_statement.location, condition: condition, true_block: true_block, false_statement: false_statement).as(^checked.Statement)
+}
+
+proc (^Checker).check_loop_statement(self, loop_statement: ^parsed.Loop_Statement) -> ^checked.Statement {
+    let body = self.check_statement(loop_statement.body)
+    return checked.new_loop_statement(location: loop_statement.location, body: body).as(^checked.Statement)
+}
+
+proc (^Checker).check_panic_statement(self, panic_statement: ^parsed.Panic_Statement) -> ^checked.Statement {
+    self.is_unreachable = true
+    return checked.new_panic_statement(location: panic_statement.location, message: panic_statement.message).as(^checked.Statement)
+}
+
+proc (^Checker).check_return_statement(self, return_statement: ^parsed.Return_Statement) -> ^checked.Statement {
+    let expression: ^checked.Expression = null
+    if return_statement.expression != null {
+        expression = self.check_expression(return_statement.expression, expected_type: self.return_type)
+        if self.return_type != null {
+            self.require_same_type(self.return_type, expression.type, return_statement.expression.location)
+        }
+    } else if self.return_type != null {
+        libc.stderr.begin_location_message(return_statement.location, style: .Error).write("Missing return expression").end_location_message()
+        panic
+    }
+    self.is_unreachable = true
+    return checked.new_return_statement(location: return_statement.location, expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_type: ^checked.Type, location: source.Source_Location) {
+    if actual_type.kind == .Null {
+        if expected_type.kind == .Multi_Pointer or expected_type.kind == .Pointer or expected_type.kind == .Procedure {
+            return
+        }
+    }
+    if not expected_type.equals(actual_type) {
+        libc.stderr.begin_location_message(location, style: .Error).write("Expected type ").write_checked_type(expected_type).write(" but got ").write_checked_type(actual_type).end_location_message()
+        panic
+    }
+}
+
+proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Variable_Statement) -> ^checked.Statement {
+    let variable_type: ^checked.Type = null
+    if variable_statement.variable_type != null {
+        variable_type = self.resolve_type(variable_statement.variable_type)
+    }
+
+    let expression: ^checked.Expression = null
+    if variable_statement.expression != null {
+        expression = self.check_expression(variable_statement.expression, expected_type: variable_type)
+        if variable_type == null {
+            if expression.type.kind == .Null {
+                libc.stderr.begin_location_message(variable_statement.expression.location, style: .Error).write("Cannot infer type from null expression").end_location_message()
+                panic
+            }
+            variable_type = expression.type
+        }
+    }
+
+    if variable_type == null {
+        libc.stderr.begin_location_message(variable_statement.location, style: .Error).write("Missing type").end_location_message()
+        panic
+    }
+
+    let name = variable_statement.name.lexeme
+    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
+    self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
+    return checked.new_variable_statement(location: variable_statement.location, symbol: variable_symbol, expression: expression).as(^checked.Statement)
+}
+
+proc (^Checker).check_while_statement(self, while_statement: ^parsed.While_Statement) -> ^checked.Statement {
+    let scope = checked.new_symbols(self.current_scope)
+    self.current_scope = scope
+    let condition = self.check_expression(while_statement.condition, expected_type: self.bool_type)
+    let body = self.check_statement(while_statement.body)
+    self.current_scope = scope.parent
+    return checked.new_while_statement(location: while_statement.location, condition: condition, body: body).as(^checked.Statement)
+}
+
+proc (^Checker).assure_expression_pointer_type(self, expression: ^checked.Expression, expected_type: ^checked.Type, location: source.Source_Location) -> ^checked.Expression {
+    if expression.type.kind == .Pointer {
+        let expression_pointee = expression.type.as(^checked.Pointer_Type).pointee
+        let expected_pointee = expected_type.as(^checked.Pointer_Type).pointee
+        if expression_pointee != expected_pointee and expression_pointee.kind == .Struct and expected_pointee.kind == .Struct {
+            let expression_struct_type = expression_pointee.as(^checked.Struct_Type)
+            let expected_struct_type = expected_pointee.as(^checked.Struct_Type)
+            while expression_struct_type.first_member != null and expression_struct_type.first_member.name.equals("super") {
+                expression_struct_type = expression_struct_type.first_member.type.as(^checked.Struct_Type)
+                if expression_struct_type == expected_struct_type {
+                    return checked.new_cast_expression(operand: expression, type: expected_type).as(^checked.Expression)
+                }
+            }
+        }
+    }
+    self.require_same_type(expected_type, expression.type, location)
+    return expression
+}
+
+proc (^Checker).check_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let expression = self.dispatch_expression(parsed_expression, expected_type: expected_type)
+    if expected_type != null and expected_type.kind == .Pointer {
+        expression = self.assure_expression_pointer_type(expression: expression, expected_type: expected_type, location: parsed_expression.location)
+    }
+    return expression
+}
+
+proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    if parsed_expression.kind == .Add {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Add, expected_type: expected_type)
+    } else if parsed_expression.kind == .Address_Of {
+        return self.check_address_of_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Alloc {
+        return self.check_alloc_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Array_Access {
+        return self.check_array_access_expression(parsed_expression.as(^parsed.Array_Access_Expression))
+    } else if parsed_expression.kind == .Bool {
+        return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
+    } else if parsed_expression.kind == .Call {
+        return self.check_call_expression(parsed_expression.as(^parsed.Call_Expression))
+    } else if parsed_expression.kind == .Cast {
+        return self.check_cast_expression(parsed_expression.as(^parsed.Cast_Expression))
+    } else if parsed_expression.kind == .Character {
+        return self.check_character_expression(parsed_expression.as(^parsed.Character_Expression))
+    } else if parsed_expression.kind == .Dereference {
+        return self.check_dereference_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Divide {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Divide, expected_type: expected_type)
+    } else if parsed_expression.kind == .Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Equals)
+    } else if parsed_expression.kind == .Greater {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater)
+    } else if parsed_expression.kind == .Greater_Or_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Greater_Or_Equals)
+    } else if parsed_expression.kind == .Group {
+        let operand = self.check_expression(parsed_expression.as(^parsed.Unary_Expression).operand, expected_type: expected_type)
+        return checked.new_group_expression(operand: operand, type: operand.type).as(^checked.Expression)
+    } else if parsed_expression.kind == .Identifier {
+        return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
+    } else if parsed_expression.kind == .Integer {
+        return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Less {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Less)
+    } else if parsed_expression.kind == .Less_Or_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Less_Or_Equals)
+    } else if parsed_expression.kind == .Logic_And {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_And, expected_type: self.bool_type)
+    } else if parsed_expression.kind == .Logic_Or {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Logic_Or, expected_type: self.bool_type)
+    } else if parsed_expression.kind == .Member_Access {
+        return self.check_member_access_expression(parsed_expression.as(^parsed.Member_Access_Expression))
+    } else if parsed_expression.kind == .Modulo {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Modulo, expected_type: expected_type)
+    } else if parsed_expression.kind == .Multiply {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Multiply, expected_type: expected_type)
+    } else if parsed_expression.kind == .Negate {
+        return self.check_negate_expression(parsed_expression.as(^parsed.Unary_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Not {
+        return self.check_not_expression(parsed_expression.as(^parsed.Unary_Expression))
+    } else if parsed_expression.kind == .Not_Equals {
+        return self.check_comparison_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Not_Equals)
+    } else if parsed_expression.kind == .Null {
+        return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .String {
+        return self.check_string_expression(parsed_expression.as(^parsed.String_Expression))
+    } else if parsed_expression.kind == .Subtract {
+        return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Subtract, expected_type: expected_type)
+    } else if parsed_expression.kind == .Symbol {
+        return self.check_dot_member_expression(parsed_expression.as(^parsed.Symbol_Expression), expected_type: expected_type)
+    } else if parsed_expression.kind == .Type_Alignment {
+        return self.check_type_alignment_expression(parsed_expression.as(^parsed.Type_Alignment_Expression))
+    } else if parsed_expression.kind == .Type_Size {
+        return self.check_type_size_expression(parsed_expression.as(^parsed.Type_Size_Expression))
+    }
+    panic "Not supported yet: expression"
+}
+
+proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if not operand.is_mutable() {
+        libc.stderr.begin_location_message(unary_expression.operand.location, style: .Error).write("Cannot take address of this expression").end_location_message()
+        panic
+    }
+    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
+    return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_alloc_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if operand.type.kind != .Struct {
+        panic "Not supported yet: alloc expression"
+    }
+    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
+    return checked.new_alloc_expression(operand: operand, type: pointer_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_array_access_expression(self, array_access_expression: ^parsed.Array_Access_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(array_access_expression.operand, expected_type: null)
+    let item_type: ^checked.Type = null
+    if operand.type.kind == .Array {
+        item_type = operand.type.as(^checked.Array_Type).item_type
+    } else if operand.type.kind == .Multi_Pointer {
+        item_type = operand.type.as(^checked.Multi_Pointer_Type).pointee
+    } else {
+        libc.stderr.begin_location_message(array_access_expression.operand.location, style: .Error).write("Not an array").end_location_message()
+        panic
+    }
+    let index = self.check_expression(array_access_expression.index, expected_type: null)
+    return checked.new_array_access_expression(operand: operand, index: index, type: item_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_binary_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind, expected_type: ^checked.Type) -> ^checked.Expression {
+    let left = self.check_expression(binary_expression.left, expected_type: expected_type)
+    let right = self.check_expression(binary_expression.right, expected_type: left.type)
+    return checked.new_binary_expression(kind: kind, left: left, right: right, type: left.type).as(^checked.Expression)
+}
+
+proc (^Checker).check_bool_expression(self, bool_expression: ^parsed.Bool_Expression) -> ^checked.Expression {
+    return checked.new_bool_expression(value: bool_expression.value, type: self.bool_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    if call_expression.operand.kind == .Identifier {
+        let symbol = self.current_scope.find(call_expression.operand.as(^parsed.Identifier_Expression).name.lexeme)
+        if symbol != null and symbol.kind == .Type {
+            return self.check_make_expression(type: symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
+        }
+    }
+    if call_expression.operand.kind == .Type {
+        let make_type = self.resolve_type(call_expression.operand.as(^parsed.Type_Expression).type)
+        if make_type.kind == .Array {
+            return self.check_make_array_expression(array_type: make_type.as(^checked.Array_Type), call_expression: call_expression)
+        }
+    }
+    let receiver: ^checked.Expression = null
+    let callee: ^checked.Expression = null
+    if call_expression.operand.kind == .Member_Access {
+        let member_access = call_expression.operand.as(^parsed.Member_Access_Expression)
+        let object = self.check_expression(member_access.operand, expected_type: null)
+        if object.type.kind == .Module {
+            let package_symbol = self.resolve_package_member(object: object, member: member_access.member, location: member_access.location)
+            if package_symbol.kind == .Type {
+                return self.check_make_expression(type: package_symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
+            }
+            callee = self.symbol_expression(package_symbol)
+        } else {
+            let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
+            if method_symbol == null and object.type.kind != .Pointer {
+                let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member_access.member.lexeme)
+                if method_symbol != null {
+                    object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
+                }
+            }
+            if method_symbol != null {
+                receiver = object
+                callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+            } else {
+                callee = self.check_object_member_access(object: object, member: member_access.member, location: member_access.location)
+            }
+        }
+    }
+    if callee == null {
+        callee = self.check_expression(call_expression.operand, expected_type: null)
+    }
+    if callee.type.kind != .Procedure {
+        libc.stderr.begin_location_message(call_expression.operand.location, style: .Error).write("Not a procedure").end_location_message()
+        panic
+    }
+    let procedure_type = callee.type.as(^checked.Procedure_Type)
+
+    let first_argument: ^checked.Call_Argument = null
+    let last_argument: ^checked.Call_Argument = null
+    let parameter = procedure_type.first_parameter
+    if receiver != null {
+        let receiver_location = call_expression.operand.as(^parsed.Member_Access_Expression).operand.location
+        if parameter.parameter_type.kind == .Pointer {
+            receiver = self.assure_expression_pointer_type(expression: receiver, expected_type: parameter.parameter_type, location: receiver_location)
+        } else {
+            self.require_same_type(parameter.parameter_type, receiver.type, receiver_location)
+        }
+        first_argument = checked.new_call_argument(receiver)
+        last_argument = first_argument
+        parameter = parameter.next
+    }
+    let parsed_argument = call_expression.first_argument
+    while parameter != null {
+        if parsed_argument == null {
+            libc.stderr.begin_location_message(call_expression.location, style: .Error).write("Too few arguments").end_location_message()
+            panic
+        }
+        if parsed_argument.label != null {
+            if parameter.name.length == 0 {
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Unexpected argument name: a procedure pointer has no parameter names").end_location_message()
+                panic
+            }
+            if not parsed_argument.label.lexeme.equals(parameter.name) {
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Expected argument name: ").write(parameter.name).end_location_message()
+                panic
+            }
+        }
+        let argument_expression = self.check_expression(parsed_argument.expression, expected_type: parameter.parameter_type)
+        let argument = checked.new_call_argument(argument_expression)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        parameter = parameter.next
+        parsed_argument = parsed_argument.next
+    }
+    if parsed_argument != null {
+        libc.stderr.begin_location_message(parsed_argument.expression.location, style: .Error).write("Too many arguments").end_location_message()
+        panic
+    }
+
+    return checked.new_call_expression(callee: callee, type: procedure_type.return_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_cast_expression(self, cast_expression: ^parsed.Cast_Expression) -> ^checked.Expression {
+    let target_type = self.resolve_type(cast_expression.target_type)
+    let operand = self.check_expression(cast_expression.operand, expected_type: null)
+    return checked.new_cast_expression(operand: operand, type: target_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_character_expression(self, character_expression: ^parsed.Character_Expression) -> ^checked.Expression {
+    return checked.new_character_expression(token: character_expression.token, type: self.u8_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_comparison_expression(self, binary_expression: ^parsed.Binary_Expression, kind: checked.Expression_Kind) -> ^checked.Expression {
+    let left = self.check_expression(binary_expression.left, expected_type: null)
+    let right = self.check_expression(binary_expression.right, expected_type: left.type)
+    return checked.new_binary_expression(kind: kind, left: left, right: right, type: self.bool_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_dereference_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: null)
+    if operand.type.kind != .Pointer {
+        libc.stderr.begin_location_message(unary_expression.location, style: .Error).write("Not a pointer").end_location_message()
+        panic
+    }
+    let pointee_type = operand.type.as(^checked.Pointer_Type).pointee
+    return checked.new_dereference_expression(operand: operand, type: pointee_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_dot_member_expression(self, symbol_expression: ^parsed.Symbol_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    if expected_type == null or expected_type.kind != .Enum {
+        libc.stderr.begin_location_message(symbol_expression.location, style: .Error).write("Cannot infer enum type for `.").write(symbol_expression.name.lexeme).write("`").end_location_message()
+        panic
+    }
+    return self.check_enum_member_expression(enum_type: expected_type.as(^checked.Enum_Type), member: symbol_expression.name)
+}
+
+proc (^Checker).check_enum_member_expression(self, enum_type: ^checked.Enum_Type, member: ^lexer.Identifier) -> ^checked.Expression {
+    let enum_member = enum_type.find_member(member.lexeme)
+    if enum_member == null {
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Enum `").write_checked_type(enum_type.as(^checked.Type)).write("` has no member: ").write(member.lexeme).end_location_message()
+        panic
+    }
+    return checked.new_enum_member_expression(member: enum_member, type: enum_type.as(^checked.Type)).as(^checked.Expression)
+}
+
+proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed.Identifier_Expression) -> ^checked.Expression {
+    let name = identifier_expression.name.lexeme
+    let symbol = self.current_scope.find(name)
+    if symbol == null {
+        libc.stderr.begin_location_message(identifier_expression.location, style: .Error).write("Undefined symbol: ").write(name).end_location_message()
+        panic
+    }
+    return self.symbol_expression(symbol)
+}
+
+proc (^Checker).symbol_expression(self, symbol: ^checked.Symbol) -> ^checked.Expression {
+    if symbol.kind == .Constant {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Constant_Symbol).expression.type).as(^checked.Expression)
+    } else if symbol.kind == .Import {
+        return checked.new_symbol_expression(symbol: symbol, type: self.module_type).as(^checked.Expression)
+    } else if symbol.kind == .Parameter {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Parameter_Symbol).type).as(^checked.Expression)
+    } else if symbol.kind == .Procedure {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Procedure_Symbol).procedure_type.as(^checked.Type)).as(^checked.Expression)
+    } else if symbol.kind == .Variable {
+        return checked.new_symbol_expression(symbol: symbol, type: symbol.as(^checked.Variable_Symbol).type).as(^checked.Expression)
+    }
+    panic "Not supported yet: symbol expression"
+}
+
+proc (^Checker).check_integer_expression(self, integer_expression: ^parsed.Integer_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let expression_type: ^checked.Type = null
+    if integer_expression.type != null {
+        expression_type = self.resolve_type(integer_expression.type)
+    } else if expected_type != null {
+        expression_type = expected_type
+    }
+    if expression_type == null {
+        expression_type = self.i32_type
+    }
+    if expression_type == null {
+        libc.stderr.begin_location_message(integer_expression.location, style: .Error).write("Cannot infer type of integer literal").end_location_message()
+        panic
+    }
+    return checked.new_integer_expression(token: integer_expression.token, type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_make_array_expression(self, array_type: ^checked.Array_Type, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    let first_argument: ^checked.Call_Argument = null
+    let last_argument: ^checked.Call_Argument = null
+    let argument_count = 0u64
+    let parsed_argument = call_expression.first_argument
+    while parsed_argument != null {
+        if parsed_argument.label != null {
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Array items cannot be named").end_location_message()
+            panic
+        }
+        let item_expression = self.check_expression(parsed_argument.expression, expected_type: array_type.item_type)
+        let argument = checked.new_call_argument(item_expression)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        argument_count = argument_count + 1
+        parsed_argument = parsed_argument.next
+    }
+    if argument_count != array_type.size {
+        libc.stderr.begin_location_message(call_expression.operand.location, style: .Error).write("Expected ").write_u64(value: array_type.size).write(" array items but got ").write_u64(value: argument_count).end_location_message()
+        panic
+    }
+    return checked.new_make_array_expression(array_type: array_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression: ^parsed.Call_Expression) -> ^checked.Expression {
+    if type.kind != .Struct {
+        panic "Not supported yet: make expression"
+    }
+    let struct_type = type.as(^checked.Struct_Type)
+    let first_argument: ^checked.Make_Struct_Argument = null
+    let last_argument: ^checked.Make_Struct_Argument = null
+    let parsed_argument = call_expression.first_argument
+    while parsed_argument != null {
+        if parsed_argument.label == null {
+            libc.stderr.begin_location_message(parsed_argument.expression.location, style: .Error).write("Expected named argument").end_location_message()
+            panic
+        }
+        let member = struct_type.find_member(parsed_argument.label.lexeme)
+        if member == null {
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("No such struct member").end_location_message()
+            panic
+        }
+        if member.struct_type != struct_type {
+            libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Super struct member must be initialized in super member").end_location_message()
+            panic
+        }
+        let earlier = call_expression.first_argument
+        while earlier != parsed_argument {
+            if earlier.label != null and earlier.label.lexeme.equals(parsed_argument.label.lexeme) {
+                libc.stderr.begin_location_message(parsed_argument.label.location, style: .Error).write("Struct member already initialized here: ").write_location(earlier.label.location).end_location_message()
+                panic
+            }
+            earlier = earlier.next
+        }
+        let expression = self.check_expression(parsed_argument.expression, expected_type: member.type)
+        if not member.type.equals(expression.type) {
+            expression = checked.new_cast_expression(operand: expression, type: member.type).as(^checked.Expression)
+        }
+        let argument = checked.new_make_struct_argument(member: member, expression: expression)
+        if last_argument == null {
+            first_argument = argument
+        } else {
+            last_argument.next = argument
+        }
+        last_argument = argument
+        parsed_argument = parsed_argument.next
+    }
+    return checked.new_make_struct_expression(struct_type: struct_type, first_argument: first_argument).as(^checked.Expression)
+}
+
+proc (^Checker).check_member_access_expression(self, member_access_expression: ^parsed.Member_Access_Expression) -> ^checked.Expression {
+    let operand_expression = member_access_expression.operand
+    let group_depth = 0
+    while operand_expression.kind == .Group {
+        operand_expression = operand_expression.as(^parsed.Unary_Expression).operand
+        group_depth = group_depth + 1
+    }
+    let operand_type = self.resolve_expression_type(operand_expression)
+    if operand_type != null {
+        if group_depth == 0 and operand_type.kind == .Enum {
+            return self.check_enum_member_expression(enum_type: operand_type.as(^checked.Enum_Type), member: member_access_expression.member)
+        }
+        if group_depth != 1 {
+            libc.stderr.begin_location_message(member_access_expression.location, style: .Error).write("Did you mean: `(").write_checked_type(operand_type).write(").").write(member_access_expression.member.lexeme).write("`?").end_location_message()
+            panic
+        }
+        return self.check_type_member_access(receiver_type: operand_type, member: member_access_expression.member)
+    }
+    let operand = self.check_expression(member_access_expression.operand, expected_type: null)
+    return self.check_object_member_access(object: operand, member: member_access_expression.member, location: member_access_expression.location)
+}
+
+proc (^Checker).resolve_package_member(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Symbol {
+    if object.kind != .Symbol or object.as(^checked.Symbol_Expression).symbol.kind != .Import {
+        libc.stderr.begin_location_message(location, style: .Error).write("Not an import").end_location_message()
+        panic
+    }
+    let package = object.as(^checked.Symbol_Expression).symbol.as(^checked.Import_Symbol).package
+    let symbol = package.symbols.find_local(member.lexeme)
+    if symbol == null {
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Module `").write(package.name).write("` has no `").write(member.lexeme).write("` symbol").end_location_message()
+        panic
+    }
+    return symbol
+}
+
+proc (^Checker).check_object_member_access(self, object: ^checked.Expression, member: ^lexer.Identifier, location: source.Source_Location) -> ^checked.Expression {
+    let object_expression = object
+    while object_expression.kind == .Group {
+        object_expression = object_expression.as(^checked.Group_Expression).operand
+    }
+    if object_expression.type.kind == .Module {
+        return self.symbol_expression(self.resolve_package_member(object: object_expression, member: member, location: location))
+    }
+    let object_type = object_expression.type
+    if object_type.kind == .Pointer {
+        object_type = object_type.as(^checked.Pointer_Type).pointee
+    }
+    if object_type.kind == .Enum {
+        if member.lexeme.equals("value") {
+            return checked.new_enum_value_expression(operand: object_expression, type: self.i32_type).as(^checked.Expression)
+        }
+        if member.lexeme.equals("name") {
+            return checked.new_enum_name_expression(operand: object_expression, type: self.str_type).as(^checked.Expression)
+        }
+    }
+    if object_type.kind == .str {
+        if member.lexeme.equals("length") {
+            return checked.new_string_length_expression(operand: object_expression, type: self.usize_type).as(^checked.Expression)
+        }
+    }
+    if object_type.kind == .Struct {
+        let struct_type = object_type.as(^checked.Struct_Type)
+        let struct_member = struct_type.find_member(member.lexeme)
+        if struct_member != null {
+            if struct_member.struct_type != struct_type {
+                let super_struct = struct_type
+                while super_struct != null {
+                    object_expression = checked.new_member_access_expression(operand: object_expression, member: super_struct.first_member).as(^checked.Expression)
+                    super_struct = super_struct.first_member.type.as(^checked.Struct_Type)
+                    if super_struct == struct_member.struct_type {
+                        break
+                    }
+                }
+            }
+            return checked.new_member_access_expression(operand: object_expression, member: struct_member).as(^checked.Expression)
+        }
+    }
+    let method_symbol = self.resolve_method_symbol(receiver_type: object_expression.type, name: member.lexeme)
+    if method_symbol == null and object_expression.type.kind != .Pointer {
+        let pointer_type = checked.new_pointer_type(pointee: object_expression.type).as(^checked.Type)
+        method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member.lexeme)
+    }
+    if method_symbol != null {
+        libc.stderr.begin_location_message(location, style: .Error).write("Code does not have closures").end_location_message()
+        panic
+    }
+    panic "Not supported yet: member access"
+}
+
+proc (^Checker).check_negate_expression(self, unary_expression: ^parsed.Unary_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: expected_type)
+    return checked.new_negate_expression(operand: operand, type: operand.type).as(^checked.Expression)
+}
+
+proc (^Checker).check_not_expression(self, unary_expression: ^parsed.Unary_Expression) -> ^checked.Expression {
+    let operand = self.check_expression(unary_expression.operand, expected_type: self.bool_type)
+    return checked.new_not_expression(operand: operand, type: operand.type).as(^checked.Expression)
+}
+
+proc (^Checker).check_null_expression(self, null_expression: ^parsed.Null_Expression, expected_type: ^checked.Type) -> ^checked.Expression {
+    let expression_type = expected_type
+    if expression_type == null {
+        expression_type = self.null_type
+    } else if expression_type.kind != .Multi_Pointer and expression_type.kind != .Pointer and expression_type.kind != .Procedure {
+        libc.stderr.begin_location_message(null_expression.location, style: .Error).write("\"null\" cannot be used with non-pointer type: ").write_checked_type(expression_type).end_location_message()
+        panic
+    }
+    return checked.new_null_expression(type: expression_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_string_expression(self, string_expression: ^parsed.String_Expression) -> ^checked.Expression {
+    return checked.new_string_expression(token: string_expression.token, type: self.str_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_type_alignment_expression(self, type_alignment_expression: ^parsed.Type_Alignment_Expression) -> ^checked.Expression {
+    let aligned_type = self.resolve_type(type_alignment_expression.target_type)
+    if aligned_type.kind == .Any {
+        libc.stderr.begin_location_message(type_alignment_expression.target_type.location, style: .Error).write("Type Any has no alignment").end_location_message()
+        panic
+    }
+    return checked.new_type_alignment_expression(aligned_type: aligned_type, type: self.usize_type).as(^checked.Expression)
+}
+
+proc (^Checker).check_type_member_access(self, receiver_type: ^checked.Type, member: ^lexer.Identifier) -> ^checked.Expression {
+    let method_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: member.lexeme)
+    if method_symbol == null {
+        libc.stderr.begin_location_message(member.location, style: .Error).write("Type `").write_checked_type(receiver_type).write("` doesn't have method: ").write(member.lexeme).end_location_message()
+        panic
+    }
+    return checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+}
+
+proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.Type_Size_Expression) -> ^checked.Expression {
+    let sized_type = self.resolve_type(type_size_expression.target_type)
+    if sized_type.kind == .Any {
+        libc.stderr.begin_location_message(type_size_expression.target_type.location, style: .Error).write("Type Any has no size").end_location_message()
+        panic
+    }
+    return checked.new_type_size_expression(sized_type: sized_type, type: self.usize_type).as(^checked.Expression)
+}
+
+proc (^Checker).append_method(self, method: ^checked.Method) {
+    if self.first_method == null {
+        self.first_method = method
+    } else {
+        self.last_method.next = method
+    }
+    self.last_method = method
+}
+
+proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) -> ^checked.Type {
+    if expression.kind == .Address_Of {
+        let pointee = self.resolve_expression_type(expression.as(^parsed.Unary_Expression).operand)
+        if pointee != null {
+            return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+        }
+    } else if expression.kind == .Identifier {
+        let symbol = self.current_scope.find(expression.as(^parsed.Identifier_Expression).name.lexeme)
+        if symbol != null and symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+    } else if expression.kind == .Type {
+        return self.resolve_type(expression.as(^parsed.Type_Expression).type)
+    }
+    return null
+}
+
+proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: str) -> ^checked.Procedure_Symbol {
+    let method = self.first_method
+    while method != null {
+        if method.symbol.name.equals(name) and method.receiver_type.equals(receiver_type) {
+            return method.symbol
+        }
+        method = method.next
+    }
+    if receiver_type.kind == .Pointer {
+        let pointee = receiver_type.as(^checked.Pointer_Type).pointee
+        if pointee.kind == .Struct {
+            let struct_type = pointee.as(^checked.Struct_Type)
+            if struct_type.first_member != null and struct_type.first_member.name.equals("super") {
+                let super_receiver_type = checked.new_pointer_type(pointee: struct_type.first_member.type).as(^checked.Type)
+                return self.resolve_method_symbol(receiver_type: super_receiver_type, name: name)
+            }
+        }
+    }
+    return null
+}
+
+proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
+    if parsed_type.kind == .Named {
+        let named_type = parsed_type.as(^parsed.Named_Type)
+        if named_type.module != null {
+            let module_symbol = self.global_symbols.find(named_type.module.lexeme)
+            if module_symbol == null {
+                libc.stderr.begin_location_message(named_type.module.location, style: .Error).write("Undefined package").end_location_message()
+                panic
+            }
+            if module_symbol.kind != .Import {
+                libc.stderr.begin_location_message(named_type.module.location, style: .Error).write("Not a package").end_location_message()
+                panic
+            }
+            return self.resolve_package_type(package: module_symbol.as(^checked.Import_Symbol).package, name: named_type.name)
+        }
+        let name = named_type.name.lexeme
+        let symbol = self.global_symbols.find(name)
+        if symbol == null {
+            symbol = self.builtin_symbols.find(name)
+        }
+        if symbol == null {
+            if self.current_package == null {
+                libc.stderr.begin_location_message(named_type.location, style: .Error).write("Unknown type").end_location_message()
+                panic
+            }
+            // The type may be declared later in the current package - check it on demand.
+            return self.resolve_package_type(package: self.current_package, name: named_type.name)
+        }
+        if symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+        libc.stderr.begin_location_message(named_type.location, style: .Error).write("Symbol is not a type").end_location_message()
+        panic
+    } else if parsed_type.kind == .Array {
+        let array_type = parsed_type.as(^parsed.Array_Type)
+        let item_type = self.resolve_type(array_type.item_type)
+        return checked.new_array_type(item_type: item_type, size: array_type.size.value).as(^checked.Type)
+    } else if parsed_type.kind == .Multi_Pointer {
+        let multi_pointer_type = parsed_type.as(^parsed.Multi_Pointer_Type)
+        let pointee = self.resolve_type(multi_pointer_type.pointee)
+        return checked.new_multi_pointer_type(pointee: pointee).as(^checked.Type)
+    } else if parsed_type.kind == .Pointer {
+        let pointer_type = parsed_type.as(^parsed.Pointer_Type)
+        let pointee = self.resolve_type(pointer_type.pointee)
+        return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+    } else if parsed_type.kind == .Procedure {
+        let procedure_type = parsed_type.as(^parsed.Procedure_Type)
+        let return_type: ^checked.Type = null
+        if procedure_type.return_type != null {
+            return_type = self.resolve_type(procedure_type.return_type)
+        }
+        let first_parameter: ^checked.Procedure_Parameter = null
+        let last_parameter: ^checked.Procedure_Parameter = null
+        let parsed_parameter = procedure_type.first_parameter
+        while parsed_parameter != null {
+            let parameter_type = self.resolve_type(parsed_parameter.parameter_type)
+            let parameter = checked.new_procedure_parameter(name: "", parameter_type: parameter_type)
+            if last_parameter == null {
+                first_parameter = parameter
+            } else {
+                last_parameter.next = parameter
+            }
+            last_parameter = parameter
+            parsed_parameter = parsed_parameter.next
+        }
+        return checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type).as(^checked.Type)
+    }
+    panic "Not supported yet: type"
+}
+
+proc (^Checker).resolve_package_type(self, package: ^checked.Package, name: ^lexer.Identifier) -> ^checked.Type {
+    let symbol = package.symbols.find_local(name.lexeme)
+    if symbol != null {
+        if symbol.kind == .Type {
+            return symbol.as(^checked.Type_Symbol).type
+        }
+        libc.stderr.begin_location_message(name.location, style: .Error).write("Symbol is not a type").end_location_message()
+        panic
+    }
+    // The type may not have been checked yet - check it on demand.
+    let module = package.parsed_package.first_module
+    while module != null {
+        let statement = module.first_statement
+        while statement != null {
+            if statement.kind == .Type {
+                let type_statement = statement.as(^parsed.Type_Statement)
+                if type_statement.name.lexeme.equals(name.lexeme) {
+                    let saved_symbols = self.global_symbols
+                    let saved_package = self.current_package
+                    let saved_package_name = self.package_name
+                    self.enter_package(package)
+                    self.check_global_type_statement(type_statement)
+                    self.global_symbols = saved_symbols
+                    self.current_package = saved_package
+                    self.package_name = saved_package_name
+                    return package.symbols.find(name.lexeme).as(^checked.Type_Symbol).type
+                }
+            }
+            statement = statement.next
+        }
+        module = module.next_module
+    }
+    libc.stderr.begin_location_message(name.location, style: .Error).write("Unknown type").end_location_message()
+    panic
+}

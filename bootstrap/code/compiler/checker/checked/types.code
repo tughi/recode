@@ -1,0 +1,292 @@
+import allocator
+import libc
+
+type Type_Kind = enum {
+    Any
+    Array
+    bool
+    Enum
+    External
+    i16
+    i32
+    i64
+    i8
+    isize
+    Module
+    Multi_Pointer
+    Null
+    Pointer
+    Procedure
+    str
+    Struct
+    u16
+    u32
+    u64
+    u8
+    usize
+}
+
+type Type = struct {
+    kind: Type_Kind
+}
+
+type Array_Type = struct {
+    super: Type
+    item_type: ^Type
+    size: u64
+}
+
+proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
+    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
+    result.^ = Array_Type(
+        super: Type(kind: .Array)
+        item_type: item_type
+        size: size
+    )
+    return result
+}
+
+type Enum_Member = struct {
+    name: str
+    value: u64
+    next: ^Enum_Member
+}
+
+proc new_enum_member(name: str, value: u64) -> ^Enum_Member {
+    let result = allocator.alloc(size: type_size(Enum_Member), alignment: type_alignment(Enum_Member)).as(^Enum_Member)
+    result.^ = Enum_Member(name: name, value: value, next: null)
+    return result
+}
+
+type Enum_Type = struct {
+    super: Named_Type
+    first_member: ^Enum_Member
+    last_member: ^Enum_Member
+}
+
+proc new_enum_type(name: str, package_name: str) -> ^Enum_Type {
+    let result = allocator.alloc(size: type_size(Enum_Type), alignment: type_alignment(Enum_Type)).as(^Enum_Type)
+    result.^ = Enum_Type(
+        super: Named_Type(super: Type(kind: .Enum), name: name, package_name: package_name)
+        first_member: null
+        last_member: null
+    )
+    return result
+}
+
+proc (^Enum_Type).find_member(self, name: str) -> ^Enum_Member {
+    let member = self.first_member
+    while member != null {
+        if member.name.equals(name) {
+            return member
+        }
+        member = member.next
+    }
+    return null
+}
+
+proc (^Enum_Type).append_member(self, member: ^Enum_Member) {
+    if self.first_member == null {
+        self.first_member = member
+    } else {
+        self.last_member.next = member
+    }
+    self.last_member = member
+}
+
+type Multi_Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
+    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
+    result.^ = Multi_Pointer_Type(
+        super: Type(kind: .Multi_Pointer)
+        pointee: pointee
+    )
+    return result
+}
+
+type Named_Type = struct {
+    super: Type
+    name: str
+    package_name: str
+}
+
+proc (^libc.FILE).write_checked_type(file, type: ^Type) -> ^libc.FILE {
+    if type.kind == .Array {
+        let array_type = type.as(^Array_Type)
+        return file.write_char(char: '[').write_u64(value: array_type.size).write_char(char: ']').write_checked_type(array_type.item_type)
+    } else if type.kind == .Multi_Pointer {
+        return file.write("[^]").write_checked_type(type.as(^Multi_Pointer_Type).pointee)
+    } else if type.kind == .Null {
+        return file.write("null")
+    } else if type.kind == .Pointer {
+        return file.write_char(char: '^').write_checked_type(type.as(^Pointer_Type).pointee)
+    } else if type.kind == .Procedure {
+        let procedure_type = type.as(^Procedure_Type)
+        file.write("proc (")
+        let parameter = procedure_type.first_parameter
+        while parameter != null {
+            file.write_checked_type(parameter.parameter_type)
+            parameter = parameter.next
+            if parameter != null {
+                file.write(", ")
+            }
+        }
+        if procedure_type.return_type != null {
+            return file.write(") -> ").write_checked_type(procedure_type.return_type)
+        }
+        return file.write_char(char: ')')
+    }
+    let named_type = type.as(^Named_Type)
+    if named_type.package_name.length > 0 {
+        file.write(named_type.package_name).write_char(char: '.')
+    }
+    return file.write(named_type.name)
+}
+
+proc (^Type).name(self) -> str {
+    return self.as(^Named_Type).name
+}
+
+proc (^Type).equals(self, other: ^Type) -> bool {
+    if self.kind != other.kind {
+        return false
+    }
+    if self.kind == .Array {
+        return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
+    }
+    if self.kind == .Enum {
+        let self_named = self.as(^Named_Type)
+        let other_named = other.as(^Named_Type)
+        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
+    }
+    if self.kind == .External {
+        return self.name().equals(other.name())
+    }
+    if self.kind == .Multi_Pointer {
+        return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
+    }
+    if self.kind == .Pointer {
+        return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
+    }
+    if self.kind == .Struct {
+        let self_named = self.as(^Named_Type)
+        let other_named = other.as(^Named_Type)
+        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
+    }
+    return true
+}
+
+proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Type {
+    let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
+    result.^ = Named_Type(
+        super: Type(kind: kind)
+        name: name
+        package_name: package_name
+    )
+    return result
+}
+
+proc new_null_type() -> ^Type {
+    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
+    result.^ = Type(kind: .Null)
+    return result
+}
+
+type Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
+    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
+    result.^ = Pointer_Type(
+        super: Type(kind: .Pointer)
+        pointee: pointee
+    )
+    return result
+}
+
+type Procedure_Parameter = struct {
+    name: str
+    parameter_type: ^Type
+    next: ^Procedure_Parameter
+}
+
+proc new_procedure_parameter(name: str, parameter_type: ^Type) -> ^Procedure_Parameter {
+    let result = allocator.alloc(size: type_size(Procedure_Parameter), alignment: type_alignment(Procedure_Parameter)).as(^Procedure_Parameter)
+    result.^ = Procedure_Parameter(name: name, parameter_type: parameter_type, next: null)
+    return result
+}
+
+type Procedure_Type = struct {
+    super: Type
+    first_parameter: ^Procedure_Parameter
+    return_type: ^Type
+}
+
+proc new_procedure_type(first_parameter: ^Procedure_Parameter, return_type: ^Type) -> ^Procedure_Type {
+    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
+    result.^ = Procedure_Type(
+        super: Type(kind: .Procedure)
+        first_parameter: first_parameter
+        return_type: return_type
+    )
+    return result
+}
+
+type Struct_Member = struct {
+    name: str
+    type: ^Type
+    struct_type: ^Struct_Type
+    next: ^Struct_Member
+}
+
+proc new_struct_member(name: str, type: ^Type) -> ^Struct_Member {
+    let result = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
+    result.^ = Struct_Member(name: name, type: type, struct_type: null, next: null)
+    return result
+}
+
+type Struct_Type = struct {
+    super: Named_Type
+    first_member: ^Struct_Member
+    last_member: ^Struct_Member
+}
+
+proc new_struct_type(name: str, package_name: str) -> ^Struct_Type {
+    let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
+    result.^ = Struct_Type(
+        super: Named_Type(super: Type(kind: .Struct), name: name, package_name: package_name)
+        first_member: null
+        last_member: null
+    )
+    return result
+}
+
+proc (^Struct_Type).find_member(self, name: str) -> ^Struct_Member {
+    let member = self.first_member
+    while member != null {
+        if member.name.equals(name) {
+            return member
+        }
+        member = member.next
+    }
+    if self.first_member != null and self.first_member.name.equals("super") {
+        return self.first_member.type.as(^Struct_Type).find_member(name)
+    }
+    return null
+}
+
+proc (^Struct_Type).append_member(self, member: ^Struct_Member) {
+    member.struct_type = self
+    if self.first_member == null {
+        self.first_member = member
+    } else {
+        self.last_member.next = member
+    }
+    self.last_member = member
+}

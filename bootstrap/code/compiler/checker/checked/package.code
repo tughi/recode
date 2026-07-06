@@ -1,0 +1,29 @@
+import allocator
+import compiler.parser.parsed
+import compiler.source
+
+type Module = struct {
+    source: source.Source
+    next_module: ^Module
+}
+
+proc new_module(source: source.Source) -> ^Module {
+    let result = allocator.alloc(size: type_size(Module), alignment: type_alignment(Module)).as(^Module)
+    result.^ = Module(source: source, next_module: null)
+    return result
+}
+
+type Package = struct {
+    name: str
+    parsed_package: ^parsed.Package
+    symbols: ^Symbols
+    first_method: ^Method
+    first_module: ^Module
+    next_package: ^Package
+}
+
+proc new_package(name: str, parsed_package: ^parsed.Package, symbols: ^Symbols) -> ^Package {
+    let result = allocator.alloc(size: type_size(Package), alignment: type_alignment(Package)).as(^Package)
+    result.^ = Package(name: name, parsed_package: parsed_package, symbols: symbols, first_method: null, first_module: null, next_package: null)
+    return result
+}

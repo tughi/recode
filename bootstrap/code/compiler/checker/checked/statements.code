@@ -1,0 +1,170 @@
+import allocator
+import compiler.lexer
+import compiler.source
+
+type Statement_Kind = enum {
+    Assignment
+    Block
+    Break
+    Expression
+    If
+    Loop
+    Panic
+    Return
+    Variable
+    While
+}
+
+type Statement = struct {
+    kind: Statement_Kind
+    location: source.Source_Location
+    next: ^Statement
+}
+
+type Assignment_Statement = struct {
+    super: Statement
+    object: ^Expression
+    value: ^Expression
+}
+
+proc new_assignment_statement(location: source.Source_Location, object: ^Expression, value: ^Expression) -> ^Assignment_Statement {
+    let result = allocator.alloc(size: type_size(Assignment_Statement), alignment: type_alignment(Assignment_Statement)).as(^Assignment_Statement)
+    result.^ = Assignment_Statement(
+        super: Statement(kind: .Assignment, location: location, next: null)
+        object: object
+        value: value
+    )
+    return result
+}
+
+type Block_Statement = struct {
+    super: Statement
+    first_statement: ^Statement
+}
+
+proc new_block_statement(location: source.Source_Location, first_statement: ^Statement) -> ^Block_Statement {
+    let result = allocator.alloc(size: type_size(Block_Statement), alignment: type_alignment(Block_Statement)).as(^Block_Statement)
+    result.^ = Block_Statement(
+        super: Statement(kind: .Block, location: location, next: null)
+        first_statement: first_statement
+    )
+    return result
+}
+
+type Break_Statement = struct {
+    super: Statement
+}
+
+proc new_break_statement(location: source.Source_Location) -> ^Break_Statement {
+    let result = allocator.alloc(size: type_size(Break_Statement), alignment: type_alignment(Break_Statement)).as(^Break_Statement)
+    result.^ = Break_Statement(
+        super: Statement(kind: .Break, location: location, next: null)
+    )
+    return result
+}
+
+type Expression_Statement = struct {
+    super: Statement
+    expression: ^Expression
+}
+
+proc new_expression_statement(location: source.Source_Location, expression: ^Expression) -> ^Expression_Statement {
+    let result = allocator.alloc(size: type_size(Expression_Statement), alignment: type_alignment(Expression_Statement)).as(^Expression_Statement)
+    result.^ = Expression_Statement(
+        super: Statement(kind: .Expression, location: location, next: null)
+        expression: expression
+    )
+    return result
+}
+
+type If_Statement = struct {
+    super: Statement
+    condition: ^Expression
+    true_block: ^Statement
+    false_statement: ^Statement
+}
+
+proc new_if_statement(location: source.Source_Location, condition: ^Expression, true_block: ^Statement, false_statement: ^Statement) -> ^If_Statement {
+    let result = allocator.alloc(size: type_size(If_Statement), alignment: type_alignment(If_Statement)).as(^If_Statement)
+    result.^ = If_Statement(
+        super: Statement(kind: .If, location: location, next: null)
+        condition: condition
+        true_block: true_block
+        false_statement: false_statement
+    )
+    return result
+}
+
+type Loop_Statement = struct {
+    super: Statement
+    body: ^Statement
+}
+
+proc new_loop_statement(location: source.Source_Location, body: ^Statement) -> ^Loop_Statement {
+    let result = allocator.alloc(size: type_size(Loop_Statement), alignment: type_alignment(Loop_Statement)).as(^Loop_Statement)
+    result.^ = Loop_Statement(
+        super: Statement(kind: .Loop, location: location, next: null)
+        body: body
+    )
+    return result
+}
+
+type Panic_Statement = struct {
+    super: Statement
+    message: ^lexer.String
+}
+
+proc new_panic_statement(location: source.Source_Location, message: ^lexer.String) -> ^Panic_Statement {
+    let result = allocator.alloc(size: type_size(Panic_Statement), alignment: type_alignment(Panic_Statement)).as(^Panic_Statement)
+    result.^ = Panic_Statement(
+        super: Statement(kind: .Panic, location: location, next: null)
+        message: message
+    )
+    return result
+}
+
+type Return_Statement = struct {
+    super: Statement
+    expression: ^Expression
+}
+
+proc new_return_statement(location: source.Source_Location, expression: ^Expression) -> ^Return_Statement {
+    let result = allocator.alloc(size: type_size(Return_Statement), alignment: type_alignment(Return_Statement)).as(^Return_Statement)
+    result.^ = Return_Statement(
+        super: Statement(kind: .Return, location: location, next: null)
+        expression: expression
+    )
+    return result
+}
+
+type Variable_Statement = struct {
+    super: Statement
+    symbol: ^Variable_Symbol
+    expression: ^Expression
+}
+
+proc new_variable_statement(location: source.Source_Location, symbol: ^Variable_Symbol, expression: ^Expression) -> ^Variable_Statement {
+    let result = allocator.alloc(size: type_size(Variable_Statement), alignment: type_alignment(Variable_Statement)).as(^Variable_Statement)
+    result.^ = Variable_Statement(
+        super: Statement(kind: .Variable, location: location, next: null)
+        symbol: symbol
+        expression: expression
+    )
+    return result
+}
+
+type While_Statement = struct {
+    super: Statement
+    condition: ^Expression
+    body: ^Statement
+}
+
+proc new_while_statement(location: source.Source_Location, condition: ^Expression, body: ^Statement) -> ^While_Statement {
+    let result = allocator.alloc(size: type_size(While_Statement), alignment: type_alignment(While_Statement)).as(^While_Statement)
+    result.^ = While_Statement(
+        super: Statement(kind: .While, location: location, next: null)
+        condition: condition
+        body: body
+    )
+    return result
+}

@@ -9,8 +9,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
-from datetime import datetime
 from typing import List, Optional
 
 logging.basicConfig(format="[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s", datefmt="%H:%M:%S")
@@ -26,7 +24,7 @@ COLOR_RESET = "\x1b[0m"
 
 def clean():
     logger.info("Cleaning")
-    run("rm -fr build stage0")
+    run("rm -fr build")
 
 
 def run(command, **kwargs):
@@ -39,152 +37,6 @@ def run(command, **kwargs):
         return subprocess.run(command, **kwargs)
     except subprocess.CalledProcessError as error:
         exit(error.returncode)
-
-
-def build_stage(n):
-    logger.info(f"Building stage{n}")
-
-    if not os.path.exists(f"build/stage{n}"):
-        run(f"mkdir -p build/stage{n}")
-
-    if n == 0:
-        assemble("bootstrap/ReCode.s", f"build/stage{n}/ReCode")
-        return
-
-    if n == 1:
-        compiler = "compiler"
-    else:
-        compiler = "stage0"
-
-    compiler_changed = not os.path.exists(f"build/stage{n}/ReCode.s") or os.path.getmtime(f"build/stage{n}/ReCode.s") < os.path.getmtime(
-        f"build/stage{n - 1}/ReCode"
-    )
-    if not compiler_changed:
-        for root, dirs, files in os.walk(compiler):
-            for file in files:
-                if os.path.getmtime(f"build/stage{n}/ReCode.s") < os.path.getmtime(f"{root}/{file}"):
-                    compiler_changed = True
-                    break
-            else:
-                continue
-            break
-
-    if compiler_changed or not os.path.exists(f"build/stage{n}/ReCode"):
-        if (
-            run(
-                [
-                    f"build/stage{n - 1}/ReCode",
-                    f"{compiler}/ReCode.code",
-                    f"build/stage{n}/ReCode.s",
-                    f"build/stage{n}/ReCode.ir",
-                ],
-                check=False,
-            ).returncode
-            != 0
-        ):
-            if os.path.exists(f"build/stage{n}/ReCode.s"):
-                run(f"rm build/stage{n}/ReCode.s")
-            trace(f"build/stage{n - 1}/ReCode", f"{compiler}/ReCode.code", "-")
-            exit(1)
-        try:
-            assemble(f"build/stage{n}/ReCode.s", f"build/stage{n}/ReCode", check=True)
-        except:
-            if os.path.exists(f"build/stage{n}/ReCode"):
-                execute(f"rm build/stage{n}/ReCode")
-            raise
-
-
-def assemble(source_files, output_file, sdl=False, **kwargs):
-    if os.path.exists(output_file):
-        for source_file in source_files:
-            if os.path.getmtime(source_file) > os.path.getmtime(output_file):
-                break
-        else:
-            return False
-
-    object_files = []
-    for source_file in source_files:
-        if not source_file.endswith(".c"):
-            continue
-        output_dir = os.path.dirname(output_file)
-        if os.path.dirname(os.path.abspath(source_file)) == os.path.abspath(output_dir):
-            object_name = os.path.basename(source_file)[:-2]
-        else:
-            object_name = os.path.relpath(source_file, "code").replace("/", "$$")[:-2]
-        object_file = output_dir + "/" + object_name + ".o"
-        object_files.append(object_file)
-        run(
-            [
-                "cc",
-                "-c",
-                source_file,
-                "-o",
-                object_file,
-                "-g",
-                "-Wno-builtin-requires-header",
-                "-Wno-incompatible-library-redeclaration",
-                "-Wno-pointer-sign",
-                "-Wno-return-type",
-                "-Wno-unused-value",
-            ],
-            **kwargs,
-        )
-
-    run(
-        [
-            "cc",
-            *object_files,
-            "-o",
-            output_file,
-            "-g",
-            *(["-L/opt/homebrew/lib", "-lSDL2"] if sdl else []),
-        ],
-        **kwargs,
-    )
-
-    return True
-
-
-def trace(*command, ignore_output=True):
-    logger.info(f"Tracing: {' '.join(command)}")
-    if sys.platform.startswith("darwin"):
-        subprocess.run(
-            " ".join(
-                [
-                    "lldb",
-                    command[0],
-                    "-batch",
-                    "-Q",
-                    "-o 'b exit'",
-                    (
-                        f'-o \'process launch -o /dev/null -e /dev/null -- {" ".join(command[1:])}\''
-                        if ignore_output
-                        else f'-o \'process launch -- {" ".join(command[1:])}\''
-                    ),
-                    "-o bt",
-                    "-o q",
-                ]
-            ),
-            shell=True,
-        )
-    else:
-        subprocess.run(
-            " ".join(
-                [
-                    "gdb",
-                    command[0],
-                    "-batch",
-                    "-ex='set confirm off'",
-                    "-ex='set style enabled on'",
-                    "-ex='set print thread-events off'",
-                    "-ex='b exit'",
-                    (f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\''),
-                    "-ex=backtrace",
-                    "-ex=quit",
-                ]
-            ),
-            shell=True,
-        )
 
 
 @dataclasses.dataclass
@@ -335,9 +187,13 @@ class Tester:
         return True
 
 
-def test(paths, save=False, stage=1):
+def test(paths, save=False):
     build()
 
+    run_tests(paths, save=save)
+
+
+def run_tests(paths, save=False, compiler_ir="build/compiler.ir"):
     tester = Tester(apply_change=save)
 
     for test_dir in sorted(test_dirs(paths)):
@@ -353,7 +209,7 @@ def test(paths, save=False, stage=1):
 
         compiler_command = [
             "Runner",
-            "build/compiler.ir",
+            compiler_ir,
             "-o",
             build_dir,
             "-n",
@@ -373,8 +229,6 @@ def test(paths, save=False, stage=1):
                 )
                 if tester.compile_panic:
                     logger.error(f"{COLOR_ERROR}{tester.compile_panic}{COLOR_RESET}")
-                if compiler_command[0] != "Runner":
-                    trace(*compiler_command)
                 exit(1)
         else:
             tester.update_actual_compile_error(compiler_result.returncode)
@@ -432,17 +286,14 @@ def compute_diff(actual_lines, expected_lines):
 
 
 def build():
-    # build_stage(0)
-    # build_stage(1)
-
-    logger.info("Building stage1")
-
-    run(["make", "BUILD_DIR=build/stage1"])
-
     logger.info("Building self-hosted compiler")
 
+    if not os.path.exists("bootstrap/compiler.ir"):
+        logger.error(f"{COLOR_ERROR}Missing bootstrap/compiler.ir{COLOR_RESET}")
+        exit(1)
+
     run("mkdir -p build")
-    run(["build/stage1/ReCode", "-o", "build", "-n", "compiler", "code", "compiler"])
+    run(["Runner", "bootstrap/compiler.ir", "-g", "-o", "build", "-n", "compiler", "code", "compiler"])
 
 
 def stage():
@@ -450,35 +301,22 @@ def stage():
 
     logger.info("Staging")
 
-    if not os.path.exists("stage0"):
-        run("cp -R compiler stage0")
+    run("mkdir -p build/stage2 build/stage3 build/stage4")
+    run(["Runner", "build/compiler.ir", "-g", "-o", "build/stage2", "-n", "compiler", "code", "compiler"])
+    run(["Runner", "build/stage2/compiler.ir", "-g", "-o", "build/stage3", "-n", "compiler", "code", "compiler"])
+    run("diff -q build/stage2/compiler.ir build/stage3/compiler.ir")
 
-    build_stage(2)
-    build_stage(3)
-    run("diff -q build/stage2/ReCode.s build/stage3/ReCode.s", check=True)
+    run_tests(["tests"], compiler_ir="build/stage2/compiler.ir")
 
-    test_with_stage(3)
+    run("rm -fr build/bootstrap")
+    run("mkdir -p build/bootstrap")
+    run("cp -R code build/bootstrap/code")
+    run(["Runner", os.path.abspath("build/stage2/compiler.ir"), "-g", "-o", ".", "-n", "compiler", "code", "compiler"], cwd="build/bootstrap")
+    run(["Runner", "build/bootstrap/compiler.ir", "-g", "-o", "build/stage4", "-n", "compiler", "code", "compiler"])
+    run("diff -q build/stage3/compiler.ir build/stage4/compiler.ir")
 
     run("rm -fr bootstrap")
-    run("mkdir bootstrap")
-    run("mv stage0 bootstrap/")
-    run("build/stage2/ReCode bootstrap/stage0/ReCode.code bootstrap/ReCode.s")
-
-    run("rm -fr compiler")
-    run("cp -R bootstrap/stage0 compiler")
-
-
-def time():
-    build_stage(0)
-    build_stage(1)
-
-    count = 10
-    start_time = datetime.now()
-    for _ in range(count):
-        run("build/stage1/ReCode compiler/ReCode.code build/stage2/ReCode.s")
-    finish_time = datetime.now()
-
-    logger.info(f"Average time: {((finish_time - start_time) / count).total_seconds()}s")
+    run("mv build/bootstrap bootstrap")
 
 
 if __name__ == "__main__":
@@ -509,6 +347,6 @@ if __name__ == "__main__":
         elif args.command == "stage":
             stage()
         elif args.command == "test":
-            test(args.path, save=args.save, stage=1)
+            test(args.path, save=args.save)
         else:
             args_parsers.print_help()

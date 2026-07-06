@@ -1,0 +1,10 @@
+type DIR = external
+type DIR_ENTRY = external
+
+proc open_dir(name: [^]u8) -> ^DIR = external "opendir"
+
+proc close_dir(dir: ^DIR) -> i32 = external "closedir"
+
+proc read_dir(dir: ^DIR) -> ^DIR_ENTRY = external "readdir"
+
+proc get_dir_entry_name(entry: ^DIR_ENTRY) -> [^]u8 = external "get_dirent_name"

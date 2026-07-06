@@ -1,0 +1,518 @@
+import allocator
+import compiler.checker.checked
+import string
+
+type Program = struct {
+    first_source_file: ^Source_File
+    last_source_file: ^Source_File
+    first_type: ^Named_Type
+    last_type: ^Named_Type
+    first_global: ^Global
+    last_global: ^Global
+    first_procedure: ^Procedure
+    last_procedure: ^Procedure
+}
+
+proc new_program() -> ^Program {
+    let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
+    result.^ = Program(first_source_file: null, last_source_file: null, first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null)
+    return result
+}
+
+proc (^Program).append_type(self, type: ^Named_Type) {
+    if self.first_type == null {
+        self.first_type = type
+    } else {
+        self.last_type.next_type = type
+    }
+    self.last_type = type
+}
+
+proc (^Program).append_global(self, global: ^Global) {
+    if self.first_global == null {
+        self.first_global = global
+    } else {
+        self.last_global.next_global = global
+    }
+    self.last_global = global
+}
+
+proc (^Program).append_procedure(self, procedure: ^Procedure) {
+    if self.first_procedure == null {
+        self.first_procedure = procedure
+    } else {
+        self.last_procedure.next = procedure
+    }
+    self.last_procedure = procedure
+}
+
+proc (^Program).find_procedure(self, name: str) -> ^Procedure {
+    let procedure = self.first_procedure
+    while procedure != null {
+        if procedure.name.equals(name) {
+            return procedure
+        }
+        procedure = procedure.next
+    }
+    return null
+}
+
+type Source_File = struct {
+    index: usize
+    path: str
+    ir_path: str
+    next: ^Source_File
+}
+
+proc (^Program).append_source_file(self, path: str, ir_path: str) -> ^Source_File {
+    let index = 1usize
+    if self.last_source_file != null {
+        index = self.last_source_file.index + 1
+    }
+    let source_file = allocator.alloc(size: type_size(Source_File), alignment: type_alignment(Source_File)).as(^Source_File)
+    source_file.^ = Source_File(index: index, path: path, ir_path: ir_path, next: null)
+    if self.first_source_file == null {
+        self.first_source_file = source_file
+    } else {
+        self.last_source_file.next = source_file
+    }
+    self.last_source_file = source_file
+    return source_file
+}
+
+proc (^Program).find_source_file(self, path: str) -> ^Source_File {
+    let source_file = self.first_source_file
+    while source_file != null {
+        if source_file.path.equals(path) {
+            return source_file
+        }
+        source_file = source_file.next
+    }
+    return null
+}
+
+type Procedure = struct {
+    name: str
+    is_method: bool
+    first_parameter: ^Value
+    last_parameter: ^Value
+    return_type: ^Type
+    first_block: ^Block
+    last_block: ^Block
+    next: ^Procedure
+}
+
+proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
+    let result = allocator.alloc(size: type_size(Procedure), alignment: type_alignment(Procedure)).as(^Procedure)
+    result.^ = Procedure(
+        name: name
+        is_method: false
+        first_parameter: null
+        last_parameter: null
+        return_type: return_type
+        first_block: null
+        last_block: null
+        next: null
+    )
+    return result
+}
+
+proc (^Procedure).append_parameter(self, value: ^Value) {
+    if self.first_parameter == null {
+        self.first_parameter = value
+    } else {
+        self.last_parameter.next = value
+    }
+    self.last_parameter = value
+}
+
+proc (^Procedure).append_block(self, block: ^Block) {
+    if self.first_block == null {
+        self.first_block = block
+    } else {
+        self.last_block.next = block
+    }
+    self.last_block = block
+}
+
+type Block = struct {
+    label: usize
+    first_instruction: ^Instruction
+    last_instruction: ^Instruction
+    next: ^Block
+}
+
+proc new_block(label: usize) -> ^Block {
+    let result = allocator.alloc(size: type_size(Block), alignment: type_alignment(Block)).as(^Block)
+    result.^ = Block(label: label, first_instruction: null, last_instruction: null, next: null)
+    return result
+}
+
+type Type_Kind = enum {
+    Any
+    Array
+    bool
+    i16
+    i32
+    i64
+    i8
+    isize
+    Multi_Pointer
+    Nothing
+    Opaque
+    Pointer
+    Procedure
+    Struct
+    u16
+    u32
+    u64
+    u8
+    usize
+}
+
+type Type = struct {
+    kind: Type_Kind
+}
+
+proc new_primitive_type(kind: Type_Kind) -> ^Type {
+    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
+    result.^ = Type(kind: kind)
+    return result
+}
+
+proc (^Type).name_string(self) -> str {
+    if self.kind == .Any {
+        return "Any"
+    } else if self.kind == .Array {
+        let array_type = self.as(^Array_Type)
+        let builder = string.new_builder()
+        return builder.append_char('[').append_decimal(array_type.size.as(usize)).append_char(']').append(array_type.item_type.name_string()).build()
+    } else if self.kind == .bool {
+        return "bool"
+    } else if self.kind == .i16 {
+        return "i16"
+    } else if self.kind == .i32 {
+        return "i32"
+    } else if self.kind == .i64 {
+        return "i64"
+    } else if self.kind == .i8 {
+        return "i8"
+    } else if self.kind == .isize {
+        return "isize"
+    } else if self.kind == .Multi_Pointer {
+        let builder = string.new_builder()
+        return builder.append("[*]").append(self.as(^Multi_Pointer_Type).pointee.name_string()).build()
+    } else if self.kind == .Opaque {
+        return self.as(^Named_Type).name
+    } else if self.kind == .Pointer {
+        let builder = string.new_builder()
+        return builder.append_char('[').append(self.as(^Pointer_Type).pointee.name_string()).append_char(']').build()
+    } else if self.kind == .Struct {
+        return self.as(^Named_Type).name
+    } else if self.kind == .u16 {
+        return "u16"
+    } else if self.kind == .u32 {
+        return "u32"
+    } else if self.kind == .u64 {
+        return "u64"
+    } else if self.kind == .u8 {
+        return "u8"
+    } else if self.kind == .usize {
+        return "usize"
+    }
+    panic "Not supported yet: type name"
+}
+
+proc align_up(size: usize, alignment: usize) -> usize {
+    return (size + alignment - 1) / alignment * alignment
+}
+
+proc (^Type).alignment(self) -> usize {
+    if self.kind == .Array {
+        return self.as(^Array_Type).item_type.alignment()
+    }
+    if self.kind == .Struct {
+        let alignment = 1usize
+        let member = self.as(^Struct_Type).first_member
+        while member != null {
+            let member_alignment = member.type.alignment()
+            if member_alignment > alignment {
+                alignment = member_alignment
+            }
+            member = member.next
+        }
+        return alignment
+    }
+    let size = self.size()
+    if size >= 8 {
+        return 8
+    }
+    return size
+}
+
+proc (^Type).size(self) -> usize {
+    if self.kind == .Array {
+        let array_type = self.as(^Array_Type)
+        return array_type.size.as(usize) * array_type.item_type.size()
+    } else if self.kind == .bool {
+        return 1
+    } else if self.kind == .i16 {
+        return 2
+    } else if self.kind == .i32 {
+        return 4
+    } else if self.kind == .i64 {
+        return 8
+    } else if self.kind == .i8 {
+        return 1
+    } else if self.kind == .isize {
+        return 8
+    } else if self.kind == .Multi_Pointer {
+        return 8
+    } else if self.kind == .Pointer {
+        return 8
+    } else if self.kind == .Procedure {
+        return 8
+    } else if self.kind == .Struct {
+        let size = 0usize
+        let alignment = 1usize
+        let member = self.as(^Struct_Type).first_member
+        while member != null {
+            let member_alignment = member.type.alignment()
+            size = align_up(size, member_alignment)
+            size = size + member.type.size()
+            if member_alignment > alignment {
+                alignment = member_alignment
+            }
+            member = member.next
+        }
+        return align_up(size, alignment)
+    } else if self.kind == .u16 {
+        return 2
+    } else if self.kind == .u32 {
+        return 4
+    } else if self.kind == .u64 {
+        return 8
+    } else if self.kind == .u8 {
+        return 1
+    } else if self.kind == .usize {
+        return 8
+    }
+    panic "Lowering not supported yet: size of type"
+}
+
+type Array_Type = struct {
+    super: Type
+    item_type: ^Type
+    size: u64
+}
+
+proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
+    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
+    result.^ = Array_Type(super: Type(kind: .Array), item_type: item_type, size: size)
+    return result
+}
+
+type Multi_Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
+    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
+    result.^ = Multi_Pointer_Type(super: Type(kind: .Multi_Pointer), pointee: pointee)
+    return result
+}
+
+type Nothing_Type = struct {
+    super: Type
+}
+
+proc new_nothing_type() -> ^Nothing_Type {
+    let result = allocator.alloc(size: type_size(Nothing_Type), alignment: type_alignment(Nothing_Type)).as(^Nothing_Type)
+    result.^ = Nothing_Type(super: Type(kind: .Nothing))
+    return result
+}
+
+type Named_Type = struct {
+    super: Type
+    name: str
+    next_type: ^Named_Type
+}
+
+type Opaque_Type = struct {
+    super: Named_Type
+}
+
+proc new_opaque_type(name: str) -> ^Opaque_Type {
+    let result = allocator.alloc(size: type_size(Opaque_Type), alignment: type_alignment(Opaque_Type)).as(^Opaque_Type)
+    result.^ = Opaque_Type(super: Named_Type(super: Type(kind: .Opaque), name: name, next_type: null))
+    return result
+}
+
+type Pointer_Type = struct {
+    super: Type
+    pointee: ^Type
+}
+
+proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
+    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
+    result.^ = Pointer_Type(super: Type(kind: .Pointer), pointee: pointee)
+    return result
+}
+
+type Procedure_Type_Parameter = struct {
+    type: ^Type
+    next: ^Procedure_Type_Parameter
+}
+
+proc new_procedure_type_parameter(type: ^Type) -> ^Procedure_Type_Parameter {
+    let result = allocator.alloc(size: type_size(Procedure_Type_Parameter), alignment: type_alignment(Procedure_Type_Parameter)).as(^Procedure_Type_Parameter)
+    result.^ = Procedure_Type_Parameter(type: type, next: null)
+    return result
+}
+
+type Procedure_Type = struct {
+    super: Type
+    first_parameter: ^Procedure_Type_Parameter
+    last_parameter: ^Procedure_Type_Parameter
+    return_type: ^Type
+}
+
+proc new_procedure_type(return_type: ^Type) -> ^Procedure_Type {
+    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
+    result.^ = Procedure_Type(super: Type(kind: .Procedure), first_parameter: null, last_parameter: null, return_type: return_type)
+    return result
+}
+
+proc (^Procedure_Type).append_parameter(self, type: ^Type) {
+    let parameter = new_procedure_type_parameter(type)
+    if self.first_parameter == null {
+        self.first_parameter = parameter
+    } else {
+        self.last_parameter.next = parameter
+    }
+    self.last_parameter = parameter
+}
+
+type Struct_Member = struct {
+    name: str
+    type: ^Type
+    next: ^Struct_Member
+}
+
+type Struct_Type = struct {
+    super: Named_Type
+    first_member: ^Struct_Member
+    last_member: ^Struct_Member
+}
+
+proc new_struct_type(name: str) -> ^Struct_Type {
+    let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
+    result.^ = Struct_Type(
+        super: Named_Type(super: Type(kind: .Struct), name: name, next_type: null)
+        first_member: null
+        last_member: null
+    )
+    return result
+}
+
+proc (^Struct_Type).append_member(self, name: str, type: ^Type) {
+    let member = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
+    member.^ = Struct_Member(name: name, type: type, next: null)
+    if self.first_member == null {
+        self.first_member = member
+    } else {
+        self.last_member.next = member
+    }
+    self.last_member = member
+}
+
+type Value_Kind = enum {
+    Global
+    Instruction_Result
+    Parameter
+    Procedure
+}
+
+type Value = struct {
+    kind: Value_Kind
+    name: str
+    type: ^Type
+    variable: ^Variable
+    next: ^Value
+}
+
+proc new_value(kind: Value_Kind, name: str, type: ^Type) -> ^Value {
+    let result = allocator.alloc(size: type_size(Value), alignment: type_alignment(Value)).as(^Value)
+    result.^ = Value(kind: kind, name: name, type: type, variable: null, next: null)
+    return result
+}
+
+type Symbol = struct {
+    super: Value
+}
+
+type Const_Payload = struct {
+    value: u64
+    lexeme: str
+}
+
+proc new_const_payload(value: u64, lexeme: str) -> ^Const_Payload {
+    let result = allocator.alloc(size: type_size(Const_Payload), alignment: type_alignment(Const_Payload)).as(^Const_Payload)
+    result.^ = Const_Payload(value: value, lexeme: lexeme)
+    return result
+}
+
+type Global = struct {
+    super: Symbol
+    literal: str
+    constant: ^Const_Payload
+    is_external: bool
+    next_global: ^Global
+}
+
+proc new_global(name: str, type: ^Type) -> ^Global {
+    let result = allocator.alloc(size: type_size(Global), alignment: type_alignment(Global)).as(^Global)
+    result.^ = Global(
+        super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
+        literal: ""
+        constant: null
+        is_external: false
+        next_global: null
+    )
+    return result
+}
+
+proc new_constant_global(name: str, type: ^Type, constant: ^Const_Payload) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.constant = constant
+    return result
+}
+
+proc new_external_global(name: str, type: ^Type) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.is_external = true
+    return result
+}
+
+proc new_string_global(name: str, type: ^Type, literal: str) -> ^Global {
+    let result = new_global(name: name, type: type)
+    result.literal = literal
+    return result
+}
+
+type Variable = struct {
+    super: Symbol
+    symbol: ^checked.Symbol
+    version: usize
+}
+
+proc new_variable(name: str, type: ^Type, symbol: ^checked.Symbol) -> ^Variable {
+    let result = allocator.alloc(size: type_size(Variable), alignment: type_alignment(Variable)).as(^Variable)
+    result.^ = Variable(
+        super: Symbol(super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null))
+        symbol: symbol
+        version: 0
+    )
+    return result
+}

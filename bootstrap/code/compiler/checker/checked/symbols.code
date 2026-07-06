@@ -1,0 +1,179 @@
+import allocator
+
+type Symbol_Kind = enum {
+    Constant
+    Import
+    Parameter
+    Procedure
+    Type
+    Variable
+}
+
+type Symbol = struct {
+    kind: Symbol_Kind
+    name: str
+}
+
+type Constant_Symbol = struct {
+    super: Symbol
+    expression: ^Expression
+}
+
+proc new_constant_symbol(name: str, expression: ^Expression) -> ^Constant_Symbol {
+    let result = allocator.alloc(size: type_size(Constant_Symbol), alignment: type_alignment(Constant_Symbol)).as(^Constant_Symbol)
+    result.^ = Constant_Symbol(
+        super: Symbol(kind: .Constant, name: name)
+        expression: expression
+    )
+    return result
+}
+
+type Import_Symbol = struct {
+    super: Symbol
+    package: ^Package
+}
+
+proc new_import_symbol(name: str, package: ^Package) -> ^Import_Symbol {
+    let result = allocator.alloc(size: type_size(Import_Symbol), alignment: type_alignment(Import_Symbol)).as(^Import_Symbol)
+    result.^ = Import_Symbol(
+        super: Symbol(kind: .Import, name: name)
+        package: package
+    )
+    return result
+}
+
+type Parameter_Symbol = struct {
+    super: Symbol
+    type: ^Type
+}
+
+proc new_parameter_symbol(name: str, type: ^Type) -> ^Parameter_Symbol {
+    let result = allocator.alloc(size: type_size(Parameter_Symbol), alignment: type_alignment(Parameter_Symbol)).as(^Parameter_Symbol)
+    result.^ = Parameter_Symbol(
+        super: Symbol(kind: .Parameter, name: name)
+        type: type
+    )
+    return result
+}
+
+type Type_Symbol = struct {
+    super: Symbol
+    type: ^Type
+}
+
+proc new_type_symbol(name: str, type: ^Type) -> ^Type_Symbol {
+    let result = allocator.alloc(size: type_size(Type_Symbol), alignment: type_alignment(Type_Symbol)).as(^Type_Symbol)
+    result.^ = Type_Symbol(
+        super: Symbol(kind: .Type, name: name)
+        type: type
+    )
+    return result
+}
+
+type Procedure_Symbol = struct {
+    super: Symbol
+    package_name: str
+    procedure_type: ^Procedure_Type
+    receiver_type: ^Type
+    body: ^Statement
+    is_external: bool
+    external_name: str
+}
+
+proc new_procedure_symbol(name: str, package_name: str, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool, external_name: str) -> ^Procedure_Symbol {
+    let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
+    result.^ = Procedure_Symbol(
+        super: Symbol(kind: .Procedure, name: name)
+        package_name: package_name
+        procedure_type: procedure_type
+        receiver_type: receiver_type
+        body: body
+        is_external: is_external
+        external_name: external_name
+    )
+    return result
+}
+
+type Method = struct {
+    receiver_type: ^Type
+    symbol: ^Procedure_Symbol
+    next: ^Method
+}
+
+proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
+    let result = allocator.alloc(size: type_size(Method), alignment: type_alignment(Method)).as(^Method)
+    result.^ = Method(receiver_type: receiver_type, symbol: symbol, next: null)
+    return result
+}
+
+type Variable_Symbol = struct {
+    super: Symbol
+    package_name: str
+    type: ^Type
+    expression: ^Expression
+    is_global: bool
+    is_external: bool
+    external_name: str
+}
+
+proc new_variable_symbol(name: str, package_name: str, type: ^Type, expression: ^Expression, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
+    let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
+    result.^ = Variable_Symbol(
+        super: Symbol(kind: .Variable, name: name)
+        package_name: package_name
+        type: type
+        expression: expression
+        is_global: is_global
+        is_external: is_external
+        external_name: external_name
+    )
+    return result
+}
+
+type Symbol_Entry = struct {
+    name: str
+    symbol: ^Symbol
+    next: ^Symbol_Entry
+}
+
+type Symbols = struct {
+    parent: ^Symbols
+    first: ^Symbol_Entry
+    last: ^Symbol_Entry
+}
+
+proc new_symbols(parent: ^Symbols) -> ^Symbols {
+    let result = allocator.alloc(size: type_size(Symbols), alignment: type_alignment(Symbols)).as(^Symbols)
+    result.^ = Symbols(parent: parent, first: null, last: null)
+    return result
+}
+
+proc (^Symbols).find(self, name: str) -> ^Symbol {
+    let symbol = self.find_local(name)
+    if symbol == null and self.parent != null {
+        return self.parent.find(name)
+    }
+    return symbol
+}
+
+proc (^Symbols).find_local(self, name: str) -> ^Symbol {
+    let entry = self.first
+    while entry != null {
+        if entry.name.equals(name) {
+            return entry.symbol
+        }
+        entry = entry.next
+    }
+    return null
+}
+
+proc (^Symbols).append(self, name: str, symbol: ^Symbol) {
+    let entry = allocator.alloc(size: type_size(Symbol_Entry), alignment: type_alignment(Symbol_Entry)).as(^Symbol_Entry)
+    entry.^ = Symbol_Entry(name: name, symbol: symbol, next: null)
+    if self.first == null {
+        self.first = entry
+    } else {
+        self.last.next = entry
+    }
+    self.last = entry
+}
