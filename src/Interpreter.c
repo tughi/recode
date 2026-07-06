@@ -1820,6 +1820,13 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(uint8_t **)return_address = result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__memcpy: {
+        void *destination = (void *)*(uint8_t **)argument_addresses[0];
+        void *source = (void *)*(uint8_t **)argument_addresses[1];
+        size_t size = *(size_t *)argument_addresses[2];
+        *(uint8_t **)return_address = memcpy(destination, source, size);
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__opendir: {
         const char *name = (const char *)*(uint8_t **)argument_addresses[0];
         DIR *result = opendir(name);
