@@ -4,7 +4,7 @@ type Number = struct {
 }
 
 proc main() -> i32 {
-    let third = Number(value: 43)
+    let third = Number(value: 43, next: null)
     let second = Number(value: 42, next: ^third)
     let first = Number(value: 41, next: ^second)
 

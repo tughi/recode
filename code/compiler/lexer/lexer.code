@@ -21,6 +21,7 @@ proc create(source: source.Source) -> Lexer {
         scan_position: 0
         scan_line: 1
         scan_column: 1
+        token_cache: Token_Cache(tokens: [3]^Token(null, null, null), size: 0, start: 0)
     )
 }
 

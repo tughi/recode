@@ -1023,6 +1023,18 @@ proc (^Checker).check_make_expression(self, type: ^checked.Type, call_expression
         last_argument = argument
         parsed_argument = parsed_argument.next
     }
+    let member = struct_type.first_member
+    while member != null {
+        let argument = first_argument
+        while argument != null and argument.member != member {
+            argument = argument.next
+        }
+        if argument == null {
+            libc.stderr.begin_location_message(call_expression.operand.location, style: .Error).write("Struct member not initialized: ").write(member.name).end_location_message()
+            panic
+        }
+        member = member.next
+    }
     return checked.new_make_struct_expression(struct_type: struct_type, first_argument: first_argument).as(^checked.Expression)
 }
 

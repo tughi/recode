@@ -2,7 +2,7 @@
     "compile": {
         "error": 1,
         "stderr": [
-            "tests/15__struct_super/006__init_super_member/test.code:25:13: Super struct member must be initialized in super member"
+            "tests/15__struct_super/006__init_super_member/test.code:26:13: Super struct member must be initialized in super member"
         ]
     }
 }

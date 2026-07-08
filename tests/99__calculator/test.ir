@@ -160,57 +160,59 @@ $test.main(%argc: i32, %argv: [*][*]u8): i32 {
   %5: [[*]u8] = offset %argv %4
   %6: [*]u8 = load %5
   %7: i32 = const 0
-  %8: calculator.tokenizer.Tokenizer = struct .data %6 .index %7
-  store %input_tokenizer.ptr %8
+  %8: [calculator.source.Node] = const null
+  %9: calculator.tokenizer.Tokenizer = struct .data %6 .index %7 .current_token %8
+  store %input_tokenizer.ptr %9
   jmp @4
 @4:
-  %9: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %input_tokenizer.ptr
-  %10: [i32] = offset %9 .kind
-  %11: i32 = load %10
-  %12: i32 = const 11
-  %13: bool = cmp_ne %11 %12
-  br %13 @5 @6
+  %10: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).peek_token %input_tokenizer.ptr
+  %11: [i32] = offset %10 .kind
+  %12: i32 = load %11
+  %13: i32 = const 11
+  %14: bool = cmp_ne %12 %13
+  br %14 @5 @6
 @5:
   %token.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
-  %14: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %input_tokenizer.ptr
-  store %token.ptr %14
-  %15: [io.Writer] = load $os.stdout
+  %15: [calculator.source.Node] = call $([calculator.tokenizer.Tokenizer]).next_token %input_tokenizer.ptr
+  store %token.ptr %15
+  %16: [io.Writer] = load $os.stdout
   %token.1: [calculator.source.Node] = load %token.ptr
-  %16: [io.Writer] = call $([io.Writer]).write_token %15 %token.1
-  %17: [io.Writer] = call $([io.Writer]).end_line %16
+  %17: [io.Writer] = call $([io.Writer]).write_token %16 %token.1
+  %18: [io.Writer] = call $([io.Writer]).end_line %17
   jmp @4
 @6:
   %input_parser.ptr: [calculator.parser.Parser] = alloc calculator.parser.Parser
-  %18: i32 = const 1
-  %19: [[*]u8] = offset %argv %18
-  %20: [*]u8 = load %19
-  %21: i32 = const 0
-  %22: calculator.tokenizer.Tokenizer = struct .data %20 .index %21
-  %23: calculator.parser.Parser = struct .tokenizer %22
-  store %input_parser.ptr %23
+  %19: i32 = const 1
+  %20: [[*]u8] = offset %argv %19
+  %21: [*]u8 = load %20
+  %22: i32 = const 0
+  %23: [calculator.source.Node] = const null
+  %24: calculator.tokenizer.Tokenizer = struct .data %21 .index %22 .current_token %23
+  %25: calculator.parser.Parser = struct .tokenizer %24
+  store %input_parser.ptr %25
   %parsed_expression.ptr: [[calculator.source.Node]] = alloc [calculator.source.Node]
-  %24: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_expression %input_parser.ptr
-  store %parsed_expression.ptr %24
-  %25: [io.Writer] = load $os.stdout
-  %26: usize = const 12
-  %27: String = struct .data $str_1 .length %26
-  %28: [io.Writer] = call $([io.Writer]).write_string %25 %27
+  %26: [calculator.source.Node] = call $([calculator.parser.Parser]).parse_expression %input_parser.ptr
+  store %parsed_expression.ptr %26
+  %27: [io.Writer] = load $os.stdout
+  %28: usize = const 12
+  %29: String = struct .data $str_1 .length %28
+  %30: [io.Writer] = call $([io.Writer]).write_string %27 %29
   %parsed_expression.1: [calculator.source.Node] = load %parsed_expression.ptr
-  %29: [io.Writer] = call $([io.Writer]).write_expression %28 %parsed_expression.1
-  %30: [io.Writer] = call $([io.Writer]).end_line %29
+  %31: [io.Writer] = call $([io.Writer]).write_expression %30 %parsed_expression.1
+  %32: [io.Writer] = call $([io.Writer]).end_line %31
   %result.ptr: [i32] = alloc i32
   %parsed_expression.2: [calculator.source.Node] = load %parsed_expression.ptr
-  %31: i32 = call $test.evaluate %parsed_expression.2
-  store %result.ptr %31
-  %32: [io.Writer] = load $os.stdout
-  %33: usize = const 8
-  %34: String = struct .data $str_2 .length %33
-  %35: [io.Writer] = call $([io.Writer]).write_string %32 %34
+  %33: i32 = call $test.evaluate %parsed_expression.2
+  store %result.ptr %33
+  %34: [io.Writer] = load $os.stdout
+  %35: usize = const 8
+  %36: String = struct .data $str_2 .length %35
+  %37: [io.Writer] = call $([io.Writer]).write_string %34 %36
   %result.1: i32 = load %result.ptr
-  %36: [io.Writer] = call $([io.Writer]).write_signed %35 %result.1
-  %37: [io.Writer] = call $([io.Writer]).end_line %36
-  %38: i32 = const 0
-  ret %38
+  %38: [io.Writer] = call $([io.Writer]).write_signed %37 %result.1
+  %39: [io.Writer] = call $([io.Writer]).end_line %38
+  %40: i32 = const 0
+  ret %40
 }
 
 $test.evaluate(%node: [calculator.source.Node]): i32 {

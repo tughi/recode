@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/04__struct/020__uninitialized_member/test.code:7:17: Struct member not initialized: y"
+        ]
+    }
+}

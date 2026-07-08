@@ -17,6 +17,7 @@ proc main(argc: i32, argv: [^][^]u8) -> i32 {
     let input_tokenizer = tokenizer.Tokenizer(
         data: argv[1]
         index: 0
+        current_token: null
     )
 
     while input_tokenizer.peek_token().kind != tokenizer.NODE_STOP {
@@ -27,6 +28,7 @@ proc main(argc: i32, argv: [^][^]u8) -> i32 {
     let input_parser = parser.Parser(tokenizer: tokenizer.Tokenizer(
         data: argv[1]
         index: 0
+        current_token: null
     ))
     let parsed_expression = input_parser.parse_expression()
     os.stdout.write_string("Expression: ").write_expression(parsed_expression).end_line()

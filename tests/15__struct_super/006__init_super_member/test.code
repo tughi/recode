@@ -21,6 +21,7 @@ proc main() -> i32 {
         super: Car(
             super: Vehicle(
                 wheels: 4
+                seats: 2
             )
             seats: 2
         )

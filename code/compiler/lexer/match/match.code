@@ -32,29 +32,29 @@ let optional_space: Match
 let required_space: Match
 
 proc init() {
-    character = Match(kind: .Character)
-    comment = Match(kind: .Comment)
-    end_of_file = Match(kind: .End_Of_File)
-    end_of_line = Match(kind: .End_Of_Line)
-    identifier = Match(kind: .Identifier)
-    integer = Match(kind: .Integer)
-    integer_type = Match(kind: .Integer_Type)
-    required_space = Match(kind: .Space, required: true)
-    optional_space = Match(kind: .Space)
+    character = Match(kind: .Character, keyword: "", other: 0, required: false)
+    comment = Match(kind: .Comment, keyword: "", other: 0, required: false)
+    end_of_file = Match(kind: .End_Of_File, keyword: "", other: 0, required: false)
+    end_of_line = Match(kind: .End_Of_Line, keyword: "", other: 0, required: false)
+    identifier = Match(kind: .Identifier, keyword: "", other: 0, required: false)
+    integer = Match(kind: .Integer, keyword: "", other: 0, required: false)
+    integer_type = Match(kind: .Integer_Type, keyword: "", other: 0, required: false)
+    required_space = Match(kind: .Space, keyword: "", other: 0, required: true)
+    optional_space = Match(kind: .Space, keyword: "", other: 0, required: false)
 }
 
 
 proc keyword(lexeme: str) -> Match {
-    return Match(kind: .Keyword, keyword: lexeme)
+    return Match(kind: .Keyword, keyword: lexeme, other: 0, required: false)
 }
 
 proc other(lexeme: u8) -> Match {
-    return Match(kind: .Other, other: lexeme)
+    return Match(kind: .Other, keyword: "", other: lexeme, required: false)
 }
 
 
 proc string_literal() -> Match {
-    return Match(kind: .String)
+    return Match(kind: .String, keyword: "", other: 0, required: false)
 }
 
 type Check_Result = enum {

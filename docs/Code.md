@@ -376,7 +376,7 @@ type Point = struct {
 let p = Point(x: 16, y: 32)
 ```
 
-Fields may be omitted (zero-initialized) or listed in any order.
+Fields may be listed in any order, but a struct initializer must cover **all** fields of the struct — omitting any field is an error (`Struct member not initialized: <name>`). To get a zero-initialized value, declare without an initializer instead (`let p: Point`).
 
 ### Heap Allocation
 

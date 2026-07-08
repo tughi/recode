@@ -8,7 +8,7 @@ proc (Point).get_x(self) -> i32 {
 }
 
 proc main() -> i32 {
-    let point = Point(x: 42)
+    let point = Point(x: 42, y: 0)
     let get_point_x = Point.get_x
     return get_point_x(point) - 42
 }

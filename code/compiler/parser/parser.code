@@ -14,7 +14,7 @@ type Parser = struct {
 }
 
 proc parse(source_dir: str, package_name: str, binary_name: str) -> ^parsed.Package {
-    let parser = Parser()
+    let parser: Parser
 
     let package: ^parsed.Package = null
     if package_name.length > 0 {
