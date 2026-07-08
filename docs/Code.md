@@ -326,6 +326,23 @@ loop {
 
 Exits the innermost `while` or `loop`.
 
+### continue
+
+Skips the rest of the current iteration of the innermost `while` or `loop` and starts the next one:
+
+```code
+let i = 0
+while i < 10 {
+    i = i + 1
+    if i % 2 == 0 {
+        continue    // skip even numbers
+    }
+    // ... only runs for odd i
+}
+```
+
+In a `while`, control jumps back to the condition (which is re-tested); in a `loop`, it jumps back to the top of the body. Like `break`, it ends the control flow path it is on — a statement after `continue` in the same block is unreachable.
+
 ### return
 
 ```code

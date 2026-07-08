@@ -7,6 +7,7 @@ type Statement_Kind = enum {
     Block
     Break
     Const
+    Continue
     Expression
     If
     Import
@@ -79,6 +80,18 @@ proc new_const_statement(location: source.Source_Location, name: ^lexer.Identifi
         super: Statement(kind: .Const, location: location, next: null)
         name: name
         expression: expression
+    )
+    return result.as(^Statement)
+}
+
+type Continue_Statement = struct {
+    super: Statement
+}
+
+proc new_continue_statement(location: source.Source_Location) -> ^Statement {
+    let result = allocator.alloc(size: type_size(Continue_Statement), alignment: type_alignment(Continue_Statement)).as(^Continue_Statement)
+    result.^ = Continue_Statement(
+        super: Statement(kind: .Continue, location: location, next: null)
     )
     return result.as(^Statement)
 }

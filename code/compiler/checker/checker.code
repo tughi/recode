@@ -485,6 +485,8 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
         return self.check_block_statement(parsed_statement.as(^parsed.Block_Statement))
     } else if parsed_statement.kind == .Break {
         return self.check_break_statement(parsed_statement.as(^parsed.Break_Statement))
+    } else if parsed_statement.kind == .Continue {
+        return self.check_continue_statement(parsed_statement.as(^parsed.Continue_Statement))
     } else if parsed_statement.kind == .Expression {
         return self.check_expression_statement(parsed_statement.as(^parsed.Expression_Statement))
     } else if parsed_statement.kind == .If {
@@ -536,6 +538,11 @@ proc (^Checker).check_block_statement(self, parsed_block: ^parsed.Block_Statemen
 proc (^Checker).check_break_statement(self, break_statement: ^parsed.Break_Statement) -> ^checked.Statement {
     self.is_unreachable = true
     return checked.new_break_statement(location: break_statement.location).as(^checked.Statement)
+}
+
+proc (^Checker).check_continue_statement(self, continue_statement: ^parsed.Continue_Statement) -> ^checked.Statement {
+    self.is_unreachable = true
+    return checked.new_continue_statement(location: continue_statement.location).as(^checked.Statement)
 }
 
 proc (^Checker).check_expression_statement(self, expression_statement: ^parsed.Expression_Statement) -> ^checked.Statement {

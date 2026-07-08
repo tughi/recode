@@ -1,0 +1,8 @@
+proc main() -> i32 {
+    let executed = false
+    loop {
+        continue
+        executed = true
+    }
+    return 0
+}

@@ -284,6 +284,8 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement {
         return self.parse_break_statement()
     } else if self.lexer.matches_one(match.keyword("const")) {
         return self.parse_const_statement()
+    } else if self.lexer.matches_one(match.keyword("continue")) {
+        return self.parse_continue_statement()
     } else if self.lexer.matches_one(match.keyword("loop")) {
         return self.parse_loop_statement()
     } else if self.lexer.matches_one(match.keyword("while")) {
@@ -326,6 +328,12 @@ proc (^Parser).parse_const_statement(self) -> ^parsed.Statement {
     self.consume_space(1)
     let expression = self.parse_expression()
     return parsed.new_const_statement(location: location, name: name, expression: expression)
+}
+
+proc (^Parser).parse_continue_statement(self) -> ^parsed.Statement {
+    let location = self.lexer.location()
+    self.consume_keyword("continue")
+    return parsed.new_continue_statement(location: location)
 }
 
 proc (^Parser).parse_loop_statement(self) -> ^parsed.Statement {

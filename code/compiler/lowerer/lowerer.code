@@ -33,6 +33,7 @@ type Lowerer = struct {
     current_procedure: ^ir.Procedure
     current_block: ^ir.Block
     break_block: ^ir.Block
+    continue_block: ^ir.Block
     scope: ^Scope_Entry
     first_enum_name: ^Enum_Name_Entry
     last_enum_name: ^Enum_Name_Entry
@@ -50,6 +51,7 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
         current_procedure: null
         current_block: null
         break_block: null
+        continue_block: null
         scope: null
         first_enum_name: null
         last_enum_name: null
@@ -293,6 +295,7 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
     self.next_value_id = 0
     self.block_counter = 0
     self.break_block = null
+    self.continue_block = null
     let block = self.create_block()
     procedure.append_block(block)
     self.current_block = block
@@ -463,6 +466,8 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
         }
     } else if statement.kind == .Break {
         self.current_block.append_instruction(ir.new_jmp_instruction(block: self.break_block).as(^ir.Instruction))
+    } else if statement.kind == .Continue {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: self.continue_block).as(^ir.Instruction))
     } else if statement.kind == .Expression {
         let expression_statement = statement.as(^checked.Expression_Statement)
         self.lower_expression(expression_statement.expression)
@@ -548,9 +553,12 @@ proc (^Lowerer).lower_loop_statement(self, loop_statement: ^checked.Loop_Stateme
     self.current_block = body_block
     self.emit_line_instruction(loop_statement.location)
     let outer_break_block = self.break_block
+    let outer_continue_block = self.continue_block
     self.break_block = end_block
+    self.continue_block = body_block
     self.lower_statement(loop_statement.body)
     self.break_block = outer_break_block
+    self.continue_block = outer_continue_block
     if not self.current_block.is_terminated() {
         self.current_block.append_instruction(ir.new_jmp_instruction(block: body_block).as(^ir.Instruction))
     }
@@ -586,9 +594,12 @@ proc (^Lowerer).lower_while_statement(self, while_statement: ^checked.While_Stat
     self.current_procedure.append_block(body_block)
     self.current_block = body_block
     let outer_break_block = self.break_block
+    let outer_continue_block = self.continue_block
     self.break_block = end_block
+    self.continue_block = condition_block
     self.lower_statement(while_statement.body)
     self.break_block = outer_break_block
+    self.continue_block = outer_continue_block
     if not self.current_block.is_terminated() {
         self.current_block.append_instruction(ir.new_jmp_instruction(block: condition_block).as(^ir.Instruction))
     }
