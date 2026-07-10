@@ -65,6 +65,17 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
             self.write(" @").write_u64(value: br_instruction.true_block.label.as(u64))
             self.write(" @").write_u64(value: br_instruction.false_block.label.as(u64))
         }
+        case .Brx {
+            let brx_instruction = instruction.as(^ir.Brx_Instruction)
+            self.write("brx ")
+            self.write_value_reference(brx_instruction.value)
+            let target = brx_instruction.first_target
+            while target != null {
+                self.write(" @").write_u64(value: target.block.label.as(u64))
+                target = target.next
+            }
+            self.write(" @").write_u64(value: brx_instruction.default_block.label.as(u64))
+        }
         case .Call {
             let call_instruction = instruction.as(^ir.Call_Instruction)
             if call_instruction.type.kind != .Nothing {

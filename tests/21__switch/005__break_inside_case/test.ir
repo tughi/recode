@@ -14,28 +14,20 @@ $test.main(): i32 {
   br %4 @3 @4
 @3:
   %d.1: i32 = load %d.ptr
-  %5: i32 = const 0
-  %6: bool = cmp_eq %d.1 %5
-  br %6 @6 @7
+  brx %d.1 @6 @7 @5
 @6:
   %count.2: i32 = load %count.ptr
-  %7: i32 = const 2
-  %8: i32 = add %count.2 %7
-  store %count.ptr %8
+  %5: i32 = const 2
+  %6: i32 = add %count.2 %5
+  store %count.ptr %6
   jmp @5
 @7:
-  %9: i32 = const 1
-  %10: bool = cmp_eq %d.1 %9
-  br %10 @8 @9
-@8:
   jmp @4
-@9:
-  jmp @5
 @5:
   %count.3: i32 = load %count.ptr
-  %11: i32 = const 1
-  %12: i32 = add %count.3 %11
-  store %count.ptr %12
+  %7: i32 = const 1
+  %8: i32 = add %count.3 %7
+  store %count.ptr %8
   jmp @2
 @4:
   %count.4: i32 = load %count.ptr

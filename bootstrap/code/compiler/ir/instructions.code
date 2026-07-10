@@ -6,6 +6,7 @@ type Instruction_Kind = enum {
     Alloc
     Bind
     Br
+    Brx
     Call
     Cast
     Compare_Equal
@@ -52,7 +53,7 @@ proc (^Block).is_terminated(self) -> bool {
         return false
     }
     let kind = self.last_instruction.kind
-    return kind == .Br or kind == .Jmp or kind == .Ret
+    return kind == .Br or kind == .Brx or kind == .Jmp or kind == .Ret
 }
 
 type Argument = struct {
@@ -148,6 +149,50 @@ proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Blo
         false_block: false_block
     )
     return allocated
+}
+
+type Brx_Target = struct {
+    block: ^Block
+    next: ^Brx_Target
+}
+
+proc new_brx_target(block: ^Block) -> ^Brx_Target {
+    let allocated = allocator.alloc(size: type_size(Brx_Target), alignment: type_alignment(Brx_Target)).as(^Brx_Target)
+    allocated.^ = Brx_Target(block: block, next: null)
+    return allocated
+}
+
+type Brx_Instruction = struct {
+    super: Instruction
+    value: ^Value
+    first_target: ^Brx_Target
+    last_target: ^Brx_Target
+    default_block: ^Block
+}
+
+proc new_brx_instruction(value: ^Value, default_block: ^Block) -> ^Brx_Instruction {
+    let allocated = allocator.alloc(size: type_size(Brx_Instruction), alignment: type_alignment(Brx_Instruction)).as(^Brx_Instruction)
+    allocated.^ = Brx_Instruction(
+        super: Instruction(
+            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            kind: .Brx
+            next_instruction: null
+        )
+        value: value
+        first_target: null
+        last_target: null
+        default_block: default_block
+    )
+    return allocated
+}
+
+proc (^Brx_Instruction).append_target(self, target: ^Brx_Target) {
+    if self.first_target == null {
+        self.first_target = target
+    } else {
+        self.last_target.next = target
+    }
+    self.last_target = target
 }
 
 type Call_Instruction = struct {

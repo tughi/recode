@@ -3,16 +3,14 @@ $test.score(%direction: i32): i32 {
   %result.ptr: [i32] = alloc i32
   %1: i32 = const 0
   store %result.ptr %1
-  %2: i32 = const 0
-  %3: bool = cmp_eq %direction %2
-  br %3 @3 @4
-@3:
-  %4: i32 = const 10
-  store %result.ptr %4
-  jmp @2
+  brx %direction @4 @3 @3 @3 @3
 @4:
-  %5: i32 = const 20
-  store %result.ptr %5
+  %2: i32 = const 10
+  store %result.ptr %2
+  jmp @2
+@3:
+  %3: i32 = const 20
+  store %result.ptr %3
   jmp @2
 @2:
   %result.1: i32 = load %result.ptr

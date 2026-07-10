@@ -208,6 +208,16 @@ Conditional branch. Jumps to the first label if the condition is true, otherwise
 br %condition @2 @3
 ```
 
+### `brx`
+
+Indexed branch (jump table). The operand is an integer; value `i` jumps to the label at position `i` (0-based). Any other value — negative or past the table — jumps to the last label, the **default**, so with K labels the table covers `0..K-2`. At least two labels (one entry plus the default) are required.
+
+```
+brx %value @4 @5 @6 @9
+```
+
+Note that `br` is true-first while `brx` is 0-indexed: `br %c @t @f` is equivalent to `brx %c @f @t`, not `brx %c @t @f`.
+
 ### `call`
 
 Calls a function. Callee type must be a `[proc]` function pointer. Arguments follow the callee. The result is omitted for void calls.

@@ -597,41 +597,57 @@ proc (^Lowerer).lower_loop_statement(self, loop_statement: ^checked.Loop_Stateme
 proc (^Lowerer).lower_switch_statement(self, switch_statement: ^checked.Switch_Statement) {
     let operand = self.lower_expression(switch_statement.operand)
     let end_block = self.create_block()
+    let else_block = end_block
+    if switch_statement.else_block != null {
+        else_block = self.create_block()
+    }
+
+    let brx_instruction = ir.new_brx_instruction(value: operand, default_block: else_block)
+    let member = switch_statement.operand.type.as(^checked.Enum_Type).first_member
+    while member != null {
+        brx_instruction.append_target(ir.new_brx_target(block: null))
+        member = member.next
+    }
+    self.current_block.append_instruction(brx_instruction.as(^ir.Instruction))
+
     let switch_case = switch_statement.first_case
     while switch_case != null {
         let case_block = self.create_block()
         let value = switch_case.first_value
         while value != null {
-            let member_value = self.lower_expression(value.expression)
-            let matches = ir.new_binary_instruction(
-                kind: .Compare_Equal
-                name: self.fresh_name()
-                type: ir.new_primitive_type(.bool)
-                left: operand
-                right: member_value
-            )
-            self.current_block.append_instruction(matches.as(^ir.Instruction))
-            let next_block = self.create_block()
-            self.current_block.append_instruction(ir.new_br_instruction(condition: matches.as(^ir.Value), true_block: case_block, false_block: next_block).as(^ir.Instruction))
-            if value.next == null {
-                self.current_procedure.append_block(case_block)
-                self.current_block = case_block
-                self.lower_statement(switch_case.block)
-                if not self.current_block.is_terminated() {
-                    self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
-                }
+            let member_value = value.expression.as(^checked.Enum_Member_Expression).member.value
+            let target = brx_instruction.first_target
+            while member_value > 0 {
+                target = target.next
+                member_value = member_value - 1
             }
-            self.current_procedure.append_block(next_block)
-            self.current_block = next_block
+            target.block = case_block
             value = value.next
+        }
+        self.current_procedure.append_block(case_block)
+        self.current_block = case_block
+        self.lower_statement(switch_case.block)
+        if not self.current_block.is_terminated() {
+            self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
         }
         switch_case = switch_case.next
     }
-    if switch_statement.else_block != null {
-        self.lower_statement(switch_statement.else_block)
+
+    let target = brx_instruction.first_target
+    while target != null {
+        if target.block == null {
+            target.block = else_block
+        }
+        target = target.next
     }
-    if not self.current_block.is_terminated() {
-        self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+
+    if switch_statement.else_block != null {
+        self.current_procedure.append_block(else_block)
+        self.current_block = else_block
+        self.lower_statement(switch_statement.else_block)
+        if not self.current_block.is_terminated() {
+            self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+        }
     }
     self.current_procedure.append_block(end_block)
     self.current_block = end_block

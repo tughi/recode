@@ -1,37 +1,21 @@
 $test.steps(%direction: i32): i32 {
 @1:
-  %1: i32 = const 0
-  %2: bool = cmp_eq %direction %1
-  br %2 @3 @4
+  brx %direction @3 @4 @5 @6 @2
 @3:
-  %3: i32 = const 1
-  ret %3
+  %1: i32 = const 1
+  ret %1
 @4:
-  %4: i32 = const 1
-  %5: bool = cmp_eq %direction %4
-  br %5 @5 @6
+  %2: i32 = const 2
+  ret %2
 @5:
-  %6: i32 = const 2
-  ret %6
+  %3: i32 = const 3
+  ret %3
 @6:
-  %7: i32 = const 2
-  %8: bool = cmp_eq %direction %7
-  br %8 @7 @8
-@7:
-  %9: i32 = const 3
-  ret %9
-@8:
-  %10: i32 = const 3
-  %11: bool = cmp_eq %direction %10
-  br %11 @9 @10
-@9:
-  %12: i32 = const 4
-  ret %12
-@10:
-  jmp @2
+  %4: i32 = const 4
+  ret %4
 @2:
-  %13: i32 = const 0
-  ret %13
+  %5: i32 = const 0
+  ret %5
 }
 
 $test.main(): i32 {
