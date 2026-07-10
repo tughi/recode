@@ -308,15 +308,17 @@ def stage():
 
     run_tests(["tests"], compiler_ir="build/stage2/compiler.ir")
 
-    run("rm -fr build/bootstrap")
-    run("mkdir -p build/bootstrap")
-    run("cp -R code build/bootstrap/code")
-    run(["Runner", os.path.abspath("build/stage2/compiler.ir"), "-g", "-o", ".", "-n", "compiler", "code", "compiler"], cwd="build/bootstrap")
-    run(["Runner", "build/bootstrap/compiler.ir", "-g", "-o", "build/stage4", "-n", "compiler", "code", "compiler"])
+    run("rm -fr build/staging")
+    run("mkdir -p build/staging/bootstrap")
+    run("cp -R code build/staging/bootstrap/code")
+    run("ln -s bootstrap/code build/staging/code")
+    run(["Runner", "../stage2/compiler.ir", "-g", "-o", "bootstrap", "-n", "compiler", "bootstrap/code", "compiler"], cwd="build/staging")
+    run(["Runner", "build/staging/bootstrap/compiler.ir", "-g", "-o", "build/stage4", "-n", "compiler", "code", "compiler"])
     run("diff -q build/stage3/compiler.ir build/stage4/compiler.ir")
 
     run("rm -fr bootstrap")
-    run("mv build/bootstrap bootstrap")
+    run("mv build/staging/bootstrap bootstrap")
+    run("rm -fr build/staging")
 
 
 if __name__ == "__main__":
