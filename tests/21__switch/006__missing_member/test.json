@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/21__switch/006__missing_member/test.code:10:5: Enum member not handled: WEST"
+        ]
+    }
+}

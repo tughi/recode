@@ -343,6 +343,30 @@ while i < 10 {
 
 In a `while`, control jumps back to the condition (which is re-tested); in a `loop`, it jumps back to the top of the body. Like `break`, it ends the control flow path it is on — a statement after `continue` in the same block is unreachable.
 
+### switch
+
+Dispatches on an enum value. A case may match several members with `or`; the optional `else` handles the remaining members and must come last. There is no fallthrough.
+
+```code
+switch direction {
+    case .EAST {
+        return 1
+    }
+    case .NORTH or .SOUTH {
+        return 0
+    }
+    else {
+        return -1
+    }
+}
+```
+
+- The switched value must be an enum and is evaluated once.
+- Case labels are members of the switched enum type (dot shorthand infers it); listing a member twice is an error.
+- Without `else`, the cases must cover **every** member — a missing one is an error. An `else` when all members are covered is also an error.
+- `break` and `continue` keep their loop meaning inside a case body.
+- An empty case body is allowed — it explicitly ignores that member.
+
 ### return
 
 ```code

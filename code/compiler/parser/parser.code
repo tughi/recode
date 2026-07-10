@@ -298,6 +298,8 @@ proc (^Parser).parse_statement(self) -> ^parsed.Statement {
         return self.parse_panic_statement()
     } else if self.lexer.matches_one(match.keyword("return")) {
         return self.parse_return_statement()
+    } else if self.lexer.matches_one(match.keyword("switch")) {
+        return self.parse_switch_statement()
     } else {
         let location = self.lexer.location()
         let expression = self.parse_expression()
@@ -440,6 +442,71 @@ proc (^Parser).parse_return_statement(self) -> ^parsed.Statement {
         expression = self.parse_expression()
     }
     return parsed.new_return_statement(location: location, expression: expression)
+}
+
+proc (^Parser).parse_switch_statement(self) -> ^parsed.Statement {
+    let location = self.lexer.location()
+    self.consume_keyword("switch")
+    self.consume_space(1)
+    let operand = self.parse_expression()
+    self.consume_space(1)
+    self.consume_other('{')
+    self.consume_end_of_line()
+    self.increase_alignment()
+
+    let first_case: ^parsed.Switch_Case = null
+    let last_case: ^parsed.Switch_Case = null
+    loop {
+        while self.lexer.matches_two(match.optional_space, match.end_of_line) or self.lexer.matches_two(match.optional_space, match.comment) {
+            self.consume_empty_line(self.alignment)
+        }
+        if not self.lexer.matches_two(match.optional_space, match.keyword("case")) {
+            break
+        }
+        self.consume_space(self.alignment)
+        self.consume_keyword("case")
+        self.consume_space(1)
+        let first_value = parsed.new_switch_case_value(self.parse_logic_and_expression())
+        let last_value = first_value
+        while self.lexer.matches_two(match.required_space, match.keyword("or")) {
+            self.consume_space(1)
+            self.consume_keyword("or")
+            self.consume_space(1)
+            let value = parsed.new_switch_case_value(self.parse_logic_and_expression())
+            last_value.next = value
+            last_value = value
+        }
+        self.consume_space(1)
+        let switch_case = parsed.new_switch_case(first_value: first_value, block: self.parse_block_statement())
+        self.consume_end_of_line()
+        if last_case == null {
+            first_case = switch_case
+        } else {
+            last_case.next = switch_case
+        }
+        last_case = switch_case
+    }
+    if first_case == null {
+        libc.stderr.begin_location_message(self.lexer.peek_token(1).location, style: .Error).write("Expected case").end_location_message()
+        panic
+    }
+
+    let else_block: ^parsed.Statement = null
+    if self.lexer.matches_two(match.optional_space, match.keyword("else")) {
+        self.consume_space(self.alignment)
+        self.consume_keyword("else")
+        self.consume_space(1)
+        else_block = self.parse_block_statement()
+        self.consume_end_of_line()
+        while self.lexer.matches_two(match.optional_space, match.end_of_line) or self.lexer.matches_two(match.optional_space, match.comment) {
+            self.consume_empty_line(self.alignment)
+        }
+    }
+
+    self.decrease_alignment()
+    self.consume_space(self.alignment)
+    self.consume_other('}')
+    return parsed.new_switch_statement(location: location, operand: operand, first_case: first_case, else_block: else_block)
 }
 
 proc (^Parser).parse_expression(self) -> ^parsed.Expression {

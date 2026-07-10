@@ -1,0 +1,21 @@
+type Direction = enum {
+    NORTH
+    SOUTH
+}
+
+proc main() -> i32 {
+    let d = Direction.SOUTH
+    let count = 0
+    while count < 10 {
+        switch d {
+            case .NORTH {
+                count = count + 2
+            }
+            case .SOUTH {
+                break
+            }
+        }
+        count = count + 1
+    }
+    return count
+}

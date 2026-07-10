@@ -1,0 +1,23 @@
+type Direction = enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+
+proc score(direction: Direction) -> i32 {
+    let result = 0
+    switch direction {
+        case .NORTH {
+            result = 10
+        }
+        else {
+            result = 20
+        }
+    }
+    return result
+}
+
+proc main() -> i32 {
+    return score(Direction.NORTH) * 2 + score(Direction.WEST) - 40
+}

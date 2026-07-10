@@ -27796,7 +27796,7 @@ $allocator.alloc(%size: usize, %alignment: usize): [Any] {
   br %4 @2 @3
 @2:
   .line 25:7:9
-  %5: usize = const 16
+  %5: usize = const 24
   %6: usize = const 1024
   %7: usize = mul %5 %6
   %8: usize = const 1024

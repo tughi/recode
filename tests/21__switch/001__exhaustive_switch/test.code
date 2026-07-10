@@ -1,0 +1,28 @@
+type Direction = enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+
+proc steps(direction: Direction) -> i32 {
+    switch direction {
+        case .NORTH {
+            return 1
+        }
+        case .EAST {
+            return 2
+        }
+        case .SOUTH {
+            return 3
+        }
+        case .WEST {
+            return 4
+        }
+    }
+    return 0
+}
+
+proc main() -> i32 {
+    return steps(Direction.NORTH) * 1000 + steps(Direction.EAST) * 100 + steps(Direction.SOUTH) * 10 + steps(Direction.WEST) - 1234
+}

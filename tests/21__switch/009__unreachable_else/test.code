@@ -1,0 +1,22 @@
+type Direction = enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+
+proc main() -> i32 {
+    let d = Direction.NORTH
+    switch d {
+        case .NORTH {
+            return 0
+        }
+        case .EAST or .SOUTH or .WEST {
+            return 1
+        }
+        else {
+            return 2
+        }
+    }
+    return 3
+}

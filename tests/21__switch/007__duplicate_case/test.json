@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/21__switch/007__duplicate_case/test.code:14:23: Enum member already handled here: tests/21__switch/007__duplicate_case/test.code:11:14"
+        ]
+    }
+}

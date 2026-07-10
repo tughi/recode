@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/21__switch/009__unreachable_else/test.code:17:14: Unreachable else case"
+        ]
+    }
+}

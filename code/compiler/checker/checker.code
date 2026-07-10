@@ -497,6 +497,8 @@ proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^c
         return self.check_panic_statement(parsed_statement.as(^parsed.Panic_Statement))
     } else if parsed_statement.kind == .Return {
         return self.check_return_statement(parsed_statement.as(^parsed.Return_Statement))
+    } else if parsed_statement.kind == .Switch {
+        return self.check_switch_statement(parsed_statement.as(^parsed.Switch_Statement))
     } else if parsed_statement.kind == .Variable {
         return self.check_variable_statement(parsed_statement.as(^parsed.Variable_Statement))
     } else if parsed_statement.kind == .While {
@@ -598,6 +600,121 @@ proc (^Checker).require_same_type(self, expected_type: ^checked.Type, actual_typ
         libc.stderr.begin_location_message(location, style: .Error).write("Expected type ").write_checked_type(expected_type).write(" but got ").write_checked_type(actual_type).end_location_message()
         panic
     }
+}
+
+proc (^Checker).check_switch_statement(self, switch_statement: ^parsed.Switch_Statement) -> ^checked.Statement {
+    let operand = self.check_expression(switch_statement.operand, expected_type: null)
+    if operand.type.kind != .Enum {
+        libc.stderr.begin_location_message(switch_statement.operand.location, style: .Error).write("Not an enum").end_location_message()
+        panic
+    }
+    let enum_type = operand.type.as(^checked.Enum_Type)
+
+    let first_case: ^checked.Switch_Case = null
+    let last_case: ^checked.Switch_Case = null
+    let parsed_case = switch_statement.first_case
+    while parsed_case != null {
+        let first_value: ^checked.Switch_Case_Value = null
+        let last_value: ^checked.Switch_Case_Value = null
+        let parsed_value = parsed_case.first_value
+        while parsed_value != null {
+            let expression = self.check_expression(parsed_value.expression, expected_type: operand.type)
+            if expression.kind != .Enum_Member {
+                libc.stderr.begin_location_message(parsed_value.expression.location, style: .Error).write("Not an enum member").end_location_message()
+                panic
+            }
+            let member = expression.as(^checked.Enum_Member_Expression).member
+
+            let earlier_parsed_case = switch_statement.first_case
+            let earlier_checked_case = first_case
+            loop {
+                let earlier_parsed_value: ^parsed.Switch_Case_Value = null
+                let earlier_checked_value: ^checked.Switch_Case_Value = null
+                if earlier_parsed_case == parsed_case {
+                    earlier_parsed_value = parsed_case.first_value
+                    earlier_checked_value = first_value
+                } else {
+                    earlier_parsed_value = earlier_parsed_case.first_value
+                    earlier_checked_value = earlier_checked_case.first_value
+                }
+                while earlier_checked_value != null {
+                    if earlier_checked_value.expression.as(^checked.Enum_Member_Expression).member == member {
+                        libc.stderr.begin_location_message(parsed_value.expression.location, style: .Error).write("Enum member already handled here: ").write_location(earlier_parsed_value.expression.location).end_location_message()
+                        panic
+                    }
+                    earlier_parsed_value = earlier_parsed_value.next
+                    earlier_checked_value = earlier_checked_value.next
+                }
+                if earlier_parsed_case == parsed_case {
+                    break
+                }
+                earlier_parsed_case = earlier_parsed_case.next
+                earlier_checked_case = earlier_checked_case.next
+            }
+
+            let value = checked.new_switch_case_value(expression)
+            if last_value == null {
+                first_value = value
+            } else {
+                last_value.next = value
+            }
+            last_value = value
+            parsed_value = parsed_value.next
+        }
+
+        let scope = checked.new_symbols(self.current_scope)
+        self.current_scope = scope
+        let block = self.check_statement(parsed_case.block)
+        self.current_scope = scope.parent
+
+        let switch_case = checked.new_switch_case(first_value: first_value, block: block)
+        if last_case == null {
+            first_case = switch_case
+        } else {
+            last_case.next = switch_case
+        }
+        last_case = switch_case
+        parsed_case = parsed_case.next
+    }
+
+    let else_block: ^checked.Statement = null
+    if switch_statement.else_block != null {
+        let scope = checked.new_symbols(self.current_scope)
+        self.current_scope = scope
+        else_block = self.check_statement(switch_statement.else_block)
+        self.current_scope = scope.parent
+    }
+
+    let all_handled = true
+    let member = enum_type.first_member
+    while member != null {
+        let found = false
+        let search_case = first_case
+        while search_case != null and not found {
+            let search_value = search_case.first_value
+            while search_value != null and not found {
+                if search_value.expression.as(^checked.Enum_Member_Expression).member == member {
+                    found = true
+                }
+                search_value = search_value.next
+            }
+            search_case = search_case.next
+        }
+        if not found {
+            all_handled = false
+            if else_block == null {
+                libc.stderr.begin_location_message(switch_statement.location, style: .Error).write("Enum member not handled: ").write(member.name).end_location_message()
+                panic
+            }
+        }
+        member = member.next
+    }
+    if else_block != null and all_handled {
+        libc.stderr.begin_location_message(switch_statement.else_block.location, style: .Error).write("Unreachable else case").end_location_message()
+        panic
+    }
+
+    return checked.new_switch_statement(location: switch_statement.location, operand: operand, first_case: first_case, else_block: else_block).as(^checked.Statement)
 }
 
 proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Variable_Statement) -> ^checked.Statement {

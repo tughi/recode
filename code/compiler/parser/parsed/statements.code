@@ -15,6 +15,7 @@ type Statement_Kind = enum {
     Panic
     Procedure
     Return
+    Switch
     Type
     Variable
     While
@@ -226,6 +227,47 @@ proc new_return_statement(location: source.Source_Location, expression: ^Express
     result.^ = Return_Statement(
         super: Statement(kind: .Return, location: location, next: null)
         expression: expression
+    )
+    return result.as(^Statement)
+}
+
+type Switch_Case_Value = struct {
+    expression: ^Expression
+    next: ^Switch_Case_Value
+}
+
+proc new_switch_case_value(expression: ^Expression) -> ^Switch_Case_Value {
+    let result = allocator.alloc(size: type_size(Switch_Case_Value), alignment: type_alignment(Switch_Case_Value)).as(^Switch_Case_Value)
+    result.^ = Switch_Case_Value(expression: expression, next: null)
+    return result
+}
+
+type Switch_Case = struct {
+    first_value: ^Switch_Case_Value
+    block: ^Statement
+    next: ^Switch_Case
+}
+
+proc new_switch_case(first_value: ^Switch_Case_Value, block: ^Statement) -> ^Switch_Case {
+    let result = allocator.alloc(size: type_size(Switch_Case), alignment: type_alignment(Switch_Case)).as(^Switch_Case)
+    result.^ = Switch_Case(first_value: first_value, block: block, next: null)
+    return result
+}
+
+type Switch_Statement = struct {
+    super: Statement
+    operand: ^Expression
+    first_case: ^Switch_Case
+    else_block: ^Statement
+}
+
+proc new_switch_statement(location: source.Source_Location, operand: ^Expression, first_case: ^Switch_Case, else_block: ^Statement) -> ^Statement {
+    let result = allocator.alloc(size: type_size(Switch_Statement), alignment: type_alignment(Switch_Statement)).as(^Switch_Statement)
+    result.^ = Switch_Statement(
+        super: Statement(kind: .Switch, location: location, next: null)
+        operand: operand
+        first_case: first_case
+        else_block: else_block
     )
     return result.as(^Statement)
 }

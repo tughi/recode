@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/21__switch/008__not_an_enum/test.code:2:12: Not an enum"
+        ]
+    }
+}

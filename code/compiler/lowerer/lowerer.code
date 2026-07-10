@@ -484,6 +484,8 @@ proc (^Lowerer).lower_statement(self, statement: ^checked.Statement) {
             value = self.lower_expression(return_statement.expression)
         }
         self.current_block.append_instruction(ir.new_ret_instruction(value: value).as(^ir.Instruction))
+    } else if statement.kind == .Switch {
+        self.lower_switch_statement(statement.as(^checked.Switch_Statement))
     } else if statement.kind == .Variable {
         self.lower_variable_statement(statement.as(^checked.Variable_Statement))
     } else if statement.kind == .While {
@@ -561,6 +563,49 @@ proc (^Lowerer).lower_loop_statement(self, loop_statement: ^checked.Loop_Stateme
     self.continue_block = outer_continue_block
     if not self.current_block.is_terminated() {
         self.current_block.append_instruction(ir.new_jmp_instruction(block: body_block).as(^ir.Instruction))
+    }
+    self.current_procedure.append_block(end_block)
+    self.current_block = end_block
+}
+
+proc (^Lowerer).lower_switch_statement(self, switch_statement: ^checked.Switch_Statement) {
+    let operand = self.lower_expression(switch_statement.operand)
+    let end_block = self.create_block()
+    let switch_case = switch_statement.first_case
+    while switch_case != null {
+        let case_block = self.create_block()
+        let value = switch_case.first_value
+        while value != null {
+            let member_value = self.lower_expression(value.expression)
+            let matches = ir.new_binary_instruction(
+                kind: .Compare_Equal
+                name: self.fresh_name()
+                type: ir.new_primitive_type(.bool)
+                left: operand
+                right: member_value
+            )
+            self.current_block.append_instruction(matches.as(^ir.Instruction))
+            let next_block = self.create_block()
+            self.current_block.append_instruction(ir.new_br_instruction(condition: matches.as(^ir.Value), true_block: case_block, false_block: next_block).as(^ir.Instruction))
+            if value.next == null {
+                self.current_procedure.append_block(case_block)
+                self.current_block = case_block
+                self.lower_statement(switch_case.block)
+                if not self.current_block.is_terminated() {
+                    self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
+                }
+            }
+            self.current_procedure.append_block(next_block)
+            self.current_block = next_block
+            value = value.next
+        }
+        switch_case = switch_case.next
+    }
+    if switch_statement.else_block != null {
+        self.lower_statement(switch_statement.else_block)
+    }
+    if not self.current_block.is_terminated() {
+        self.current_block.append_instruction(ir.new_jmp_instruction(block: end_block).as(^ir.Instruction))
     }
     self.current_procedure.append_block(end_block)
     self.current_block = end_block

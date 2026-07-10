@@ -1,0 +1,8 @@
+proc main() -> i32 {
+    switch 42 {
+        case .NORTH {
+            return 0
+        }
+    }
+    return 1
+}
