@@ -181,46 +181,66 @@ proc new_primitive_type(kind: Type_Kind) -> ^Type {
 }
 
 proc (^Type).name_string(self) -> str {
-    if self.kind == .Any {
-        return "Any"
-    } else if self.kind == .Array {
-        let array_type = self.as(^Array_Type)
-        let builder = string.new_builder()
-        return builder.append_char('[').append_decimal(array_type.size.as(usize)).append_char(']').append(array_type.item_type.name_string()).build()
-    } else if self.kind == .bool {
-        return "bool"
-    } else if self.kind == .i16 {
-        return "i16"
-    } else if self.kind == .i32 {
-        return "i32"
-    } else if self.kind == .i64 {
-        return "i64"
-    } else if self.kind == .i8 {
-        return "i8"
-    } else if self.kind == .isize {
-        return "isize"
-    } else if self.kind == .Multi_Pointer {
-        let builder = string.new_builder()
-        return builder.append("[*]").append(self.as(^Multi_Pointer_Type).pointee.name_string()).build()
-    } else if self.kind == .Opaque {
-        return self.as(^Named_Type).name
-    } else if self.kind == .Pointer {
-        let builder = string.new_builder()
-        return builder.append_char('[').append(self.as(^Pointer_Type).pointee.name_string()).append_char(']').build()
-    } else if self.kind == .Struct {
-        return self.as(^Named_Type).name
-    } else if self.kind == .u16 {
-        return "u16"
-    } else if self.kind == .u32 {
-        return "u32"
-    } else if self.kind == .u64 {
-        return "u64"
-    } else if self.kind == .u8 {
-        return "u8"
-    } else if self.kind == .usize {
-        return "usize"
+    switch self.kind {
+        case .Any {
+            return "Any"
+        }
+        case .Array {
+            let array_type = self.as(^Array_Type)
+            let builder = string.new_builder()
+            return builder.append_char('[').append_decimal(array_type.size.as(usize)).append_char(']').append(array_type.item_type.name_string()).build()
+        }
+        case .bool {
+            return "bool"
+        }
+        case .i16 {
+            return "i16"
+        }
+        case .i32 {
+            return "i32"
+        }
+        case .i64 {
+            return "i64"
+        }
+        case .i8 {
+            return "i8"
+        }
+        case .isize {
+            return "isize"
+        }
+        case .Multi_Pointer {
+            let builder = string.new_builder()
+            return builder.append("[*]").append(self.as(^Multi_Pointer_Type).pointee.name_string()).build()
+        }
+        case .Opaque {
+            return self.as(^Named_Type).name
+        }
+        case .Pointer {
+            let builder = string.new_builder()
+            return builder.append_char('[').append(self.as(^Pointer_Type).pointee.name_string()).append_char(']').build()
+        }
+        case .Struct {
+            return self.as(^Named_Type).name
+        }
+        case .u16 {
+            return "u16"
+        }
+        case .u32 {
+            return "u32"
+        }
+        case .u64 {
+            return "u64"
+        }
+        case .u8 {
+            return "u8"
+        }
+        case .usize {
+            return "usize"
+        }
+        else {
+            panic "Not supported yet: type name"
+        }
     }
-    panic "Not supported yet: type name"
 }
 
 proc align_up(size: usize, alignment: usize) -> usize {
@@ -251,53 +271,72 @@ proc (^Type).alignment(self) -> usize {
 }
 
 proc (^Type).size(self) -> usize {
-    if self.kind == .Array {
-        let array_type = self.as(^Array_Type)
-        return array_type.size.as(usize) * array_type.item_type.size()
-    } else if self.kind == .bool {
-        return 1
-    } else if self.kind == .i16 {
-        return 2
-    } else if self.kind == .i32 {
-        return 4
-    } else if self.kind == .i64 {
-        return 8
-    } else if self.kind == .i8 {
-        return 1
-    } else if self.kind == .isize {
-        return 8
-    } else if self.kind == .Multi_Pointer {
-        return 8
-    } else if self.kind == .Pointer {
-        return 8
-    } else if self.kind == .Procedure {
-        return 8
-    } else if self.kind == .Struct {
-        let size = 0usize
-        let alignment = 1usize
-        let member = self.as(^Struct_Type).first_member
-        while member != null {
-            let member_alignment = member.type.alignment()
-            size = align_up(size, member_alignment)
-            size = size + member.type.size()
-            if member_alignment > alignment {
-                alignment = member_alignment
-            }
-            member = member.next
+    switch self.kind {
+        case .Array {
+            let array_type = self.as(^Array_Type)
+            return array_type.size.as(usize) * array_type.item_type.size()
         }
-        return align_up(size, alignment)
-    } else if self.kind == .u16 {
-        return 2
-    } else if self.kind == .u32 {
-        return 4
-    } else if self.kind == .u64 {
-        return 8
-    } else if self.kind == .u8 {
-        return 1
-    } else if self.kind == .usize {
-        return 8
+        case .bool {
+            return 1
+        }
+        case .i16 {
+            return 2
+        }
+        case .i32 {
+            return 4
+        }
+        case .i64 {
+            return 8
+        }
+        case .i8 {
+            return 1
+        }
+        case .isize {
+            return 8
+        }
+        case .Multi_Pointer {
+            return 8
+        }
+        case .Pointer {
+            return 8
+        }
+        case .Procedure {
+            return 8
+        }
+        case .Struct {
+            let size = 0usize
+            let alignment = 1usize
+            let member = self.as(^Struct_Type).first_member
+            while member != null {
+                let member_alignment = member.type.alignment()
+                size = align_up(size, member_alignment)
+                size = size + member.type.size()
+                if member_alignment > alignment {
+                    alignment = member_alignment
+                }
+                member = member.next
+            }
+            return align_up(size, alignment)
+        }
+        case .u16 {
+            return 2
+        }
+        case .u32 {
+            return 4
+        }
+        case .u64 {
+            return 8
+        }
+        case .u8 {
+            return 1
+        }
+        case .usize {
+            return 8
+        }
+        else {
+            panic "Lowering not supported yet: size of type"
+        }
     }
-    panic "Lowering not supported yet: size of type"
 }
 
 type Array_Type = struct {

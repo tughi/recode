@@ -65,64 +65,76 @@ type Check_Result = enum {
 
 proc (^Match).check(self, lexer: ^lexer.Lexer, lookahead: usize) -> Check_Result {
     let token = lexer.peek_token(lookahead)
-    if self.kind == .Character {
-        if token.kind == .Character {
-            return .Match
-        }
-    } else if self.kind == .Comment {
-        if token.kind == .Comment {
-            return .Match
-        }
-    } else if self.kind == .End_Of_File {
-        if token.kind == .End_Of_File {
-            return .Match
-        }
-    } else if self.kind == .End_Of_Line {
-        if token.kind == .End_Of_Line or token.kind == .End_Of_File {
-            return .Match
-        }
-    } else if self.kind == .Identifier {
-        if token.kind == .Identifier {
-            return .Match
-        }
-    } else if self.kind == .Integer {
-        if token.kind == .Integer {
-            return .Match
-        }
-    } else if self.kind == .Integer_Type {
-        if token.kind == .Identifier {
-            let lexeme = token.lexeme
-            if lexeme.char_at(0) == 'i' and (lexeme.equals("i8") or lexeme.equals("i16") or lexeme.equals("i32") or lexeme.equals("i64") or lexeme.equals("isize")) {
-                return .Match
-            }
-            if lexeme.char_at(0) == 'u' and (lexeme.equals("u8") or lexeme.equals("u16") or lexeme.equals("u32") or lexeme.equals("u64") or lexeme.equals("usize")) {
+    switch self.kind {
+        case .Character {
+            if token.kind == .Character {
                 return .Match
             }
         }
-    } else if self.kind == .Keyword {
-        if token.kind == .Identifier {
-            if token.lexeme.equals(self.keyword) {
+        case .Comment {
+            if token.kind == .Comment {
                 return .Match
             }
         }
-    } else if self.kind == .Other {
-        if token.kind == .Other {
-            if token.lexeme.char_at(0) == self.other {
+        case .End_Of_File {
+            if token.kind == .End_Of_File {
                 return .Match
             }
         }
-    } else if self.kind == .Space {
-        if not self.required {
-            if token.kind == .Space {
+        case .End_Of_Line {
+            if token.kind == .End_Of_Line or token.kind == .End_Of_File {
                 return .Match
             }
-            return .Optional
-        } else if token.kind == .Space {
-            return .Match
         }
-    } else if self.kind == .String {
-        if token.kind == .String {
-            return .Match
+        case .Identifier {
+            if token.kind == .Identifier {
+                return .Match
+            }
+        }
+        case .Integer {
+            if token.kind == .Integer {
+                return .Match
+            }
+        }
+        case .Integer_Type {
+            if token.kind == .Identifier {
+                let lexeme = token.lexeme
+                if lexeme.char_at(0) == 'i' and (lexeme.equals("i8") or lexeme.equals("i16") or lexeme.equals("i32") or lexeme.equals("i64") or lexeme.equals("isize")) {
+                    return .Match
+                }
+                if lexeme.char_at(0) == 'u' and (lexeme.equals("u8") or lexeme.equals("u16") or lexeme.equals("u32") or lexeme.equals("u64") or lexeme.equals("usize")) {
+                    return .Match
+                }
+            }
+        }
+        case .Keyword {
+            if token.kind == .Identifier {
+                if token.lexeme.equals(self.keyword) {
+                    return .Match
+                }
+            }
+        }
+        case .Other {
+            if token.kind == .Other {
+                if token.lexeme.char_at(0) == self.other {
+                    return .Match
+                }
+            }
+        }
+        case .Space {
+            if not self.required {
+                if token.kind == .Space {
+                    return .Match
+                }
+                return .Optional
+            } else if token.kind == .Space {
+                return .Match
+            }
+        }
+        case .String {
+            if token.kind == .String {
+                return .Match
+            }
         }
     }
     return .No_Match

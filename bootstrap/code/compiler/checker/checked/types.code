@@ -115,36 +115,44 @@ type Named_Type = struct {
 }
 
 proc (^libc.FILE).write_checked_type(file, type: ^Type) -> ^libc.FILE {
-    if type.kind == .Array {
-        let array_type = type.as(^Array_Type)
-        return file.write_char(char: '[').write_u64(value: array_type.size).write_char(char: ']').write_checked_type(array_type.item_type)
-    } else if type.kind == .Multi_Pointer {
-        return file.write("[^]").write_checked_type(type.as(^Multi_Pointer_Type).pointee)
-    } else if type.kind == .Null {
-        return file.write("null")
-    } else if type.kind == .Pointer {
-        return file.write_char(char: '^').write_checked_type(type.as(^Pointer_Type).pointee)
-    } else if type.kind == .Procedure {
-        let procedure_type = type.as(^Procedure_Type)
-        file.write("proc (")
-        let parameter = procedure_type.first_parameter
-        while parameter != null {
-            file.write_checked_type(parameter.parameter_type)
-            parameter = parameter.next
-            if parameter != null {
-                file.write(", ")
+    switch type.kind {
+        case .Array {
+            let array_type = type.as(^Array_Type)
+            return file.write_char(char: '[').write_u64(value: array_type.size).write_char(char: ']').write_checked_type(array_type.item_type)
+        }
+        case .Multi_Pointer {
+            return file.write("[^]").write_checked_type(type.as(^Multi_Pointer_Type).pointee)
+        }
+        case .Null {
+            return file.write("null")
+        }
+        case .Pointer {
+            return file.write_char(char: '^').write_checked_type(type.as(^Pointer_Type).pointee)
+        }
+        case .Procedure {
+            let procedure_type = type.as(^Procedure_Type)
+            file.write("proc (")
+            let parameter = procedure_type.first_parameter
+            while parameter != null {
+                file.write_checked_type(parameter.parameter_type)
+                parameter = parameter.next
+                if parameter != null {
+                    file.write(", ")
+                }
             }
+            if procedure_type.return_type != null {
+                return file.write(") -> ").write_checked_type(procedure_type.return_type)
+            }
+            return file.write_char(char: ')')
         }
-        if procedure_type.return_type != null {
-            return file.write(") -> ").write_checked_type(procedure_type.return_type)
+        else {
+            let named_type = type.as(^Named_Type)
+            if named_type.package_name.length > 0 {
+                file.write(named_type.package_name).write_char(char: '.')
+            }
+            return file.write(named_type.name)
         }
-        return file.write_char(char: ')')
     }
-    let named_type = type.as(^Named_Type)
-    if named_type.package_name.length > 0 {
-        file.write(named_type.package_name).write_char(char: '.')
-    }
-    return file.write(named_type.name)
 }
 
 proc (^Type).name(self) -> str {
@@ -155,29 +163,28 @@ proc (^Type).equals(self, other: ^Type) -> bool {
     if self.kind != other.kind {
         return false
     }
-    if self.kind == .Array {
-        return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
+    switch self.kind {
+        case .Array {
+            return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
+        }
+        case .Enum or .Struct {
+            let self_named = self.as(^Named_Type)
+            let other_named = other.as(^Named_Type)
+            return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
+        }
+        case .External {
+            return self.name().equals(other.name())
+        }
+        case .Multi_Pointer {
+            return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
+        }
+        case .Pointer {
+            return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
+        }
+        else {
+            return true
+        }
     }
-    if self.kind == .Enum {
-        let self_named = self.as(^Named_Type)
-        let other_named = other.as(^Named_Type)
-        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
-    }
-    if self.kind == .External {
-        return self.name().equals(other.name())
-    }
-    if self.kind == .Multi_Pointer {
-        return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
-    }
-    if self.kind == .Pointer {
-        return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
-    }
-    if self.kind == .Struct {
-        let self_named = self.as(^Named_Type)
-        let other_named = other.as(^Named_Type)
-        return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
-    }
-    return true
 }
 
 proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Type {

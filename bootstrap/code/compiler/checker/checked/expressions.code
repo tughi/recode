@@ -46,20 +46,24 @@ type Expression = struct {
 }
 
 proc (^Expression).is_mutable(self) -> bool {
-    if self.kind == .Array_Access {
-        return true
-    } else if self.kind == .Dereference {
-        return true
-    } else if self.kind == .Member_Access {
-        let member_access = self.as(^Member_Access_Expression)
-        if member_access.operand.type.kind == .Pointer {
+    switch self.kind {
+        case .Array_Access or .Dereference {
             return true
         }
-        return member_access.operand.is_mutable()
-    } else if self.kind == .Symbol {
-        return self.as(^Symbol_Expression).symbol.kind == .Variable
+        case .Member_Access {
+            let member_access = self.as(^Member_Access_Expression)
+            if member_access.operand.type.kind == .Pointer {
+                return true
+            }
+            return member_access.operand.is_mutable()
+        }
+        case .Symbol {
+            return self.as(^Symbol_Expression).symbol.kind == .Variable
+        }
+        else {
+            return false
+        }
     }
-    return false
 }
 
 type Address_Of_Expression = struct {
