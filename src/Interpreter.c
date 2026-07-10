@@ -181,6 +181,46 @@ static Step execute_br_instruction(Interpreter *interpreter, IR_Instruction *ins
     return (Step){.kind = STEP_JUMP, .jump_block = target};
 }
 
+static Step execute_brx_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *value_address_ = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    int64_t value = 0;
+    switch (instruction->arguments.items[0]->type->kind) {
+    case IR_TYPE__I8:
+        value = (int64_t)*(int8_t *)value_address_;
+        break;
+    case IR_TYPE__I16:
+        value = (int64_t)*(int16_t *)value_address_;
+        break;
+    case IR_TYPE__I32:
+        value = (int64_t)*(int32_t *)value_address_;
+        break;
+    case IR_TYPE__I64:
+    case IR_TYPE__ISIZE:
+        value = *(int64_t *)value_address_;
+        break;
+    case IR_TYPE__U8:
+        value = (int64_t)*(uint8_t *)value_address_;
+        break;
+    case IR_TYPE__U16:
+        value = (int64_t)*(uint16_t *)value_address_;
+        break;
+    case IR_TYPE__U32:
+        value = (int64_t)*(uint32_t *)value_address_;
+        break;
+    case IR_TYPE__U64:
+    case IR_TYPE__USIZE:
+        value = (int64_t)*(uint64_t *)value_address_;
+        break;
+    default:
+        break;
+    }
+    size_t count = instruction->brx_instruction.count;
+    size_t index = (value >= 0 && value < (int64_t)(count - 1)) ? (size_t)value : count - 1;
+    return (Step){.kind = STEP_JUMP, .jump_block = instruction->brx_instruction.blocks[index]};
+}
+
 static Step execute_call_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     (void)return_address;
     (void)previous_block;
@@ -1277,6 +1317,8 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) 
         return execute_alloc_instruction;
     case IR_INSTRUCTION__BR:
         return execute_br_instruction;
+    case IR_INSTRUCTION__BRX:
+        return execute_brx_instruction;
     case IR_INSTRUCTION__CALL:
         return execute_call_instruction;
     case IR_INSTRUCTION__CAST:

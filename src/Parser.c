@@ -904,6 +904,32 @@ static IR_Instruction *parse_br_instruction(Parser *parser) {
     return instruction;
 }
 
+static IR_Instruction *parse_brx_instruction(Parser *parser) {
+    expect_space(parser, 1);
+    IR_Value *value = expect_value_reference(parser);
+
+    IR_Instruction *instruction = alloc_instruction();
+    instruction->result = (IR_Value){0};
+    instruction->kind = IR_INSTRUCTION__BRX;
+    ir_value_list_add(&instruction->arguments, value);
+    instruction->brx_instruction.labels = NULL;
+    size_t count = 0;
+    while (parser->current.kind == TOKEN_KIND__SPACE) {
+        if (parser->next.kind != TOKEN_KIND__LABEL) {
+            break;
+        }
+        expect_space(parser, 1);
+        size_t label = expect_label(parser);
+        instruction->brx_instruction.labels = realloc(instruction->brx_instruction.labels, (count + 1) * sizeof(size_t));
+        instruction->brx_instruction.labels[count++] = label;
+    }
+    if (count < 2) {
+        parse_error_current(parser, "Brx requires at least one entry label and a default label");
+    }
+    instruction->brx_instruction.count = count;
+    return instruction;
+}
+
 static IR_Instruction *parse_jmp_instruction(Parser *parser) {
     expect_space(parser, 1);
     size_t label = expect_label(parser);
@@ -1023,6 +1049,8 @@ static IR_Instruction *parse_instruction(Parser *parser) {
         IR_Instruction *instruction = NULL;
         if (string_equals_cstr(mnemonic, "br")) {
             instruction = parse_br_instruction(parser);
+        } else if (string_equals_cstr(mnemonic, "brx")) {
+            instruction = parse_brx_instruction(parser);
         } else if (string_equals_cstr(mnemonic, "call")) {
             expect_space(parser, 1);
             instruction = alloc_instruction();
@@ -1086,6 +1114,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
         expect_type(parser, location, "br condition", ir_type_bool(), instruction->arguments.items[0]->type);
         instruction->br_instruction.true_block = expect_block(parser, function, location, instruction->br_instruction.true_label);
         instruction->br_instruction.false_block = expect_block(parser, function, location, instruction->br_instruction.false_label);
+        return;
+    case IR_INSTRUCTION__BRX:
+        if (!is_integer_type(instruction->arguments.items[0]->type)) {
+            parse_error(parser, location, "brx value must be an integer type");
+        }
+        instruction->brx_instruction.blocks = malloc(instruction->brx_instruction.count * sizeof(IR_Block *));
+        for (size_t i = 0; i < instruction->brx_instruction.count; i++) {
+            instruction->brx_instruction.blocks[i] = expect_block(parser, function, location, instruction->brx_instruction.labels[i]);
+        }
         return;
     case IR_INSTRUCTION__CALL: {
         IR_Type *callee_type = instruction->arguments.items[0]->type;

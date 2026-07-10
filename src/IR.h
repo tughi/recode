@@ -139,6 +139,12 @@ typedef struct IR_Br_Instruction {
     IR_Block *false_block;
 } IR_Br_Instruction;
 
+typedef struct IR_Brx_Instruction {
+    size_t *labels;
+    IR_Block **blocks;
+    size_t count;
+} IR_Brx_Instruction;
+
 typedef struct IR_Const_Instruction {
     int64_t value;
 } IR_Const_Instruction;
@@ -177,6 +183,7 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__ADD,
     IR_INSTRUCTION__ALLOC,
     IR_INSTRUCTION__BR,
+    IR_INSTRUCTION__BRX,
     IR_INSTRUCTION__CALL,
     IR_INSTRUCTION__CAST,
     IR_INSTRUCTION__CMP_EQ,
@@ -228,6 +235,7 @@ struct IR_Instruction {
     union {
         IR_Alloc_Instruction alloc_instruction;
         IR_Br_Instruction br_instruction;
+        IR_Brx_Instruction brx_instruction;
         IR_Const_Instruction const_instruction;
         IR_Dbg_Bind_Instruction dbg_bind_instruction;
         IR_Dbg_Line_Instruction dbg_line_instruction;
