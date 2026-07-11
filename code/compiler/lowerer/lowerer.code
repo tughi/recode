@@ -139,7 +139,7 @@ proc (^Lowerer).procedure_name(self, procedure_symbol: ^checked.Procedure_Symbol
         builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string())
         return builder.append(").").append(procedure_symbol.name).build()
     }
-    return builder.append(procedure_symbol.package_name).append_char('.').append(procedure_symbol.name).build()
+    return builder.append(procedure_symbol.package.name).append_char('.').append(procedure_symbol.name).build()
 }
 
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
@@ -227,7 +227,7 @@ proc (^Lowerer).variable_name(self, variable_symbol: ^checked.Variable_Symbol) -
         return variable_symbol.name
     }
     let builder = string.new_builder()
-    return builder.append(variable_symbol.package_name).append_char('.').append(variable_symbol.name).build()
+    return builder.append(variable_symbol.package.name).append_char('.').append(variable_symbol.name).build()
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {

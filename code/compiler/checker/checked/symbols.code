@@ -42,6 +42,11 @@ proc new_import_symbol(name: str, package: ^Package) -> ^Import_Symbol {
     return result
 }
 
+type Package_Symbol = struct {
+    super: Symbol
+    package: ^Package
+}
+
 type Parameter_Symbol = struct {
     super: Symbol
     type: ^Type
@@ -71,8 +76,7 @@ proc new_type_symbol(name: str, type: ^Type) -> ^Type_Symbol {
 }
 
 type Procedure_Symbol = struct {
-    super: Symbol
-    package_name: str
+    super: Package_Symbol
     procedure_type: ^Procedure_Type
     receiver_type: ^Type
     body: ^Statement
@@ -80,11 +84,10 @@ type Procedure_Symbol = struct {
     external_name: str
 }
 
-proc new_procedure_symbol(name: str, package_name: str, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool, external_name: str) -> ^Procedure_Symbol {
+proc new_procedure_symbol(name: str, package: ^Package, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool, external_name: str) -> ^Procedure_Symbol {
     let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
     result.^ = Procedure_Symbol(
-        super: Symbol(kind: .Procedure, name: name)
-        package_name: package_name
+        super: Package_Symbol(super: Symbol(kind: .Procedure, name: name), package: package)
         procedure_type: procedure_type
         receiver_type: receiver_type
         body: body
@@ -107,8 +110,7 @@ proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
 }
 
 type Variable_Symbol = struct {
-    super: Symbol
-    package_name: str
+    super: Package_Symbol
     type: ^Type
     expression: ^Expression
     is_global: bool
@@ -116,11 +118,10 @@ type Variable_Symbol = struct {
     external_name: str
 }
 
-proc new_variable_symbol(name: str, package_name: str, type: ^Type, expression: ^Expression, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
+proc new_variable_symbol(name: str, package: ^Package, type: ^Type, expression: ^Expression, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
     let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
     result.^ = Variable_Symbol(
-        super: Symbol(kind: .Variable, name: name)
-        package_name: package_name
+        super: Package_Symbol(super: Symbol(kind: .Variable, name: name), package: package)
         type: type
         expression: expression
         is_global: is_global

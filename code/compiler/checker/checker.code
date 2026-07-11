@@ -347,7 +347,7 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
     if variable_statement.external_name != null {
         external_name = variable_statement.external_name.value
     }
-    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
+    let variable_symbol = checked.new_variable_symbol(name: name, package: self.current_package, type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
     self.global_symbols.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
 }
 
@@ -456,7 +456,7 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
         external_name = procedure_statement.external_name.value
     }
     let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let procedure_symbol = checked.new_procedure_symbol(name: name, package_name: self.package_name, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, package: self.current_package, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
     if receiver_type != null {
         self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
     }
@@ -776,7 +776,7 @@ proc (^Checker).check_variable_statement(self, variable_statement: ^parsed.Varia
     }
 
     let name = variable_statement.name.lexeme
-    let variable_symbol = checked.new_variable_symbol(name: name, package_name: self.package_name, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
+    let variable_symbol = checked.new_variable_symbol(name: name, package: self.current_package, type: variable_type, expression: null, is_global: false, is_external: false, external_name: "")
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
     return checked.new_variable_statement(location: variable_statement.location, symbol: variable_symbol, expression: expression).as(^checked.Statement)
 }
