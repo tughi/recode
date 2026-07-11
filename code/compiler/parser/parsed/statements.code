@@ -181,6 +181,7 @@ type Procedure_Statement = struct {
     super: Statement
     receiver: ^Type
     name: ^lexer.Identifier
+    first_type_parameter: ^Type_Parameter
     first_parameter: ^Procedure_Parameter
     return_type: ^Type
     is_external: bool
@@ -188,12 +189,13 @@ type Procedure_Statement = struct {
     body: ^Statement
 }
 
-proc new_procedure_statement(location: source.Source_Location, receiver: ^Type, name: ^lexer.Identifier, first_parameter: ^Procedure_Parameter, return_type: ^Type, is_external: bool, external_name: ^lexer.String, body: ^Statement) -> ^Statement {
+proc new_procedure_statement(location: source.Source_Location, receiver: ^Type, name: ^lexer.Identifier, first_type_parameter: ^Type_Parameter, first_parameter: ^Procedure_Parameter, return_type: ^Type, is_external: bool, external_name: ^lexer.String, body: ^Statement) -> ^Statement {
     let result = allocator.alloc(size: type_size(Procedure_Statement), alignment: type_alignment(Procedure_Statement)).as(^Procedure_Statement)
     result.^ = Procedure_Statement(
         super: Statement(kind: .Procedure, location: location, next: null)
         receiver: receiver
         name: name
+        first_type_parameter: first_type_parameter
         first_parameter: first_parameter
         return_type: return_type
         is_external: is_external
@@ -308,6 +310,20 @@ proc new_while_statement(location: source.Source_Location, condition: ^Expressio
         body: body
     )
     return result.as(^Statement)
+}
+
+type Type_Parameter = struct {
+    name: ^lexer.Identifier
+    next: ^Type_Parameter
+}
+
+proc new_type_parameter(name: ^lexer.Identifier) -> ^Type_Parameter {
+    let result = allocator.alloc(size: type_size(Type_Parameter), alignment: type_alignment(Type_Parameter)).as(^Type_Parameter)
+    result.^ = Type_Parameter(
+        name: name
+        next: null
+    )
+    return result
 }
 
 type Type_Statement = struct {

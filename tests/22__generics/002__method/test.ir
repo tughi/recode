@@ -1,0 +1,56 @@
+type test.Box = struct {
+  value: i32
+}
+
+type String = struct {
+  data: [*]u8
+  length: usize
+}
+
+$str_1: [*]u8 = "x"
+
+$([test.Box]).put<i32>(%self, %item: i32): i32 {
+@1:
+  %1: [i32] = offset %self .value
+  %2: [i32] = offset %self .value
+  %3: i32 = load %2
+  %4: i32 = const 1
+  %5: i32 = add %3 %4
+  store %1 %5
+  ret %item
+}
+
+$([test.Box]).put<String>(%self, %item: String): String {
+@1:
+  %1: [i32] = offset %self .value
+  %2: [i32] = offset %self .value
+  %3: i32 = load %2
+  %4: i32 = const 1
+  %5: i32 = add %3 %4
+  store %1 %5
+  ret %item
+}
+
+$test.main(): i32 {
+@1:
+  %box.ptr: [test.Box] = alloc test.Box
+  %1: i32 = const 0
+  %2: test.Box = struct .value %1
+  store %box.ptr %2
+  %3: i32 = const 7
+  %4: i32 = call $([test.Box]).put<i32> %box.ptr %3
+  %5: usize = const 1
+  %6: String = struct .data $str_1 .length %5
+  %7: String = call $([test.Box]).put<String> %box.ptr %6
+  %8: [i32] = offset %box.ptr .value
+  %9: i32 = load %8
+  %10: i32 = const 2
+  %11: i32 = sub %9 %10
+  ret %11
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

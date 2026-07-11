@@ -81,7 +81,13 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
     while package != null {
         let entry = package.symbols.first
         while entry != null {
-            if entry.symbol.kind == .Procedure {
+            if entry.symbol.kind == .Generic_Procedure {
+                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+                while procedure_instance != null {
+                    lowerer.declare_procedure(procedure_instance.symbol)
+                    procedure_instance = procedure_instance.next
+                }
+            } else if entry.symbol.kind == .Procedure {
                 lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
             } else if entry.symbol.kind == .Variable {
                 let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
@@ -101,7 +107,13 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
     while package != null {
         let entry = package.symbols.first
         while entry != null {
-            if entry.symbol.kind == .Procedure {
+            if entry.symbol.kind == .Generic_Procedure {
+                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+                while procedure_instance != null {
+                    lowerer.define_procedure(procedure_instance.symbol)
+                    procedure_instance = procedure_instance.next
+                }
+            } else if entry.symbol.kind == .Procedure {
                 let procedure_symbol = entry.symbol.as(^checked.Procedure_Symbol)
                 let procedure = lowerer.define_procedure(procedure_symbol)
                 if package == checked_package and procedure_symbol.receiver_type == null and procedure_symbol.name.equals("main") {
@@ -136,10 +148,24 @@ proc (^Lowerer).procedure_name(self, procedure_symbol: ^checked.Procedure_Symbol
     }
     let builder = string.new_builder()
     if procedure_symbol.receiver_type != null {
-        builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string())
-        return builder.append(").").append(procedure_symbol.name).build()
+        builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string()).append(").").append(procedure_symbol.name)
+    } else {
+        builder.append(procedure_symbol.package.name).append_char('.').append(procedure_symbol.name)
     }
-    return builder.append(procedure_symbol.package.name).append_char('.').append(procedure_symbol.name).build()
+    let type_argument = procedure_symbol.first_type_argument
+    if type_argument != null {
+        builder.append_char('<')
+        loop {
+            builder.append(self.lower_type(type_argument.type).name_string())
+            type_argument = type_argument.next
+            if type_argument == null {
+                break
+            }
+            builder.append(", ")
+        }
+        builder.append_char('>')
+    }
+    return builder.build()
 }
 
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {

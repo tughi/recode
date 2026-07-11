@@ -1,0 +1,19 @@
+$test.identity<i32>(%value: i32): i32 {
+@1:
+  ret %value
+}
+
+$test.main(): i32 {
+@1:
+  %1: i32 = const 42
+  %2: i32 = call $test.identity<i32> %1
+  %3: i32 = const 42
+  %4: i32 = sub %2 %3
+  ret %4
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -176,6 +176,26 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement {
         self.consume_other('.')
     }
     let procedure_name = self.consume_identifier()
+    let first_type_parameter: ^parsed.Type_Parameter = null
+    if self.lexer.matches_one(match.other('<')) {
+        self.consume_other('<')
+        let last_type_parameter: ^parsed.Type_Parameter = null
+        loop {
+            let type_parameter = parsed.new_type_parameter(self.consume_identifier())
+            if last_type_parameter == null {
+                first_type_parameter = type_parameter
+            } else {
+                last_type_parameter.next = type_parameter
+            }
+            last_type_parameter = type_parameter
+            if self.lexer.matches_one(match.other('>')) {
+                break
+            }
+            self.consume_other(',')
+            self.consume_space(1)
+        }
+        self.consume_other('>')
+    }
     self.consume_space(0)
     self.consume_other('(')
     let first_parameter = self.parse_procedure_parameters(receiver: receiver)
@@ -211,6 +231,7 @@ proc (^Parser).parse_procedure_statement(self) -> ^parsed.Statement {
         location: location
         receiver: receiver
         name: procedure_name
+        first_type_parameter: first_type_parameter
         first_parameter: first_parameter
         return_type: return_type
         is_external: is_external
@@ -718,6 +739,19 @@ proc (^Parser).parse_access_expression(self) -> ^parsed.Expression {
             self.consume_space(0)
             self.consume_other(']')
             expression = parsed.new_array_access_expression(location: location, operand: expression, index: index)
+        } else if self.lexer.matches_one(match.other('<')) and not self.lexer.matches_two(match.other('<'), match.other('=')) {
+            let location = self.lexer.location()
+            self.consume_other('<')
+            let first_type_argument = parsed.new_type_argument(self.parse_type())
+            let last_type_argument = first_type_argument
+            while not self.lexer.matches_one(match.other('>')) {
+                self.consume_other(',')
+                self.consume_space(1)
+                last_type_argument.next = parsed.new_type_argument(self.parse_type())
+                last_type_argument = last_type_argument.next
+            }
+            self.consume_other('>')
+            expression = parsed.new_instantiation_expression(location: location, operand: expression, first_type_argument: first_type_argument)
         } else {
             break
         }

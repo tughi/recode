@@ -1,0 +1,7 @@
+proc identity<T>(value: T) -> T {
+    return value
+}
+
+proc main() -> i32 {
+    return identity<i32>(42) - 42
+}

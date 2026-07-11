@@ -24,6 +24,15 @@ $test.add+anon+with(%a: i32, %b: i32): i32 {
 
 The `+...` suffix is part of the name — `$test.add+anon+with` is the symbol to `call`.
 
+Global names may also carry generic type arguments, written as `$name<T1, T2, ...>` (e.g. `$test.identity<i32>`) after the dotted components. As with generic type names, the argument list is parsed only to validate that each argument is a well-formed type and is then folded into the nominal name — the full spelling (including spacing: one space after each comma, none elsewhere) is the symbol to `call`, and it must match byte-for-byte at the declaration and every use.
+
+```
+$test.identity<i32>(%value: i32): i32 {
+@1:
+    ret %value
+}
+```
+
 #### Methods (receiver procedures)
 
 A receiver type written as `$( <type> ).<member>` attaches a method to a type. The same member name on different receivers names distinct procedures, so the receiver acts as a namespace. The receiver parameter is written without a type and defaults to the receiver type.

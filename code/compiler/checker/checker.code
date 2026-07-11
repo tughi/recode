@@ -15,6 +15,8 @@ type Checker = struct {
     last_package: ^checked.Package
     first_method: ^checked.Method
     last_method: ^checked.Method
+    first_generic_method: ^checked.Generic_Method
+    last_generic_method: ^checked.Generic_Method
     return_type: ^checked.Type
     bool_type: ^checked.Type
     i32_type: ^checked.Type
@@ -38,6 +40,8 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         last_package: null
         first_method: null
         last_method: null
+        first_generic_method: null
+        last_generic_method: null
         return_type: null
         bool_type: null
         i32_type: null
@@ -410,6 +414,11 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
 }
 
 proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) {
+    if procedure_statement.first_type_parameter != null {
+        self.declare_generic_procedure(procedure_statement)
+        return
+    }
+
     let name = procedure_statement.name.lexeme
 
     let receiver_type: ^checked.Type = null
@@ -417,6 +426,47 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
         receiver_type = self.resolve_type(procedure_statement.receiver)
     }
 
+    let external_name = ""
+    if procedure_statement.external_name != null {
+        external_name = procedure_statement.external_name.value
+    }
+    let procedure_type = self.resolve_procedure_signature(procedure_statement)
+    let procedure_symbol = checked.new_procedure_symbol(name: name, package: self.current_package, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
+    if receiver_type != null {
+        self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
+    }
+    self.global_symbols.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
+}
+
+proc (^Checker).declare_generic_procedure(self, procedure_statement: ^parsed.Procedure_Statement) {
+    if procedure_statement.is_external {
+        libc.stderr.begin_location_message(procedure_statement.location, style: .Error).write("Generic procedures cannot be external").end_location_message()
+        panic
+    }
+
+    let name = procedure_statement.name.lexeme
+
+    let type_parameter = procedure_statement.first_type_parameter
+    while type_parameter != null {
+        let other_type_parameter = procedure_statement.first_type_parameter
+        while other_type_parameter != type_parameter {
+            if other_type_parameter.name.lexeme.equals(type_parameter.name.lexeme) {
+                libc.stderr.begin_location_message(type_parameter.name.location, style: .Error).write("Duplicate type parameter declaration").end_location_message()
+                panic
+            }
+            other_type_parameter = other_type_parameter.next
+        }
+        type_parameter = type_parameter.next
+    }
+
+    let generic_symbol = checked.new_generic_procedure_symbol(name: name, package: self.current_package, parsed_statement: procedure_statement)
+    if procedure_statement.receiver != null {
+        self.append_generic_method(checked.new_generic_method(generic_symbol))
+    }
+    self.global_symbols.append(name: name, symbol: generic_symbol.as(^checked.Symbol))
+}
+
+proc (^Checker).resolve_procedure_signature(self, procedure_statement: ^parsed.Procedure_Statement) -> ^checked.Procedure_Type {
     let return_type: ^checked.Type = null
     if procedure_statement.return_type != null {
         return_type = self.resolve_type(procedure_statement.return_type)
@@ -451,20 +501,11 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
         parsed_parameter = parsed_parameter.next
     }
 
-    let external_name = ""
-    if procedure_statement.external_name != null {
-        external_name = procedure_statement.external_name.value
-    }
-    let procedure_type = checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
-    let procedure_symbol = checked.new_procedure_symbol(name: name, package: self.current_package, procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
-    if receiver_type != null {
-        self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
-    }
-    self.global_symbols.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
+    return checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type)
 }
 
 proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedure_Statement) {
-    if procedure_statement.is_external or procedure_statement.body == null {
+    if procedure_statement.is_external or procedure_statement.body == null or procedure_statement.first_type_parameter != null {
         return
     }
 
@@ -477,6 +518,10 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
         procedure_symbol = self.global_symbols.find(name).as(^checked.Procedure_Symbol)
     }
 
+    self.check_procedure_symbol_body(procedure_statement, procedure_symbol)
+}
+
+proc (^Checker).check_procedure_symbol_body(self, procedure_statement: ^parsed.Procedure_Statement, procedure_symbol: ^checked.Procedure_Symbol) {
     let scope = checked.new_symbols(self.global_symbols)
     let parameter = procedure_symbol.procedure_type.first_parameter
     while parameter != null {
@@ -492,6 +537,52 @@ proc (^Checker).check_procedure_body(self, procedure_statement: ^parsed.Procedur
     } else {
         panic "Not supported yet: procedure body"
     }
+}
+
+proc (^Checker).instantiate_procedure(self, generic_symbol: ^checked.Generic_Procedure_Symbol, first_type_argument: ^checked.Type_Argument) -> ^checked.Procedure_Symbol {
+    let procedure_instance = generic_symbol.first_instance
+    while procedure_instance != null {
+        let instance_type_argument = procedure_instance.symbol.first_type_argument
+        let type_argument = first_type_argument
+        while type_argument != null and instance_type_argument.type.equals(type_argument.type) {
+            instance_type_argument = instance_type_argument.next
+            type_argument = type_argument.next
+        }
+        if type_argument == null {
+            return procedure_instance.symbol
+        }
+        procedure_instance = procedure_instance.next
+    }
+
+    let instance = checked.new_procedure_symbol(name: generic_symbol.name, package: generic_symbol.package, procedure_type: null, receiver_type: null, body: null, is_external: false, external_name: "")
+    instance.first_type_argument = first_type_argument
+    generic_symbol.append_instance(instance) // Register the instance before checking its body, so recursive calls terminate.
+
+    let saved_global_symbols = self.global_symbols
+    let saved_current_scope = self.current_scope
+    let saved_current_package = self.current_package
+    let saved_package_name = self.package_name
+    let saved_return_type = self.return_type
+    let saved_is_unreachable = self.is_unreachable
+
+    self.enter_package(generic_symbol.package)
+    self.global_symbols = self.make_type_parameter_scope(generic_symbol, first_type_argument: first_type_argument)
+
+    if generic_symbol.parsed_statement.receiver != null {
+        instance.receiver_type = self.resolve_type(generic_symbol.parsed_statement.receiver)
+    }
+    instance.procedure_type = self.resolve_procedure_signature(generic_symbol.parsed_statement)
+    self.is_unreachable = false
+    self.check_procedure_symbol_body(generic_symbol.parsed_statement, procedure_symbol: instance)
+
+    self.global_symbols = saved_global_symbols
+    self.current_scope = saved_current_scope
+    self.current_package = saved_current_package
+    self.package_name = saved_package_name
+    self.return_type = saved_return_type
+    self.is_unreachable = saved_is_unreachable
+
+    return instance
 }
 
 proc (^Checker).check_statement(self, parsed_statement: ^parsed.Statement) -> ^checked.Statement {
@@ -862,6 +953,10 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
         case .Identifier {
             return self.check_identifier_expression(parsed_expression.as(^parsed.Identifier_Expression))
         }
+        case .Instantiation {
+            libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Generic procedure must be called").end_location_message()
+            panic
+        }
         case .Integer {
             return self.check_integer_expression(parsed_expression.as(^parsed.Integer_Expression), expected_type: expected_type)
         }
@@ -969,13 +1064,109 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     }
     let receiver: ^checked.Expression = null
     let callee: ^checked.Expression = null
-    if call_expression.operand.kind == .Member_Access {
+    if call_expression.operand.kind == .Instantiation {
+        let instantiation = call_expression.operand.as(^parsed.Instantiation_Expression)
+
+        let type_argument_count: u64 = 0
+        let first_type_argument: ^checked.Type_Argument = null
+        let last_type_argument: ^checked.Type_Argument = null
+        let parsed_type_argument = instantiation.first_type_argument
+        while parsed_type_argument != null {
+            let type_argument = checked.new_type_argument(self.resolve_type(parsed_type_argument.type))
+            if last_type_argument == null {
+                first_type_argument = type_argument
+            } else {
+                last_type_argument.next = type_argument
+            }
+            last_type_argument = type_argument
+            type_argument_count = type_argument_count + 1
+            parsed_type_argument = parsed_type_argument.next
+        }
+
+        let generic_symbol: ^checked.Generic_Procedure_Symbol = null
+        if instantiation.operand.kind == .Identifier {
+            let name = instantiation.operand.as(^parsed.Identifier_Expression).name
+            let symbol = self.current_scope.find(name.lexeme)
+            if symbol == null {
+                libc.stderr.begin_location_message(name.location, style: .Error).write("Undefined symbol: ").write(name.lexeme).end_location_message()
+                panic
+            }
+            if symbol.kind != .Generic_Procedure {
+                libc.stderr.begin_location_message(instantiation.operand.location, style: .Error).write("Not a generic procedure").end_location_message()
+                panic
+            }
+            generic_symbol = symbol.as(^checked.Generic_Procedure_Symbol)
+        } else if instantiation.operand.kind == .Member_Access {
+            let member_access = instantiation.operand.as(^parsed.Member_Access_Expression)
+            let object = self.check_expression(member_access.operand, expected_type: null)
+            if object.type.kind == .Module {
+                let package_symbol = self.resolve_package_member(object: object, member: member_access.member, location: member_access.location)
+                if package_symbol.kind != .Generic_Procedure {
+                    libc.stderr.begin_location_message(member_access.member.location, style: .Error).write("Not a generic procedure").end_location_message()
+                    panic
+                }
+                generic_symbol = package_symbol.as(^checked.Generic_Procedure_Symbol)
+            } else {
+                // The receiver may reference type parameters: match by name, check the receiver after substitution.
+                let generic_method = self.first_generic_method
+                while generic_method != null and generic_symbol == null {
+                    if generic_method.symbol.name.equals(member_access.member.lexeme) {
+                        let receiver_type = self.resolve_generic_receiver_type(generic_method.symbol, first_type_argument: first_type_argument)
+                        if self.receiver_accepts(receiver_type, object_type: object.type) {
+                            generic_symbol = generic_method.symbol
+                        } else if object.type.kind != .Pointer {
+                            let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                            if self.receiver_accepts(receiver_type, object_type: pointer_type) {
+                                object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
+                                generic_symbol = generic_method.symbol
+                            }
+                        }
+                    }
+                    generic_method = generic_method.next
+                }
+                if generic_symbol == null {
+                    let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
+                    if method_symbol == null and object.type.kind != .Pointer {
+                        method_symbol = self.resolve_method_symbol(receiver_type: checked.new_pointer_type(pointee: object.type).as(^checked.Type), name: member_access.member.lexeme)
+                    }
+                    if method_symbol != null {
+                        libc.stderr.begin_location_message(instantiation.operand.location, style: .Error).write("Not a generic procedure").end_location_message()
+                        panic
+                    }
+                    libc.stderr.begin_location_message(member_access.member.location, style: .Error).write("Type `").write_checked_type(object.type).write("` doesn't have method: ").write(member_access.member.lexeme).end_location_message()
+                    panic
+                }
+                receiver = object
+            }
+        } else {
+            libc.stderr.begin_location_message(instantiation.operand.location, style: .Error).write("Not a generic procedure").end_location_message()
+            panic
+        }
+
+        let type_parameter_count: u64 = 0
+        let type_parameter = generic_symbol.parsed_statement.first_type_parameter
+        while type_parameter != null {
+            type_parameter_count = type_parameter_count + 1
+            type_parameter = type_parameter.next
+        }
+        if type_argument_count != type_parameter_count {
+            libc.stderr.begin_location_message(instantiation.location, style: .Error).write("Expected ").write_u64(value: type_parameter_count).write(" type arguments but got ").write_u64(value: type_argument_count).end_location_message()
+            panic
+        }
+
+        let instance = self.instantiate_procedure(generic_symbol, first_type_argument: first_type_argument)
+        callee = checked.new_symbol_expression(symbol: instance.as(^checked.Symbol), type: instance.procedure_type.as(^checked.Type)).as(^checked.Expression)
+    } else if call_expression.operand.kind == .Member_Access {
         let member_access = call_expression.operand.as(^parsed.Member_Access_Expression)
         let object = self.check_expression(member_access.operand, expected_type: null)
         if object.type.kind == .Module {
             let package_symbol = self.resolve_package_member(object: object, member: member_access.member, location: member_access.location)
             if package_symbol.kind == .Type {
                 return self.check_make_expression(type: package_symbol.as(^checked.Type_Symbol).type, call_expression: call_expression)
+            }
+            if package_symbol.kind == .Generic_Procedure {
+                libc.stderr.begin_location_message(member_access.member.location, style: .Error).write("Missing type arguments").end_location_message()
+                panic
             }
             callee = self.symbol_expression(package_symbol)
         } else {
@@ -990,6 +1181,9 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
             if method_symbol != null {
                 receiver = object
                 callee = checked.new_symbol_expression(symbol: method_symbol.as(^checked.Symbol), type: method_symbol.procedure_type.as(^checked.Type)).as(^checked.Expression)
+            } else if self.find_generic_method(member_access.member.lexeme) != null {
+                libc.stderr.begin_location_message(member_access.member.location, style: .Error).write("Missing type arguments").end_location_message()
+                panic
             } else {
                 callee = self.check_object_member_access(object: object, member: member_access.member, location: member_access.location)
             }
@@ -1008,7 +1202,11 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
     let last_argument: ^checked.Call_Argument = null
     let parameter = procedure_type.first_parameter
     if receiver != null {
-        let receiver_location = call_expression.operand.as(^parsed.Member_Access_Expression).operand.location
+        let member_access_operand = call_expression.operand
+        if member_access_operand.kind == .Instantiation {
+            member_access_operand = member_access_operand.as(^parsed.Instantiation_Expression).operand
+        }
+        let receiver_location = member_access_operand.as(^parsed.Member_Access_Expression).operand.location
         if parameter.parameter_type.kind == .Pointer {
             receiver = self.assure_expression_pointer_type(expression: receiver, expected_type: parameter.parameter_type, location: receiver_location)
         } else {
@@ -1101,6 +1299,10 @@ proc (^Checker).check_identifier_expression(self, identifier_expression: ^parsed
     let symbol = self.current_scope.find(name)
     if symbol == null {
         libc.stderr.begin_location_message(identifier_expression.location, style: .Error).write("Undefined symbol: ").write(name).end_location_message()
+        panic
+    }
+    if symbol.kind == .Generic_Procedure {
+        libc.stderr.begin_location_message(identifier_expression.location, style: .Error).write("Missing type arguments").end_location_message()
         panic
     }
     return self.symbol_expression(symbol)
@@ -1274,7 +1476,12 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
         object_expression = object_expression.as(^checked.Group_Expression).operand
     }
     if object_expression.type.kind == .Module {
-        return self.symbol_expression(self.resolve_package_member(object: object_expression, member: member, location: location))
+        let package_symbol = self.resolve_package_member(object: object_expression, member: member, location: location)
+        if package_symbol.kind == .Generic_Procedure {
+            libc.stderr.begin_location_message(member.location, style: .Error).write("Missing type arguments").end_location_message()
+            panic
+        }
+        return self.symbol_expression(package_symbol)
     }
     let object_type = object_expression.type
     if object_type.kind == .Pointer {
@@ -1359,6 +1566,10 @@ proc (^Checker).check_type_alignment_expression(self, type_alignment_expression:
 proc (^Checker).check_type_member_access(self, receiver_type: ^checked.Type, member: ^lexer.Identifier) -> ^checked.Expression {
     let method_symbol = self.resolve_method_symbol(receiver_type: receiver_type, name: member.lexeme)
     if method_symbol == null {
+        if self.find_generic_method(member.lexeme) != null {
+            libc.stderr.begin_location_message(member.location, style: .Error).write("Missing type arguments").end_location_message()
+            panic
+        }
         libc.stderr.begin_location_message(member.location, style: .Error).write("Type `").write_checked_type(receiver_type).write("` doesn't have method: ").write(member.lexeme).end_location_message()
         panic
     }
@@ -1374,6 +1585,15 @@ proc (^Checker).check_type_size_expression(self, type_size_expression: ^parsed.T
     return checked.new_type_size_expression(sized_type: sized_type, type: self.usize_type).as(^checked.Expression)
 }
 
+proc (^Checker).append_generic_method(self, generic_method: ^checked.Generic_Method) {
+    if self.first_generic_method == null {
+        self.first_generic_method = generic_method
+    } else {
+        self.last_generic_method.next = generic_method
+    }
+    self.last_generic_method = generic_method
+}
+
 proc (^Checker).append_method(self, method: ^checked.Method) {
     if self.first_method == null {
         self.first_method = method
@@ -1381,6 +1601,45 @@ proc (^Checker).append_method(self, method: ^checked.Method) {
         self.last_method.next = method
     }
     self.last_method = method
+}
+
+proc (^Checker).find_generic_method(self, name: str) -> ^checked.Generic_Procedure_Symbol {
+    let generic_method = self.first_generic_method
+    while generic_method != null {
+        if generic_method.symbol.name.equals(name) {
+            return generic_method.symbol
+        }
+        generic_method = generic_method.next
+    }
+    return null
+}
+
+proc (^Checker).make_type_parameter_scope(self, generic_symbol: ^checked.Generic_Procedure_Symbol, first_type_argument: ^checked.Type_Argument) -> ^checked.Symbols {
+    let scope = checked.new_symbols(generic_symbol.package.symbols)
+    let type_parameter = generic_symbol.parsed_statement.first_type_parameter
+    let type_argument = first_type_argument
+    while type_parameter != null and type_argument != null {
+        scope.append(name: type_parameter.name.lexeme, symbol: checked.new_type_symbol(name: type_parameter.name.lexeme, type: type_argument.type).as(^checked.Symbol))
+        type_parameter = type_parameter.next
+        type_argument = type_argument.next
+    }
+    return scope
+}
+
+proc (^Checker).receiver_accepts(self, receiver_type: ^checked.Type, object_type: ^checked.Type) -> bool {
+    if receiver_type.equals(object_type) {
+        return true
+    }
+    if object_type.kind == .Pointer {
+        let pointee = object_type.as(^checked.Pointer_Type).pointee
+        if pointee.kind == .Struct {
+            let struct_type = pointee.as(^checked.Struct_Type)
+            if struct_type.first_member != null and struct_type.first_member.name.equals("super") {
+                return self.receiver_accepts(receiver_type, object_type: checked.new_pointer_type(pointee: struct_type.first_member.type).as(^checked.Type))
+            }
+        }
+    }
+    return false
 }
 
 proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) -> ^checked.Type {
@@ -1404,6 +1663,22 @@ proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) ->
         }
     }
     return null
+}
+
+proc (^Checker).resolve_generic_receiver_type(self, generic_symbol: ^checked.Generic_Procedure_Symbol, first_type_argument: ^checked.Type_Argument) -> ^checked.Type {
+    let saved_global_symbols = self.global_symbols
+    let saved_current_package = self.current_package
+    let saved_package_name = self.package_name
+
+    self.enter_package(generic_symbol.package)
+    self.global_symbols = self.make_type_parameter_scope(generic_symbol, first_type_argument: first_type_argument)
+    let receiver_type = self.resolve_type(generic_symbol.parsed_statement.receiver)
+
+    self.global_symbols = saved_global_symbols
+    self.current_package = saved_current_package
+    self.package_name = saved_package_name
+
+    return receiver_type
 }
 
 proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: str) -> ^checked.Procedure_Symbol {

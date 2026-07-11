@@ -156,6 +156,26 @@ let fn2 = echo                          // infer type
 let result = fn(42)                     // call via pointer
 ```
 
+### Generic Procedures
+
+A procedure may declare **type parameters** in `<...>` after its name; the parameter names act as types throughout the signature and body:
+
+```code
+proc identity<T>(value: T) -> T {
+    return value
+}
+```
+
+A generic procedure is called with **explicit type arguments** — there is no inference:
+
+```code
+let n = identity<i32>(42)
+```
+
+- The type-argument list must match the type-parameter list in length; each instantiation with distinct type arguments compiles a separate copy of the procedure (monomorphization).
+- The `<` of a type-argument list follows the callee directly, with no space — a `<` with surrounding spaces is the less-than operator.
+- A generic procedure must be instantiated and called; it cannot be used as a value or assigned to a procedure pointer, and it cannot be `external`.
+
 ---
 
 ## Pointers

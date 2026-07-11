@@ -1,0 +1,15 @@
+type Box = struct {
+    value: i32
+}
+
+proc (^Box).put<T>(self, item: T) -> T {
+    self.value = self.value + 1
+    return item
+}
+
+proc main() -> i32 {
+    let box = Box(value: 0)
+    box.put<i32>(7)
+    box.put<str>("x")
+    return box.value - 2
+}
