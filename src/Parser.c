@@ -130,6 +130,24 @@ typedef struct {
 
 static IR_Type *parse_type(Parser *parser);
 
+static const char *accept_type_arguments(Parser *parser) {
+    if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != '<') {
+        return NULL;
+    }
+    advance(parser);
+    while (true) {
+        parse_type(parser);
+        expect_space(parser, 0);
+        if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != ',') {
+            break;
+        }
+        advance(parser);
+        expect_space(parser, 1);
+    };
+    String close = expect_other(parser, '>');
+    return close.content + close.length;
+}
+
 static Type_Name parse_type_name(Parser *parser) {
     if (parser->current.kind != TOKEN_KIND__IDENTIFIER) {
         parse_error_current(parser, "Expected identifier");
@@ -141,19 +159,7 @@ static Type_Name parse_type_name(Parser *parser) {
         advance(parser);
         advance(parser);
     }
-    if (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '<') {
-        advance(parser);
-        while (true) {
-            parse_type(parser);
-            expect_space(parser, 0);
-            if (parser->current.kind != TOKEN_KIND__OTHER || parser->current.other.value != ',') {
-                break;
-            }
-            advance(parser);
-            expect_space(parser, 1);
-        };
-        expect_other(parser, '>');
-    }
+    accept_type_arguments(parser);
     const char *end = parser->current.lexeme.content;
     return (Type_Name){
         .lexeme = (String){.content = start, .length = (size_t)(end - start)},
@@ -527,6 +533,10 @@ static IR_Value_Name parse_global_value_name(Parser *parser) {
         }
         end = parser->current.lexeme.content + parser->current.lexeme.length;
         advance(parser);
+    }
+    const char *type_arguments_end = accept_type_arguments(parser);
+    if (type_arguments_end != NULL) {
+        end = type_arguments_end;
     }
     while (parser->current.kind == TOKEN_KIND__OTHER && parser->current.other.value == '+') {
         advance(parser);
