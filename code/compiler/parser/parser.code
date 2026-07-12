@@ -799,7 +799,7 @@ proc (^Parser).parse_primary_expression(self) -> ^parsed.Expression {
         let integer_type: ^parsed.Type = null
         if self.lexer.matches_one(match.integer_type) {
             let type_token = self.consume_identifier()
-            integer_type = parsed.new_named_type(location: type_token.location, module: null, name: type_token)
+            integer_type = parsed.new_named_type(location: type_token.location, module: null, name: type_token, first_type_argument: null)
         }
         return parsed.new_integer_expression(token: integer_token, type: integer_type)
     }
@@ -936,7 +936,20 @@ proc (^Parser).parse_type(self) -> ^parsed.Type {
         module = first_token
         name_token = self.consume_identifier()
     }
-    return parsed.new_named_type(location: first_token.location, module: module, name: name_token)
+    let first_type_argument: ^parsed.Type_Argument = null
+    if self.lexer.matches_one(match.other('<')) {
+        self.consume_other('<')
+        first_type_argument = parsed.new_type_argument(self.parse_type())
+        let last_type_argument = first_type_argument
+        while not self.lexer.matches_one(match.other('>')) {
+            self.consume_other(',')
+            self.consume_space(1)
+            last_type_argument.next = parsed.new_type_argument(self.parse_type())
+            last_type_argument = last_type_argument.next
+        }
+        self.consume_other('>')
+    }
+    return parsed.new_named_type(location: first_token.location, module: module, name: name_token, first_type_argument: first_type_argument)
 }
 
 proc (^Parser).parse_type_specifier(self) -> ^parsed.Type_Specifier {
@@ -1077,11 +1090,31 @@ proc (^Parser).parse_type_statement(self) -> ^parsed.Statement {
     self.consume_keyword("type")
     self.consume_space(1)
     let name = self.consume_identifier()
+    let first_type_parameter: ^parsed.Type_Parameter = null
+    if self.lexer.matches_one(match.other('<')) {
+        self.consume_other('<')
+        let last_type_parameter: ^parsed.Type_Parameter = null
+        loop {
+            let type_parameter = parsed.new_type_parameter(self.consume_identifier())
+            if last_type_parameter == null {
+                first_type_parameter = type_parameter
+            } else {
+                last_type_parameter.next = type_parameter
+            }
+            last_type_parameter = type_parameter
+            if self.lexer.matches_one(match.other('>')) {
+                break
+            }
+            self.consume_other(',')
+            self.consume_space(1)
+        }
+        self.consume_other('>')
+    }
     self.consume_space(1)
     self.consume_other('=')
     self.consume_space(1)
     let specifier = self.parse_type_specifier()
-    return parsed.new_type_statement(location: location, name: name, specifier: specifier)
+    return parsed.new_type_statement(location: location, name: name, first_type_parameter: first_type_parameter, specifier: specifier)
 }
 
 proc (^Parser).increase_alignment(self) {

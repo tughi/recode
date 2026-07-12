@@ -1,0 +1,8 @@
+type Box<T> = struct {
+    value: T
+}
+
+proc main() -> i32 {
+    let box: Box = Box<i32>(value: 42)
+    return 0
+}

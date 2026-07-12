@@ -1,0 +1,9 @@
+type Pair<A, B> = struct {
+    first: A
+    second: B
+}
+
+proc main() -> i32 {
+    let pair = Pair<i32>(first: 1, second: 2)
+    return 0
+}

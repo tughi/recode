@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/22__generics/015__type_argument_count/test.code:7:20: Expected 2 type arguments but got 1"
+        ]
+    }
+}

@@ -1432,11 +1432,32 @@ proc (^Lowerer).lower_external_type(self, name: str) -> ^ir.Type {
 }
 
 proc (^Lowerer).type_name(self, named_type: ^checked.Named_Type) -> str {
-    if named_type.package_name.length == 0 {
+    let first_type_argument: ^checked.Type_Argument = null
+    if named_type.kind == .Struct {
+        first_type_argument = named_type.as(^checked.Struct_Type).first_type_argument
+    }
+    if named_type.package_name.length == 0 and first_type_argument == null {
         return named_type.name
     }
     let builder = string.new_builder()
-    return builder.append(named_type.package_name).append_char('.').append(named_type.name).build()
+    if named_type.package_name.length > 0 {
+        builder.append(named_type.package_name).append_char('.')
+    }
+    builder.append(named_type.name)
+    let type_argument = first_type_argument
+    if type_argument != null {
+        builder.append_char('<')
+        loop {
+            builder.append(self.lower_type(type_argument.type).name_string())
+            type_argument = type_argument.next
+            if type_argument == null {
+                break
+            }
+            builder.append(", ")
+        }
+        builder.append_char('>')
+    }
+    return builder.build()
 }
 
 proc (^Lowerer).lower_struct_type(self, checked_struct_type: ^checked.Struct_Type) -> ^ir.Type {

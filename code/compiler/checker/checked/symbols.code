@@ -4,6 +4,7 @@ import compiler.parser.parsed
 type Symbol_Kind = enum {
     Constant
     Generic_Procedure
+    Generic_Struct
     Import
     Parameter
     Procedure
@@ -62,6 +63,35 @@ proc new_generic_procedure_symbol(name: str, package: ^Package, parsed_statement
 proc (^Generic_Procedure_Symbol).append_instance(self, instance: ^Procedure_Symbol) {
     let node = allocator.alloc(size: type_size(Procedure_Instance), alignment: type_alignment(Procedure_Instance)).as(^Procedure_Instance)
     node.^ = Procedure_Instance(symbol: instance, next: null)
+    if self.first_instance == null {
+        self.first_instance = node
+    } else {
+        self.last_instance.next = node
+    }
+    self.last_instance = node
+}
+
+type Generic_Struct_Symbol = struct {
+    super: Package_Symbol
+    parsed_statement: ^parsed.Type_Statement
+    first_instance: ^Struct_Instance
+    last_instance: ^Struct_Instance
+}
+
+proc new_generic_struct_symbol(name: str, package: ^Package, parsed_statement: ^parsed.Type_Statement) -> ^Generic_Struct_Symbol {
+    let result = allocator.alloc(size: type_size(Generic_Struct_Symbol), alignment: type_alignment(Generic_Struct_Symbol)).as(^Generic_Struct_Symbol)
+    result.^ = Generic_Struct_Symbol(
+        super: Package_Symbol(super: Symbol(kind: .Generic_Struct, name: name), package: package)
+        parsed_statement: parsed_statement
+        first_instance: null
+        last_instance: null
+    )
+    return result
+}
+
+proc (^Generic_Struct_Symbol).append_instance(self, instance: ^Struct_Type) {
+    let node = allocator.alloc(size: type_size(Struct_Instance), alignment: type_alignment(Struct_Instance)).as(^Struct_Instance)
+    node.^ = Struct_Instance(type: instance, next: null)
     if self.first_instance == null {
         self.first_instance = node
     } else {
@@ -142,6 +172,11 @@ proc new_procedure_symbol(name: str, package: ^Package, procedure_type: ^Procedu
         external_name: external_name
     )
     return result
+}
+
+type Struct_Instance = struct {
+    type: ^Struct_Type
+    next: ^Struct_Instance
 }
 
 type Type_Argument = struct {

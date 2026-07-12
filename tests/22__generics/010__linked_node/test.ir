@@ -1,0 +1,66 @@
+type test.Node<i32> = struct {
+  value: i32
+  next: [test.Node<i32>]
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$test.new_node(%value: i32, %next: [test.Node<i32>]): [test.Node<i32>] {
+@1:
+  %node.ptr: [[test.Node<i32>]] = alloc [test.Node<i32>]
+  %1: usize = const 16
+  %2: [Any] = call $malloc %1
+  %3: [test.Node<i32>] = cast %2
+  store %node.ptr %3
+  %node.1: [test.Node<i32>] = load %node.ptr
+  %4: test.Node<i32> = struct .value %value .next %next
+  store %node.1 %4
+  %node.2: [test.Node<i32>] = load %node.ptr
+  ret %node.2
+}
+
+$test.main(): i32 {
+@1:
+  %list.ptr: [[test.Node<i32>]] = alloc [test.Node<i32>]
+  %1: i32 = const 2
+  %2: i32 = const 40
+  %3: [test.Node<i32>] = const null
+  %4: [test.Node<i32>] = call $test.new_node %2 %3
+  %5: [test.Node<i32>] = call $test.new_node %1 %4
+  store %list.ptr %5
+  %sum.ptr: [i32] = alloc i32
+  %6: i32 = const 0
+  store %sum.ptr %6
+  %node.ptr: [[test.Node<i32>]] = alloc [test.Node<i32>]
+  %list.1: [test.Node<i32>] = load %list.ptr
+  store %node.ptr %list.1
+  jmp @2
+@2:
+  %node.1: [test.Node<i32>] = load %node.ptr
+  %7: [test.Node<i32>] = const null
+  %8: bool = cmp_ne %node.1 %7
+  br %8 @3 @4
+@3:
+  %sum.1: i32 = load %sum.ptr
+  %node.2: [test.Node<i32>] = load %node.ptr
+  %9: [i32] = offset %node.2 .value
+  %10: i32 = load %9
+  %11: i32 = add %sum.1 %10
+  store %sum.ptr %11
+  %node.3: [test.Node<i32>] = load %node.ptr
+  %12: [[test.Node<i32>]] = offset %node.3 .next
+  %13: [test.Node<i32>] = load %12
+  store %node.ptr %13
+  jmp @2
+@4:
+  %sum.2: i32 = load %sum.ptr
+  %14: i32 = const 42
+  %15: i32 = sub %sum.2 %14
+  ret %15
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

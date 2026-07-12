@@ -180,7 +180,7 @@ let n = identity(42)       // T inferred as i32
 
 - Type parameters are deduced from the arguments — including through pointer types (`^T`, `[^]T`) and, for a generic method, from the receiver.
 - A type parameter that appears only in the return type (e.g. `proc make<T>() -> ^T`) cannot be inferred and requires explicit type arguments; the call is rejected with `Cannot infer type arguments`.
-- The type-argument list must match the type-parameter list in length; each instantiation with distinct type arguments compiles a separate copy of the procedure (monomorphization).
+- The type-argument list must match the type-parameter list in length.
 - The `<` of a type-argument list follows the callee directly, with no space — a `<` with surrounding spaces is the less-than operator.
 - A generic procedure must be instantiated and called; it cannot be used as a value or assigned to a procedure pointer, and it cannot be `external`.
 
@@ -489,6 +489,46 @@ type Sports_Car = struct {
 - A `^Sports_Car` is assignable to `^Vehicle` (implicit pointer narrowing)
 - Methods defined on `Vehicle` are resolved on `Sports_Car`
 - The `super` field must be a plain struct type (not a pointer)
+
+### Generic Structs
+
+A struct may declare **type parameters** in `<...>` after its name; the parameter names act as types throughout the member list:
+
+```code
+type Box<T> = struct {
+    value: T
+}
+
+type Node<T> = struct {
+    value: T
+    next: ^Node<T>    // self-reference is fine
+}
+```
+
+Every use of a generic struct names its type arguments — in type position and in construction alike:
+
+```code
+let node: ^Node<i32> = null
+let boxed = Box<Box<i32>>(value: Box<i32>(value: 42))
+```
+
+Methods may target one instance, or all of them via a generic procedure whose type parameters appear in the receiver:
+
+```code
+proc (^Box<i32>).increment(self) { ... }        // only on Box<i32>
+proc (^Box<T>).get<T>(self) -> T { ... }        // on every Box<T>; T inferred from the receiver
+```
+
+A generic procedure can also infer its type parameters through a generic struct argument:
+
+```code
+proc unwrap<T>(box: Box<T>) -> T { ... }
+let n = unwrap(Box<i32>(value: 42))    // T inferred as i32
+```
+
+- Each distinct type-argument list names a distinct struct type; two mentions of `Box<i32>` are the same type, while `Box<i32>` and `Box<u8>` are unrelated.
+- The type-argument list must match the type-parameter list in length (`Expected N type arguments but got M`); referencing a generic struct without type arguments is an error (`Missing type arguments`), as is applying type arguments to a non-generic type (`Not a generic type`).
+- Only structs can be generic — type parameters on an `enum` (or any other type declaration) are rejected with `Only struct types can be generic`.
 
 ---
 

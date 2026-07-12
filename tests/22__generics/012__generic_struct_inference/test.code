@@ -1,0 +1,13 @@
+type Pair<A, B> = struct {
+    first: A
+    second: B
+}
+
+proc swap<A, B>(pair: Pair<A, B>) -> Pair<B, A> {
+    return Pair<B, A>(first: pair.second, second: pair.first)
+}
+
+proc main() -> i32 {
+    let pair = swap(Pair<u8, i32>(first: 2u8, second: 40))
+    return pair.first + pair.second.as(i32) - 42
+}

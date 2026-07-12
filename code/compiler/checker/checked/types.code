@@ -154,7 +154,23 @@ proc (^libc.FILE).write_checked_type(file, type: ^Type) -> ^libc.FILE {
             if named_type.package_name.length > 0 {
                 file.write(named_type.package_name).write_char(char: '.')
             }
-            return file.write(named_type.name)
+            file.write(named_type.name)
+            if type.kind == .Struct {
+                let type_argument = type.as(^Struct_Type).first_type_argument
+                if type_argument != null {
+                    file.write_char(char: '<')
+                    loop {
+                        file.write_checked_type(type_argument.type)
+                        type_argument = type_argument.next
+                        if type_argument == null {
+                            break
+                        }
+                        file.write(", ")
+                    }
+                    file.write_char(char: '>')
+                }
+            }
+            return file
         }
     }
 }
@@ -171,7 +187,7 @@ proc (^Type).equals(self, other: ^Type) -> bool {
         case .Array {
             return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
         }
-        case .Enum or .Struct {
+        case .Enum {
             let self_named = self.as(^Named_Type)
             let other_named = other.as(^Named_Type)
             return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
@@ -188,53 +204,30 @@ proc (^Type).equals(self, other: ^Type) -> bool {
         case .Pointer {
             return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
         }
+        case .Struct {
+            let self_struct = self.as(^Struct_Type)
+            let other_struct = other.as(^Struct_Type)
+            if self_struct.generic_symbol != null or other_struct.generic_symbol != null {
+                if self_struct.generic_symbol != other_struct.generic_symbol {
+                    return false
+                }
+                let self_type_argument = self_struct.first_type_argument
+                let other_type_argument = other_struct.first_type_argument
+                while self_type_argument != null {
+                    if not self_type_argument.type.equals(other_type_argument.type) {
+                        return false
+                    }
+                    self_type_argument = self_type_argument.next
+                    other_type_argument = other_type_argument.next
+                }
+                return true
+            }
+            let self_named = self.as(^Named_Type)
+            let other_named = other.as(^Named_Type)
+            return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
+        }
         else {
             return true
-        }
-    }
-}
-
-// Returns null if any placeholder is unresolved.
-proc (^Type).resolve_placeholders(self) -> ^Type {
-    switch self.kind {
-        case .Array {
-            let array_type = self.as(^Array_Type)
-            let item_type = array_type.item_type.resolve_placeholders()
-            if item_type == array_type.item_type {
-                return self
-            }
-            if item_type == null {
-                return null
-            }
-            return new_array_type(item_type: item_type, size: array_type.size).as(^Type)
-        }
-        case .Multi_Pointer {
-            let pointee = self.as(^Multi_Pointer_Type).pointee
-            let resolved_pointee = pointee.resolve_placeholders()
-            if resolved_pointee == pointee {
-                return self
-            }
-            if resolved_pointee == null {
-                return null
-            }
-            return new_multi_pointer_type(pointee: resolved_pointee).as(^Type)
-        }
-        case .Placeholder {
-            return self.as(^Placeholder_Type).resolved
-        }
-        case .Pointer {
-            let pointee = self.as(^Pointer_Type).pointee
-            let resolved_pointee = pointee.resolve_placeholders()
-            if resolved_pointee == pointee {
-                return self
-            }
-            if resolved_pointee == null {
-                return null
-            }
-            return new_pointer_type(pointee: resolved_pointee).as(^Type)
-        }
-        else {
-            return self
         }
     }
 }
@@ -328,6 +321,8 @@ proc new_struct_member(name: str, type: ^Type) -> ^Struct_Member {
 
 type Struct_Type = struct {
     super: Named_Type
+    generic_symbol: ^Generic_Struct_Symbol
+    first_type_argument: ^Type_Argument
     first_member: ^Struct_Member
     last_member: ^Struct_Member
 }
@@ -336,6 +331,8 @@ proc new_struct_type(name: str, package_name: str) -> ^Struct_Type {
     let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
     result.^ = Struct_Type(
         super: Named_Type(super: Type(kind: .Struct), name: name, package_name: package_name)
+        generic_symbol: null
+        first_type_argument: null
         first_member: null
         last_member: null
     )

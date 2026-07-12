@@ -329,14 +329,16 @@ proc new_type_parameter(name: ^lexer.Identifier) -> ^Type_Parameter {
 type Type_Statement = struct {
     super: Statement
     name: ^lexer.Identifier
+    first_type_parameter: ^Type_Parameter
     specifier: ^Type_Specifier
 }
 
-proc new_type_statement(location: source.Source_Location, name: ^lexer.Identifier, specifier: ^Type_Specifier) -> ^Statement {
+proc new_type_statement(location: source.Source_Location, name: ^lexer.Identifier, first_type_parameter: ^Type_Parameter, specifier: ^Type_Specifier) -> ^Statement {
     let result = allocator.alloc(size: type_size(Type_Statement), alignment: type_alignment(Type_Statement)).as(^Type_Statement)
     result.^ = Type_Statement(
         super: Statement(kind: .Type, location: location, next: null)
         name: name
+        first_type_parameter: first_type_parameter
         specifier: specifier
     )
     return result.as(^Statement)

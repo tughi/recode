@@ -1,0 +1,12 @@
+type Box<T> = struct {
+    value: T
+}
+
+proc unwrap<T>(box: Box<T>) -> T {
+    return box.value
+}
+
+proc main() -> i32 {
+    let box = Box<Box<i32>>(value: Box<i32>(value: 42))
+    return unwrap(unwrap(box)) - 42
+}

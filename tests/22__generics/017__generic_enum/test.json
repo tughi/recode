@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/22__generics/017__generic_enum/test.code:1:18: Only struct types can be generic"
+        ]
+    }
+}

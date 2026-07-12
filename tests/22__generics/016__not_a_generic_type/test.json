@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/22__generics/016__not_a_generic_type/test.code:6:14: Not a generic type"
+        ]
+    }
+}

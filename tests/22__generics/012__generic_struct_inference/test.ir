@@ -1,0 +1,48 @@
+type test.Pair<i32, u8> = struct {
+  first: i32
+  second: u8
+}
+
+type test.Pair<u8, i32> = struct {
+  first: u8
+  second: i32
+}
+
+$test.swap<u8, i32>(%pair: test.Pair<u8, i32>): test.Pair<i32, u8> {
+@1:
+  %1.ptr: [test.Pair<u8, i32>] = alloc test.Pair<u8, i32>
+  store %1.ptr %pair
+  %2: [i32] = offset %1.ptr .second
+  %3: i32 = load %2
+  %4.ptr: [test.Pair<u8, i32>] = alloc test.Pair<u8, i32>
+  store %4.ptr %pair
+  %5: [u8] = offset %4.ptr .first
+  %6: u8 = load %5
+  %7: test.Pair<i32, u8> = struct .first %3 .second %6
+  ret %7
+}
+
+$test.main(): i32 {
+@1:
+  %pair.ptr: [test.Pair<i32, u8>] = alloc test.Pair<i32, u8>
+  %1: u8 = const 2
+  %2: i32 = const 40
+  %3: test.Pair<u8, i32> = struct .first %1 .second %2
+  %4: test.Pair<i32, u8> = call $test.swap<u8, i32> %3
+  store %pair.ptr %4
+  %5: [i32] = offset %pair.ptr .first
+  %6: i32 = load %5
+  %7: [u8] = offset %pair.ptr .second
+  %8: u8 = load %7
+  %9: i32 = cast %8
+  %10: i32 = add %6 %9
+  %11: i32 = const 42
+  %12: i32 = sub %10 %11
+  ret %12
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

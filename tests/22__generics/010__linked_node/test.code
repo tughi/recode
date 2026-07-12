@@ -1,0 +1,23 @@
+proc malloc(size: usize) -> ^Any = external
+
+type Node<T> = struct {
+    value: T
+    next: ^Node<T>
+}
+
+proc new_node(value: i32, next: ^Node<i32>) -> ^Node<i32> {
+    let node = malloc(type_size(Node<i32>)).as(^Node<i32>)
+    node.^ = Node<i32>(value: value, next: next)
+    return node
+}
+
+proc main() -> i32 {
+    let list = new_node(value: 2, next: new_node(value: 40, next: null))
+    let sum = 0
+    let node = list
+    while node != null {
+        sum = sum + node.value
+        node = node.next
+    }
+    return sum - 42
+}

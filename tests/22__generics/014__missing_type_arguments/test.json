@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/22__generics/014__missing_type_arguments/test.code:6:14: Missing type arguments"
+        ]
+    }
+}

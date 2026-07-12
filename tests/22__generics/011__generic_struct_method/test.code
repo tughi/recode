@@ -1,0 +1,18 @@
+type Box<T> = struct {
+    value: T
+}
+
+proc (^Box<i32>).increment(self) {
+    self.value = self.value + 1
+}
+
+proc (^Box<T>).get<T>(self) -> T {
+    return self.value
+}
+
+proc main() -> i32 {
+    let box = Box<i32>(value: 40)
+    box.increment()
+    box.increment()
+    return box.get() - 42
+}

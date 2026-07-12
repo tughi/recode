@@ -1,0 +1,41 @@
+type test.Box<i32> = struct {
+  value: i32
+}
+
+$([test.Box<i32>]).increment(%self) {
+@1:
+  %1: [i32] = offset %self .value
+  %2: [i32] = offset %self .value
+  %3: i32 = load %2
+  %4: i32 = const 1
+  %5: i32 = add %3 %4
+  store %1 %5
+  ret
+}
+
+$([test.Box<i32>]).get<i32>(%self): i32 {
+@1:
+  %1: [i32] = offset %self .value
+  %2: i32 = load %1
+  ret %2
+}
+
+$test.main(): i32 {
+@1:
+  %box.ptr: [test.Box<i32>] = alloc test.Box<i32>
+  %1: i32 = const 40
+  %2: test.Box<i32> = struct .value %1
+  store %box.ptr %2
+  call $([test.Box<i32>]).increment %box.ptr
+  call $([test.Box<i32>]).increment %box.ptr
+  %3: i32 = call $([test.Box<i32>]).get<i32> %box.ptr
+  %4: i32 = const 42
+  %5: i32 = sub %3 %4
+  ret %5
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
