@@ -3,6 +3,7 @@
 #include "Interpreter.h"
 #include "String.h"
 #include <limits.h>
+#include <math.h>
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -627,7 +628,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
     float bottom = bounds.y + bounds.height;
     Scrollbar *scrollbar = &ir_panel->scrollbar;
     size_t first_line = (size_t)(scrollbar->scroll_y / line_height);
-    float y_origin = bounds.y - (scrollbar->scroll_y - (float)first_line * line_height);
+    float y_origin = bounds.y - floorf(scrollbar->scroll_y - (float)first_line * line_height);
 
     int gutter_digits = 1;
     for (size_t n = lines_size; n >= 10; n /= 10) {
@@ -734,7 +735,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     float bottom = bounds.y + bounds.height;
     Scrollbar *scrollbar = &source_panel->scrollbar;
     size_t first_line = (size_t)(scrollbar->scroll_y / line_height);
-    float y_origin = bounds.y - (scrollbar->scroll_y - (float)first_line * line_height);
+    float y_origin = bounds.y - floorf(scrollbar->scroll_y - (float)first_line * line_height);
 
     int gutter_digits = 1;
     for (size_t n = lines_size; n >= 10; n /= 10) {
@@ -780,7 +781,7 @@ static Rectangle split_panel_child_bounds(Split_Panel *split, size_t index, Rect
             x += width + GUTTER_SIZE;
             remaining -= width;
         }
-        return (Rectangle){x, bounds.y, remaining * split->children[index]->weight, bounds.height};
+        return (Rectangle){floorf(x), bounds.y, floorf(remaining * split->children[index]->weight), bounds.height};
     } else {
         float available = bounds.height - gutters_total;
         float remaining = available;
@@ -790,7 +791,7 @@ static Rectangle split_panel_child_bounds(Split_Panel *split, size_t index, Rect
             y += height + GUTTER_SIZE;
             remaining -= height;
         }
-        return (Rectangle){bounds.x, y, bounds.width, remaining * split->children[index]->weight};
+        return (Rectangle){bounds.x, floorf(y), bounds.width, floorf(remaining * split->children[index]->weight)};
     }
 }
 
@@ -920,7 +921,7 @@ static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Recta
     int line_height = font.baseSize;
     float bottom = bounds.y + bounds.height;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    float y = bounds.y - stack_panel->scrollbar.scroll_y;
+    float y = bounds.y - floorf(stack_panel->scrollbar.scroll_y);
     for (Call_Frame *f = debugger->current_frame; f != NULL; f = f->caller) {
         if (y >= bottom) {
             break;
@@ -1268,7 +1269,7 @@ static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *deb
     Font font = debugger->font;
     int line_height = font.baseSize;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    float y = bounds.y - variables_panel->scrollbar.scroll_y;
+    float y = bounds.y - floorf(variables_panel->scrollbar.scroll_y);
     float bottom = bounds.y + bounds.height;
     for (size_t i = 0; i < debugger->var_nodes_size; i++) {
         if (y + line_height > bounds.y && y < bottom) {
@@ -1353,7 +1354,7 @@ static void memory_panel_draw(Memory_Panel *memory_panel, Debugger *debugger, Re
     int advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
     size_t rows = (debugger->memory_target_size + 15) / 16;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    float y = bounds.y - memory_panel->scrollbar.scroll_y;
+    float y = bounds.y - floorf(memory_panel->scrollbar.scroll_y);
     float bottom = bounds.y + bounds.height;
     if (y + line_height > bounds.y && y < bottom) {
         char header[64];
