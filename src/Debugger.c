@@ -498,11 +498,13 @@ static size_t text_panel_scroll_input(Debugger *debugger, Panel *panel, Scrollba
     return 0;
 }
 
-static float text_panel_draw_gutter(Debugger *debugger, Rectangle bounds, float row_y, size_t line, size_t current_line, int gutter_digits, float gutter_width, bool has_breakpoint) {
+static float text_panel_draw_gutter(Debugger *debugger, Rectangle bounds, float row_y, size_t line, size_t current_line, size_t view_line, int gutter_digits, float gutter_width, bool has_breakpoint) {
     Font font = debugger->font;
     int line_height = font.baseSize;
     if (line == current_line) {
         DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKBLUE);
+    } else if (line == view_line) {
+        DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKPURPLE);
     }
     if (has_breakpoint) {
         DrawRectangle((int)bounds.x, (int)row_y, (int)gutter_width, line_height, MAROON);
@@ -515,7 +517,7 @@ static float text_panel_draw_gutter(Debugger *debugger, Rectangle bounds, float 
         leading++;
     }
     int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
-    Color number_color = line == current_line ? GRAY : DARKGRAY;
+    Color number_color = line == current_line || line == view_line ? GRAY : DARKGRAY;
     Color dim_color = {number_color.r, number_color.g, number_color.b, number_color.a / 2};
     Vector2 number_position = {bounds.x, row_y};
     for (int j = 0; number_text[j] != '\0'; j++) {
@@ -639,7 +641,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
         if (row_y >= bottom) {
             break;
         }
-        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
+        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, 0, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
 
         Vector2 position = {source_x, row_y};
         Token *line_token = lexed_file->lines[i];
@@ -746,7 +748,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         if (row_y >= bottom) {
             break;
         }
-        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, gutter_digits, gutter_width, source_line_has_breakpoint(debugger, i + 1));
+        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, debugger->view_origin.line, gutter_digits, gutter_width, source_line_has_breakpoint(debugger, i + 1));
         Vector2 position = {source_x, row_y};
         draw_text(font, text->lines[i], LIGHTGRAY, &position, right);
     }
