@@ -59,6 +59,7 @@ typedef struct {
     Font font;
     Call_Frame *current_frame;
     Source_Location last_origin;
+    Source_Location view_origin;
     Frame_Debug_State *frame_states;
     size_t frame_states_size;
     size_t frame_states_capacity;
@@ -207,6 +208,13 @@ static Source_Location debugger_current_origin(Debugger *debugger) {
     return state->origin;
 }
 
+static Source_Location source_panel_origin(Debugger *debugger) {
+    if (debugger->view_origin.line != 0) {
+        return debugger->view_origin;
+    }
+    return debugger_current_origin(debugger);
+}
+
 static Frame_Debug_State *sync_frame_states(Debugger *debugger, Call_Frame *frame, size_t depth) {
     while (debugger->frame_states_size > depth) {
         free(debugger->frame_states[--debugger->frame_states_size].bindings);
@@ -299,7 +307,7 @@ static bool ir_line_has_breakpoint(Debugger *debugger, size_t line) {
 }
 
 static bool source_line_has_breakpoint(Debugger *debugger, size_t line) {
-    String source = debugger_current_origin(debugger).source;
+    String source = source_panel_origin(debugger).source;
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
         IR_Instruction *breakpoint = debugger->breakpoints.items[i];
         if (breakpoint->kind == IR_INSTRUCTION__DBG_LINE && breakpoint->dbg_line_instruction.location.line == line && string_equals(breakpoint->dbg_line_instruction.location.source, source)) {
@@ -515,6 +523,50 @@ static void ir_panel_handle_step(IR_Panel *ir_panel, Debugger *debugger) {
     text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->module->lexed_file.lines_size, debugger->font.baseSize);
 }
 
+static void navigate_to_source(Debugger *debugger, Source_Location location) {
+    IR_Source_File_List *source_files = &debugger->module->source_files;
+    for (size_t i = 0; i < source_files->size; i++) {
+        if (string_equals(source_files->items[i], location.source)) {
+            File *file = &debugger->sources[i];
+            if (file->lines == NULL) {
+                return;
+            }
+            debugger->view_origin = location;
+            Source_Panel *source_panel = (Source_Panel *)debugger->source_panel;
+            text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, location.line, file->lines_size, debugger->font.baseSize);
+            return;
+        }
+    }
+}
+
+static void navigate_to_directive(Debugger *debugger, size_t line) {
+    Token *token = debugger->module->lexed_file.lines[line - 1];
+    if (token->kind == TOKEN_KIND__SPACE) {
+        token++;
+    }
+    if (token->kind != TOKEN_KIND__OTHER || token->other.value != '.') {
+        return;
+    }
+    token++;
+    if (token->kind != TOKEN_KIND__IDENTIFIER) {
+        return;
+    }
+    if (string_equals_cstr(token->lexeme, "line")) {
+        IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
+        if (instruction != NULL && instruction->kind == IR_INSTRUCTION__DBG_LINE) {
+            navigate_to_source(debugger, instruction->dbg_line_instruction.location);
+        }
+    } else if (string_equals_cstr(token->lexeme, "source")) {
+        while (token->kind != TOKEN_KIND__INTEGER && token->kind != TOKEN_KIND__END_OF_LINE && token->kind != TOKEN_KIND__END_OF_FILE) {
+            token++;
+        }
+        IR_Source_File_List *source_files = &debugger->module->source_files;
+        if (token->kind == TOKEN_KIND__INTEGER && token->integer.value >= 1 && token->integer.value <= source_files->size) {
+            navigate_to_source(debugger, (Source_Location){.source = source_files->items[token->integer.value - 1], .line = 1});
+        }
+    }
+}
+
 static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
     size_t lines_size = debugger->module->lexed_file.lines_size;
     size_t line = text_panel_scroll_input(debugger, &ir_panel->panel, &ir_panel->scrollbar, lines_size);
@@ -522,6 +574,18 @@ static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
         IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
         if (instruction != NULL) {
             toggle_breakpoint(debugger, instruction);
+        }
+        return;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 mouse = GetMousePosition();
+        Rectangle bounds = ir_panel->panel.bounds;
+        float gutter_width = text_panel_gutter_width(debugger, lines_size);
+        if (mouse.x >= bounds.x + gutter_width && mouse.x < bounds.x + bounds.width - 8 && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
+            size_t clicked_line = (size_t)((mouse.y - bounds.y + ir_panel->scrollbar.scroll_y) / debugger->font.baseSize) + 1;
+            if (clicked_line <= lines_size) {
+                navigate_to_directive(debugger, clicked_line);
+            }
         }
     }
 }
@@ -597,7 +661,7 @@ static IR_Panel make_ir_panel(float weight) {
 }
 
 static File *source_panel_text(Debugger *debugger) {
-    Source_Location origin = debugger_current_origin(debugger);
+    Source_Location origin = source_panel_origin(debugger);
     if (origin.line == 0) {
         return NULL;
     }
@@ -617,6 +681,7 @@ static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
 }
 
 static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
+    debugger->view_origin = (Source_Location){0};
     File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
@@ -632,7 +697,7 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
     }
     size_t line = text_panel_scroll_input(debugger, &source_panel->panel, &source_panel->scrollbar, text->lines_size);
     if (line != 0) {
-        IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, debugger_current_origin(debugger).source, line);
+        IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, source_panel_origin(debugger).source, line);
         if (instruction != NULL) {
             toggle_breakpoint(debugger, instruction);
         }
@@ -645,7 +710,8 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         return;
     }
     size_t lines_size = text->lines_size;
-    size_t current_line = debugger->current_frame == NULL ? 0 : debugger_current_origin(debugger).line;
+    Source_Location origin = debugger_current_origin(debugger);
+    size_t current_line = debugger->current_frame != NULL && string_equals(source_panel_origin(debugger).source, origin.source) ? origin.line : 0;
     Font font = debugger->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
