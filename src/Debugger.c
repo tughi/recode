@@ -148,6 +148,17 @@ static bool is_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     return false;
 }
 
+static bool is_exit_call(Call_Frame *frame) {
+    IR_Instruction *instruction = frame->instruction;
+    if (instruction->kind != IR_INSTRUCTION__CALL) {
+        return false;
+    }
+    IR_Value *callee_value = instruction->arguments.items[0];
+    uint8_t *base = callee_value->kind <= IR_VALUE__GLOBAL_VARIABLE ? frame->globals_data : frame->frame_data;
+    IR_Function *callee = *(IR_Function **)(base + callee_value->slot.offset);
+    return callee != NULL && callee->is_external && callee->which == IR_EXTERNAL_FUNCTION__exit;
+}
+
 static IR_Instruction *find_instruction_at_line(IR_Module *module, size_t line) {
     for (size_t f = 0; f < module->functions.size; f++) {
         IR_Function *function = module->functions.items[f];
@@ -1452,7 +1463,7 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
         record_binding(state, instruction);
     }
 
-    bool at_breakpoint = is_breakpoint(debugger, instruction);
+    bool at_breakpoint = is_breakpoint(debugger, instruction) || is_exit_call(current_frame);
     if (instruction->kind == IR_INSTRUCTION__DBG_LINE) {
         bool source_pause = debugger->mode == DEBUGGER_MODE__SOURCE_STEP || (debugger->mode == DEBUGGER_MODE__SOURCE_NEXT && depth <= debugger->next_depth);
         if (!at_breakpoint && !source_pause) {
