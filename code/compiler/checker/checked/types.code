@@ -15,6 +15,7 @@ type Type_Kind = enum {
     Module
     Multi_Pointer
     Null
+    Placeholder
     Pointer
     Procedure
     str
@@ -126,6 +127,9 @@ proc (^libc.FILE).write_checked_type(file, type: ^Type) -> ^libc.FILE {
         case .Null {
             return file.write("null")
         }
+        case .Placeholder {
+            return file.write(type.as(^Placeholder_Type).name)
+        }
         case .Pointer {
             return file.write_char(char: '^').write_checked_type(type.as(^Pointer_Type).pointee)
         }
@@ -178,11 +182,59 @@ proc (^Type).equals(self, other: ^Type) -> bool {
         case .Multi_Pointer {
             return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
         }
+        case .Placeholder {
+            return self == other
+        }
         case .Pointer {
             return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
         }
         else {
             return true
+        }
+    }
+}
+
+// Returns null if any placeholder is unresolved.
+proc (^Type).resolve_placeholders(self) -> ^Type {
+    switch self.kind {
+        case .Array {
+            let array_type = self.as(^Array_Type)
+            let item_type = array_type.item_type.resolve_placeholders()
+            if item_type == array_type.item_type {
+                return self
+            }
+            if item_type == null {
+                return null
+            }
+            return new_array_type(item_type: item_type, size: array_type.size).as(^Type)
+        }
+        case .Multi_Pointer {
+            let pointee = self.as(^Multi_Pointer_Type).pointee
+            let resolved_pointee = pointee.resolve_placeholders()
+            if resolved_pointee == pointee {
+                return self
+            }
+            if resolved_pointee == null {
+                return null
+            }
+            return new_multi_pointer_type(pointee: resolved_pointee).as(^Type)
+        }
+        case .Placeholder {
+            return self.as(^Placeholder_Type).resolved
+        }
+        case .Pointer {
+            let pointee = self.as(^Pointer_Type).pointee
+            let resolved_pointee = pointee.resolve_placeholders()
+            if resolved_pointee == pointee {
+                return self
+            }
+            if resolved_pointee == null {
+                return null
+            }
+            return new_pointer_type(pointee: resolved_pointee).as(^Type)
+        }
+        else {
+            return self
         }
     }
 }
@@ -200,6 +252,22 @@ proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Typ
 proc new_null_type() -> ^Type {
     let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
     result.^ = Type(kind: .Null)
+    return result
+}
+
+type Placeholder_Type = struct {
+    super: Type
+    name: str
+    resolved: ^Type
+}
+
+proc new_placeholder_type(name: str) -> ^Placeholder_Type {
+    let result = allocator.alloc(size: type_size(Placeholder_Type), alignment: type_alignment(Placeholder_Type)).as(^Placeholder_Type)
+    result.^ = Placeholder_Type(
+        super: Type(kind: .Placeholder)
+        name: name
+        resolved: null
+    )
     return result
 }
 

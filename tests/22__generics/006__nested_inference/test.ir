@@ -1,0 +1,29 @@
+type test.Foo = struct {
+  value: i32
+}
+
+$test.identity<test.Foo>(%value: test.Foo): test.Foo {
+@1:
+  ret %value
+}
+
+$test.main(): i32 {
+@1:
+  %1: i32 = const 42
+  %2: test.Foo = struct .value %1
+  %3: test.Foo = call $test.identity<test.Foo> %2
+  %4: test.Foo = call $test.identity<test.Foo> %3
+  %5.ptr: [test.Foo] = alloc test.Foo
+  store %5.ptr %4
+  %6: [i32] = offset %5.ptr .value
+  %7: i32 = load %6
+  %8: i32 = const 42
+  %9: i32 = sub %7 %8
+  ret %9
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

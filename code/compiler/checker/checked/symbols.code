@@ -199,13 +199,14 @@ type Symbol_Entry = struct {
 
 type Symbols = struct {
     parent: ^Symbols
+    package: ^Package
     first: ^Symbol_Entry
     last: ^Symbol_Entry
 }
 
 proc new_symbols(parent: ^Symbols) -> ^Symbols {
     let result = allocator.alloc(size: type_size(Symbols), alignment: type_alignment(Symbols)).as(^Symbols)
-    result.^ = Symbols(parent: parent, first: null, last: null)
+    result.^ = Symbols(parent: parent, package: null, first: null, last: null)
     return result
 }
 

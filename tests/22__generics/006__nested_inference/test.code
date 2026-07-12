@@ -1,0 +1,11 @@
+type Foo = struct {
+    value: i32
+}
+
+proc identity<T>(value: T) -> T {
+    return value
+}
+
+proc main() -> i32 {
+    return identity(identity(Foo(value: 42))).value - 42
+}

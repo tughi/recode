@@ -1,0 +1,10 @@
+proc (^T).bump<T>(self, amount: T) -> T {
+    self.^ = self.^ + amount
+    return self.^
+}
+
+proc main() -> i32 {
+    let x = 40
+    x.bump(2)
+    return x - 42
+}

@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/22__generics/005__inference_error/test.code:6:23: Cannot infer type arguments"
+        ]
+    }
+}

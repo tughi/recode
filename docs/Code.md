@@ -166,12 +166,20 @@ proc identity<T>(value: T) -> T {
 }
 ```
 
-A generic procedure is called with **explicit type arguments** — there is no inference:
+A generic procedure may be called with **explicit type arguments**:
 
 ```code
 let n = identity<i32>(42)
 ```
 
+The type arguments may also be **inferred** from the call arguments — omit the `<...>` and each type parameter is deduced by matching the declared parameter types against the argument types:
+
+```code
+let n = identity(42)       // T inferred as i32
+```
+
+- Type parameters are deduced from the arguments — including through pointer types (`^T`, `[^]T`) and, for a generic method, from the receiver.
+- A type parameter that appears only in the return type (e.g. `proc make<T>() -> ^T`) cannot be inferred and requires explicit type arguments; the call is rejected with `Cannot infer type arguments`.
 - The type-argument list must match the type-parameter list in length; each instantiation with distinct type arguments compiles a separate copy of the procedure (monomorphization).
 - The `<` of a type-argument list follows the callee directly, with no space — a `<` with surrounding spaces is the less-than operator.
 - A generic procedure must be instantiated and called; it cannot be used as a value or assigned to a procedure pointer, and it cannot be `external`.

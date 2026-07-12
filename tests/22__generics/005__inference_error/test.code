@@ -1,0 +1,8 @@
+proc make<T>() -> ^T {
+    return null
+}
+
+proc main() -> i32 {
+    let pointer = make()
+    return 0
+}

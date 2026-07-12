@@ -1,0 +1,19 @@
+type Box = struct {
+    value: i32
+}
+
+proc (^Box).put<T>(self, item: T) -> T {
+    self.value = self.value + 1
+    return item
+}
+
+proc deref<T>(pointer: ^T) -> T {
+    return pointer.^
+}
+
+proc main() -> i32 {
+    let box = Box(value: 0)
+    box.put(7)
+    let value = 5
+    return deref(^value) + box.value - 6
+}

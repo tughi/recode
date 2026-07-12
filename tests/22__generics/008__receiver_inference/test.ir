@@ -1,0 +1,27 @@
+$([i32]).bump<i32>(%self, %amount: i32): i32 {
+@1:
+  %1: i32 = load %self
+  %2: i32 = add %1 %amount
+  store %self %2
+  %3: i32 = load %self
+  ret %3
+}
+
+$test.main(): i32 {
+@1:
+  %x.ptr: [i32] = alloc i32
+  %1: i32 = const 40
+  store %x.ptr %1
+  %2: i32 = const 2
+  %3: i32 = call $([i32]).bump<i32> %x.ptr %2
+  %x.1: i32 = load %x.ptr
+  %4: i32 = const 42
+  %5: i32 = sub %x.1 %4
+  ret %5
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
