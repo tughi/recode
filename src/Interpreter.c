@@ -20,6 +20,7 @@ struct Interpreter {
     size_t stack_used;
     Observer *observer;
     Call_Frame *current_frame;
+    bool aborted;
 };
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -1946,8 +1947,13 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
         for (size_t i = 0; i < frame.block->instructions.size; i++) {
             IR_Instruction *instruction = frame.block->instructions.items[i];
             frame.instruction = instruction;
-            if (interpreter->observer != NULL) {
-                interpreter->observer->on_step(interpreter->observer, &frame);
+            if (interpreter->observer != NULL && !interpreter->aborted) {
+                interpreter->observer->on_step(interpreter->observer, &frame, &interpreter->aborted);
+            }
+            if (interpreter->aborted) {
+                interpreter->current_frame = frame.caller;
+                interpreter->stack_used -= frame_size;
+                return;
             }
             Step step = instruction->execute(interpreter, instruction, frame_data, return_address, previous_block);
             if (step.kind == STEP_NEXT) {

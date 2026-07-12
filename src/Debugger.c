@@ -81,6 +81,7 @@ typedef struct {
     Panel *source_panel;
     bool source_stepping;
     double last_interaction_time;
+    bool restart_requested;
 } Debugger;
 
 struct Panel {
@@ -1450,7 +1451,7 @@ static void debugger_render_frame(Debugger *debugger) {
     EndDrawing();
 }
 
-static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
+static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool *aborted) {
     Debugger *debugger = (Debugger *)observer;
 
     size_t depth = frame_depth(current_frame);
@@ -1491,6 +1492,9 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
         }
         if (IsKeyPressed(KEY_SPACE)) {
             debugger->mode = DEBUGGER_MODE__STEP;
+        } else if (IsKeyPressed(KEY_R)) {
+            debugger->restart_requested = true;
+            *aborted = true;
         } else if (IsKeyPressed(KEY_Q)) {
             exit(0);
         }
@@ -1525,6 +1529,11 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
         if (IsKeyPressed(KEY_C)) {
             debugger->mode = DEBUGGER_MODE__CONTINUE;
             debugger->current_frame = NULL;
+            return;
+        }
+        if (IsKeyPressed(KEY_R)) {
+            debugger->restart_requested = true;
+            *aborted = true;
             return;
         }
         if (IsKeyPressed(KEY_Q)) {
@@ -1661,6 +1670,25 @@ static File *load_sources(IR_Module *module) {
     return sources;
 }
 
+static void debugger_restart(Debugger *debugger) {
+    for (size_t i = 0; i < debugger->heap_allocations_size; i++) {
+        free(debugger->heap_allocations[i].address);
+    }
+    debugger->heap_allocations_size = 0;
+    debugger->memory_target = NULL;
+    debugger->memory_target_size = 0;
+    while (debugger->frame_states_size > 0) {
+        free(debugger->frame_states[--debugger->frame_states_size].bindings);
+    }
+    debugger->current_frame = NULL;
+    debugger->selected_frame = NULL;
+    debugger->last_origin = (Source_Location){0};
+    debugger->view_origin = (Source_Location){0};
+    debugger->mode = DEBUGGER_MODE__STEP;
+    debugger->next_depth = 0;
+    debugger->restart_requested = false;
+}
+
 int64_t debug(IR_Module *module, int argc, char *argv[]) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "Code IR Debugger");
@@ -1691,6 +1719,10 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         .source_stepping = has_origins,
     };
     int64_t result = interpret(module, argc, argv, &debugger.observer);
+    while (debugger.restart_requested) {
+        debugger_restart(&debugger);
+        result = interpret(module, argc, argv, &debugger.observer);
+    }
 
     if (debugger.heap_allocations_size > 0) {
         size_t total = 0;
