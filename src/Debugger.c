@@ -58,6 +58,7 @@ typedef struct {
     IR_Instruction_List breakpoints;
     Font font;
     Call_Frame *current_frame;
+    Call_Frame *selected_frame;
     Source_Location last_origin;
     Source_Location view_origin;
     Frame_Debug_State *frame_states;
@@ -123,6 +124,7 @@ typedef struct {
 
 typedef struct {
     Panel panel;
+    Scrollbar scrollbar;
 } Stack_Panel;
 
 typedef struct {
@@ -897,53 +899,96 @@ static Split_Panel make_split_panel(float weight, Split_Direction direction, Pan
 }
 
 static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Rectangle bounds) {
-    (void)stack_panel;
     if (debugger->current_frame == NULL) {
         return;
     }
     Font font = debugger->font;
     int line_height = font.baseSize;
+    float bottom = bounds.y + bounds.height;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
-    float y = bounds.y;
-    bool first = true;
+    float y = bounds.y - stack_panel->scrollbar.scroll_y;
     for (Call_Frame *f = debugger->current_frame; f != NULL; f = f->caller) {
-        if (first) {
-            DrawRectangle((int)bounds.x, (int)y, (int)bounds.width, line_height, DARKBLUE);
-            first = false;
-        }
-        char name[128];
-        snprintf(name, sizeof(name), "%.*s", STRING(f->function->name));
-        Frame_Debug_State *frame_state = debugger_frame_state(debugger, f);
-        Source_Location frame_location = frame_state != NULL && frame_state->origin.line != 0 ? frame_state->origin : f->instruction->location;
-        String source = frame_location.source;
-        for (size_t i = source.length; i > 0; i--) {
-            if (source.content[i - 1] == '/') {
-                source.content += i;
-                source.length -= i;
-                break;
-            }
-        }
-        char location[128];
-        snprintf(location, sizeof(location), "%.*s:%zu", STRING(source), frame_location.line);
-        Vector2 location_size = MeasureTextEx(font, location, line_height, 0);
-        DrawTextEx(font, name, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
-        DrawTextEx(font, location, (Vector2){bounds.x + bounds.width - location_size.x, y}, line_height, 0, GRAY);
-        y += line_height;
-        if (y >= bounds.y + bounds.height) {
+        if (y >= bottom) {
             break;
         }
+        if (y + line_height > bounds.y) {
+            if (f == debugger->selected_frame) {
+                DrawRectangle((int)bounds.x, (int)y, (int)bounds.width, line_height, DARKBLUE);
+            }
+            char name[128];
+            snprintf(name, sizeof(name), "%.*s", STRING(f->function->name));
+            Frame_Debug_State *frame_state = debugger_frame_state(debugger, f);
+            Source_Location frame_location = frame_state != NULL && frame_state->origin.line != 0 ? frame_state->origin : f->instruction->location;
+            String source = frame_location.source;
+            for (size_t i = source.length; i > 0; i--) {
+                if (source.content[i - 1] == '/') {
+                    source.content += i;
+                    source.length -= i;
+                    break;
+                }
+            }
+            char location[128];
+            snprintf(location, sizeof(location), "%.*s:%zu", STRING(source), frame_location.line);
+            Vector2 location_size = MeasureTextEx(font, location, line_height, 0);
+            DrawTextEx(font, name, (Vector2){bounds.x, y}, line_height, 0, RAYWHITE);
+            DrawTextEx(font, location, (Vector2){bounds.x + bounds.width - location_size.x, y}, line_height, 0, GRAY);
+        }
+        y += line_height;
     }
     EndScissorMode();
+    float content_height = (float)frame_depth(debugger->current_frame) * line_height;
+    draw_panel_scrollbar(bounds, content_height, &stack_panel->scrollbar);
 }
 
 static void stack_panel_handle_input(Stack_Panel *stack_panel, Debugger *debugger) {
-    (void)stack_panel;
-    (void)debugger;
+    if (debugger->current_frame == NULL) {
+        return;
+    }
+    int line_height = debugger->font.baseSize;
+    float panel_height = stack_panel->panel.bounds.height;
+    float content_height = (float)frame_depth(debugger->current_frame) * line_height;
+    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
+
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0) {
+        stack_panel->scrollbar.scroll_y -= wheel * line_height * 3;
+    }
+    if (stack_panel->scrollbar.scroll_y > max_scroll) {
+        stack_panel->scrollbar.scroll_y = max_scroll;
+    }
+    if (stack_panel->scrollbar.scroll_y < 0) {
+        stack_panel->scrollbar.scroll_y = 0;
+    }
+
+    if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        return;
+    }
+    Vector2 mouse = GetMousePosition();
+    Rectangle bounds = stack_panel->panel.bounds;
+    if (!CheckCollisionPointRec(mouse, bounds) || mouse.x >= bounds.x + bounds.width - 8) {
+        return;
+    }
+    size_t row = (size_t)((mouse.y - bounds.y + stack_panel->scrollbar.scroll_y) / line_height);
+    Call_Frame *frame = debugger->current_frame;
+    for (size_t i = 0; i < row && frame != NULL; i++) {
+        frame = frame->caller;
+    }
+    if (frame == NULL) {
+        return;
+    }
+    debugger->selected_frame = frame;
+    Frame_Debug_State *frame_state = debugger_frame_state(debugger, frame);
+    if (frame_state != NULL && frame_state->origin.line != 0) {
+        navigate_to_source(debugger, frame_state->origin);
+    } else {
+        IR_Panel *ir_panel = (IR_Panel *)debugger->ir_panel;
+        text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, frame->instruction->location.line, debugger->module->lexed_file.lines_size, debugger->font.baseSize);
+    }
 }
 
 static void stack_panel_handle_step(Stack_Panel *stack_panel, Debugger *debugger) {
-    (void)stack_panel;
     (void)debugger;
+    stack_panel->scrollbar.scroll_y = 0;
 }
 
 static Panel *stack_panel_pick(Stack_Panel *stack_panel, Vector2 position) {
@@ -1150,14 +1195,14 @@ static void build_var_nodes(Debugger *debugger) {
     if (debugger->current_frame == NULL) {
         return;
     }
-    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->current_frame);
+    Frame_Debug_State *state = debugger_frame_state(debugger, debugger->selected_frame);
     if (state == NULL) {
         return;
     }
     for (size_t i = 0; i < state->bindings_size; i++) {
         Dbg_Binding *binding = &state->bindings[i];
         IR_Type *display_type;
-        uint8_t *address = binding_address(debugger->current_frame, binding, &display_type);
+        uint8_t *address = binding_address(debugger->selected_frame, binding, &display_type);
         char name[64];
         snprintf(name, sizeof(name), "%.*s", STRING(binding->name));
         add_var_node(debugger, name, name, display_type, address, 0);
@@ -1442,6 +1487,7 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame) {
     }
 
     debugger->current_frame = current_frame;
+    debugger->selected_frame = current_frame;
     debugger->last_origin = debugger_current_origin(debugger);
 
     debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
