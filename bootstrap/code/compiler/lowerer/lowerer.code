@@ -81,7 +81,13 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
     while package != null {
         let entry = package.symbols.first
         while entry != null {
-            if entry.symbol.kind == .Procedure {
+            if entry.symbol.kind == .Generic_Procedure {
+                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+                while procedure_instance != null {
+                    lowerer.declare_procedure(procedure_instance.symbol)
+                    procedure_instance = procedure_instance.next
+                }
+            } else if entry.symbol.kind == .Procedure {
                 lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
             } else if entry.symbol.kind == .Variable {
                 let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
@@ -101,7 +107,13 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
     while package != null {
         let entry = package.symbols.first
         while entry != null {
-            if entry.symbol.kind == .Procedure {
+            if entry.symbol.kind == .Generic_Procedure {
+                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+                while procedure_instance != null {
+                    lowerer.define_procedure(procedure_instance.symbol)
+                    procedure_instance = procedure_instance.next
+                }
+            } else if entry.symbol.kind == .Procedure {
                 let procedure_symbol = entry.symbol.as(^checked.Procedure_Symbol)
                 let procedure = lowerer.define_procedure(procedure_symbol)
                 if package == checked_package and procedure_symbol.receiver_type == null and procedure_symbol.name.equals("main") {
@@ -136,10 +148,24 @@ proc (^Lowerer).procedure_name(self, procedure_symbol: ^checked.Procedure_Symbol
     }
     let builder = string.new_builder()
     if procedure_symbol.receiver_type != null {
-        builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string())
-        return builder.append(").").append(procedure_symbol.name).build()
+        builder.append_char('(').append(self.lower_type(procedure_symbol.receiver_type).name_string()).append(").").append(procedure_symbol.name)
+    } else {
+        builder.append(procedure_symbol.package.name).append_char('.').append(procedure_symbol.name)
     }
-    return builder.append(procedure_symbol.package_name).append_char('.').append(procedure_symbol.name).build()
+    let type_argument = procedure_symbol.first_type_argument
+    if type_argument != null {
+        builder.append_char('<')
+        loop {
+            builder.append(self.lower_type(type_argument.type).name_string())
+            type_argument = type_argument.next
+            if type_argument == null {
+                break
+            }
+            builder.append(", ")
+        }
+        builder.append_char('>')
+    }
+    return builder.build()
 }
 
 proc (^Lowerer).declare_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) {
@@ -227,7 +253,7 @@ proc (^Lowerer).variable_name(self, variable_symbol: ^checked.Variable_Symbol) -
         return variable_symbol.name
     }
     let builder = string.new_builder()
-    return builder.append(variable_symbol.package_name).append_char('.').append(variable_symbol.name).build()
+    return builder.append(variable_symbol.package.name).append_char('.').append(variable_symbol.name).build()
 }
 
 proc (^Lowerer).define_procedure(self, procedure_symbol: ^checked.Procedure_Symbol) -> ^ir.Procedure {
@@ -1406,11 +1432,32 @@ proc (^Lowerer).lower_external_type(self, name: str) -> ^ir.Type {
 }
 
 proc (^Lowerer).type_name(self, named_type: ^checked.Named_Type) -> str {
-    if named_type.package_name.length == 0 {
+    let first_type_argument: ^checked.Type_Argument = null
+    if named_type.kind == .Struct {
+        first_type_argument = named_type.as(^checked.Struct_Type).first_type_argument
+    }
+    if named_type.package_name.length == 0 and first_type_argument == null {
         return named_type.name
     }
     let builder = string.new_builder()
-    return builder.append(named_type.package_name).append_char('.').append(named_type.name).build()
+    if named_type.package_name.length > 0 {
+        builder.append(named_type.package_name).append_char('.')
+    }
+    builder.append(named_type.name)
+    let type_argument = first_type_argument
+    if type_argument != null {
+        builder.append_char('<')
+        loop {
+            builder.append(self.lower_type(type_argument.type).name_string())
+            type_argument = type_argument.next
+            if type_argument == null {
+                break
+            }
+            builder.append(", ")
+        }
+        builder.append_char('>')
+    }
+    return builder.build()
 }
 
 proc (^Lowerer).lower_struct_type(self, checked_struct_type: ^checked.Struct_Type) -> ^ir.Type {

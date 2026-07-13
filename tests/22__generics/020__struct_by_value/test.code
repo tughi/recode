@@ -1,0 +1,17 @@
+proc malloc(size: usize) -> ^Any = external
+
+type Point = struct {
+    x: i32
+    y: i32
+}
+
+proc new<T>(value: T) -> ^T {
+    let result = malloc(type_size(T)).as(^T)
+    result.^ = value
+    return result
+}
+
+proc main() -> i32 {
+    let point = new(Point(x: 40, y: 2))
+    return point.x + point.y - 42
+}

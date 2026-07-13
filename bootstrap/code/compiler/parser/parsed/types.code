@@ -49,14 +49,16 @@ type Named_Type = struct {
     super: Type
     module: ^lexer.Identifier
     name: ^lexer.Identifier
+    first_type_argument: ^Type_Argument
 }
 
-proc new_named_type(location: source.Source_Location, module: ^lexer.Identifier, name: ^lexer.Identifier) -> ^Type {
+proc new_named_type(location: source.Source_Location, module: ^lexer.Identifier, name: ^lexer.Identifier, first_type_argument: ^Type_Argument) -> ^Type {
     let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
     result.^ = Named_Type(
         super: Type(kind: .Named, location: location)
         module: module
         name: name
+        first_type_argument: first_type_argument
     )
     return result.as(^Type)
 }

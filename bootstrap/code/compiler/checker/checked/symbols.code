@@ -1,7 +1,10 @@
 import allocator
+import compiler.parser.parsed
 
 type Symbol_Kind = enum {
     Constant
+    Generic_Procedure
+    Generic_Struct
     Import
     Parameter
     Procedure
@@ -28,6 +31,75 @@ proc new_constant_symbol(name: str, expression: ^Expression) -> ^Constant_Symbol
     return result
 }
 
+type Generic_Method = struct {
+    symbol: ^Generic_Procedure_Symbol
+    next: ^Generic_Method
+}
+
+proc new_generic_method(symbol: ^Generic_Procedure_Symbol) -> ^Generic_Method {
+    let result = allocator.alloc(size: type_size(Generic_Method), alignment: type_alignment(Generic_Method)).as(^Generic_Method)
+    result.^ = Generic_Method(symbol: symbol, next: null)
+    return result
+}
+
+type Generic_Procedure_Symbol = struct {
+    super: Package_Symbol
+    parsed_statement: ^parsed.Procedure_Statement
+    first_instance: ^Procedure_Instance
+    last_instance: ^Procedure_Instance
+}
+
+proc new_generic_procedure_symbol(name: str, package: ^Package, parsed_statement: ^parsed.Procedure_Statement) -> ^Generic_Procedure_Symbol {
+    let result = allocator.alloc(size: type_size(Generic_Procedure_Symbol), alignment: type_alignment(Generic_Procedure_Symbol)).as(^Generic_Procedure_Symbol)
+    result.^ = Generic_Procedure_Symbol(
+        super: Package_Symbol(super: Symbol(kind: .Generic_Procedure, name: name), package: package)
+        parsed_statement: parsed_statement
+        first_instance: null
+        last_instance: null
+    )
+    return result
+}
+
+proc (^Generic_Procedure_Symbol).append_instance(self, instance: ^Procedure_Symbol) {
+    let node = allocator.alloc(size: type_size(Procedure_Instance), alignment: type_alignment(Procedure_Instance)).as(^Procedure_Instance)
+    node.^ = Procedure_Instance(symbol: instance, next: null)
+    if self.first_instance == null {
+        self.first_instance = node
+    } else {
+        self.last_instance.next = node
+    }
+    self.last_instance = node
+}
+
+type Generic_Struct_Symbol = struct {
+    super: Package_Symbol
+    parsed_statement: ^parsed.Type_Statement
+    first_instance: ^Struct_Instance
+    last_instance: ^Struct_Instance
+}
+
+proc new_generic_struct_symbol(name: str, package: ^Package, parsed_statement: ^parsed.Type_Statement) -> ^Generic_Struct_Symbol {
+    let result = allocator.alloc(size: type_size(Generic_Struct_Symbol), alignment: type_alignment(Generic_Struct_Symbol)).as(^Generic_Struct_Symbol)
+    result.^ = Generic_Struct_Symbol(
+        super: Package_Symbol(super: Symbol(kind: .Generic_Struct, name: name), package: package)
+        parsed_statement: parsed_statement
+        first_instance: null
+        last_instance: null
+    )
+    return result
+}
+
+proc (^Generic_Struct_Symbol).append_instance(self, instance: ^Struct_Type) {
+    let node = allocator.alloc(size: type_size(Struct_Instance), alignment: type_alignment(Struct_Instance)).as(^Struct_Instance)
+    node.^ = Struct_Instance(type: instance, next: null)
+    if self.first_instance == null {
+        self.first_instance = node
+    } else {
+        self.last_instance.next = node
+    }
+    self.last_instance = node
+}
+
 type Import_Symbol = struct {
     super: Symbol
     package: ^Package
@@ -42,6 +114,23 @@ proc new_import_symbol(name: str, package: ^Package) -> ^Import_Symbol {
     return result
 }
 
+type Method = struct {
+    receiver_type: ^Type
+    symbol: ^Procedure_Symbol
+    next: ^Method
+}
+
+proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
+    let result = allocator.alloc(size: type_size(Method), alignment: type_alignment(Method)).as(^Method)
+    result.^ = Method(receiver_type: receiver_type, symbol: symbol, next: null)
+    return result
+}
+
+type Package_Symbol = struct {
+    super: Symbol
+    package: ^Package
+}
+
 type Parameter_Symbol = struct {
     super: Symbol
     type: ^Type
@@ -53,6 +142,51 @@ proc new_parameter_symbol(name: str, type: ^Type) -> ^Parameter_Symbol {
         super: Symbol(kind: .Parameter, name: name)
         type: type
     )
+    return result
+}
+
+type Procedure_Instance = struct {
+    symbol: ^Procedure_Symbol
+    next: ^Procedure_Instance
+}
+
+type Procedure_Symbol = struct {
+    super: Package_Symbol
+    first_type_argument: ^Type_Argument
+    procedure_type: ^Procedure_Type
+    receiver_type: ^Type
+    body: ^Statement
+    is_external: bool
+    external_name: str
+}
+
+proc new_procedure_symbol(name: str, package: ^Package, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool, external_name: str) -> ^Procedure_Symbol {
+    let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
+    result.^ = Procedure_Symbol(
+        super: Package_Symbol(super: Symbol(kind: .Procedure, name: name), package: package)
+        first_type_argument: null
+        procedure_type: procedure_type
+        receiver_type: receiver_type
+        body: body
+        is_external: is_external
+        external_name: external_name
+    )
+    return result
+}
+
+type Struct_Instance = struct {
+    type: ^Struct_Type
+    next: ^Struct_Instance
+}
+
+type Type_Argument = struct {
+    type: ^Type
+    next: ^Type_Argument
+}
+
+proc new_type_argument(type: ^Type) -> ^Type_Argument {
+    let result = allocator.alloc(size: type_size(Type_Argument), alignment: type_alignment(Type_Argument)).as(^Type_Argument)
+    result.^ = Type_Argument(type: type, next: null)
     return result
 }
 
@@ -70,45 +204,8 @@ proc new_type_symbol(name: str, type: ^Type) -> ^Type_Symbol {
     return result
 }
 
-type Procedure_Symbol = struct {
-    super: Symbol
-    package_name: str
-    procedure_type: ^Procedure_Type
-    receiver_type: ^Type
-    body: ^Statement
-    is_external: bool
-    external_name: str
-}
-
-proc new_procedure_symbol(name: str, package_name: str, procedure_type: ^Procedure_Type, receiver_type: ^Type, body: ^Statement, is_external: bool, external_name: str) -> ^Procedure_Symbol {
-    let result = allocator.alloc(size: type_size(Procedure_Symbol), alignment: type_alignment(Procedure_Symbol)).as(^Procedure_Symbol)
-    result.^ = Procedure_Symbol(
-        super: Symbol(kind: .Procedure, name: name)
-        package_name: package_name
-        procedure_type: procedure_type
-        receiver_type: receiver_type
-        body: body
-        is_external: is_external
-        external_name: external_name
-    )
-    return result
-}
-
-type Method = struct {
-    receiver_type: ^Type
-    symbol: ^Procedure_Symbol
-    next: ^Method
-}
-
-proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
-    let result = allocator.alloc(size: type_size(Method), alignment: type_alignment(Method)).as(^Method)
-    result.^ = Method(receiver_type: receiver_type, symbol: symbol, next: null)
-    return result
-}
-
 type Variable_Symbol = struct {
-    super: Symbol
-    package_name: str
+    super: Package_Symbol
     type: ^Type
     expression: ^Expression
     is_global: bool
@@ -116,11 +213,10 @@ type Variable_Symbol = struct {
     external_name: str
 }
 
-proc new_variable_symbol(name: str, package_name: str, type: ^Type, expression: ^Expression, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
+proc new_variable_symbol(name: str, package: ^Package, type: ^Type, expression: ^Expression, is_global: bool, is_external: bool, external_name: str) -> ^Variable_Symbol {
     let result = allocator.alloc(size: type_size(Variable_Symbol), alignment: type_alignment(Variable_Symbol)).as(^Variable_Symbol)
     result.^ = Variable_Symbol(
-        super: Symbol(kind: .Variable, name: name)
-        package_name: package_name
+        super: Package_Symbol(super: Symbol(kind: .Variable, name: name), package: package)
         type: type
         expression: expression
         is_global: is_global
@@ -138,13 +234,14 @@ type Symbol_Entry = struct {
 
 type Symbols = struct {
     parent: ^Symbols
+    package: ^Package
     first: ^Symbol_Entry
     last: ^Symbol_Entry
 }
 
 proc new_symbols(parent: ^Symbols) -> ^Symbols {
     let result = allocator.alloc(size: type_size(Symbols), alignment: type_alignment(Symbols)).as(^Symbols)
-    result.^ = Symbols(parent: parent, first: null, last: null)
+    result.^ = Symbols(parent: parent, package: null, first: null, last: null)
     return result
 }
 

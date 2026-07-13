@@ -1,0 +1,45 @@
+type test.Point = struct {
+  x: i32
+  y: i32
+}
+
+$malloc: [proc (usize): [Any]] = external
+
+$test.new<test.Point>(%value: test.Point): [test.Point] {
+@1:
+  %result.ptr: [[test.Point]] = alloc [test.Point]
+  %1: usize = const 8
+  %2: [Any] = call $malloc %1
+  %3: [test.Point] = cast %2
+  store %result.ptr %3
+  %result.1: [test.Point] = load %result.ptr
+  store %result.1 %value
+  %result.2: [test.Point] = load %result.ptr
+  ret %result.2
+}
+
+$test.main(): i32 {
+@1:
+  %point.ptr: [[test.Point]] = alloc [test.Point]
+  %1: i32 = const 40
+  %2: i32 = const 2
+  %3: test.Point = struct .x %1 .y %2
+  %4: [test.Point] = call $test.new<test.Point> %3
+  store %point.ptr %4
+  %point.1: [test.Point] = load %point.ptr
+  %5: [i32] = offset %point.1 .x
+  %6: i32 = load %5
+  %point.2: [test.Point] = load %point.ptr
+  %7: [i32] = offset %point.2 .y
+  %8: i32 = load %7
+  %9: i32 = add %6 %8
+  %10: i32 = const 42
+  %11: i32 = sub %9 %10
+  ret %11
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
