@@ -62,9 +62,7 @@ type Argument = struct {
 }
 
 proc new_argument(value: ^Value) -> ^Argument {
-    let result = allocator.alloc(size: type_size(Argument), alignment: type_alignment(Argument)).as(^Argument)
-    result.^ = Argument(value: value, next: null)
-    return result
+    return allocator.new(Argument(value: value, next: null))
 }
 
 type Alloc_Instruction = struct {
@@ -75,16 +73,14 @@ type Alloc_Instruction = struct {
 proc new_alloc_instruction(variable: ^Variable) -> ^Alloc_Instruction {
     let name_builder = string.new_builder()
     let result_name = name_builder.append(variable.name).append(".ptr").build()
-    let allocated = allocator.alloc(size: type_size(Alloc_Instruction), alignment: type_alignment(Alloc_Instruction)).as(^Alloc_Instruction)
-    allocated.^ = Alloc_Instruction(
+    return allocator.new(Alloc_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: result_name, type: new_pointer_type(variable.type).as(^Type), variable: variable, next: null)
             kind: .Alloc
             next_instruction: null
         )
         allocated_type: variable.type
-    )
-    return allocated
+    ))
 }
 
 type Binary_Instruction = struct {
@@ -94,8 +90,7 @@ type Binary_Instruction = struct {
 }
 
 proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left: ^Value, right: ^Value) -> ^Binary_Instruction {
-    let allocated = allocator.alloc(size: type_size(Binary_Instruction), alignment: type_alignment(Binary_Instruction)).as(^Binary_Instruction)
-    allocated.^ = Binary_Instruction(
+    return allocator.new(Binary_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: kind
@@ -103,8 +98,7 @@ proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left
         )
         left: left
         right: right
-    )
-    return allocated
+    ))
 }
 
 type Bind_Instruction = struct {
@@ -115,8 +109,7 @@ type Bind_Instruction = struct {
 }
 
 proc new_bind_instruction(name: str, indirect: bool, value: ^Value) -> ^Bind_Instruction {
-    let allocated = allocator.alloc(size: type_size(Bind_Instruction), alignment: type_alignment(Bind_Instruction)).as(^Bind_Instruction)
-    allocated.^ = Bind_Instruction(
+    return allocator.new(Bind_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Bind
@@ -125,8 +118,7 @@ proc new_bind_instruction(name: str, indirect: bool, value: ^Value) -> ^Bind_Ins
         name: name
         indirect: indirect
         value: value
-    )
-    return allocated
+    ))
 }
 
 type Br_Instruction = struct {
@@ -137,8 +129,7 @@ type Br_Instruction = struct {
 }
 
 proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Block) -> ^Br_Instruction {
-    let allocated = allocator.alloc(size: type_size(Br_Instruction), alignment: type_alignment(Br_Instruction)).as(^Br_Instruction)
-    allocated.^ = Br_Instruction(
+    return allocator.new(Br_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Br
@@ -147,8 +138,7 @@ proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Blo
         condition: condition
         true_block: true_block
         false_block: false_block
-    )
-    return allocated
+    ))
 }
 
 type Brx_Target = struct {
@@ -157,9 +147,7 @@ type Brx_Target = struct {
 }
 
 proc new_brx_target(block: ^Block) -> ^Brx_Target {
-    let allocated = allocator.alloc(size: type_size(Brx_Target), alignment: type_alignment(Brx_Target)).as(^Brx_Target)
-    allocated.^ = Brx_Target(block: block, next: null)
-    return allocated
+    return allocator.new(Brx_Target(block: block, next: null))
 }
 
 type Brx_Instruction = struct {
@@ -171,8 +159,7 @@ type Brx_Instruction = struct {
 }
 
 proc new_brx_instruction(value: ^Value, default_block: ^Block) -> ^Brx_Instruction {
-    let allocated = allocator.alloc(size: type_size(Brx_Instruction), alignment: type_alignment(Brx_Instruction)).as(^Brx_Instruction)
-    allocated.^ = Brx_Instruction(
+    return allocator.new(Brx_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Brx
@@ -182,8 +169,7 @@ proc new_brx_instruction(value: ^Value, default_block: ^Block) -> ^Brx_Instructi
         first_target: null
         last_target: null
         default_block: default_block
-    )
-    return allocated
+    ))
 }
 
 proc (^Brx_Instruction).append_target(self, target: ^Brx_Target) {
@@ -202,8 +188,7 @@ type Call_Instruction = struct {
 }
 
 proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instruction {
-    let allocated = allocator.alloc(size: type_size(Call_Instruction), alignment: type_alignment(Call_Instruction)).as(^Call_Instruction)
-    allocated.^ = Call_Instruction(
+    return allocator.new(Call_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Call
@@ -211,8 +196,7 @@ proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instr
         )
         callee: callee
         first_argument: null
-    )
-    return allocated
+    ))
 }
 
 type Cast_Instruction = struct {
@@ -221,16 +205,14 @@ type Cast_Instruction = struct {
 }
 
 proc new_cast_instruction(name: str, type: ^Type, value: ^Value) -> ^Cast_Instruction {
-    let allocated = allocator.alloc(size: type_size(Cast_Instruction), alignment: type_alignment(Cast_Instruction)).as(^Cast_Instruction)
-    allocated.^ = Cast_Instruction(
+    return allocator.new(Cast_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Cast
             next_instruction: null
         )
         value: value
-    )
-    return allocated
+    ))
 }
 
 type Const_Instruction = struct {
@@ -240,8 +222,7 @@ type Const_Instruction = struct {
 }
 
 proc new_const_instruction(name: str, type: ^Type, value: u64, lexeme: str) -> ^Const_Instruction {
-    let allocated = allocator.alloc(size: type_size(Const_Instruction), alignment: type_alignment(Const_Instruction)).as(^Const_Instruction)
-    allocated.^ = Const_Instruction(
+    return allocator.new(Const_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Const
@@ -249,8 +230,7 @@ proc new_const_instruction(name: str, type: ^Type, value: u64, lexeme: str) -> ^
         )
         value: value
         lexeme: lexeme
-    )
-    return allocated
+    ))
 }
 
 type Jmp_Instruction = struct {
@@ -259,16 +239,14 @@ type Jmp_Instruction = struct {
 }
 
 proc new_jmp_instruction(block: ^Block) -> ^Jmp_Instruction {
-    let allocated = allocator.alloc(size: type_size(Jmp_Instruction), alignment: type_alignment(Jmp_Instruction)).as(^Jmp_Instruction)
-    allocated.^ = Jmp_Instruction(
+    return allocator.new(Jmp_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Jmp
             next_instruction: null
         )
         block: block
-    )
-    return allocated
+    ))
 }
 
 type Line_Instruction = struct {
@@ -279,8 +257,7 @@ type Line_Instruction = struct {
 }
 
 proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> ^Line_Instruction {
-    let allocated = allocator.alloc(size: type_size(Line_Instruction), alignment: type_alignment(Line_Instruction)).as(^Line_Instruction)
-    allocated.^ = Line_Instruction(
+    return allocator.new(Line_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Line
@@ -289,8 +266,7 @@ proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> 
         source_file: source_file
         line: line
         column: column
-    )
-    return allocated
+    ))
 }
 
 type Load_Instruction = struct {
@@ -299,16 +275,14 @@ type Load_Instruction = struct {
 }
 
 proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Instruction {
-    let allocated = allocator.alloc(size: type_size(Load_Instruction), alignment: type_alignment(Load_Instruction)).as(^Load_Instruction)
-    allocated.^ = Load_Instruction(
+    return allocator.new(Load_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Load
             next_instruction: null
         )
         pointer: pointer
-    )
-    return allocated
+    ))
 }
 
 type Neg_Instruction = struct {
@@ -317,16 +291,14 @@ type Neg_Instruction = struct {
 }
 
 proc new_neg_instruction(name: str, type: ^Type, operand: ^Value) -> ^Neg_Instruction {
-    let allocated = allocator.alloc(size: type_size(Neg_Instruction), alignment: type_alignment(Neg_Instruction)).as(^Neg_Instruction)
-    allocated.^ = Neg_Instruction(
+    return allocator.new(Neg_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Neg
             next_instruction: null
         )
         operand: operand
-    )
-    return allocated
+    ))
 }
 
 type Not_Instruction = struct {
@@ -335,16 +307,14 @@ type Not_Instruction = struct {
 }
 
 proc new_not_instruction(name: str, type: ^Type, operand: ^Value) -> ^Not_Instruction {
-    let allocated = allocator.alloc(size: type_size(Not_Instruction), alignment: type_alignment(Not_Instruction)).as(^Not_Instruction)
-    allocated.^ = Not_Instruction(
+    return allocator.new(Not_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Not
             next_instruction: null
         )
         operand: operand
-    )
-    return allocated
+    ))
 }
 
 type Offset_Instruction = struct {
@@ -354,8 +324,7 @@ type Offset_Instruction = struct {
 }
 
 proc new_offset_instruction(name: str, type: ^Type, pointer: ^Value, index: ^Value) -> ^Offset_Instruction {
-    let allocated = allocator.alloc(size: type_size(Offset_Instruction), alignment: type_alignment(Offset_Instruction)).as(^Offset_Instruction)
-    allocated.^ = Offset_Instruction(
+    return allocator.new(Offset_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Offset
@@ -363,8 +332,7 @@ proc new_offset_instruction(name: str, type: ^Type, pointer: ^Value, index: ^Val
         )
         pointer: pointer
         index: index
-    )
-    return allocated
+    ))
 }
 
 type Phi_Entry = struct {
@@ -374,9 +342,7 @@ type Phi_Entry = struct {
 }
 
 proc new_phi_entry(block: ^Block, value: ^Value) -> ^Phi_Entry {
-    let result = allocator.alloc(size: type_size(Phi_Entry), alignment: type_alignment(Phi_Entry)).as(^Phi_Entry)
-    result.^ = Phi_Entry(block: block, value: value, next: null)
-    return result
+    return allocator.new(Phi_Entry(block: block, value: value, next: null))
 }
 
 type Phi_Instruction = struct {
@@ -386,8 +352,7 @@ type Phi_Instruction = struct {
 }
 
 proc new_phi_instruction(name: str, type: ^Type) -> ^Phi_Instruction {
-    let allocated = allocator.alloc(size: type_size(Phi_Instruction), alignment: type_alignment(Phi_Instruction)).as(^Phi_Instruction)
-    allocated.^ = Phi_Instruction(
+    return allocator.new(Phi_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Phi
@@ -395,8 +360,7 @@ proc new_phi_instruction(name: str, type: ^Type) -> ^Phi_Instruction {
         )
         first_entry: null
         last_entry: null
-    )
-    return allocated
+    ))
 }
 
 proc (^Phi_Instruction).append_entry(self, block: ^Block, value: ^Value) {
@@ -415,16 +379,14 @@ type Ret_Instruction = struct {
 }
 
 proc new_ret_instruction(value: ^Value) -> ^Ret_Instruction {
-    let allocated = allocator.alloc(size: type_size(Ret_Instruction), alignment: type_alignment(Ret_Instruction)).as(^Ret_Instruction)
-    allocated.^ = Ret_Instruction(
+    return allocator.new(Ret_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Ret
             next_instruction: null
         )
         value: value
-    )
-    return allocated
+    ))
 }
 
 type Store_Instruction = struct {
@@ -434,8 +396,7 @@ type Store_Instruction = struct {
 }
 
 proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction {
-    let allocated = allocator.alloc(size: type_size(Store_Instruction), alignment: type_alignment(Store_Instruction)).as(^Store_Instruction)
-    allocated.^ = Store_Instruction(
+    return allocator.new(Store_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
             kind: .Store
@@ -443,8 +404,7 @@ proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction
         )
         pointer: pointer
         value: value
-    )
-    return allocated
+    ))
 }
 
 type Struct_Instruction_Field = struct {
@@ -454,9 +414,7 @@ type Struct_Instruction_Field = struct {
 }
 
 proc new_struct_instruction_field(name: str, value: ^Value) -> ^Struct_Instruction_Field {
-    let result = allocator.alloc(size: type_size(Struct_Instruction_Field), alignment: type_alignment(Struct_Instruction_Field)).as(^Struct_Instruction_Field)
-    result.^ = Struct_Instruction_Field(name: name, value: value, next: null)
-    return result
+    return allocator.new(Struct_Instruction_Field(name: name, value: value, next: null))
 }
 
 type Struct_Instruction = struct {
@@ -465,16 +423,14 @@ type Struct_Instruction = struct {
 }
 
 proc new_struct_instruction(name: str, type: ^Type) -> ^Struct_Instruction {
-    let allocated = allocator.alloc(size: type_size(Struct_Instruction), alignment: type_alignment(Struct_Instruction)).as(^Struct_Instruction)
-    allocated.^ = Struct_Instruction(
+    return allocator.new(Struct_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Struct
             next_instruction: null
         )
         first_field: null
-    )
-    return allocated
+    ))
 }
 
 type Struct_Offset_Instruction = struct {
@@ -484,8 +440,7 @@ type Struct_Offset_Instruction = struct {
 }
 
 proc new_struct_offset_instruction(name: str, type: ^Type, pointer: ^Value, member: str) -> ^Struct_Offset_Instruction {
-    let allocated = allocator.alloc(size: type_size(Struct_Offset_Instruction), alignment: type_alignment(Struct_Offset_Instruction)).as(^Struct_Offset_Instruction)
-    allocated.^ = Struct_Offset_Instruction(
+    return allocator.new(Struct_Offset_Instruction(
         super: Instruction(
             super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
             kind: .Struct_Offset
@@ -493,6 +448,5 @@ proc new_struct_offset_instruction(name: str, type: ^Type, pointer: ^Value, memb
         )
         pointer: pointer
         member: member
-    )
-    return allocated
+    ))
 }

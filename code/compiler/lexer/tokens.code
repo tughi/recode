@@ -27,12 +27,10 @@ type Character = struct {
 }
 
 proc new_character(lexeme: str, location: source.Source_Location, value: u8) -> ^Character {
-    let result = allocator.alloc(size: type_size(Character), alignment: type_alignment(Character)).as(^Character)
-    result.^ = Character(
+    return allocator.new(Character(
         super: Token(kind: .Character, lexeme: lexeme, location: location)
         value: value
-    )
-    return result
+    ))
 }
 
 type Comment = struct {
@@ -40,11 +38,9 @@ type Comment = struct {
 }
 
 proc new_comment(lexeme: str, location: source.Source_Location) -> ^Comment {
-    let result = allocator.alloc(size: type_size(Comment), alignment: type_alignment(Comment)).as(^Comment)
-    result.^ = Comment(
+    return allocator.new(Comment(
         super: Token(kind: .Comment, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type End_Of_File = struct {
@@ -52,11 +48,9 @@ type End_Of_File = struct {
 }
 
 proc new_end_of_file(lexeme: str, location: source.Source_Location) -> ^End_Of_File {
-    let result = allocator.alloc(size: type_size(End_Of_File), alignment: type_alignment(End_Of_File)).as(^End_Of_File)
-    result.^ = End_Of_File(
+    return allocator.new(End_Of_File(
         super: Token(kind: .End_Of_File, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type End_Of_Line = struct {
@@ -64,11 +58,9 @@ type End_Of_Line = struct {
 }
 
 proc new_end_of_line(lexeme: str, location: source.Source_Location) -> ^End_Of_Line {
-    let result = allocator.alloc(size: type_size(End_Of_Line), alignment: type_alignment(End_Of_Line)).as(^End_Of_Line)
-    result.^ = End_Of_Line(
+    return allocator.new(End_Of_Line(
         super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type Error = struct {
@@ -76,11 +68,9 @@ type Error = struct {
 }
 
 proc new_error(lexeme: str, location: source.Source_Location) -> ^Error {
-    let result = allocator.alloc(size: type_size(Error), alignment: type_alignment(Error)).as(^Error)
-    result.^ = Error(
+    return allocator.new(Error(
         super: Token(kind: .Error, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type Identifier = struct {
@@ -88,11 +78,9 @@ type Identifier = struct {
 }
 
 proc new_identifier(lexeme: str, location: source.Source_Location) -> ^Identifier {
-    let result = allocator.alloc(size: type_size(Identifier), alignment: type_alignment(Identifier)).as(^Identifier)
-    result.^ = Identifier(
+    return allocator.new(Identifier(
         super: Token(kind: .Identifier, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type Integer = struct {
@@ -102,13 +90,11 @@ type Integer = struct {
 }
 
 proc new_integer(lexeme: str, location: source.Source_Location, value: u64, base: i32) -> ^Integer {
-    let result = allocator.alloc(size: type_size(Integer), alignment: type_alignment(Integer)).as(^Integer)
-    result.^ = Integer(
+    return allocator.new(Integer(
         super: Token(kind: .Integer, lexeme: lexeme, location: location)
         value: value
         base: base
-    )
-    return result
+    ))
 }
 
 type Other = struct {
@@ -116,11 +102,9 @@ type Other = struct {
 }
 
 proc new_other(lexeme: str, location: source.Source_Location) -> ^Other {
-    let result = allocator.alloc(size: type_size(Other), alignment: type_alignment(Other)).as(^Other)
-    result.^ = Other(
+    return allocator.new(Other(
         super: Token(kind: .Other, lexeme: lexeme, location: location)
-    )
-    return result
+    ))
 }
 
 type Space = struct {
@@ -129,12 +113,10 @@ type Space = struct {
 }
 
 proc new_space(lexeme: str, location: source.Source_Location, count: i32) -> ^Space {
-    let result = allocator.alloc(size: type_size(Space), alignment: type_alignment(Space)).as(^Space)
-    result.^ = Space(
+    return allocator.new(Space(
         super: Token(kind: .Space, lexeme: lexeme, location: location)
         count: count
-    )
-    return result
+    ))
 }
 
 type String = struct {
@@ -143,12 +125,10 @@ type String = struct {
 }
 
 proc new_string(lexeme: str, location: source.Source_Location, value: str) -> ^String {
-    let result = allocator.alloc(size: type_size(String), alignment: type_alignment(String)).as(^String)
-    result.^ = String(
+    return allocator.new(String(
         super: Token(kind: .String, lexeme: lexeme, location: location)
         value: value
-    )
-    return result
+    ))
 }
 
 proc (^Identifier).merge_with(self, separator: ^Other, another: ^Identifier) -> ^Identifier {

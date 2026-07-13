@@ -10,9 +10,7 @@ type Scope_Entry = struct {
 }
 
 proc new_scope_entry(value: ^ir.Value, next: ^Scope_Entry) -> ^Scope_Entry {
-    let result = allocator.alloc(size: type_size(Scope_Entry), alignment: type_alignment(Scope_Entry)).as(^Scope_Entry)
-    result.^ = Scope_Entry(value: value, next: next)
-    return result
+    return allocator.new(Scope_Entry(value: value, next: next))
 }
 
 type Enum_Name_Entry = struct {
@@ -21,9 +19,7 @@ type Enum_Name_Entry = struct {
 }
 
 proc new_enum_name_entry(enum_type: ^checked.Enum_Type) -> ^Enum_Name_Entry {
-    let result = allocator.alloc(size: type_size(Enum_Name_Entry), alignment: type_alignment(Enum_Name_Entry)).as(^Enum_Name_Entry)
-    result.^ = Enum_Name_Entry(enum_type: enum_type, next: null)
-    return result
+    return allocator.new(Enum_Name_Entry(enum_type: enum_type, next: null))
 }
 
 type Lowerer = struct {

@@ -8,3 +8,9 @@ proc alloc(size: usize, alignment: usize) -> ^Any {
     }
     return default_allocator.alloc(size: size, alignment: alignment)
 }
+
+proc new<T>(value: T) -> ^T {
+    let result = alloc(size: type_size(T), alignment: type_alignment(T)).as(^T)
+    result.^ = value
+    return result
+}
