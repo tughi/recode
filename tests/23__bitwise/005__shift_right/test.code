@@ -1,0 +1,6 @@
+proc main() -> i32 {
+    let byte: u8 = 240
+    let low = byte >> 4
+    let negative = -16
+    return low.as(i32) + (negative >> 2) + 4
+}

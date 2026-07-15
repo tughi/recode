@@ -1,0 +1,10 @@
+proc main() -> i32 {
+    let hash: u32 = 2166136261
+    hash = (hash ^ 97) * 16777619
+    hash = (hash ^ 98) * 16777619
+    hash = (hash ^ 99) * 16777619
+    if hash == 440920331 {
+        return 0
+    }
+    return 1
+}

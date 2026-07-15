@@ -1,0 +1,13 @@
+$test.main(): i32 {
+@1:
+  %1: i32 = const 12
+  %2: i32 = const 10
+  %3: i32 = and %1 %2
+  ret %3
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

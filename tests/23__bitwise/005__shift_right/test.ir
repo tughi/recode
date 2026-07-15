@@ -1,0 +1,30 @@
+$test.main(): i32 {
+@1:
+  %byte.ptr: [u8] = alloc u8
+  %1: u8 = const 240
+  store %byte.ptr %1
+  %low.ptr: [u8] = alloc u8
+  %byte.1: u8 = load %byte.ptr
+  %2: u8 = const 4
+  %3: u8 = shr %byte.1 %2
+  store %low.ptr %3
+  %negative.ptr: [i32] = alloc i32
+  %4: i32 = const 16
+  %5: i32 = neg %4
+  store %negative.ptr %5
+  %low.1: u8 = load %low.ptr
+  %6: i32 = cast %low.1
+  %negative.1: i32 = load %negative.ptr
+  %7: i32 = const 2
+  %8: i32 = shr %negative.1 %7
+  %9: i32 = add %6 %8
+  %10: i32 = const 4
+  %11: i32 = add %9 %10
+  ret %11
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

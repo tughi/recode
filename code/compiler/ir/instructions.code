@@ -5,6 +5,9 @@ type Instruction_Kind = enum {
     Add
     Alloc
     Bind
+    Bitwise_And
+    Bitwise_Or
+    Bitwise_Xor
     Br
     Brx
     Call
@@ -27,6 +30,8 @@ type Instruction_Kind = enum {
     Offset
     Phi
     Ret
+    Shift_Left
+    Shift_Right
     Store
     Struct
     Struct_Offset

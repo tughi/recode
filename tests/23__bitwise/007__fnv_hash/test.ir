@@ -1,0 +1,40 @@
+$test.main(): i32 {
+@1:
+  %hash.ptr: [u32] = alloc u32
+  %1: u32 = const 2166136261
+  store %hash.ptr %1
+  %hash.1: u32 = load %hash.ptr
+  %2: u32 = const 97
+  %3: u32 = xor %hash.1 %2
+  %4: u32 = const 16777619
+  %5: u32 = mul %3 %4
+  store %hash.ptr %5
+  %hash.2: u32 = load %hash.ptr
+  %6: u32 = const 98
+  %7: u32 = xor %hash.2 %6
+  %8: u32 = const 16777619
+  %9: u32 = mul %7 %8
+  store %hash.ptr %9
+  %hash.3: u32 = load %hash.ptr
+  %10: u32 = const 99
+  %11: u32 = xor %hash.3 %10
+  %12: u32 = const 16777619
+  %13: u32 = mul %11 %12
+  store %hash.ptr %13
+  %hash.4: u32 = load %hash.ptr
+  %14: u32 = const 440920331
+  %15: bool = cmp_eq %hash.4 %14
+  br %15 @2 @3
+@2:
+  %16: i32 = const 0
+  ret %16
+@3:
+  %17: i32 = const 1
+  ret %17
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}

@@ -263,6 +263,20 @@ Both accept any type expression, including generic instantiations.
 
 `+`, `-`, `*`, `/`, `%` (modulo)
 
+### Bitwise
+
+`&` (AND), `|` (OR), `^` (XOR), `<<` (shift left), `>>` (shift right)
+
+Both operands must have the same integer type, which is also the result type. `>>` is arithmetic (sign-filling) on signed types and logical (zero-filling) on unsigned types. A shift count outside `0 .. bit width - 1` is a runtime error.
+
+```code
+let masked = flags & 0x0F
+let packed = high << 8 | low
+if flags & 4 != 0 { ... }   // & binds tighter than !=
+```
+
+Binary `^` is XOR; prefix `^` remains the address-of operator (`^value`).
+
 ### Comparison
 
 `==`, `!=`, `<`, `<=`, `>`, `>=`
@@ -290,12 +304,18 @@ From highest to lowest:
 | Unary | `-` (negation), `not` |
 | Multiplicative | `*`, `/`, `%` |
 | Additive | `+`, `-` |
+| Shift | `<<`, `>>` |
+| Bitwise AND | `&` |
+| Bitwise XOR | `^` |
+| Bitwise OR | `|` |
 | Comparison | `<`, `<=`, `>`, `>=` |
 | Equality | `==`, `!=` |
 | Logic | `and` |
 | Logic | `or` |
 
 Equality binds looser than comparison — `a == b < c` parses as `a == (b < c)`.
+
+The bitwise levels bind tighter than comparisons, so `flags & MASK != 0` parses as `(flags & MASK) != 0`. Note that shifts bind looser than `+`/`-`: `x << 2 + 1` parses as `x << (2 + 1)`.
 
 Use parentheses to override the default grouping:
 

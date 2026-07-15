@@ -5,6 +5,9 @@ type Expression_Kind = enum {
     Add
     Address_Of
     Array_Access
+    Bitwise_And
+    Bitwise_Or
+    Bitwise_Xor
     Bool
     Call
     Cast
@@ -32,6 +35,8 @@ type Expression_Kind = enum {
     Not
     Not_Equals
     Null
+    Shift_Left
+    Shift_Right
     String
     String_Length
     Subtract
