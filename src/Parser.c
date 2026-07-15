@@ -646,6 +646,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         return instruction;
     }
 
+    if (string_equals_cstr(mnemonic, "and")) {
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__AND;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "call")) {
         expect_space(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
@@ -820,6 +829,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         parse_error_current(parser, "Expected '.' followed by field name, or an index variable");
     }
 
+    if (string_equals_cstr(mnemonic, "or")) {
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__OR;
+        return instruction;
+    }
+
     if (string_equals_cstr(mnemonic, "phi")) {
         instruction->kind = IR_INSTRUCTION__PHI;
         instruction->phi_instruction.labels = NULL;
@@ -840,6 +858,24 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         if (count == 0) {
             parse_error_current(parser, "Phi requires at least one entry");
         }
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "shl")) {
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__SHL;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "shr")) {
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__SHR;
         return instruction;
     }
 
@@ -891,6 +927,15 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         expect_space(parser, 1);
         ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
         instruction->kind = IR_INSTRUCTION__SUB;
+        return instruction;
+    }
+
+    if (string_equals_cstr(mnemonic, "xor")) {
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        expect_space(parser, 1);
+        ir_value_list_add(&instruction->arguments, expect_value_reference(parser));
+        instruction->kind = IR_INSTRUCTION__XOR;
         return instruction;
     }
 
@@ -1103,10 +1148,15 @@ static void check_instruction(Parser *parser, IR_Function *function, IR_Instruct
     Source_Location location = instruction->location;
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
+    case IR_INSTRUCTION__AND:
     case IR_INSTRUCTION__DIV:
     case IR_INSTRUCTION__MOD:
     case IR_INSTRUCTION__MUL:
-    case IR_INSTRUCTION__SUB: {
+    case IR_INSTRUCTION__OR:
+    case IR_INSTRUCTION__SHL:
+    case IR_INSTRUCTION__SHR:
+    case IR_INSTRUCTION__SUB:
+    case IR_INSTRUCTION__XOR: {
         IR_Type *type = instruction->result.type;
         if (!is_integer_type(type)) {
             parse_error(parser, location, "arithmetic result must be an integer type");

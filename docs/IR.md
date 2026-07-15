@@ -209,6 +209,14 @@ Allocates stack memory for a local variable and returns a `[T]` single pointer t
 %x.ptr: [i32] = alloc i32
 ```
 
+### `and`
+
+Bitwise AND.
+
+```
+%result: u32 = and %left %right
+```
+
 ### `br`
 
 Conditional branch. Jumps to the first label if the condition is true, otherwise to the second.
@@ -381,6 +389,14 @@ Both forms always produce a `[T]` single pointer.
 %field: [i32] = offset %struct_ptr .x
 ```
 
+### `or`
+
+Bitwise OR.
+
+```
+%result: u32 = or %left %right
+```
+
 ### `phi`
 
 SSA phi function. Selects a value based on the predecessor basic block.
@@ -396,6 +412,22 @@ Returns from the current function, optionally with a value.
 ```
 ret %value
 ret
+```
+
+### `shl`
+
+Bitwise shift left. The shift count must be in `0 .. bit width - 1`; any other count is a runtime error.
+
+```
+%result: u32 = shl %value %count
+```
+
+### `shr`
+
+Bitwise shift right — arithmetic (sign-filling) for signed types, logical (zero-filling) for unsigned. The shift count must be in `0 .. bit width - 1`; any other count is a runtime error.
+
+```
+%result: u32 = shr %value %count
 ```
 
 ### `store`
@@ -421,4 +453,12 @@ Integer subtraction.
 
 ```
 %result: i32 = sub %left %right
+```
+
+### `xor`
+
+Bitwise XOR.
+
+```
+%result: u32 = xor %left %right
 ```

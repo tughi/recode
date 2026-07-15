@@ -182,6 +182,7 @@ typedef struct IR_Struct_Instruction {
 typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__ADD,
     IR_INSTRUCTION__ALLOC,
+    IR_INSTRUCTION__AND,
     IR_INSTRUCTION__BR,
     IR_INSTRUCTION__BRX,
     IR_INSTRUCTION__CALL,
@@ -203,12 +204,16 @@ typedef enum IR_Instruction_Kind {
     IR_INSTRUCTION__NEG,
     IR_INSTRUCTION__NOT,
     IR_INSTRUCTION__OFFSET,
+    IR_INSTRUCTION__OR,
     IR_INSTRUCTION__PHI,
     IR_INSTRUCTION__PLACEHOLDER,
     IR_INSTRUCTION__RET,
+    IR_INSTRUCTION__SHL,
+    IR_INSTRUCTION__SHR,
     IR_INSTRUCTION__STORE,
     IR_INSTRUCTION__STRUCT,
     IR_INSTRUCTION__SUB,
+    IR_INSTRUCTION__XOR,
 } IR_Instruction_Kind;
 
 typedef struct IR_Instruction IR_Instruction;

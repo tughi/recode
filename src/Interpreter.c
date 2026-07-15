@@ -165,6 +165,46 @@ static Step execute_add_u64_instruction(Interpreter *interpreter, IR_Instruction
     return (Step){.kind = STEP_NEXT};
 }
 
+static Step execute_and_u8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint8_t *)result_address = *(uint8_t *)left_address & *(uint8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_and_u16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint16_t *)result_address = *(uint16_t *)left_address & *(uint16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_and_u32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint32_t *)result_address = *(uint32_t *)left_address & *(uint32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_and_u64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint64_t *)result_address = *(uint64_t *)left_address & *(uint64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
 static Step execute_alloc_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     (void)return_address;
     (void)previous_block;
@@ -1159,6 +1199,46 @@ static Step execute_offset_instruction(Interpreter *interpreter, IR_Instruction 
     return (Step){.kind = STEP_NEXT};
 }
 
+static Step execute_or_u8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint8_t *)result_address = *(uint8_t *)left_address | *(uint8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_or_u16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint16_t *)result_address = *(uint16_t *)left_address | *(uint16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_or_u32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint32_t *)result_address = *(uint32_t *)left_address | *(uint32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_or_u64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint64_t *)result_address = *(uint64_t *)left_address | *(uint64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
 static Step execute_phi_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     (void)return_address;
     for (size_t i = 0; i < instruction->arguments.size; i++) {
@@ -1186,6 +1266,162 @@ static Step execute_ret_instruction(Interpreter *interpreter, IR_Instruction *in
         copy_slot(return_address, value_address(interpreter, frame_data, source_value), source_value->slot.size);
     }
     return (Step){.kind = STEP_RETURN};
+}
+
+static Step execute_shl_u8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint8_t *)right_address >= 8) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint8_t *)result_address = *(uint8_t *)left_address << *(uint8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shl_u16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint16_t *)right_address >= 16) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint16_t *)result_address = *(uint16_t *)left_address << *(uint16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shl_u32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint32_t *)right_address >= 32) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint32_t *)result_address = *(uint32_t *)left_address << *(uint32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shl_u64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint64_t *)right_address >= 64) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint64_t *)result_address = *(uint64_t *)left_address << *(uint64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_i8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint8_t *)right_address >= 8) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(int8_t *)result_address = *(int8_t *)left_address >> *(int8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_i16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint16_t *)right_address >= 16) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(int16_t *)result_address = *(int16_t *)left_address >> *(int16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_i32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint32_t *)right_address >= 32) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(int32_t *)result_address = *(int32_t *)left_address >> *(int32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_i64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint64_t *)right_address >= 64) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(int64_t *)result_address = *(int64_t *)left_address >> *(int64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_u8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint8_t *)right_address >= 8) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint8_t *)result_address = *(uint8_t *)left_address >> *(uint8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_u16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint16_t *)right_address >= 16) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint16_t *)result_address = *(uint16_t *)left_address >> *(uint16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_u32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint32_t *)right_address >= 32) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint32_t *)result_address = *(uint32_t *)left_address >> *(uint32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_shr_u64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    if (*(uint64_t *)right_address >= 64) {
+        runtime_error(interpreter, instruction->location, "Shift out of range");
+    }
+    *(uint64_t *)result_address = *(uint64_t *)left_address >> *(uint64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
 }
 
 static Step execute_store_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
@@ -1288,6 +1524,46 @@ static Step execute_sub_u64_instruction(Interpreter *interpreter, IR_Instruction
     return (Step){.kind = STEP_NEXT};
 }
 
+static Step execute_xor_u8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint8_t *)result_address = *(uint8_t *)left_address ^ *(uint8_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_xor_u16_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint16_t *)result_address = *(uint16_t *)left_address ^ *(uint16_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_xor_u32_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint32_t *)result_address = *(uint32_t *)left_address ^ *(uint32_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
+static Step execute_xor_u64_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
+    (void)return_address;
+    (void)previous_block;
+    uint8_t *left_address = value_address(interpreter, frame_data, instruction->arguments.items[0]);
+    uint8_t *right_address = value_address(interpreter, frame_data, instruction->arguments.items[1]);
+    uint8_t *result_address = value_address(interpreter, frame_data, &instruction->result);
+    *(uint64_t *)result_address = *(uint64_t *)left_address ^ *(uint64_t *)right_address;
+    return (Step){.kind = STEP_NEXT};
+}
+
 static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
@@ -1316,6 +1592,26 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) 
         break;
     case IR_INSTRUCTION__ALLOC:
         return execute_alloc_instruction;
+    case IR_INSTRUCTION__AND:
+        switch (instruction->result.type->kind) {
+        case IR_TYPE__I8:
+        case IR_TYPE__U8:
+            return execute_and_u8_instruction;
+        case IR_TYPE__I16:
+        case IR_TYPE__U16:
+            return execute_and_u16_instruction;
+        case IR_TYPE__I32:
+        case IR_TYPE__U32:
+            return execute_and_u32_instruction;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return execute_and_u64_instruction;
+        default:
+            break;
+        }
+        break;
     case IR_INSTRUCTION__BR:
         return execute_br_instruction;
     case IR_INSTRUCTION__BRX:
@@ -1586,12 +1882,76 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) 
         return execute_not_instruction;
     case IR_INSTRUCTION__OFFSET:
         return execute_offset_instruction;
+    case IR_INSTRUCTION__OR:
+        switch (instruction->result.type->kind) {
+        case IR_TYPE__I8:
+        case IR_TYPE__U8:
+            return execute_or_u8_instruction;
+        case IR_TYPE__I16:
+        case IR_TYPE__U16:
+            return execute_or_u16_instruction;
+        case IR_TYPE__I32:
+        case IR_TYPE__U32:
+            return execute_or_u32_instruction;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return execute_or_u64_instruction;
+        default:
+            break;
+        }
+        break;
     case IR_INSTRUCTION__PHI:
         return execute_phi_instruction;
     case IR_INSTRUCTION__PLACEHOLDER:
         return execute_placeholder_instruction;
     case IR_INSTRUCTION__RET:
         return execute_ret_instruction;
+    case IR_INSTRUCTION__SHL:
+        switch (instruction->result.type->kind) {
+        case IR_TYPE__I8:
+        case IR_TYPE__U8:
+            return execute_shl_u8_instruction;
+        case IR_TYPE__I16:
+        case IR_TYPE__U16:
+            return execute_shl_u16_instruction;
+        case IR_TYPE__I32:
+        case IR_TYPE__U32:
+            return execute_shl_u32_instruction;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return execute_shl_u64_instruction;
+        default:
+            break;
+        }
+        break;
+    case IR_INSTRUCTION__SHR:
+        switch (instruction->result.type->kind) {
+        case IR_TYPE__I8:
+            return execute_shr_i8_instruction;
+        case IR_TYPE__I16:
+            return execute_shr_i16_instruction;
+        case IR_TYPE__I32:
+            return execute_shr_i32_instruction;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+            return execute_shr_i64_instruction;
+        case IR_TYPE__U8:
+            return execute_shr_u8_instruction;
+        case IR_TYPE__U16:
+            return execute_shr_u16_instruction;
+        case IR_TYPE__U32:
+            return execute_shr_u32_instruction;
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return execute_shr_u64_instruction;
+        default:
+            break;
+        }
+        break;
     case IR_INSTRUCTION__STORE:
         return execute_store_instruction;
     case IR_INSTRUCTION__STRUCT:
@@ -1616,6 +1976,26 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) 
         case IR_TYPE__U64:
         case IR_TYPE__USIZE:
             return execute_sub_u64_instruction;
+        default:
+            break;
+        }
+        break;
+    case IR_INSTRUCTION__XOR:
+        switch (instruction->result.type->kind) {
+        case IR_TYPE__I8:
+        case IR_TYPE__U8:
+            return execute_xor_u8_instruction;
+        case IR_TYPE__I16:
+        case IR_TYPE__U16:
+            return execute_xor_u16_instruction;
+        case IR_TYPE__I32:
+        case IR_TYPE__U32:
+            return execute_xor_u32_instruction;
+        case IR_TYPE__I64:
+        case IR_TYPE__ISIZE:
+        case IR_TYPE__U64:
+        case IR_TYPE__USIZE:
+            return execute_xor_u64_instruction;
         default:
             break;
         }
