@@ -976,7 +976,11 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
                 return load_instruction.as(^ir.Value)
             }
             if symbol.kind == .Procedure {
-                return ir.new_value(kind: .Procedure, name: self.procedure_name(symbol.as(^checked.Procedure_Symbol)), type: self.lower_type(symbol_expression.type))
+                let procedure_symbol = symbol.as(^checked.Procedure_Symbol)
+                if procedure_symbol.is_external {
+                    return self.find_global(self.procedure_name(procedure_symbol))
+                }
+                return ir.new_value(kind: .Procedure, name: self.procedure_name(procedure_symbol), type: self.lower_type(symbol_expression.type))
             }
             return self.find_scope(symbol)
         }
