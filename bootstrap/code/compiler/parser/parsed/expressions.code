@@ -6,6 +6,9 @@ type Expression_Kind = enum {
     Add
     Address_Of
     Array_Access
+    Bitwise_And
+    Bitwise_Or
+    Bitwise_Xor
     Bool
     Call
     Cast
@@ -30,6 +33,8 @@ type Expression_Kind = enum {
     Not
     Not_Equals
     Null
+    Shift_Left
+    Shift_Right
     String
     Subtract
     Symbol
@@ -50,12 +55,11 @@ type Binary_Expression = struct {
 }
 
 proc new_binary_expression(kind: Expression_Kind, location: source.Source_Location, left: ^Expression, right: ^Expression) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Binary_Expression), alignment: type_alignment(Binary_Expression)).as(^Binary_Expression)
-    result.^ = Binary_Expression(
+    let result = allocator.new(Binary_Expression(
         super: Expression(kind: kind, location: location)
         left: left
         right: right
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -65,11 +69,10 @@ type Unary_Expression = struct {
 }
 
 proc new_unary_expression(kind: Expression_Kind, location: source.Source_Location, operand: ^Expression) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Unary_Expression), alignment: type_alignment(Unary_Expression)).as(^Unary_Expression)
-    result.^ = Unary_Expression(
+    let result = allocator.new(Unary_Expression(
         super: Expression(kind: kind, location: location)
         operand: operand
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -80,12 +83,11 @@ type Array_Access_Expression = struct {
 }
 
 proc new_array_access_expression(location: source.Source_Location, operand: ^Expression, index: ^Expression) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Array_Access_Expression), alignment: type_alignment(Array_Access_Expression)).as(^Array_Access_Expression)
-    result.^ = Array_Access_Expression(
+    let result = allocator.new(Array_Access_Expression(
         super: Expression(kind: .Array_Access, location: location)
         operand: operand
         index: index
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -95,11 +97,10 @@ type Bool_Expression = struct {
 }
 
 proc new_bool_expression(location: source.Source_Location, value: bool) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Bool_Expression), alignment: type_alignment(Bool_Expression)).as(^Bool_Expression)
-    result.^ = Bool_Expression(
+    let result = allocator.new(Bool_Expression(
         super: Expression(kind: .Bool, location: location)
         value: value
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -110,13 +111,11 @@ type Call_Argument = struct {
 }
 
 proc new_call_argument(label: ^lexer.Identifier, expression: ^Expression) -> ^Call_Argument {
-    let result = allocator.alloc(size: type_size(Call_Argument), alignment: type_alignment(Call_Argument)).as(^Call_Argument)
-    result.^ = Call_Argument(
+    return allocator.new(Call_Argument(
         label: label
         expression: expression
         next: null
-    )
-    return result
+    ))
 }
 
 type Call_Expression = struct {
@@ -126,12 +125,11 @@ type Call_Expression = struct {
 }
 
 proc new_call_expression(location: source.Source_Location, operand: ^Expression, first_argument: ^Call_Argument) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Call_Expression), alignment: type_alignment(Call_Expression)).as(^Call_Expression)
-    result.^ = Call_Expression(
+    let result = allocator.new(Call_Expression(
         super: Expression(kind: .Call, location: location)
         operand: operand
         first_argument: first_argument
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -142,12 +140,11 @@ type Cast_Expression = struct {
 }
 
 proc new_cast_expression(location: source.Source_Location, operand: ^Expression, target_type: ^Type) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Cast_Expression), alignment: type_alignment(Cast_Expression)).as(^Cast_Expression)
-    result.^ = Cast_Expression(
+    let result = allocator.new(Cast_Expression(
         super: Expression(kind: .Cast, location: location)
         operand: operand
         target_type: target_type
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -157,11 +154,10 @@ type Character_Expression = struct {
 }
 
 proc new_character_expression(token: ^lexer.Character) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Character_Expression), alignment: type_alignment(Character_Expression)).as(^Character_Expression)
-    result.^ = Character_Expression(
+    let result = allocator.new(Character_Expression(
         super: Expression(kind: .Character, location: token.location)
         token: token
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -171,11 +167,10 @@ type Identifier_Expression = struct {
 }
 
 proc new_identifier_expression(name: ^lexer.Identifier) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Identifier_Expression), alignment: type_alignment(Identifier_Expression)).as(^Identifier_Expression)
-    result.^ = Identifier_Expression(
+    let result = allocator.new(Identifier_Expression(
         super: Expression(kind: .Identifier, location: name.location)
         name: name
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -186,12 +181,11 @@ type Instantiation_Expression = struct {
 }
 
 proc new_instantiation_expression(location: source.Source_Location, operand: ^Expression, first_type_argument: ^Type_Argument) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Instantiation_Expression), alignment: type_alignment(Instantiation_Expression)).as(^Instantiation_Expression)
-    result.^ = Instantiation_Expression(
+    let result = allocator.new(Instantiation_Expression(
         super: Expression(kind: .Instantiation, location: location)
         operand: operand
         first_type_argument: first_type_argument
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -202,12 +196,11 @@ type Integer_Expression = struct {
 }
 
 proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Integer_Expression), alignment: type_alignment(Integer_Expression)).as(^Integer_Expression)
-    result.^ = Integer_Expression(
+    let result = allocator.new(Integer_Expression(
         super: Expression(kind: .Integer, location: token.location)
         token: token
         type: type
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -218,12 +211,11 @@ type Member_Access_Expression = struct {
 }
 
 proc new_member_access_expression(location: source.Source_Location, operand: ^Expression, member: ^lexer.Identifier) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Member_Access_Expression), alignment: type_alignment(Member_Access_Expression)).as(^Member_Access_Expression)
-    result.^ = Member_Access_Expression(
+    let result = allocator.new(Member_Access_Expression(
         super: Expression(kind: .Member_Access, location: location)
         operand: operand
         member: member
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -233,11 +225,10 @@ type Null_Expression = struct {
 }
 
 proc new_null_expression(token: ^lexer.Identifier) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Null_Expression), alignment: type_alignment(Null_Expression)).as(^Null_Expression)
-    result.^ = Null_Expression(
+    let result = allocator.new(Null_Expression(
         super: Expression(kind: .Null, location: token.location)
         token: token
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -247,11 +238,10 @@ type String_Expression = struct {
 }
 
 proc new_string_expression(token: ^lexer.String) -> ^Expression {
-    let result = allocator.alloc(size: type_size(String_Expression), alignment: type_alignment(String_Expression)).as(^String_Expression)
-    result.^ = String_Expression(
+    let result = allocator.new(String_Expression(
         super: Expression(kind: .String, location: token.location)
         token: token
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -261,11 +251,10 @@ type Symbol_Expression = struct {
 }
 
 proc new_symbol_expression(location: source.Source_Location, name: ^lexer.Identifier) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Symbol_Expression), alignment: type_alignment(Symbol_Expression)).as(^Symbol_Expression)
-    result.^ = Symbol_Expression(
+    let result = allocator.new(Symbol_Expression(
         super: Expression(kind: .Symbol, location: location)
         name: name
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -275,11 +264,10 @@ type Type_Alignment_Expression = struct {
 }
 
 proc new_type_alignment_expression(location: source.Source_Location, target_type: ^Type) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Type_Alignment_Expression), alignment: type_alignment(Type_Alignment_Expression)).as(^Type_Alignment_Expression)
-    result.^ = Type_Alignment_Expression(
+    let result = allocator.new(Type_Alignment_Expression(
         super: Expression(kind: .Type_Alignment, location: location)
         target_type: target_type
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -289,12 +277,10 @@ type Type_Argument = struct {
 }
 
 proc new_type_argument(type: ^Type) -> ^Type_Argument {
-    let result = allocator.alloc(size: type_size(Type_Argument), alignment: type_alignment(Type_Argument)).as(^Type_Argument)
-    result.^ = Type_Argument(
+    return allocator.new(Type_Argument(
         type: type
         next: null
-    )
-    return result
+    ))
 }
 
 type Type_Expression = struct {
@@ -303,11 +289,10 @@ type Type_Expression = struct {
 }
 
 proc new_type_expression(location: source.Source_Location, type: ^Type) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Type_Expression), alignment: type_alignment(Type_Expression)).as(^Type_Expression)
-    result.^ = Type_Expression(
+    let result = allocator.new(Type_Expression(
         super: Expression(kind: .Type, location: location)
         type: type
-    )
+    ))
     return result.as(^Expression)
 }
 
@@ -317,10 +302,9 @@ type Type_Size_Expression = struct {
 }
 
 proc new_type_size_expression(location: source.Source_Location, target_type: ^Type) -> ^Expression {
-    let result = allocator.alloc(size: type_size(Type_Size_Expression), alignment: type_alignment(Type_Size_Expression)).as(^Type_Size_Expression)
-    result.^ = Type_Size_Expression(
+    let result = allocator.new(Type_Size_Expression(
         super: Expression(kind: .Type_Size, location: location)
         target_type: target_type
-    )
+    ))
     return result.as(^Expression)
 }

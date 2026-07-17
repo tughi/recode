@@ -38,13 +38,11 @@ type Array_Type = struct {
 }
 
 proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
-    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
-    result.^ = Array_Type(
+    return allocator.new(Array_Type(
         super: Type(kind: .Array)
         item_type: item_type
         size: size
-    )
-    return result
+    ))
 }
 
 type Enum_Member = struct {
@@ -54,9 +52,7 @@ type Enum_Member = struct {
 }
 
 proc new_enum_member(name: str, value: u64) -> ^Enum_Member {
-    let result = allocator.alloc(size: type_size(Enum_Member), alignment: type_alignment(Enum_Member)).as(^Enum_Member)
-    result.^ = Enum_Member(name: name, value: value, next: null)
-    return result
+    return allocator.new(Enum_Member(name: name, value: value, next: null))
 }
 
 type Enum_Type = struct {
@@ -66,13 +62,11 @@ type Enum_Type = struct {
 }
 
 proc new_enum_type(name: str, package_name: str) -> ^Enum_Type {
-    let result = allocator.alloc(size: type_size(Enum_Type), alignment: type_alignment(Enum_Type)).as(^Enum_Type)
-    result.^ = Enum_Type(
+    return allocator.new(Enum_Type(
         super: Named_Type(super: Type(kind: .Enum), name: name, package_name: package_name)
         first_member: null
         last_member: null
-    )
-    return result
+    ))
 }
 
 proc (^Enum_Type).find_member(self, name: str) -> ^Enum_Member {
@@ -101,12 +95,10 @@ type Multi_Pointer_Type = struct {
 }
 
 proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
-    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
-    result.^ = Multi_Pointer_Type(
+    return allocator.new(Multi_Pointer_Type(
         super: Type(kind: .Multi_Pointer)
         pointee: pointee
-    )
-    return result
+    ))
 }
 
 type Named_Type = struct {
@@ -233,19 +225,15 @@ proc (^Type).equals(self, other: ^Type) -> bool {
 }
 
 proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Type {
-    let result = allocator.alloc(size: type_size(Named_Type), alignment: type_alignment(Named_Type)).as(^Named_Type)
-    result.^ = Named_Type(
+    return allocator.new(Named_Type(
         super: Type(kind: kind)
         name: name
         package_name: package_name
-    )
-    return result
+    ))
 }
 
 proc new_null_type() -> ^Type {
-    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
-    result.^ = Type(kind: .Null)
-    return result
+    return allocator.new(Type(kind: .Null))
 }
 
 type Placeholder_Type = struct {
@@ -255,13 +243,11 @@ type Placeholder_Type = struct {
 }
 
 proc new_placeholder_type(name: str) -> ^Placeholder_Type {
-    let result = allocator.alloc(size: type_size(Placeholder_Type), alignment: type_alignment(Placeholder_Type)).as(^Placeholder_Type)
-    result.^ = Placeholder_Type(
+    return allocator.new(Placeholder_Type(
         super: Type(kind: .Placeholder)
         name: name
         resolved: null
-    )
-    return result
+    ))
 }
 
 type Pointer_Type = struct {
@@ -270,12 +256,10 @@ type Pointer_Type = struct {
 }
 
 proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
-    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
-    result.^ = Pointer_Type(
+    return allocator.new(Pointer_Type(
         super: Type(kind: .Pointer)
         pointee: pointee
-    )
-    return result
+    ))
 }
 
 type Procedure_Parameter = struct {
@@ -285,9 +269,7 @@ type Procedure_Parameter = struct {
 }
 
 proc new_procedure_parameter(name: str, parameter_type: ^Type) -> ^Procedure_Parameter {
-    let result = allocator.alloc(size: type_size(Procedure_Parameter), alignment: type_alignment(Procedure_Parameter)).as(^Procedure_Parameter)
-    result.^ = Procedure_Parameter(name: name, parameter_type: parameter_type, next: null)
-    return result
+    return allocator.new(Procedure_Parameter(name: name, parameter_type: parameter_type, next: null))
 }
 
 type Procedure_Type = struct {
@@ -297,13 +279,11 @@ type Procedure_Type = struct {
 }
 
 proc new_procedure_type(first_parameter: ^Procedure_Parameter, return_type: ^Type) -> ^Procedure_Type {
-    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
-    result.^ = Procedure_Type(
+    return allocator.new(Procedure_Type(
         super: Type(kind: .Procedure)
         first_parameter: first_parameter
         return_type: return_type
-    )
-    return result
+    ))
 }
 
 type Struct_Member = struct {
@@ -314,9 +294,7 @@ type Struct_Member = struct {
 }
 
 proc new_struct_member(name: str, type: ^Type) -> ^Struct_Member {
-    let result = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
-    result.^ = Struct_Member(name: name, type: type, struct_type: null, next: null)
-    return result
+    return allocator.new(Struct_Member(name: name, type: type, struct_type: null, next: null))
 }
 
 type Struct_Type = struct {
@@ -328,15 +306,13 @@ type Struct_Type = struct {
 }
 
 proc new_struct_type(name: str, package_name: str) -> ^Struct_Type {
-    let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
-    result.^ = Struct_Type(
+    return allocator.new(Struct_Type(
         super: Named_Type(super: Type(kind: .Struct), name: name, package_name: package_name)
         generic_symbol: null
         first_type_argument: null
         first_member: null
         last_member: null
-    )
-    return result
+    ))
 }
 
 proc (^Struct_Type).find_member(self, name: str) -> ^Struct_Member {

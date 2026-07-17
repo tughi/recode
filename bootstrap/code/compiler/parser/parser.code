@@ -581,35 +581,94 @@ proc (^Parser).parse_equality_expression(self) -> ^parsed.Expression {
 }
 
 proc (^Parser).parse_comparison_expression(self) -> ^parsed.Expression {
-    let expression = self.parse_additive_expression()
+    let expression = self.parse_bitwise_or_expression()
     if self.lexer.matches_three(match.optional_space, match.other('<'), match.other('=')) {
         let location = self.lexer.location()
         self.consume_space(1)
         self.consume_two_other('<', '=')
         self.consume_space(1)
-        let right = self.parse_additive_expression()
+        let right = self.parse_bitwise_or_expression()
         expression = parsed.new_binary_expression(.Less_Or_Equals, location, expression, right)
     } else if self.lexer.matches_two(match.optional_space, match.other('<')) {
         let location = self.lexer.location()
         self.consume_space(1)
         self.consume_other('<')
         self.consume_space(1)
-        let right = self.parse_additive_expression()
+        let right = self.parse_bitwise_or_expression()
         expression = parsed.new_binary_expression(.Less, location, expression, right)
     } else if self.lexer.matches_three(match.optional_space, match.other('>'), match.other('=')) {
         let location = self.lexer.location()
         self.consume_space(1)
         self.consume_two_other('>', '=')
         self.consume_space(1)
-        let right = self.parse_additive_expression()
+        let right = self.parse_bitwise_or_expression()
         expression = parsed.new_binary_expression(.Greater_Or_Equals, location, expression, right)
     } else if self.lexer.matches_two(match.optional_space, match.other('>')) {
         let location = self.lexer.location()
         self.consume_space(1)
         self.consume_other('>')
         self.consume_space(1)
-        let right = self.parse_additive_expression()
+        let right = self.parse_bitwise_or_expression()
         expression = parsed.new_binary_expression(.Greater, location, expression, right)
+    }
+    return expression
+}
+
+proc (^Parser).parse_bitwise_or_expression(self) -> ^parsed.Expression {
+    let expression = self.parse_bitwise_xor_expression()
+    while self.lexer.matches_two(match.optional_space, match.other('|')) {
+        let location = self.lexer.location()
+        self.consume_space(1)
+        self.consume_other('|')
+        self.consume_space(1)
+        let right = self.parse_bitwise_xor_expression()
+        expression = parsed.new_binary_expression(.Bitwise_Or, location, expression, right)
+    }
+    return expression
+}
+
+proc (^Parser).parse_bitwise_xor_expression(self) -> ^parsed.Expression {
+    let expression = self.parse_bitwise_and_expression()
+    while self.lexer.matches_two(match.optional_space, match.other('^')) {
+        let location = self.lexer.location()
+        self.consume_space(1)
+        self.consume_other('^')
+        self.consume_space(1)
+        let right = self.parse_bitwise_and_expression()
+        expression = parsed.new_binary_expression(.Bitwise_Xor, location, expression, right)
+    }
+    return expression
+}
+
+proc (^Parser).parse_bitwise_and_expression(self) -> ^parsed.Expression {
+    let expression = self.parse_shift_expression()
+    while self.lexer.matches_two(match.optional_space, match.other('&')) {
+        let location = self.lexer.location()
+        self.consume_space(1)
+        self.consume_other('&')
+        self.consume_space(1)
+        let right = self.parse_shift_expression()
+        expression = parsed.new_binary_expression(.Bitwise_And, location, expression, right)
+    }
+    return expression
+}
+
+proc (^Parser).parse_shift_expression(self) -> ^parsed.Expression {
+    let expression = self.parse_additive_expression()
+    while self.lexer.matches_three(match.optional_space, match.other('<'), match.other('<')) or self.lexer.matches_three(match.optional_space, match.other('>'), match.other('>')) {
+        let location = self.lexer.location()
+        self.consume_space(1)
+        if self.lexer.matches_one(match.other('<')) {
+            self.consume_two_other('<', '<')
+            self.consume_space(1)
+            let right = self.parse_additive_expression()
+            expression = parsed.new_binary_expression(.Shift_Left, location, expression, right)
+        } else {
+            self.consume_two_other('>', '>')
+            self.consume_space(1)
+            let right = self.parse_additive_expression()
+            expression = parsed.new_binary_expression(.Shift_Right, location, expression, right)
+        }
     }
     return expression
 }

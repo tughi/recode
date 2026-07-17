@@ -10,9 +10,7 @@ type Scope_Entry = struct {
 }
 
 proc new_scope_entry(value: ^ir.Value, next: ^Scope_Entry) -> ^Scope_Entry {
-    let result = allocator.alloc(size: type_size(Scope_Entry), alignment: type_alignment(Scope_Entry)).as(^Scope_Entry)
-    result.^ = Scope_Entry(value: value, next: next)
-    return result
+    return allocator.new(Scope_Entry(value: value, next: next))
 }
 
 type Enum_Name_Entry = struct {
@@ -21,9 +19,7 @@ type Enum_Name_Entry = struct {
 }
 
 proc new_enum_name_entry(enum_type: ^checked.Enum_Type) -> ^Enum_Name_Entry {
-    let result = allocator.alloc(size: type_size(Enum_Name_Entry), alignment: type_alignment(Enum_Name_Entry)).as(^Enum_Name_Entry)
-    result.^ = Enum_Name_Entry(enum_type: enum_type, next: null)
-    return result
+    return allocator.new(Enum_Name_Entry(enum_type: enum_type, next: null))
 }
 
 type Lowerer = struct {
@@ -738,6 +734,15 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             self.current_block.append_instruction(load_instruction.as(^ir.Instruction))
             return load_instruction.as(^ir.Value)
         }
+        case .Bitwise_And {
+            return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Bitwise_And)
+        }
+        case .Bitwise_Or {
+            return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Bitwise_Or)
+        }
+        case .Bitwise_Xor {
+            return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Bitwise_Xor)
+        }
         case .Bool {
             let bool_expression = expression.as(^checked.Bool_Expression)
             let value = 0u64
@@ -908,6 +913,12 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
             self.current_block.append_instruction(const_instruction.as(^ir.Instruction))
             return const_instruction.as(^ir.Value)
         }
+        case .Shift_Left {
+            return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Shift_Left)
+        }
+        case .Shift_Right {
+            return self.lower_binary_expression(expression.as(^checked.Binary_Expression), .Shift_Right)
+        }
         case .String {
             return self.lower_string_struct(expression.as(^checked.String_Expression).token.value)
         }
@@ -965,7 +976,11 @@ proc (^Lowerer).lower_expression(self, expression: ^checked.Expression) -> ^ir.V
                 return load_instruction.as(^ir.Value)
             }
             if symbol.kind == .Procedure {
-                return ir.new_value(kind: .Procedure, name: self.procedure_name(symbol.as(^checked.Procedure_Symbol)), type: self.lower_type(symbol_expression.type))
+                let procedure_symbol = symbol.as(^checked.Procedure_Symbol)
+                if procedure_symbol.is_external {
+                    return self.find_global(self.procedure_name(procedure_symbol))
+                }
+                return ir.new_value(kind: .Procedure, name: self.procedure_name(procedure_symbol), type: self.lower_type(symbol_expression.type))
             }
             return self.find_scope(symbol)
         }

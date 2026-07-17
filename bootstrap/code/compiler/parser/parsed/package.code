@@ -8,13 +8,11 @@ type Module = struct {
 }
 
 proc new_module(source: source.Source, first_statement: ^Statement) -> ^Module {
-    let result = allocator.alloc(size: type_size(Module), alignment: type_alignment(Module)).as(^Module)
-    result.^ = Module(
+    return allocator.new(Module(
         source: source
         first_statement: first_statement
         next_module: null
-    )
-    return result
+    ))
 }
 
 type Package = struct {
@@ -26,13 +24,11 @@ type Package = struct {
 }
 
 proc new_package(name: str, is_root: bool) -> ^Package {
-    let result = allocator.alloc(size: type_size(Package), alignment: type_alignment(Package)).as(^Package)
-    result.^ = Package(
+    return allocator.new(Package(
         name: name
         is_root: is_root
         import_location: source.Source_Location(source: source.Source(path: "", content: ""), line: 0, column: 0)
         first_module: null
         next_package: null
-    )
-    return result
+    ))
 }

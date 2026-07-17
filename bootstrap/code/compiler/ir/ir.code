@@ -14,9 +14,7 @@ type Program = struct {
 }
 
 proc new_program() -> ^Program {
-    let result = allocator.alloc(size: type_size(Program), alignment: type_alignment(Program)).as(^Program)
-    result.^ = Program(first_source_file: null, last_source_file: null, first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null)
-    return result
+    return allocator.new(Program(first_source_file: null, last_source_file: null, first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null))
 }
 
 proc (^Program).append_type(self, type: ^Named_Type) {
@@ -69,8 +67,7 @@ proc (^Program).append_source_file(self, path: str, ir_path: str) -> ^Source_Fil
     if self.last_source_file != null {
         index = self.last_source_file.index + 1
     }
-    let source_file = allocator.alloc(size: type_size(Source_File), alignment: type_alignment(Source_File)).as(^Source_File)
-    source_file.^ = Source_File(index: index, path: path, ir_path: ir_path, next: null)
+    let source_file = allocator.new(Source_File(index: index, path: path, ir_path: ir_path, next: null))
     if self.first_source_file == null {
         self.first_source_file = source_file
     } else {
@@ -103,8 +100,7 @@ type Procedure = struct {
 }
 
 proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
-    let result = allocator.alloc(size: type_size(Procedure), alignment: type_alignment(Procedure)).as(^Procedure)
-    result.^ = Procedure(
+    return allocator.new(Procedure(
         name: name
         is_method: false
         first_parameter: null
@@ -113,8 +109,7 @@ proc new_procedure(name: str, return_type: ^Type) -> ^Procedure {
         first_block: null
         last_block: null
         next: null
-    )
-    return result
+    ))
 }
 
 proc (^Procedure).append_parameter(self, value: ^Value) {
@@ -143,9 +138,7 @@ type Block = struct {
 }
 
 proc new_block(label: usize) -> ^Block {
-    let result = allocator.alloc(size: type_size(Block), alignment: type_alignment(Block)).as(^Block)
-    result.^ = Block(label: label, first_instruction: null, last_instruction: null, next: null)
-    return result
+    return allocator.new(Block(label: label, first_instruction: null, last_instruction: null, next: null))
 }
 
 type Type_Kind = enum {
@@ -175,9 +168,7 @@ type Type = struct {
 }
 
 proc new_primitive_type(kind: Type_Kind) -> ^Type {
-    let result = allocator.alloc(size: type_size(Type), alignment: type_alignment(Type)).as(^Type)
-    result.^ = Type(kind: kind)
-    return result
+    return allocator.new(Type(kind: kind))
 }
 
 proc (^Type).name_string(self) -> str {
@@ -346,9 +337,7 @@ type Array_Type = struct {
 }
 
 proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
-    let result = allocator.alloc(size: type_size(Array_Type), alignment: type_alignment(Array_Type)).as(^Array_Type)
-    result.^ = Array_Type(super: Type(kind: .Array), item_type: item_type, size: size)
-    return result
+    return allocator.new(Array_Type(super: Type(kind: .Array), item_type: item_type, size: size))
 }
 
 type Multi_Pointer_Type = struct {
@@ -357,9 +346,7 @@ type Multi_Pointer_Type = struct {
 }
 
 proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
-    let result = allocator.alloc(size: type_size(Multi_Pointer_Type), alignment: type_alignment(Multi_Pointer_Type)).as(^Multi_Pointer_Type)
-    result.^ = Multi_Pointer_Type(super: Type(kind: .Multi_Pointer), pointee: pointee)
-    return result
+    return allocator.new(Multi_Pointer_Type(super: Type(kind: .Multi_Pointer), pointee: pointee))
 }
 
 type Nothing_Type = struct {
@@ -367,9 +354,7 @@ type Nothing_Type = struct {
 }
 
 proc new_nothing_type() -> ^Nothing_Type {
-    let result = allocator.alloc(size: type_size(Nothing_Type), alignment: type_alignment(Nothing_Type)).as(^Nothing_Type)
-    result.^ = Nothing_Type(super: Type(kind: .Nothing))
-    return result
+    return allocator.new(Nothing_Type(super: Type(kind: .Nothing)))
 }
 
 type Named_Type = struct {
@@ -383,9 +368,7 @@ type Opaque_Type = struct {
 }
 
 proc new_opaque_type(name: str) -> ^Opaque_Type {
-    let result = allocator.alloc(size: type_size(Opaque_Type), alignment: type_alignment(Opaque_Type)).as(^Opaque_Type)
-    result.^ = Opaque_Type(super: Named_Type(super: Type(kind: .Opaque), name: name, next_type: null))
-    return result
+    return allocator.new(Opaque_Type(super: Named_Type(super: Type(kind: .Opaque), name: name, next_type: null)))
 }
 
 type Pointer_Type = struct {
@@ -394,9 +377,7 @@ type Pointer_Type = struct {
 }
 
 proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
-    let result = allocator.alloc(size: type_size(Pointer_Type), alignment: type_alignment(Pointer_Type)).as(^Pointer_Type)
-    result.^ = Pointer_Type(super: Type(kind: .Pointer), pointee: pointee)
-    return result
+    return allocator.new(Pointer_Type(super: Type(kind: .Pointer), pointee: pointee))
 }
 
 type Procedure_Type_Parameter = struct {
@@ -405,9 +386,7 @@ type Procedure_Type_Parameter = struct {
 }
 
 proc new_procedure_type_parameter(type: ^Type) -> ^Procedure_Type_Parameter {
-    let result = allocator.alloc(size: type_size(Procedure_Type_Parameter), alignment: type_alignment(Procedure_Type_Parameter)).as(^Procedure_Type_Parameter)
-    result.^ = Procedure_Type_Parameter(type: type, next: null)
-    return result
+    return allocator.new(Procedure_Type_Parameter(type: type, next: null))
 }
 
 type Procedure_Type = struct {
@@ -418,9 +397,7 @@ type Procedure_Type = struct {
 }
 
 proc new_procedure_type(return_type: ^Type) -> ^Procedure_Type {
-    let result = allocator.alloc(size: type_size(Procedure_Type), alignment: type_alignment(Procedure_Type)).as(^Procedure_Type)
-    result.^ = Procedure_Type(super: Type(kind: .Procedure), first_parameter: null, last_parameter: null, return_type: return_type)
-    return result
+    return allocator.new(Procedure_Type(super: Type(kind: .Procedure), first_parameter: null, last_parameter: null, return_type: return_type))
 }
 
 proc (^Procedure_Type).append_parameter(self, type: ^Type) {
@@ -446,18 +423,15 @@ type Struct_Type = struct {
 }
 
 proc new_struct_type(name: str) -> ^Struct_Type {
-    let result = allocator.alloc(size: type_size(Struct_Type), alignment: type_alignment(Struct_Type)).as(^Struct_Type)
-    result.^ = Struct_Type(
+    return allocator.new(Struct_Type(
         super: Named_Type(super: Type(kind: .Struct), name: name, next_type: null)
         first_member: null
         last_member: null
-    )
-    return result
+    ))
 }
 
 proc (^Struct_Type).append_member(self, name: str, type: ^Type) {
-    let member = allocator.alloc(size: type_size(Struct_Member), alignment: type_alignment(Struct_Member)).as(^Struct_Member)
-    member.^ = Struct_Member(name: name, type: type, next: null)
+    let member = allocator.new(Struct_Member(name: name, type: type, next: null))
     if self.first_member == null {
         self.first_member = member
     } else {
@@ -482,9 +456,7 @@ type Value = struct {
 }
 
 proc new_value(kind: Value_Kind, name: str, type: ^Type) -> ^Value {
-    let result = allocator.alloc(size: type_size(Value), alignment: type_alignment(Value)).as(^Value)
-    result.^ = Value(kind: kind, name: name, type: type, variable: null, next: null)
-    return result
+    return allocator.new(Value(kind: kind, name: name, type: type, variable: null, next: null))
 }
 
 type Symbol = struct {
@@ -497,9 +469,7 @@ type Const_Payload = struct {
 }
 
 proc new_const_payload(value: u64, lexeme: str) -> ^Const_Payload {
-    let result = allocator.alloc(size: type_size(Const_Payload), alignment: type_alignment(Const_Payload)).as(^Const_Payload)
-    result.^ = Const_Payload(value: value, lexeme: lexeme)
-    return result
+    return allocator.new(Const_Payload(value: value, lexeme: lexeme))
 }
 
 type Global = struct {
@@ -511,15 +481,13 @@ type Global = struct {
 }
 
 proc new_global(name: str, type: ^Type) -> ^Global {
-    let result = allocator.alloc(size: type_size(Global), alignment: type_alignment(Global)).as(^Global)
-    result.^ = Global(
+    return allocator.new(Global(
         super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
         literal: ""
         constant: null
         is_external: false
         next_global: null
-    )
-    return result
+    ))
 }
 
 proc new_constant_global(name: str, type: ^Type, constant: ^Const_Payload) -> ^Global {
@@ -547,11 +515,9 @@ type Variable = struct {
 }
 
 proc new_variable(name: str, type: ^Type, symbol: ^checked.Symbol) -> ^Variable {
-    let result = allocator.alloc(size: type_size(Variable), alignment: type_alignment(Variable)).as(^Variable)
-    result.^ = Variable(
+    return allocator.new(Variable(
         super: Symbol(super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null))
         symbol: symbol
         version: 0
-    )
-    return result
+    ))
 }

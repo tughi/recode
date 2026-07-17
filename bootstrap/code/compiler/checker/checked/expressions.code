@@ -5,6 +5,9 @@ type Expression_Kind = enum {
     Add
     Address_Of
     Array_Access
+    Bitwise_And
+    Bitwise_Or
+    Bitwise_Xor
     Bool
     Call
     Cast
@@ -32,6 +35,8 @@ type Expression_Kind = enum {
     Not
     Not_Equals
     Null
+    Shift_Left
+    Shift_Right
     String
     String_Length
     Subtract
@@ -72,12 +77,10 @@ type Address_Of_Expression = struct {
 }
 
 proc new_address_of_expression(operand: ^Expression, type: ^Type) -> ^Address_Of_Expression {
-    let result = allocator.alloc(size: type_size(Address_Of_Expression), alignment: type_alignment(Address_Of_Expression)).as(^Address_Of_Expression)
-    result.^ = Address_Of_Expression(
+    return allocator.new(Address_Of_Expression(
         super: Expression(kind: .Address_Of, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Array_Access_Expression = struct {
@@ -87,13 +90,11 @@ type Array_Access_Expression = struct {
 }
 
 proc new_array_access_expression(operand: ^Expression, index: ^Expression, type: ^Type) -> ^Array_Access_Expression {
-    let result = allocator.alloc(size: type_size(Array_Access_Expression), alignment: type_alignment(Array_Access_Expression)).as(^Array_Access_Expression)
-    result.^ = Array_Access_Expression(
+    return allocator.new(Array_Access_Expression(
         super: Expression(kind: .Array_Access, type: type)
         operand: operand
         index: index
-    )
-    return result
+    ))
 }
 
 type Binary_Expression = struct {
@@ -103,13 +104,11 @@ type Binary_Expression = struct {
 }
 
 proc new_binary_expression(kind: Expression_Kind, left: ^Expression, right: ^Expression, type: ^Type) -> ^Binary_Expression {
-    let result = allocator.alloc(size: type_size(Binary_Expression), alignment: type_alignment(Binary_Expression)).as(^Binary_Expression)
-    result.^ = Binary_Expression(
+    return allocator.new(Binary_Expression(
         super: Expression(kind: kind, type: type)
         left: left
         right: right
-    )
-    return result
+    ))
 }
 
 type Bool_Expression = struct {
@@ -118,12 +117,10 @@ type Bool_Expression = struct {
 }
 
 proc new_bool_expression(value: bool, type: ^Type) -> ^Bool_Expression {
-    let result = allocator.alloc(size: type_size(Bool_Expression), alignment: type_alignment(Bool_Expression)).as(^Bool_Expression)
-    result.^ = Bool_Expression(
+    return allocator.new(Bool_Expression(
         super: Expression(kind: .Bool, type: type)
         value: value
-    )
-    return result
+    ))
 }
 
 type Call_Argument = struct {
@@ -132,9 +129,7 @@ type Call_Argument = struct {
 }
 
 proc new_call_argument(expression: ^Expression) -> ^Call_Argument {
-    let result = allocator.alloc(size: type_size(Call_Argument), alignment: type_alignment(Call_Argument)).as(^Call_Argument)
-    result.^ = Call_Argument(expression: expression, next: null)
-    return result
+    return allocator.new(Call_Argument(expression: expression, next: null))
 }
 
 type Call_Expression = struct {
@@ -144,13 +139,11 @@ type Call_Expression = struct {
 }
 
 proc new_call_expression(callee: ^Expression, type: ^Type, first_argument: ^Call_Argument) -> ^Call_Expression {
-    let result = allocator.alloc(size: type_size(Call_Expression), alignment: type_alignment(Call_Expression)).as(^Call_Expression)
-    result.^ = Call_Expression(
+    return allocator.new(Call_Expression(
         super: Expression(kind: .Call, type: type)
         callee: callee
         first_argument: first_argument
-    )
-    return result
+    ))
 }
 
 type Cast_Expression = struct {
@@ -159,12 +152,10 @@ type Cast_Expression = struct {
 }
 
 proc new_cast_expression(operand: ^Expression, type: ^Type) -> ^Cast_Expression {
-    let result = allocator.alloc(size: type_size(Cast_Expression), alignment: type_alignment(Cast_Expression)).as(^Cast_Expression)
-    result.^ = Cast_Expression(
+    return allocator.new(Cast_Expression(
         super: Expression(kind: .Cast, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Character_Expression = struct {
@@ -173,12 +164,10 @@ type Character_Expression = struct {
 }
 
 proc new_character_expression(token: ^lexer.Character, type: ^Type) -> ^Character_Expression {
-    let result = allocator.alloc(size: type_size(Character_Expression), alignment: type_alignment(Character_Expression)).as(^Character_Expression)
-    result.^ = Character_Expression(
+    return allocator.new(Character_Expression(
         super: Expression(kind: .Character, type: type)
         token: token
-    )
-    return result
+    ))
 }
 
 type Dereference_Expression = struct {
@@ -187,12 +176,10 @@ type Dereference_Expression = struct {
 }
 
 proc new_dereference_expression(operand: ^Expression, type: ^Type) -> ^Dereference_Expression {
-    let result = allocator.alloc(size: type_size(Dereference_Expression), alignment: type_alignment(Dereference_Expression)).as(^Dereference_Expression)
-    result.^ = Dereference_Expression(
+    return allocator.new(Dereference_Expression(
         super: Expression(kind: .Dereference, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Enum_Member_Expression = struct {
@@ -201,12 +188,10 @@ type Enum_Member_Expression = struct {
 }
 
 proc new_enum_member_expression(member: ^Enum_Member, type: ^Type) -> ^Enum_Member_Expression {
-    let result = allocator.alloc(size: type_size(Enum_Member_Expression), alignment: type_alignment(Enum_Member_Expression)).as(^Enum_Member_Expression)
-    result.^ = Enum_Member_Expression(
+    return allocator.new(Enum_Member_Expression(
         super: Expression(kind: .Enum_Member, type: type)
         member: member
-    )
-    return result
+    ))
 }
 
 type Enum_Name_Expression = struct {
@@ -215,12 +200,10 @@ type Enum_Name_Expression = struct {
 }
 
 proc new_enum_name_expression(operand: ^Expression, type: ^Type) -> ^Enum_Name_Expression {
-    let result = allocator.alloc(size: type_size(Enum_Name_Expression), alignment: type_alignment(Enum_Name_Expression)).as(^Enum_Name_Expression)
-    result.^ = Enum_Name_Expression(
+    return allocator.new(Enum_Name_Expression(
         super: Expression(kind: .Enum_Name, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Enum_Value_Expression = struct {
@@ -229,12 +212,10 @@ type Enum_Value_Expression = struct {
 }
 
 proc new_enum_value_expression(operand: ^Expression, type: ^Type) -> ^Enum_Value_Expression {
-    let result = allocator.alloc(size: type_size(Enum_Value_Expression), alignment: type_alignment(Enum_Value_Expression)).as(^Enum_Value_Expression)
-    result.^ = Enum_Value_Expression(
+    return allocator.new(Enum_Value_Expression(
         super: Expression(kind: .Enum_Value, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Group_Expression = struct {
@@ -243,12 +224,10 @@ type Group_Expression = struct {
 }
 
 proc new_group_expression(operand: ^Expression, type: ^Type) -> ^Group_Expression {
-    let result = allocator.alloc(size: type_size(Group_Expression), alignment: type_alignment(Group_Expression)).as(^Group_Expression)
-    result.^ = Group_Expression(
+    return allocator.new(Group_Expression(
         super: Expression(kind: .Group, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Integer_Expression = struct {
@@ -257,12 +236,10 @@ type Integer_Expression = struct {
 }
 
 proc new_integer_expression(token: ^lexer.Integer, type: ^Type) -> ^Integer_Expression {
-    let result = allocator.alloc(size: type_size(Integer_Expression), alignment: type_alignment(Integer_Expression)).as(^Integer_Expression)
-    result.^ = Integer_Expression(
+    return allocator.new(Integer_Expression(
         super: Expression(kind: .Integer, type: type)
         token: token
-    )
-    return result
+    ))
 }
 
 type Make_Struct_Argument = struct {
@@ -272,9 +249,7 @@ type Make_Struct_Argument = struct {
 }
 
 proc new_make_struct_argument(member: ^Struct_Member, expression: ^Expression) -> ^Make_Struct_Argument {
-    let result = allocator.alloc(size: type_size(Make_Struct_Argument), alignment: type_alignment(Make_Struct_Argument)).as(^Make_Struct_Argument)
-    result.^ = Make_Struct_Argument(member: member, expression: expression, next: null)
-    return result
+    return allocator.new(Make_Struct_Argument(member: member, expression: expression, next: null))
 }
 
 type Make_Array_Expression = struct {
@@ -283,12 +258,10 @@ type Make_Array_Expression = struct {
 }
 
 proc new_make_array_expression(array_type: ^Array_Type, first_argument: ^Call_Argument) -> ^Make_Array_Expression {
-    let result = allocator.alloc(size: type_size(Make_Array_Expression), alignment: type_alignment(Make_Array_Expression)).as(^Make_Array_Expression)
-    result.^ = Make_Array_Expression(
+    return allocator.new(Make_Array_Expression(
         super: Expression(kind: .Make_Array, type: array_type.as(^Type))
         first_argument: first_argument
-    )
-    return result
+    ))
 }
 
 type Make_Struct_Expression = struct {
@@ -297,12 +270,10 @@ type Make_Struct_Expression = struct {
 }
 
 proc new_make_struct_expression(struct_type: ^Struct_Type, first_argument: ^Make_Struct_Argument) -> ^Make_Struct_Expression {
-    let result = allocator.alloc(size: type_size(Make_Struct_Expression), alignment: type_alignment(Make_Struct_Expression)).as(^Make_Struct_Expression)
-    result.^ = Make_Struct_Expression(
+    return allocator.new(Make_Struct_Expression(
         super: Expression(kind: .Make_Struct, type: struct_type.as(^Type))
         first_argument: first_argument
-    )
-    return result
+    ))
 }
 
 type Member_Access_Expression = struct {
@@ -312,13 +283,11 @@ type Member_Access_Expression = struct {
 }
 
 proc new_member_access_expression(operand: ^Expression, member: ^Struct_Member) -> ^Member_Access_Expression {
-    let result = allocator.alloc(size: type_size(Member_Access_Expression), alignment: type_alignment(Member_Access_Expression)).as(^Member_Access_Expression)
-    result.^ = Member_Access_Expression(
+    return allocator.new(Member_Access_Expression(
         super: Expression(kind: .Member_Access, type: member.type)
         operand: operand
         member: member
-    )
-    return result
+    ))
 }
 
 type Negate_Expression = struct {
@@ -327,12 +296,10 @@ type Negate_Expression = struct {
 }
 
 proc new_negate_expression(operand: ^Expression, type: ^Type) -> ^Negate_Expression {
-    let result = allocator.alloc(size: type_size(Negate_Expression), alignment: type_alignment(Negate_Expression)).as(^Negate_Expression)
-    result.^ = Negate_Expression(
+    return allocator.new(Negate_Expression(
         super: Expression(kind: .Negate, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Not_Expression = struct {
@@ -341,12 +308,10 @@ type Not_Expression = struct {
 }
 
 proc new_not_expression(operand: ^Expression, type: ^Type) -> ^Not_Expression {
-    let result = allocator.alloc(size: type_size(Not_Expression), alignment: type_alignment(Not_Expression)).as(^Not_Expression)
-    result.^ = Not_Expression(
+    return allocator.new(Not_Expression(
         super: Expression(kind: .Not, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Null_Expression = struct {
@@ -354,11 +319,9 @@ type Null_Expression = struct {
 }
 
 proc new_null_expression(type: ^Type) -> ^Null_Expression {
-    let result = allocator.alloc(size: type_size(Null_Expression), alignment: type_alignment(Null_Expression)).as(^Null_Expression)
-    result.^ = Null_Expression(
+    return allocator.new(Null_Expression(
         super: Expression(kind: .Null, type: type)
-    )
-    return result
+    ))
 }
 
 type String_Expression = struct {
@@ -367,12 +330,10 @@ type String_Expression = struct {
 }
 
 proc new_string_expression(token: ^lexer.String, type: ^Type) -> ^String_Expression {
-    let result = allocator.alloc(size: type_size(String_Expression), alignment: type_alignment(String_Expression)).as(^String_Expression)
-    result.^ = String_Expression(
+    return allocator.new(String_Expression(
         super: Expression(kind: .String, type: type)
         token: token
-    )
-    return result
+    ))
 }
 
 type String_Length_Expression = struct {
@@ -381,12 +342,10 @@ type String_Length_Expression = struct {
 }
 
 proc new_string_length_expression(operand: ^Expression, type: ^Type) -> ^String_Length_Expression {
-    let result = allocator.alloc(size: type_size(String_Length_Expression), alignment: type_alignment(String_Length_Expression)).as(^String_Length_Expression)
-    result.^ = String_Length_Expression(
+    return allocator.new(String_Length_Expression(
         super: Expression(kind: .String_Length, type: type)
         operand: operand
-    )
-    return result
+    ))
 }
 
 type Symbol_Expression = struct {
@@ -395,12 +354,10 @@ type Symbol_Expression = struct {
 }
 
 proc new_symbol_expression(symbol: ^Symbol, type: ^Type) -> ^Symbol_Expression {
-    let result = allocator.alloc(size: type_size(Symbol_Expression), alignment: type_alignment(Symbol_Expression)).as(^Symbol_Expression)
-    result.^ = Symbol_Expression(
+    return allocator.new(Symbol_Expression(
         super: Expression(kind: .Symbol, type: type)
         symbol: symbol
-    )
-    return result
+    ))
 }
 
 type Type_Alignment_Expression = struct {
@@ -409,12 +366,10 @@ type Type_Alignment_Expression = struct {
 }
 
 proc new_type_alignment_expression(aligned_type: ^Type, type: ^Type) -> ^Type_Alignment_Expression {
-    let result = allocator.alloc(size: type_size(Type_Alignment_Expression), alignment: type_alignment(Type_Alignment_Expression)).as(^Type_Alignment_Expression)
-    result.^ = Type_Alignment_Expression(
+    return allocator.new(Type_Alignment_Expression(
         super: Expression(kind: .Type_Alignment, type: type)
         aligned_type: aligned_type
-    )
-    return result
+    ))
 }
 
 type Type_Size_Expression = struct {
@@ -423,10 +378,8 @@ type Type_Size_Expression = struct {
 }
 
 proc new_type_size_expression(sized_type: ^Type, type: ^Type) -> ^Type_Size_Expression {
-    let result = allocator.alloc(size: type_size(Type_Size_Expression), alignment: type_alignment(Type_Size_Expression)).as(^Type_Size_Expression)
-    result.^ = Type_Size_Expression(
+    return allocator.new(Type_Size_Expression(
         super: Expression(kind: .Type_Size, type: type)
         sized_type: sized_type
-    )
-    return result
+    ))
 }

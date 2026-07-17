@@ -313,25 +313,26 @@ proc (^Checker).check_const_statement(self, const_statement: ^parsed.Const_State
 }
 
 proc (^Checker).require_constant(self, expression: ^checked.Expression, parsed_expression: ^parsed.Expression) {
-    if expression.kind == .Bool or expression.kind == .Character or expression.kind == .Integer or expression.kind == .String {
-        return
-    }
-    if expression.kind == .Add or expression.kind == .Divide or expression.kind == .Modulo or expression.kind == .Multiply or expression.kind == .Subtract {
-        let binary_expression = expression.as(^checked.Binary_Expression)
-        let parsed_binary_expression = parsed_expression.as(^parsed.Binary_Expression)
-        self.require_constant(expression: binary_expression.left, parsed_expression: parsed_binary_expression.left)
-        self.require_constant(expression: binary_expression.right, parsed_expression: parsed_binary_expression.right)
-        return
-    }
-    if expression.kind == .Symbol {
-        if expression.as(^checked.Symbol_Expression).symbol.kind != .Constant {
-            libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant symbol").end_location_message()
+    switch expression.kind {
+        case .Bool or .Character or .Integer or .String {
+        }
+        case .Add or .Bitwise_And or .Bitwise_Or or .Bitwise_Xor or .Divide or .Modulo or .Multiply or .Shift_Left or .Shift_Right or .Subtract {
+            let binary_expression = expression.as(^checked.Binary_Expression)
+            let parsed_binary_expression = parsed_expression.as(^parsed.Binary_Expression)
+            self.require_constant(expression: binary_expression.left, parsed_expression: parsed_binary_expression.left)
+            self.require_constant(expression: binary_expression.right, parsed_expression: parsed_binary_expression.right)
+        }
+        case .Symbol {
+            if expression.as(^checked.Symbol_Expression).symbol.kind != .Constant {
+                libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant symbol").end_location_message()
+                panic
+            }
+        }
+        else {
+            libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant expression").end_location_message()
             panic
         }
-        return
     }
-    libc.stderr.begin_location_message(parsed_expression.location, style: .Error).write("Expected constant expression").end_location_message()
-    panic
 }
 
 proc (^Checker).check_global_variable_statement(self, variable_statement: ^parsed.Variable_Statement) {
@@ -1007,6 +1008,15 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
         case .Array_Access {
             return self.check_array_access_expression(parsed_expression.as(^parsed.Array_Access_Expression))
         }
+        case .Bitwise_And {
+            return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Bitwise_And, expected_type: expected_type)
+        }
+        case .Bitwise_Or {
+            return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Bitwise_Or, expected_type: expected_type)
+        }
+        case .Bitwise_Xor {
+            return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Bitwise_Xor, expected_type: expected_type)
+        }
         case .Bool {
             return self.check_bool_expression(parsed_expression.as(^parsed.Bool_Expression))
         }
@@ -1080,6 +1090,12 @@ proc (^Checker).dispatch_expression(self, parsed_expression: ^parsed.Expression,
         }
         case .Null {
             return self.check_null_expression(parsed_expression.as(^parsed.Null_Expression), expected_type: expected_type)
+        }
+        case .Shift_Left {
+            return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Shift_Left, expected_type: expected_type)
+        }
+        case .Shift_Right {
+            return self.check_binary_expression(parsed_expression.as(^parsed.Binary_Expression), kind: .Shift_Right, expected_type: expected_type)
         }
         case .String {
             return self.check_string_expression(parsed_expression.as(^parsed.String_Expression))

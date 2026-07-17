@@ -58,6 +58,15 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
             self.write(bind_instruction.name).write_char(char: ' ')
             self.write_value_reference(bind_instruction.value)
         }
+        case .Bitwise_And {
+            self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "and")
+        }
+        case .Bitwise_Or {
+            self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "or")
+        }
+        case .Bitwise_Xor {
+            self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "xor")
+        }
         case .Br {
             let br_instruction = instruction.as(^ir.Br_Instruction)
             self.write("br ")
@@ -183,6 +192,12 @@ proc (^libc.FILE).write_instruction(self, instruction: ^ir.Instruction) -> ^libc
                 self.write_char(char: ' ')
                 self.write_value_reference(ret_instruction.value)
             }
+        }
+        case .Shift_Left {
+            self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "shl")
+        }
+        case .Shift_Right {
+            self.write_binary_instruction(instruction.as(^ir.Binary_Instruction), "shr")
         }
         case .Store {
             let store_instruction = instruction.as(^ir.Store_Instruction)
