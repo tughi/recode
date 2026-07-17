@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import concurrent.futures
 import dataclasses
 import difflib
 import json
@@ -9,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from typing import List, Optional
 
 logging.basicConfig(format="[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s", datefmt="%H:%M:%S")
@@ -18,6 +20,7 @@ logger.setLevel(logging.DEBUG)
 
 COLOR_DEBUG = "\x1b[2;37m"
 COLOR_ERROR = "\x1b[0;91m"
+COLOR_SUCCESS = "\x1b[0;92m"
 COLOR_WARNING = "\x1b[0;93m"
 COLOR_RESET = "\x1b[0m"
 
@@ -31,10 +34,8 @@ def run(command, **kwargs):
     if isinstance(command, str):
         command = command.split(" ")
     logger.debug(f"{COLOR_DEBUG}{' '.join(command)}{COLOR_RESET}")
-    if "check" not in kwargs:
-        kwargs["check"] = True
     try:
-        return subprocess.run(command, **kwargs)
+        subprocess.run(command, check=True, **kwargs)
     except subprocess.CalledProcessError as error:
         exit(error.returncode)
 
@@ -64,127 +65,120 @@ class TestData:
         return False
 
 
-class Tester:
-    test_dir: str
+def load_test_data(test_dir: str) -> TestData:
+    test_data = json.loads(open(f"{test_dir}/test.json").read()) if os.path.exists(f"{test_dir}/test.json") else {}
+    return TestData(
+        compile_error=test_data.get("compile", {}).get("error", 0),
+        compile_stderr=test_data.get("compile", {}).get("stderr", []),
+        execute_args=test_data.get("execute", {}).get("args", []),
+        execute_error=test_data.get("execute", {}).get("error", 0),
+        execute_stderr=test_data.get("execute", {}).get("stderr", []),
+        execute_stdout=test_data.get("execute", {}).get("stdout", []),
+    )
 
-    compile_panic: Optional[str]
 
-    expect_test_data: TestData
-
-    actual_test_data: TestData
-
-    apply_change: bool
-
-    def __init__(self, apply_change: bool):
-        self.apply_change = apply_change
-
-    def load_test_data(self, test_dir: str) -> TestData:
-        self.test_dir = test_dir
-
-        test_data = json.loads(open(f"{test_dir}/test.json").read()) if os.path.exists(f"{test_dir}/test.json") else {}
-        self.expect_test_data = TestData(
-            compile_error=test_data.get("compile", {}).get("error", 0),
-            compile_stderr=test_data.get("compile", {}).get("stderr", []),
-            execute_args=test_data.get("execute", {}).get("args", []),
-            execute_error=test_data.get("execute", {}).get("error", 0),
-            execute_stderr=test_data.get("execute", {}).get("stderr", []),
-            execute_stdout=test_data.get("execute", {}).get("stdout", []),
-        )
-
-        self.actual_test_data = dataclasses.replace(self.expect_test_data)
-
-    def update_actual_compile_error(self, compile_error: int) -> None:
-        self.actual_test_data = dataclasses.replace(
-            self.actual_test_data,
-            compile_error=compile_error,
-        )
-
-    def update_actual_compile_stderr(self, compile_stderr: str) -> None:
-        lines = compile_stderr.splitlines()
-        self.actual_test_data = dataclasses.replace(
-            self.actual_test_data,
-            compile_stderr=[re.sub(r"\x1b\[[0-9;]+m", "", line) for line in lines],
-        )
-        if lines and re.match(r"^(code/)?compiler/.*:\d+: Panic!", self.actual_test_data.compile_stderr[-1]):
-            self.actual_test_data.compile_stderr.pop()
-            self.compile_panic = lines.pop()
+def save_test_data(test_dir: str, test_data: TestData) -> None:
+    if not test_data.has_data():
+        if os.path.exists(f"{test_dir}/test.json"):
+            os.remove(f"{test_dir}/test.json")
+    else:
+        compile_data = {}
+        execute_data = {}
+        if test_data.compile_error:
+            compile_data["error"] = test_data.compile_error
         else:
-            self.compile_panic = None
-
-    def update_actual_execute_error(self, execute_error: int) -> None:
-        self.actual_test_data = dataclasses.replace(
-            self.actual_test_data,
-            execute_error=execute_error,
-        )
-
-    def update_actual_execute_stderr(self, execute_stderr: str) -> None:
-        self.actual_test_data = dataclasses.replace(
-            self.actual_test_data,
-            execute_stderr=[re.sub(r"\x1b\[[0-9;]+m", "", line) for line in execute_stderr.splitlines()],
-        )
-
-    def update_actual_execute_stdout(self, execute_stdout: str) -> None:
-        self.actual_test_data = dataclasses.replace(
-            self.actual_test_data,
-            execute_stdout=[re.sub(r"\x1b\[[0-9;]+m", "", line) for line in execute_stdout.splitlines()],
-        )
-
-    def save_test_data(self) -> None:
-        if not self.actual_test_data.has_data():
-            if os.path.exists(f"{self.test_dir}/test.json"):
-                os.remove(f"{self.test_dir}/test.json")
-        else:
-            compile_data = {}
-            execute_data = {}
-            if self.actual_test_data.compile_error:
-                compile_data["error"] = self.actual_test_data.compile_error
-            else:
-                if self.actual_test_data.execute_args:
-                    execute_data["args"] = self.actual_test_data.execute_args
-                if self.actual_test_data.execute_error:
-                    execute_data["error"] = self.actual_test_data.execute_error
-                if self.actual_test_data.execute_stderr:
-                    execute_data["stderr"] = self.actual_test_data.execute_stderr
-                if self.actual_test_data.execute_stdout:
-                    execute_data["stdout"] = self.actual_test_data.execute_stdout
-            if self.actual_test_data.compile_stderr:
-                compile_data["stderr"] = self.actual_test_data.compile_stderr
-            open(f"{self.test_dir}/test.json", "w").write(
-                json.dumps(
-                    {
-                        **({"compile": compile_data} if compile_data else {}),
-                        **({"execute": execute_data} if execute_data else {}),
-                    },
-                    indent=4,
-                )
+            if test_data.execute_args:
+                execute_data["args"] = test_data.execute_args
+            if test_data.execute_error:
+                execute_data["error"] = test_data.execute_error
+            if test_data.execute_stderr:
+                execute_data["stderr"] = test_data.execute_stderr
+            if test_data.execute_stdout:
+                execute_data["stdout"] = test_data.execute_stdout
+        if test_data.compile_stderr:
+            compile_data["stderr"] = test_data.compile_stderr
+        open(f"{test_dir}/test.json", "w").write(
+            json.dumps(
+                {
+                    **({"compile": compile_data} if compile_data else {}),
+                    **({"execute": execute_data} if execute_data else {}),
+                },
+                indent=4,
             )
-
-    def check_test_data(self) -> bool:
-        if self.actual_test_data != self.expect_test_data:
-            if self.apply_change:
-                self.save_test_data()
-                self.expect_test_data = self.actual_test_data
-                self.apply_change = False
-            else:
-                return False
-        return True
-
-    def check_ir_file(self, build_ir_path: str) -> bool:
-        expected_ir_path = f"{self.test_dir}/test.ir"
-        result = run(
-            f"diff -N {build_ir_path} {expected_ir_path}",
-            capture_output=True,
-            text=True,
-            check=False,
         )
-        if result.returncode != 0:
-            if self.apply_change:
-                shutil.copyfile(build_ir_path, expected_ir_path)
-                self.apply_change = False
-            else:
-                logger.error(f"{COLOR_ERROR}Unexpected IR output\n{COLOR_DEBUG}{result.stdout}{COLOR_RESET}")
-                return False
-        return True
+
+
+def clean_lines(text: str) -> List[str]:
+    return [re.sub(r"\x1b\[[0-9;]+m", "", line) for line in text.splitlines()]
+
+
+def collect_test_data(test_dir: str, compiler_ir: str, expect_test_data: TestData):
+    build_dir = f"build/{test_dir}"
+    os.makedirs(build_dir, exist_ok=True)
+
+    build_ir_path = f"{build_dir}/test.ir"
+    if os.path.exists(build_ir_path):
+        os.remove(build_ir_path)
+
+    actual_test_data = dataclasses.replace(expect_test_data)
+
+    compiler_command = ["Runner", compiler_ir, "-o", build_dir, "-n", "test", test_dir]
+    compiler_result = subprocess.run(compiler_command, capture_output=True, text=True)
+    actual_test_data.compile_error = compiler_result.returncode
+    actual_test_data.compile_stderr = clean_lines(compiler_result.stderr)
+    compile_panic = None
+    if actual_test_data.compile_stderr and re.match(r"^(code/)?compiler/.*:\d+: Panic!", actual_test_data.compile_stderr[-1]):
+        compile_panic = actual_test_data.compile_stderr.pop()
+
+    if compiler_result.returncode == 0:
+        runner_command = ["Runner", build_ir_path, *expect_test_data.execute_args]
+        test_result = subprocess.run(runner_command, capture_output=True, text=True)
+        actual_test_data.execute_error = test_result.returncode
+        actual_test_data.execute_stderr = clean_lines(test_result.stderr)
+        actual_test_data.execute_stdout = clean_lines(test_result.stdout)
+
+    return actual_test_data, compile_panic, build_ir_path
+
+
+def check_test_data(test_dir: str, expect_test_data: TestData, actual_test_data: TestData, compile_panic: Optional[str], build_ir_path: str) -> Optional[str]:
+    if actual_test_data.compile_error != 0:
+        if actual_test_data != expect_test_data:
+            failure = f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(actual_test_data.compile_stderr, expect_test_data.compile_stderr)}{COLOR_RESET}"
+            if compile_panic:
+                failure += f"\n{COLOR_ERROR}{compile_panic}{COLOR_RESET}"
+            return failure
+        return None
+
+    if expect_test_data.compile_error != 0:
+        return f"{COLOR_ERROR}Expected compiler error{COLOR_RESET}"
+
+    if actual_test_data.compile_stderr != expect_test_data.compile_stderr:
+        return f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(actual_test_data.compile_stderr, expect_test_data.compile_stderr)}{COLOR_RESET}"
+
+    if actual_test_data.execute_error != expect_test_data.execute_error:
+        failure = f"{COLOR_ERROR}Unexpected execute exit: {actual_test_data.execute_error}{COLOR_RESET}"
+        if actual_test_data.execute_stderr:
+            failure += f"\n{COLOR_DEBUG}" + "\n".join(actual_test_data.execute_stderr) + COLOR_RESET
+        return failure
+
+    if actual_test_data.execute_stderr != expect_test_data.execute_stderr:
+        return f"{COLOR_ERROR}Unexpected execute stderr\n{COLOR_DEBUG}{compute_diff(actual_test_data.execute_stderr, expect_test_data.execute_stderr)}{COLOR_RESET}"
+
+    if actual_test_data.execute_stdout != expect_test_data.execute_stdout:
+        return f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(actual_test_data.execute_stdout, expect_test_data.execute_stdout)}{COLOR_RESET}"
+
+    return check_ir_file(test_dir, build_ir_path)
+
+
+def check_ir_file(test_dir: str, build_ir_path: str) -> Optional[str]:
+    result = subprocess.run(
+        ["diff", "-N", build_ir_path, f"{test_dir}/test.ir"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return f"{COLOR_ERROR}Unexpected IR output\n{COLOR_DEBUG}{result.stdout}{COLOR_RESET}"
+    return None
 
 
 def test(paths, save=False):
@@ -194,81 +188,41 @@ def test(paths, save=False):
 
 
 def run_tests(paths, save=False, compiler_ir="build/compiler.ir"):
-    tester = Tester(apply_change=save)
+    dirs = sorted(test_dirs(paths))
+    logger.info(f"Testing {len(dirs)} tests")
 
-    for test_dir in sorted(test_dirs(paths)):
-        build_dir = f"build/{test_dir}"
-        if not os.path.exists(build_dir):
-            run(f"mkdir -p {build_dir}")
+    start = time.perf_counter()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+        futures = [executor.submit(run_test, test_dir, compiler_ir) for test_dir in dirs]
 
-        logger.info(f"Testing: {test_dir}")
+        failed = 0
+        for test_dir, future in zip(dirs, futures):
+            failure, duration, actual_test_data, build_ir_path = future.result()
+            if failure is None:
+                logger.info(f"{COLOR_SUCCESS}PASSED{COLOR_RESET} {test_dir} {COLOR_DEBUG}({duration * 1000:.0f}ms){COLOR_RESET}")
+            elif save:
+                save = False
+                save_test_data(test_dir, actual_test_data)
+                if actual_test_data.compile_error == 0:
+                    shutil.copyfile(build_ir_path, f"{test_dir}/test.ir")
+                logger.warning(f"{COLOR_WARNING}SAVED{COLOR_RESET} {test_dir} {COLOR_DEBUG}({duration * 1000:.0f}ms){COLOR_RESET}\n{failure}")
+            else:
+                failed += 1
+                logger.error(f"{COLOR_ERROR}FAILED{COLOR_RESET} {test_dir} {COLOR_DEBUG}({duration * 1000:.0f}ms){COLOR_RESET}\n{failure}")
+    elapsed = time.perf_counter() - start
 
-        build_ir_path = f"{build_dir}/test.ir"
-        if os.path.exists(build_ir_path):
-            os.remove(build_ir_path)
+    if failed:
+        logger.error(f"{COLOR_ERROR}Failed {failed} of {len(dirs)} tests in {elapsed:.1f}s{COLOR_RESET}")
+        exit(1)
+    logger.info(f"Passed {len(dirs)} tests in {elapsed:.1f}s")
 
-        compiler_command = [
-            "Runner",
-            compiler_ir,
-            "-o",
-            build_dir,
-            "-n",
-            "test",
-            f"{test_dir}",
-        ]
 
-        tester.load_test_data(test_dir)
-
-        compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
-        if compiler_result.returncode != 0:
-            tester.update_actual_compile_error(compiler_result.returncode)
-            tester.update_actual_compile_stderr(compiler_result.stderr)
-            if not tester.check_test_data():
-                logger.error(
-                    f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.compile_stderr, tester.expect_test_data.compile_stderr)}{COLOR_RESET}"
-                )
-                if tester.compile_panic:
-                    logger.error(f"{COLOR_ERROR}{tester.compile_panic}{COLOR_RESET}")
-                exit(1)
-        else:
-            tester.update_actual_compile_error(compiler_result.returncode)
-            if not tester.check_test_data():
-                logger.error(f"{COLOR_ERROR}Expected compiler error\n{COLOR_RESET}")
-                exit(1)
-
-            tester.update_actual_compile_stderr(compiler_result.stderr)
-            if not tester.check_test_data():
-                logger.error(
-                    f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.compile_stderr, tester.expect_test_data.compile_stderr)}{COLOR_RESET}"
-                )
-                exit(1)
-
-            runner_command = ["Runner", build_ir_path, *tester.actual_test_data.execute_args]
-            test_result = run(runner_command, capture_output=True, text=True, check=False)
-
-            tester.update_actual_execute_error(test_result.returncode)
-            if not tester.check_test_data():
-                logger.error(f"{COLOR_ERROR}Unexpected execute exit: {test_result.returncode}{COLOR_RESET}")
-                if test_result.stderr:
-                    logger.error(f"{COLOR_DEBUG}{test_result.stderr}{COLOR_RESET}")
-                exit(1)
-
-            tester.update_actual_execute_stderr(test_result.stderr)
-            if not tester.check_test_data():
-                logger.error(
-                    f"{COLOR_ERROR}Unexpected execute stderr\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stderr, tester.expect_test_data.execute_stderr)}{COLOR_RESET}"
-                )
-                exit(1)
-
-            tester.update_actual_execute_stdout(test_result.stdout)
-            if not tester.check_test_data():
-                logger.error(
-                    f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stdout, tester.expect_test_data.execute_stdout)}{COLOR_RESET}"
-                )
-                exit(1)
-
-            if not tester.check_ir_file(build_ir_path):
-                exit(1)
+def run_test(test_dir: str, compiler_ir: str):
+    start = time.perf_counter()
+    expect_test_data = load_test_data(test_dir)
+    actual_test_data, compile_panic, build_ir_path = collect_test_data(test_dir, compiler_ir, expect_test_data)
+    failure = check_test_data(test_dir, expect_test_data, actual_test_data, compile_panic, build_ir_path)
+    return failure, time.perf_counter() - start, actual_test_data, build_ir_path
 
 
 def test_dirs(paths):
@@ -325,7 +279,7 @@ if __name__ == "__main__":
     args_parsers = argparse.ArgumentParser(prog="ReCode")
     args_command_parser = args_parsers.add_subparsers(dest="command")
 
-    clean_args_parser = args_command_parser.add_parser("clean", help="clean the build directory")
+    args_command_parser.add_parser("clean", help="clean the build directory")
 
     build_args_parser = args_command_parser.add_parser("build", help="build the compiler")
     build_args_parser.add_argument("--clean", action="store_true", help="clean before building")
@@ -339,7 +293,9 @@ if __name__ == "__main__":
     test_args_parser.add_argument("--save", action="store_true", help="save the first unexpected compiler output")
 
     args = args_parsers.parse_args()
-    if args.command == "clean":
+    if args.command is None:
+        args_parsers.print_help()
+    elif args.command == "clean":
         clean()
     else:
         if args.clean:
@@ -350,5 +306,3 @@ if __name__ == "__main__":
             stage()
         elif args.command == "test":
             test(args.path, save=args.save)
-        else:
-            args_parsers.print_help()
