@@ -8,6 +8,17 @@
 #include <string.h>
 
 typedef struct {
+    IR_Value *value;
+    uint32_t hash;
+} Value_Table_Slot;
+
+typedef struct {
+    Value_Table_Slot *slots;
+    size_t capacity;
+    size_t size;
+} Value_Table;
+
+typedef struct {
     File file;
     Lexed_File *lexed_file;
     size_t cursor;
@@ -15,8 +26,8 @@ typedef struct {
     Token next;
     IR_Type_List *types;
     IR_Source_File_List *source_files;
-    IR_Value_List function_values;
-    IR_Value_List global_values;
+    Value_Table function_values;
+    Value_Table global_values;
     IR_Instruction_List forward_references;
     uint32_t function_frame_size;
     uint32_t globals_frame_size;
@@ -339,14 +350,66 @@ static uint64_t expect_integer(Parser *parser, IR_Type *type, bool negative) {
     return value;
 }
 
-static IR_Value *ir_value_list_lookup(IR_Value_List *list, String name) {
-    for (size_t i = list->size; i > 0; i--) {
-        IR_Value *value = list->items[i - 1];
-        if (string_equals(value->name, name)) {
-            return value;
+static uint32_t value_name_hash(String name) {
+    uint32_t hash = 2166136261u;
+    for (size_t i = 0; i < name.length; i++) {
+        hash ^= (uint8_t)name.content[i];
+        hash *= 16777619u;
+    }
+    return hash;
+}
+
+static IR_Value *value_table_lookup(Value_Table *table, String name) {
+    if (table->size == 0) {
+        return NULL;
+    }
+    uint32_t hash = value_name_hash(name);
+    size_t index = hash & (table->capacity - 1);
+    while (table->slots[index].value != NULL) {
+        if (table->slots[index].hash == hash && string_equals(table->slots[index].value->name, name)) {
+            return table->slots[index].value;
         }
+        index = (index + 1) & (table->capacity - 1);
     }
     return NULL;
+}
+
+static void value_table_add(Value_Table *table, IR_Value *value) {
+    if (table->size * 4 >= table->capacity * 3) {
+        size_t capacity = table->capacity > 0 ? table->capacity * 2 : 256;
+        Value_Table_Slot *slots = calloc(capacity, sizeof(Value_Table_Slot));
+        for (size_t i = 0; i < table->capacity; i++) {
+            Value_Table_Slot slot = table->slots[i];
+            if (slot.value != NULL) {
+                size_t index = slot.hash & (capacity - 1);
+                while (slots[index].value != NULL) {
+                    index = (index + 1) & (capacity - 1);
+                }
+                slots[index] = slot;
+            }
+        }
+        free(table->slots);
+        table->slots = slots;
+        table->capacity = capacity;
+    }
+    uint32_t hash = value_name_hash(value->name);
+    size_t index = hash & (table->capacity - 1);
+    while (table->slots[index].value != NULL) {
+        if (table->slots[index].hash == hash && string_equals(table->slots[index].value->name, value->name)) {
+            table->slots[index].value = value;
+            return;
+        }
+        index = (index + 1) & (table->capacity - 1);
+    }
+    table->slots[index] = (Value_Table_Slot){value, hash};
+    table->size++;
+}
+
+static void value_table_clear(Value_Table *table) {
+    if (table->size > 0) {
+        memset(table->slots, 0, table->capacity * sizeof(Value_Table_Slot));
+        table->size = 0;
+    }
 }
 
 static size_t expect_label(Parser *parser) {
@@ -403,7 +466,7 @@ static IR_Value_Name parse_global_value_name(Parser *parser);
 static IR_Value *expect_value_reference(Parser *parser) {
     if (is_local_value_name_start(parser)) {
         IR_Value_Name value_name = parse_local_value_name(parser);
-        IR_Value *value = ir_value_list_lookup(&parser->function_values, value_name.lexeme);
+        IR_Value *value = value_table_lookup(&parser->function_values, value_name.lexeme);
         if (value != NULL) {
             return value;
         }
@@ -413,7 +476,7 @@ static IR_Value *expect_value_reference(Parser *parser) {
         placeholder->result.kind = IR_VALUE__INSTRUCTION_RESULT;
         placeholder->result.name = value_name.lexeme;
         placeholder->result.type = NULL;
-        ir_value_list_add(&parser->function_values, &placeholder->result);
+        value_table_add(&parser->function_values, &placeholder->result);
         ir_instruction_list_add(&parser->forward_references, placeholder);
         return &placeholder->result;
     }
@@ -421,13 +484,13 @@ static IR_Value *expect_value_reference(Parser *parser) {
         parse_error_current(parser, "Expected value reference");
     }
     IR_Value_Name value_name = parse_global_value_name(parser);
-    IR_Value *value = ir_value_list_lookup(&parser->global_values, value_name.lexeme);
+    IR_Value *value = value_table_lookup(&parser->global_values, value_name.lexeme);
     if (value == NULL) {
         IR_Global *global = calloc(1, sizeof(IR_Global));
         global->value.kind = IR_VALUE__UNRESOLVED;
         global->value.name = value_name.lexeme;
         global->location = value_name.location;
-        ir_value_list_add(&parser->global_values, &global->value);
+        value_table_add(&parser->global_values, &global->value);
         value = &global->value;
     }
     return value;
@@ -616,12 +679,12 @@ static IR_Instruction *parse_value_instruction(Parser *parser) {
         }
     }
     if (instruction == NULL) {
-        if (ir_value_list_lookup(&parser->function_values, result_name.lexeme) != NULL) {
+        if (value_table_lookup(&parser->function_values, result_name.lexeme) != NULL) {
             parse_error(parser, result_name.location, "Redefinition of '%.*s'", STRING(result_name.lexeme));
         }
         instruction = alloc_instruction();
         instruction->result.name = result_name.lexeme;
-        ir_value_list_add(&parser->function_values, &instruction->result);
+        value_table_add(&parser->function_values, &instruction->result);
     }
     instruction->location = result_name.location;
     instruction->result.kind = IR_VALUE__INSTRUCTION_RESULT;
@@ -1621,7 +1684,7 @@ static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name
     expect_space(parser, 1);
     IR_Type *type = parse_type(parser);
 
-    IR_Value *global_value = ir_value_list_lookup(&parser->global_values, name.lexeme);
+    IR_Value *global_value = value_table_lookup(&parser->global_values, name.lexeme);
     IR_Global *global;
     if (global_value != NULL) {
         if (global_value->type != NULL) {
@@ -1630,7 +1693,8 @@ static void parse_external(Parser *parser, IR_Module *module, IR_Value_Name name
         global = (IR_Global *)global_value;
     } else {
         global = calloc(1, sizeof(IR_Global));
-        ir_value_list_add(&parser->global_values, &global->value);
+        global->value.name = name.lexeme;
+        value_table_add(&parser->global_values, &global->value);
     }
     global->value.name = name.lexeme;
     global->value.type = type;
@@ -1737,14 +1801,14 @@ static void add_function_parameter(Parser *parser, IR_Function *function, String
     parameter->type = type;
     parameter->slot = reserve_frame_slot(&parser->function_frame_size, type);
     ir_value_list_add(&function->parameters, parameter);
-    ir_value_list_add(&parser->function_values, parameter);
+    value_table_add(&parser->function_values, parameter);
 }
 
 static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) {
     expect_other(parser, '(');
     expect_space(parser, 0);
 
-    IR_Value *function_value = ir_value_list_lookup(&parser->global_values, function_name.lexeme);
+    IR_Value *function_value = value_table_lookup(&parser->global_values, function_name.lexeme);
     IR_Function *function;
     if (function_value != NULL) {
         if (function_value->type != NULL) {
@@ -1753,14 +1817,15 @@ static IR_Function *parse_function(Parser *parser, IR_Value_Name function_name) 
         function = (IR_Function *)function_value;
     } else {
         function = calloc(1, sizeof(IR_Global));
-        ir_value_list_add(&parser->global_values, &function->value);
+        function->value.name = function_name.lexeme;
+        value_table_add(&parser->global_values, &function->value);
     }
     function->value.kind = IR_VALUE__FUNCTION;
     function->value.name = function_name.lexeme;
     function->name = function_name.lexeme;
     function->location = function_name.location;
 
-    parser->function_values.size = 0;
+    value_table_clear(&parser->function_values);
     parser->forward_references.size = 0;
     parser->function_frame_size = 0;
 
@@ -1893,8 +1958,8 @@ IR_Module *parse(Lexed_File lexed_file, bool debug) {
     parser.lexed_file = &module->lexed_file;
     parser.cursor = 0;
     parser.source_files = &module->source_files;
-    parser.function_values = (IR_Value_List){0};
-    parser.global_values = (IR_Value_List){0};
+    parser.function_values = (Value_Table){0};
+    parser.global_values = (Value_Table){0};
     parser.forward_references = (IR_Instruction_List){0};
     parser.function_frame_size = 0;
     parser.globals_frame_size = 0;
@@ -1944,12 +2009,18 @@ IR_Module *parse(Lexed_File lexed_file, bool debug) {
         parse_error_current(&parser, "Unexpected top-level token");
     }
 
-    for (size_t i = 0; i < parser.global_values.size; i++) {
-        IR_Value *global_value = parser.global_values.items[i];
-        if (global_value->kind == IR_VALUE__UNRESOLVED) {
+    IR_Global *unresolved = NULL;
+    for (size_t i = 0; i < parser.global_values.capacity; i++) {
+        IR_Value *global_value = parser.global_values.slots[i].value;
+        if (global_value != NULL && global_value->kind == IR_VALUE__UNRESOLVED) {
             IR_Global *global = (IR_Global *)global_value;
-            parse_error(&parser, global->location, "Undefined global '%.*s'", STRING(global_value->name));
+            if (unresolved == NULL || global->location.line < unresolved->location.line) {
+                unresolved = global;
+            }
         }
+    }
+    if (unresolved != NULL) {
+        parse_error(&parser, unresolved->location, "Undefined global '%.*s'", STRING(unresolved->value.name));
     }
 
     for (size_t i = 0; i < module->functions.size; i++) {
