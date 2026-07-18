@@ -2,19 +2,32 @@
 #include "File.h"
 #include "Interpreter.h"
 #include "Parser.h"
+#include "Profiler.h"
 #include <stdio.h>
 #include <string.h>
 
 int main(int argc, char *argv[]) {
     bool debug_mode = false;
+    bool profile_mode = false;
     int arg_index = 1;
-    if (arg_index < argc && strcmp(argv[arg_index], "-d") == 0) {
-        debug_mode = true;
-        arg_index++;
+    while (arg_index < argc) {
+        if (strcmp(argv[arg_index], "-d") == 0) {
+            debug_mode = true;
+            arg_index++;
+        } else if (strcmp(argv[arg_index], "-p") == 0) {
+            profile_mode = true;
+            arg_index++;
+        } else {
+            break;
+        }
     }
 
     if (arg_index >= argc) {
-        fprintf(stderr, "Usage: Runner [-d] IR [args...]\n");
+        fprintf(stderr, "Usage: Runner [-d | -p] IR [args...]\n");
+        return 1;
+    }
+    if (debug_mode && profile_mode) {
+        fprintf(stderr, "Runner: -d and -p cannot be combined\n");
         return 1;
     }
 
@@ -35,5 +48,9 @@ int main(int argc, char *argv[]) {
     if (debug_mode) {
         return (int)debug(module, argc - arg_index, argv + arg_index);
     }
-    return (int)interpret(module, argc - arg_index, argv + arg_index, NULL);
+    int64_t result = interpret(module, argc - arg_index, argv + arg_index, NULL, profile_mode);
+    if (profile_mode) {
+        profile_report(module);
+    }
+    return (int)result;
 }

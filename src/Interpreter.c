@@ -1,5 +1,6 @@
 #include "Interpreter.h"
 #include "Panic.h"
+#include "Profiler.h"
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <dirent.h>
@@ -21,6 +22,8 @@ struct Interpreter {
     Observer *observer;
     Call_Frame *current_frame;
     bool aborted;
+    bool profiling;
+    uint64_t *profile_child_time;
 };
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -2287,12 +2290,41 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
     }
 }
 
+static void profile_function_exit(Interpreter *interpreter, IR_Function *function, uint64_t start_time, uint64_t child_time, uint64_t *caller_child_time) {
+    uint64_t elapsed = profile_time() - start_time;
+    function->profile.exclusive_time += elapsed - child_time;
+    function->profile.active_calls--;
+    if (function->profile.active_calls == 0) {
+        function->profile.inclusive_time += elapsed;
+    }
+    interpreter->profile_child_time = caller_child_time;
+    if (caller_child_time != NULL) {
+        *caller_child_time += elapsed;
+    }
+}
+
 static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location) {
     if (argument_count != function->parameters.size) {
         runtime_error(interpreter, call_location, "'%.*s' expects %zu argument(s), got %zu", STRING(function->name), function->parameters.size, argument_count);
     }
+
+    bool profiling = interpreter->profiling;
+    uint64_t profile_start = 0;
+    uint64_t child_time = 0;
+    uint64_t *caller_child_time = NULL;
+    if (profiling) {
+        function->profile.calls++;
+        function->profile.active_calls++;
+        caller_child_time = interpreter->profile_child_time;
+        interpreter->profile_child_time = &child_time;
+        profile_start = profile_time();
+    }
+
     if (function->is_external) {
         call_external(interpreter, function, argument_addresses, return_address, call_location);
+        if (profiling) {
+            profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+        }
         return;
     }
     if (function->blocks.size == 0) {
@@ -2320,6 +2352,9 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
         .caller = interpreter->current_frame,
     };
     interpreter->current_frame = &frame;
+    if (profiling) {
+        frame.block->execution_count++;
+    }
 
     IR_Block *previous_block = NULL;
     while (true) {
@@ -2333,6 +2368,9 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
             if (interpreter->aborted) {
                 interpreter->current_frame = frame.caller;
                 interpreter->stack_used -= frame_size;
+                if (profiling) {
+                    profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+                }
                 return;
             }
             Step step = instruction->execute(interpreter, instruction, frame_data, return_address, previous_block);
@@ -2342,12 +2380,18 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
             if (step.kind == STEP_JUMP) {
                 previous_block = frame.block;
                 frame.block = step.jump_block;
+                if (profiling) {
+                    frame.block->execution_count++;
+                }
                 terminated = true;
                 break;
             }
             // STEP_RETURN
             interpreter->current_frame = frame.caller;
             interpreter->stack_used -= frame_size;
+            if (profiling) {
+                profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+            }
             return;
         }
         if (!terminated) {
@@ -2356,9 +2400,9 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
     }
 }
 
-int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer) {
+int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer, bool profiling) {
     String main_name = string_from("$main");
-    Interpreter interpreter = {.module = module, .observer = observer};
+    Interpreter interpreter = {.module = module, .observer = observer, .profiling = profiling};
     prepare_module(module);
     IR_Function *main_function = find_function(&interpreter, main_name);
     if (main_function == NULL) {

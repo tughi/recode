@@ -528,6 +528,7 @@ static IR_Block *alloc_block(size_t label, Source_Location location) {
     block->label = label;
     block->location = location;
     block->instructions = (IR_Instruction_List){0};
+    block->execution_count = 0;
     return block;
 }
 

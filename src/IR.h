@@ -263,6 +263,7 @@ struct IR_Block {
     size_t label;
     Source_Location location;
     IR_Instruction_List instructions;
+    uint64_t execution_count;
 };
 
 typedef enum {
@@ -307,6 +308,13 @@ typedef enum {
     IR_EXTERNAL_FUNCTION__strlen,
 } IR_External_Function;
 
+typedef struct {
+    uint64_t calls;
+    uint64_t inclusive_time;
+    uint64_t exclusive_time;
+    uint64_t active_calls;
+} IR_Function_Profile;
+
 typedef struct IR_Function {
     IR_Value value;
     String name;
@@ -321,6 +329,7 @@ typedef struct IR_Function {
         };
         IR_External_Function which;
     };
+    IR_Function_Profile profile;
 } IR_Function;
 
 typedef struct {

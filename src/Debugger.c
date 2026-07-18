@@ -1721,10 +1721,10 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         .source_panel = &source_panel.panel,
         .source_stepping = has_origins,
     };
-    int64_t result = interpret(module, argc, argv, &debugger.observer);
+    int64_t result = interpret(module, argc, argv, &debugger.observer, false);
     while (debugger.restart_requested) {
         debugger_restart(&debugger);
-        result = interpret(module, argc, argv, &debugger.observer);
+        result = interpret(module, argc, argv, &debugger.observer, false);
     }
 
     if (debugger.heap_allocations_size > 0) {

@@ -20,4 +20,4 @@ struct Observer {
     void (*on_heap_free)(Observer *self, uint8_t *address);
 };
 
-int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *inspector);
+int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *inspector, bool profiling);
