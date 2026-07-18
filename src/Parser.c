@@ -1599,6 +1599,10 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
         if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
             return IR_EXTERNAL_FUNCTION__SDL_WaitEvent;
         }
+    } else if (string_equals_cstr(name, "$calloc")) {
+        if (return_type == any_ptr_type && parameter_count == 2 && parameters[0]->type == usize_type && parameters[1]->type == usize_type) {
+            return IR_EXTERNAL_FUNCTION__calloc;
+        }
     } else if (string_equals_cstr(name, "$closedir")) {
         if (return_type == i32_type && parameter_count == 1 && is_named_pointer(parameters[0]->type)) {
             return IR_EXTERNAL_FUNCTION__closedir;
@@ -1662,6 +1666,10 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
     } else if (string_equals_cstr(name, "$memcpy")) {
         if (return_type == any_ptr_type && parameter_count == 3 && parameters[0]->type == any_ptr_type && parameters[1]->type == any_ptr_type && parameters[2]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__memcpy;
+        }
+    } else if (string_equals_cstr(name, "$memset")) {
+        if (return_type == any_ptr_type && parameter_count == 3 && parameters[0]->type == any_ptr_type && parameters[1]->type == i32_type && parameters[2]->type == usize_type) {
+            return IR_EXTERNAL_FUNCTION__memset;
         }
     } else if (string_equals_cstr(name, "$opendir")) {
         if (is_named_pointer(return_type) && parameter_count == 1 && parameters[0]->type == u8_multi_ptr_type) {

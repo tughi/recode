@@ -1,12 +1,40 @@
 ; exit: 0
 
+$calloc: [proc (usize, usize): [Any]] = external
 $exit: [proc (i32): void] = external
 $free: [proc ([Any]): void] = external
 $malloc: [proc (usize): [Any]] = external
+$memset: [proc ([Any], i32, usize): [Any]] = external
 $realloc: [proc ([Any], usize): [Any]] = external
 
 $main(): i32 {
-@0:
-  %0: i32 = const 0
-  ret %0
+@1:
+  %0: usize = const 4
+  %1: usize = const 2
+  %ptr: [Any] = call $calloc %0 %1
+  %bytes: [*]u8 = cast %ptr
+  %2: usize = const 5
+  %p5: [u8] = offset %bytes %2
+  %b0: u8 = load %p5
+  %3: u8 = const 0
+  %4: bool = cmp_eq %b0 %3
+  br %4 @2 @3
+@2:
+  %5: i32 = const 42
+  %6: usize = const 8
+  %7: [Any] = call $memset %ptr %5 %6
+  %b1: u8 = load %p5
+  %8: u8 = const 42u8
+  %9: bool = cmp_eq %b1 %8
+  call $free %ptr
+  br %9 @4 @5
+@3:
+  %10: i32 = const 1
+  ret %10
+@4:
+  %11: i32 = const 0
+  ret %11
+@5:
+  %12: i32 = const 2
+  ret %12
 }

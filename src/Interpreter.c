@@ -2139,6 +2139,16 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(int32_t *)return_address = (int32_t)result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__calloc: {
+        size_t count = *(size_t *)argument_addresses[0];
+        size_t size = *(size_t *)argument_addresses[1];
+        uint8_t *result = calloc(count, size);
+        if (interpreter->observer != NULL && result != NULL) {
+            interpreter->observer->on_heap_alloc(interpreter->observer, result, count * size, call_location);
+        }
+        *(uint8_t **)return_address = result;
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__closedir: {
         DIR *dir = (DIR *)*(uint8_t **)argument_addresses[0];
         int result = closedir(dir);
@@ -2258,6 +2268,13 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         void *source = (void *)*(uint8_t **)argument_addresses[1];
         size_t size = *(size_t *)argument_addresses[2];
         *(uint8_t **)return_address = memcpy(destination, source, size);
+        break;
+    }
+    case IR_EXTERNAL_FUNCTION__memset: {
+        void *destination = (void *)*(uint8_t **)argument_addresses[0];
+        int32_t value = *(int32_t *)argument_addresses[1];
+        size_t size = *(size_t *)argument_addresses[2];
+        *(uint8_t **)return_address = memset(destination, value, size);
         break;
     }
     case IR_EXTERNAL_FUNCTION__opendir: {
