@@ -329,8 +329,9 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
     procedure.append_block(block)
     self.current_block = block
 
-    let member = enum_type.first_member
-    while member != null {
+    let member_iterator = enum_type.members.iterator()
+    while member_iterator.has_next() {
+        let member = member_iterator.next()
         let member_value = ir.new_const_instruction(
             name: self.fresh_name()
             type: ir.new_primitive_type(.i32)
@@ -358,7 +359,6 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
 
         self.current_procedure.append_block(next_block)
         self.current_block = next_block
-        member = member.next
     }
     // No member matched: return an empty string.
     let empty_value = self.lower_string_struct("")
@@ -625,10 +625,11 @@ proc (^Lowerer).lower_switch_statement(self, switch_statement: ^checked.Switch_S
     }
 
     let brx_instruction = ir.new_brx_instruction(value: operand, default_block: else_block)
-    let member = switch_statement.operand.type.as(^checked.Enum_Type).first_member
-    while member != null {
+    let member_count = switch_statement.operand.type.as(^checked.Enum_Type).members.size
+    let member_index = 0usize
+    while member_index < member_count {
         brx_instruction.append_target(ir.new_brx_target(block: null))
-        member = member.next
+        member_index = member_index + 1
     }
     self.current_block.append_instruction(brx_instruction.as(^ir.Instruction))
 

@@ -1696,7 +1696,8 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
         libc.stderr.begin_location_message(location, style: .Error).write("Code does not have closures").end_location_message()
         panic
     }
-    panic "Not supported yet: member access"
+    libc.stderr.begin_location_message(location, style: .Error).write("Undefined member: ").write(member.lexeme).end_location_message()
+    panic
 }
 
 proc (^Checker).check_negate_expression(self, unary_expression: ^parsed.Unary_Expression, expected_type: ^checked.Type) -> ^checked.Expression {

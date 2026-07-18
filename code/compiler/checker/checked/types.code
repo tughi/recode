@@ -1,4 +1,5 @@
 import allocator
+import collections
 import libc
 
 type Type_Kind = enum {
@@ -48,45 +49,30 @@ proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
 type Enum_Member = struct {
     name: str
     value: u64
-    next: ^Enum_Member
 }
 
 proc new_enum_member(name: str, value: u64) -> ^Enum_Member {
-    return allocator.new(Enum_Member(name: name, value: value, next: null))
+    return allocator.new(Enum_Member(name: name, value: value))
 }
 
 type Enum_Type = struct {
     super: Named_Type
-    first_member: ^Enum_Member
-    last_member: ^Enum_Member
+    members: collections.Map<str, ^Enum_Member>
 }
 
 proc new_enum_type(name: str, package_name: str) -> ^Enum_Type {
     return allocator.new(Enum_Type(
         super: Named_Type(super: Type(kind: .Enum), name: name, package_name: package_name)
-        first_member: null
-        last_member: null
+        members: collections.empty_map<str, ^Enum_Member>()
     ))
 }
 
 proc (^Enum_Type).find_member(self, name: str) -> ^Enum_Member {
-    let member = self.first_member
-    while member != null {
-        if member.name.equals(name) {
-            return member
-        }
-        member = member.next
-    }
-    return null
+    return self.members.get(name)
 }
 
 proc (^Enum_Type).append_member(self, member: ^Enum_Member) {
-    if self.first_member == null {
-        self.first_member = member
-    } else {
-        self.last_member.next = member
-    }
-    self.last_member = member
+    self.members.put(member.name, member)
 }
 
 type Multi_Pointer_Type = struct {

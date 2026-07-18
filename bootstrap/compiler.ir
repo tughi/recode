@@ -1618,333 +1618,335 @@ $str_174: [*]u8 = "Code does not have closures"
 
 $str_175: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1697: Panic!\n"
 
-$str_176: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1699: Panic! Not supported yet: member access\n"
+$str_176: [*]u8 = "Undefined member: "
 
-$str_177: [*]u8 = "\"null\" cannot be used with non-pointer type: "
+$str_177: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1700: Panic!\n"
 
-$str_178: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1718: Panic!\n"
+$str_178: [*]u8 = "\"null\" cannot be used with non-pointer type: "
 
-$str_179: [*]u8 = "Type Any has no alignment"
+$str_179: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1719: Panic!\n"
 
-$str_180: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1731: Panic!\n"
+$str_180: [*]u8 = "Type Any has no alignment"
 
-$str_181: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1741: Panic!\n"
+$str_181: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1732: Panic!\n"
 
-$str_182: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1744: Panic!\n"
+$str_182: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1742: Panic!\n"
 
-$str_183: [*]u8 = "Type Any has no size"
+$str_183: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1745: Panic!\n"
 
-$str_184: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1753: Panic!\n"
+$str_184: [*]u8 = "Type Any has no size"
 
-$str_185: [*]u8 = "Cannot infer type arguments"
+$str_185: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1754: Panic!\n"
 
-$str_186: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1830: Panic!\n"
+$str_186: [*]u8 = "Cannot infer type arguments"
 
-$str_187: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1876: Panic!\n"
+$str_187: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1831: Panic!\n"
 
-$str_188: [*]u8 = "Undefined package"
+$str_188: [*]u8 = "bootstrap/code/compiler/checker/checker.code:1877: Panic!\n"
 
-$str_189: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2041: Panic!\n"
+$str_189: [*]u8 = "Undefined package"
 
-$str_190: [*]u8 = "Not a package"
+$str_190: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2042: Panic!\n"
 
-$str_191: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2045: Panic!\n"
+$str_191: [*]u8 = "Not a package"
 
-$str_192: [*]u8 = "Unknown type"
+$str_192: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2046: Panic!\n"
 
-$str_193: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2054: Panic!\n"
+$str_193: [*]u8 = "Unknown type"
 
-$str_194: [*]u8 = "Symbol is not a type"
+$str_194: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2055: Panic!\n"
 
-$str_195: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2065: Panic!\n"
+$str_195: [*]u8 = "Symbol is not a type"
 
-$str_196: [*]u8 = "Not a generic type"
+$str_196: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2066: Panic!\n"
 
-$str_197: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2069: Panic!\n"
+$str_197: [*]u8 = "Not a generic type"
 
-$str_198: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2138: Panic!\n"
+$str_198: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2070: Panic!\n"
 
-$str_199: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2144: Panic!\n"
+$str_199: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2139: Panic!\n"
 
-$str_200: [*]u8 = "String"
+$str_200: [*]u8 = "bootstrap/code/compiler/checker/checker.code:2145: Panic!\n"
 
-$str_201: [*]u8 = "main"
+$str_201: [*]u8 = "String"
 
-$str_202: [*]u8 = ", "
+$str_202: [*]u8 = "main"
 
-$str_203: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:228: Panic! Lowering not supported yet: non-constant global initializer\n"
+$str_203: [*]u8 = ", "
 
-$str_204: [*]u8 = ".name"
+$str_204: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:228: Panic! Lowering not supported yet: non-constant global initializer\n"
 
-$str_205: [*]u8 = ": Panic!"
+$str_205: [*]u8 = ".name"
 
-$str_206: [*]u8 = "stderr"
+$str_206: [*]u8 = ": Panic!"
 
-$str_207: [*]u8 = "fwrite"
+$str_207: [*]u8 = "stderr"
 
-$str_208: [*]u8 = "exit"
+$str_208: [*]u8 = "fwrite"
 
-$str_209: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:560: Panic! Lowering not supported yet: assignment object\n"
+$str_209: [*]u8 = "exit"
 
-$str_210: [*]u8 = "str_"
+$str_210: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:560: Panic! Lowering not supported yet: assignment object\n"
 
-$str_211: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:1341: Panic! Lowering: symbol not in scope\n"
+$str_211: [*]u8 = "str_"
 
-$str_212: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:1431: Panic! Lowering not supported yet: type\n"
+$str_212: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:1341: Panic! Lowering: symbol not in scope\n"
 
-$str_213: [*]u8 = "Package does not exist"
+$str_213: [*]u8 = "bootstrap/code/compiler/lowerer/lowerer.code:1431: Panic! Lowering not supported yet: type\n"
 
-$str_214: [*]u8 = "bootstrap/code/compiler/parser/parser.code:60: Panic!\n"
+$str_214: [*]u8 = "Package does not exist"
 
-$str_215: [*]u8 = "Package does not exist: "
+$str_215: [*]u8 = "bootstrap/code/compiler/parser/parser.code:60: Panic!\n"
 
-$str_216: [*]u8 = "bootstrap/code/compiler/parser/parser.code:63: Panic!\n"
+$str_216: [*]u8 = "Package does not exist: "
 
-$str_217: [*]u8 = ".code"
+$str_217: [*]u8 = "bootstrap/code/compiler/parser/parser.code:63: Panic!\n"
 
-$str_218: [*]u8 = "import"
+$str_218: [*]u8 = ".code"
 
-$str_219: [*]u8 = "type"
+$str_219: [*]u8 = "import"
 
-$str_220: [*]u8 = "const"
+$str_220: [*]u8 = "type"
 
-$str_221: [*]u8 = "let"
+$str_221: [*]u8 = "const"
 
-$str_222: [*]u8 = "proc"
+$str_222: [*]u8 = "let"
 
-$str_223: [*]u8 = "external"
+$str_223: [*]u8 = "proc"
 
-$str_224: [*]u8 = "Missing procedure body"
+$str_224: [*]u8 = "external"
 
-$str_225: [*]u8 = "bootstrap/code/compiler/parser/parser.code:225: Panic!\n"
+$str_225: [*]u8 = "Missing procedure body"
 
-$str_226: [*]u8 = "break"
+$str_226: [*]u8 = "bootstrap/code/compiler/parser/parser.code:225: Panic!\n"
 
-$str_227: [*]u8 = "continue"
+$str_227: [*]u8 = "break"
 
-$str_228: [*]u8 = "loop"
+$str_228: [*]u8 = "continue"
 
-$str_229: [*]u8 = "while"
+$str_229: [*]u8 = "loop"
 
-$str_230: [*]u8 = "if"
+$str_230: [*]u8 = "while"
 
-$str_231: [*]u8 = "panic"
+$str_231: [*]u8 = "if"
 
-$str_232: [*]u8 = "return"
+$str_232: [*]u8 = "panic"
 
-$str_233: [*]u8 = "switch"
+$str_233: [*]u8 = "return"
 
-$str_234: [*]u8 = "else"
+$str_234: [*]u8 = "switch"
 
-$str_235: [*]u8 = "case"
+$str_235: [*]u8 = "else"
 
-$str_236: [*]u8 = "or"
+$str_236: [*]u8 = "case"
 
-$str_237: [*]u8 = "Expected case"
+$str_237: [*]u8 = "or"
 
-$str_238: [*]u8 = "bootstrap/code/compiler/parser/parser.code:512: Panic!\n"
+$str_238: [*]u8 = "Expected case"
 
-$str_239: [*]u8 = "and"
+$str_239: [*]u8 = "bootstrap/code/compiler/parser/parser.code:512: Panic!\n"
 
-$str_240: [*]u8 = "type_size"
+$str_240: [*]u8 = "and"
 
-$str_241: [*]u8 = "type_alignment"
+$str_241: [*]u8 = "type_size"
 
-$str_242: [*]u8 = "not"
+$str_242: [*]u8 = "type_alignment"
 
-$str_243: [*]u8 = "as"
+$str_243: [*]u8 = "not"
 
-$str_244: [*]u8 = "false"
+$str_244: [*]u8 = "as"
 
-$str_245: [*]u8 = "null"
+$str_245: [*]u8 = "false"
 
-$str_246: [*]u8 = "true"
+$str_246: [*]u8 = "null"
 
-$str_247: [*]u8 = "Multi-line argument list must start on a new line"
+$str_247: [*]u8 = "true"
 
-$str_248: [*]u8 = "Multi-line argument list must end on a new line"
+$str_248: [*]u8 = "Multi-line argument list must start on a new line"
 
-$str_249: [*]u8 = "enum"
+$str_249: [*]u8 = "Multi-line argument list must end on a new line"
 
-$str_250: [*]u8 = "struct"
+$str_250: [*]u8 = "enum"
 
-$str_251: [*]u8 = "Unexpected token"
+$str_251: [*]u8 = "struct"
 
-$str_252: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1194: Panic!\n"
+$str_252: [*]u8 = "Unexpected token"
 
-$str_253: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1208: Panic!\n"
+$str_253: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1194: Panic!\n"
 
-$str_254: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1218: Panic!\n"
+$str_254: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1208: Panic!\n"
 
-$str_255: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1228: Panic!\n"
+$str_255: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1218: Panic!\n"
 
-$str_256: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1257: Panic!\n"
+$str_256: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1228: Panic!\n"
 
-$str_257: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1267: Panic!\n"
+$str_257: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1257: Panic!\n"
 
-$str_258: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1277: Panic!\n"
+$str_258: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1267: Panic!\n"
 
-$str_259: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1287: Panic!\n"
+$str_259: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1277: Panic!\n"
 
-$str_260: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1297: Panic!\n"
+$str_260: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1287: Panic!\n"
 
-$str_261: [*]u8 = "Consumed "
+$str_261: [*]u8 = "bootstrap/code/compiler/parser/parser.code:1297: Panic!\n"
 
-$str_262: [*]u8 = " spaces where "
+$str_262: [*]u8 = "Consumed "
 
-$str_263: [*]u8 = " were expected"
+$str_263: [*]u8 = " spaces where "
 
-$str_264: [*]u8 = "Consumed 0 spaces where "
+$str_264: [*]u8 = " were expected"
 
-$str_265: [*]u8 = " = "
+$str_265: [*]u8 = "Consumed 0 spaces where "
 
-$str_266: [*]u8 = "  "
+$str_266: [*]u8 = " = "
 
-$str_267: [*]u8 = "add"
+$str_267: [*]u8 = "  "
 
-$str_268: [*]u8 = " = alloc "
+$str_268: [*]u8 = "add"
 
-$str_269: [*]u8 = ".bind "
+$str_269: [*]u8 = " = alloc "
 
-$str_270: [*]u8 = "xor"
+$str_270: [*]u8 = ".bind "
 
-$str_271: [*]u8 = "br "
+$str_271: [*]u8 = "xor"
 
-$str_272: [*]u8 = " @"
+$str_272: [*]u8 = "br "
 
-$str_273: [*]u8 = "brx "
+$str_273: [*]u8 = " @"
 
-$str_274: [*]u8 = "call "
+$str_274: [*]u8 = "brx "
 
-$str_275: [*]u8 = " = cast "
+$str_275: [*]u8 = "call "
 
-$str_276: [*]u8 = "cmp_eq"
+$str_276: [*]u8 = " = cast "
 
-$str_277: [*]u8 = "cmp_gt"
+$str_277: [*]u8 = "cmp_eq"
 
-$str_278: [*]u8 = "cmp_ge"
+$str_278: [*]u8 = "cmp_gt"
 
-$str_279: [*]u8 = "cmp_lt"
+$str_279: [*]u8 = "cmp_ge"
 
-$str_280: [*]u8 = "cmp_le"
+$str_280: [*]u8 = "cmp_lt"
 
-$str_281: [*]u8 = "cmp_ne"
+$str_281: [*]u8 = "cmp_le"
 
-$str_282: [*]u8 = " = const "
+$str_282: [*]u8 = "cmp_ne"
 
-$str_283: [*]u8 = "div"
+$str_283: [*]u8 = " = const "
 
-$str_284: [*]u8 = "jmp @"
+$str_284: [*]u8 = "div"
 
-$str_285: [*]u8 = ".line "
+$str_285: [*]u8 = "jmp @"
 
-$str_286: [*]u8 = " = load "
+$str_286: [*]u8 = ".line "
 
-$str_287: [*]u8 = "mod"
+$str_287: [*]u8 = " = load "
 
-$str_288: [*]u8 = "mul"
+$str_288: [*]u8 = "mod"
 
-$str_289: [*]u8 = " = neg "
+$str_289: [*]u8 = "mul"
 
-$str_290: [*]u8 = " = not "
+$str_290: [*]u8 = " = neg "
 
-$str_291: [*]u8 = " = offset "
+$str_291: [*]u8 = " = not "
 
-$str_292: [*]u8 = " = phi"
+$str_292: [*]u8 = " = offset "
 
-$str_293: [*]u8 = "ret"
+$str_293: [*]u8 = " = phi"
 
-$str_294: [*]u8 = "shl"
+$str_294: [*]u8 = "ret"
 
-$str_295: [*]u8 = "shr"
+$str_295: [*]u8 = "shl"
 
-$str_296: [*]u8 = "store "
+$str_296: [*]u8 = "shr"
 
-$str_297: [*]u8 = " = struct"
+$str_297: [*]u8 = "store "
 
-$str_298: [*]u8 = " ."
+$str_298: [*]u8 = " = struct"
 
-$str_299: [*]u8 = "sub"
+$str_299: [*]u8 = " ."
 
-$str_300: [*]u8 = ": "
+$str_300: [*]u8 = "sub"
 
-$str_301: [*]u8 = " {"
+$str_301: [*]u8 = ": "
 
-$str_302: [*]u8 = " = \""
+$str_302: [*]u8 = " {"
 
-$str_303: [*]u8 = "\\0"
+$str_303: [*]u8 = " = \""
 
-$str_304: [*]u8 = "\\n"
+$str_304: [*]u8 = "\\0"
 
-$str_305: [*]u8 = "\\t"
+$str_305: [*]u8 = "\\n"
 
-$str_306: [*]u8 = "\\\\"
+$str_306: [*]u8 = "\\t"
 
-$str_307: [*]u8 = "\\\""
+$str_307: [*]u8 = "\\\\"
 
-$str_308: [*]u8 = " = external"
+$str_308: [*]u8 = "\\\""
 
-$str_309: [*]u8 = ".source "
+$str_309: [*]u8 = " = external"
 
-$str_310: [*]u8 = " \""
+$str_310: [*]u8 = ".source "
 
-$str_311: [*]u8 = "[*]"
+$str_311: [*]u8 = " \""
 
-$str_312: [*]u8 = "bootstrap/code/compiler/printer/printer.code:366: Panic!\n"
+$str_312: [*]u8 = "[*]"
 
-$str_313: [*]u8 = "proc ("
+$str_313: [*]u8 = "bootstrap/code/compiler/printer/printer.code:366: Panic!\n"
 
-$str_314: [*]u8 = "type "
+$str_314: [*]u8 = "proc ("
 
-$str_315: [*]u8 = "struct {"
+$str_315: [*]u8 = "type "
 
-$str_316: [*]u8 = "opaque"
+$str_316: [*]u8 = "struct {"
 
-$str_317: [*]u8 = "[^]"
+$str_317: [*]u8 = "opaque"
 
-$str_318: [*]u8 = ") -> "
+$str_318: [*]u8 = "[^]"
 
-$str_319: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:137: Panic! Cannot merge identifier with separator\n"
+$str_319: [*]u8 = ") -> "
 
-$str_320: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:140: Panic! Cannot merge separator with another\n"
+$str_320: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:137: Panic! Cannot merge identifier with separator\n"
 
-$str_321: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:153: Panic! Cannot merge other with another\n"
+$str_321: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:140: Panic! Cannot merge separator with another\n"
 
-$str_322: [*]u8 = "[0;91m"
+$str_322: [*]u8 = "bootstrap/code/compiler/lexer/tokens.code:153: Panic! Cannot merge other with another\n"
 
-$str_323: [*]u8 = "[0;93m"
+$str_323: [*]u8 = "[0;91m"
 
-$str_324: [*]u8 = "[0m"
+$str_324: [*]u8 = "[0;93m"
 
-$str_325: [*]u8 = "r"
+$str_325: [*]u8 = "[0m"
 
-$str_326: [*]u8 = "bootstrap/code/compiler/source/source.code:12: Panic! Failed to open file\n"
+$str_326: [*]u8 = "r"
 
-$str_327: [*]u8 = "bootstrap/code/compiler/source/source.code:17: Panic! Failed to seek to end of file\n"
+$str_327: [*]u8 = "bootstrap/code/compiler/source/source.code:12: Panic! Failed to open file\n"
 
-$str_328: [*]u8 = "bootstrap/code/compiler/source/source.code:22: Panic! Failed to seek to start of file\n"
+$str_328: [*]u8 = "bootstrap/code/compiler/source/source.code:17: Panic! Failed to seek to end of file\n"
 
-$str_329: [*]u8 = "bootstrap/code/compiler/source/source.code:29: Panic! Failed to read file to memory\n"
+$str_329: [*]u8 = "bootstrap/code/compiler/source/source.code:22: Panic! Failed to seek to start of file\n"
 
-$str_330: [*]u8 = "../"
+$str_330: [*]u8 = "bootstrap/code/compiler/source/source.code:29: Panic! Failed to read file to memory\n"
 
-$str_331: [*]u8 = "."
+$str_331: [*]u8 = "../"
 
-$str_332: [*]u8 = "bootstrap/code/allocator/arena.code:22: Panic! Out of memory\n"
+$str_332: [*]u8 = "."
 
-$str_333: [*]u8 = "bootstrap/code/allocator/arena.code:49: Panic! Arena already reserved\n"
+$str_333: [*]u8 = "bootstrap/code/allocator/arena.code:22: Panic! Out of memory\n"
 
-$str_334: [*]u8 = "bootstrap/code/allocator/arena.code:57: Panic! Failed to allocate arena memory\n"
+$str_334: [*]u8 = "bootstrap/code/allocator/arena.code:49: Panic! Arena already reserved\n"
 
-$str_335: [*]u8 = ".ptr"
+$str_335: [*]u8 = "bootstrap/code/allocator/arena.code:57: Panic! Failed to allocate arena memory\n"
 
-$str_336: [*]u8 = "bootstrap/code/compiler/ir/ir.code:232: Panic! Not supported yet: type name\n"
+$str_336: [*]u8 = ".ptr"
 
-$str_337: [*]u8 = "bootstrap/code/compiler/ir/ir.code:328: Panic! Lowering not supported yet: size of type\n"
+$str_337: [*]u8 = "bootstrap/code/compiler/ir/ir.code:232: Panic! Not supported yet: type name\n"
 
-$str_338: [*]u8 = "bootstrap/code/string/builder/builder.code:20: Panic! Interleaved builders\n"
+$str_338: [*]u8 = "bootstrap/code/compiler/ir/ir.code:328: Panic! Lowering not supported yet: size of type\n"
 
-$str_339: [*]u8 = "bootstrap/code/string/builder/builder.code:23: Panic! Out of memory\n"
+$str_339: [*]u8 = "bootstrap/code/string/builder/builder.code:20: Panic! Interleaved builders\n"
+
+$str_340: [*]u8 = "bootstrap/code/string/builder/builder.code:23: Panic! Out of memory\n"
 
 $compiler.main(%argc: i32, %argv: [*][*]u8): i32 {
 @1:
@@ -10847,13 +10849,25 @@ $([compiler.checker.Checker]).check_object_member_access(%self, %object: [compil
   jmp @39
 @39:
   .line 2:1699:5
-  %156: [Any] = cast $str_176
-  %157: usize = const 1
-  %158: usize = const 91
-  %159: [FILE] = load $stderr
-  %160: usize = call $fwrite %156 %157 %158 %159
-  %161: i32 = const 1
-  call $exit %161
+  %156: [FILE] = load $stderr
+  %157: i32 = const 1
+  %158: [FILE] = call $([FILE]).begin_location_message %156 %location %157
+  %159: usize = const 18
+  %160: String = struct .data $str_176 .length %159
+  %161: [FILE] = call $([FILE]).write %158 %160
+  %162: [compiler.lexer.Token] = offset %member .super
+  %163: [String] = offset %162 .lexeme
+  %164: String = load %163
+  %165: [FILE] = call $([FILE]).write %161 %164
+  %166: [FILE] = call $([FILE]).end_location_message %165
+  .line 2:1700:5
+  %167: [Any] = cast $str_177
+  %168: usize = const 1
+  %169: usize = const 58
+  %170: [FILE] = load $stderr
+  %171: usize = call $fwrite %167 %168 %169 %170
+  %172: i32 = const 1
+  call $exit %172
 }
 
 $([compiler.checker.Checker]).check_negate_expression(%self, %unary_expression: [compiler.parser.parsed.Unary_Expression], %expected_type: [compiler.checker.checked.Type]): [compiler.checker.checked.Expression] {
@@ -10861,14 +10875,14 @@ $([compiler.checker.Checker]).check_negate_expression(%self, %unary_expression: 
   .bind self %self
   .bind unary_expression %unary_expression
   .bind expected_type %expected_type
-  .line 2:1703:5
+  .line 2:1704:5
   %operand.ptr: [[compiler.checker.checked.Expression]] = alloc [compiler.checker.checked.Expression]
   .bind &operand %operand.ptr
   %1: [[compiler.parser.parsed.Expression]] = offset %unary_expression .operand
   %2: [compiler.parser.parsed.Expression] = load %1
   %3: [compiler.checker.checked.Expression] = call $([compiler.checker.Checker]).check_expression %self %2 %expected_type
   store %operand.ptr %3
-  .line 2:1704:5
+  .line 2:1705:5
   %operand.1: [compiler.checker.checked.Expression] = load %operand.ptr
   %operand.2: [compiler.checker.checked.Expression] = load %operand.ptr
   %4: [[compiler.checker.checked.Type]] = offset %operand.2 .type
@@ -10882,7 +10896,7 @@ $([compiler.checker.Checker]).check_not_expression(%self, %unary_expression: [co
 @1:
   .bind self %self
   .bind unary_expression %unary_expression
-  .line 2:1708:5
+  .line 2:1709:5
   %operand.ptr: [[compiler.checker.checked.Expression]] = alloc [compiler.checker.checked.Expression]
   .bind &operand %operand.ptr
   %1: [[compiler.parser.parsed.Expression]] = offset %unary_expression .operand
@@ -10891,7 +10905,7 @@ $([compiler.checker.Checker]).check_not_expression(%self, %unary_expression: [co
   %4: [compiler.checker.checked.Type] = load %3
   %5: [compiler.checker.checked.Expression] = call $([compiler.checker.Checker]).check_expression %self %2 %4
   store %operand.ptr %5
-  .line 2:1709:5
+  .line 2:1710:5
   %operand.1: [compiler.checker.checked.Expression] = load %operand.ptr
   %operand.2: [compiler.checker.checked.Expression] = load %operand.ptr
   %6: [[compiler.checker.checked.Type]] = offset %operand.2 .type
@@ -10906,23 +10920,23 @@ $([compiler.checker.Checker]).check_null_expression(%self, %null_expression: [co
   .bind self %self
   .bind null_expression %null_expression
   .bind expected_type %expected_type
-  .line 2:1713:5
+  .line 2:1714:5
   %expression_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &expression_type %expression_type.ptr
   store %expression_type.ptr %expected_type
-  .line 2:1714:5
+  .line 2:1715:5
   %expression_type.1: [compiler.checker.checked.Type] = load %expression_type.ptr
   %1: [compiler.checker.checked.Type] = const null
   %2: bool = cmp_eq %expression_type.1 %1
   br %2 @2 @3
 @2:
-  .line 2:1715:9
+  .line 2:1716:9
   %3: [[compiler.checker.checked.Type]] = offset %self .null_type
   %4: [compiler.checker.checked.Type] = load %3
   store %expression_type.ptr %4
   jmp @4
 @3:
-  .line 2:1716:12
+  .line 2:1717:12
   %expression_type.2: [compiler.checker.checked.Type] = load %expression_type.ptr
   %5: [i32] = offset %expression_type.2 .kind
   %6: i32 = load %5
@@ -10950,7 +10964,7 @@ $([compiler.checker.Checker]).check_null_expression(%self, %null_expression: [co
   %18: bool = phi @6 %13 @7 %17
   br %18 @9 @10
 @9:
-  .line 2:1717:9
+  .line 2:1718:9
   %19: [FILE] = load $stderr
   %20: [compiler.parser.parsed.Expression] = offset %null_expression .super
   %21: [compiler.source.Source_Location] = offset %20 .location
@@ -10958,13 +10972,13 @@ $([compiler.checker.Checker]).check_null_expression(%self, %null_expression: [co
   %23: i32 = const 1
   %24: [FILE] = call $([FILE]).begin_location_message %19 %22 %23
   %25: usize = const 45
-  %26: String = struct .data $str_177 .length %25
+  %26: String = struct .data $str_178 .length %25
   %27: [FILE] = call $([FILE]).write %24 %26
   %expression_type.5: [compiler.checker.checked.Type] = load %expression_type.ptr
   %28: [FILE] = call $([FILE]).write_checked_type %27 %expression_type.5
   %29: [FILE] = call $([FILE]).end_location_message %28
-  .line 2:1718:9
-  %30: [Any] = cast $str_178
+  .line 2:1719:9
+  %30: [Any] = cast $str_179
   %31: usize = const 1
   %32: usize = const 58
   %33: [FILE] = load $stderr
@@ -10975,7 +10989,7 @@ $([compiler.checker.Checker]).check_null_expression(%self, %null_expression: [co
 @10:
   jmp @4
 @4:
-  .line 2:1720:5
+  .line 2:1721:5
   %expression_type.6: [compiler.checker.checked.Type] = load %expression_type.ptr
   %36: [compiler.checker.checked.Null_Expression] = call $compiler.checker.checked.new_null_expression %expression_type.6
   %37: [compiler.checker.checked.Expression] = cast %36
@@ -10986,7 +11000,7 @@ $([compiler.checker.Checker]).check_string_expression(%self, %string_expression:
 @1:
   .bind self %self
   .bind string_expression %string_expression
-  .line 2:1724:5
+  .line 2:1725:5
   %1: [[compiler.lexer.String]] = offset %string_expression .token
   %2: [compiler.lexer.String] = load %1
   %3: [[compiler.checker.checked.Type]] = offset %self .str_type
@@ -11000,14 +11014,14 @@ $([compiler.checker.Checker]).check_type_alignment_expression(%self, %type_align
 @1:
   .bind self %self
   .bind type_alignment_expression %type_alignment_expression
-  .line 2:1728:5
+  .line 2:1729:5
   %aligned_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &aligned_type %aligned_type.ptr
   %1: [[compiler.parser.parsed.Type]] = offset %type_alignment_expression .target_type
   %2: [compiler.parser.parsed.Type] = load %1
   %3: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %2
   store %aligned_type.ptr %3
-  .line 2:1729:5
+  .line 2:1730:5
   %aligned_type.1: [compiler.checker.checked.Type] = load %aligned_type.ptr
   %4: [i32] = offset %aligned_type.1 .kind
   %5: i32 = load %4
@@ -11015,7 +11029,7 @@ $([compiler.checker.Checker]).check_type_alignment_expression(%self, %type_align
   %7: bool = cmp_eq %5 %6
   br %7 @2 @3
 @2:
-  .line 2:1730:9
+  .line 2:1731:9
   %8: [FILE] = load $stderr
   %9: [[compiler.parser.parsed.Type]] = offset %type_alignment_expression .target_type
   %10: [compiler.parser.parsed.Type] = load %9
@@ -11024,11 +11038,11 @@ $([compiler.checker.Checker]).check_type_alignment_expression(%self, %type_align
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %8 %12 %13
   %15: usize = const 25
-  %16: String = struct .data $str_179 .length %15
+  %16: String = struct .data $str_180 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
-  .line 2:1731:9
-  %19: [Any] = cast $str_180
+  .line 2:1732:9
+  %19: [Any] = cast $str_181
   %20: usize = const 1
   %21: usize = const 58
   %22: [FILE] = load $stderr
@@ -11037,7 +11051,7 @@ $([compiler.checker.Checker]).check_type_alignment_expression(%self, %type_align
   call $exit %24
   jmp @3
 @3:
-  .line 2:1733:5
+  .line 2:1734:5
   %aligned_type.2: [compiler.checker.checked.Type] = load %aligned_type.ptr
   %25: [[compiler.checker.checked.Type]] = offset %self .usize_type
   %26: [compiler.checker.checked.Type] = load %25
@@ -11051,7 +11065,7 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   .bind self %self
   .bind receiver_type %receiver_type
   .bind member %member
-  .line 2:1737:5
+  .line 2:1738:5
   %method_symbol.ptr: [[compiler.checker.checked.Procedure_Symbol]] = alloc [compiler.checker.checked.Procedure_Symbol]
   .bind &method_symbol %method_symbol.ptr
   %1: [compiler.lexer.Token] = offset %member .super
@@ -11059,13 +11073,13 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   %3: String = load %2
   %4: [compiler.checker.checked.Procedure_Symbol] = call $([compiler.checker.Checker]).resolve_method_symbol %self %receiver_type %3
   store %method_symbol.ptr %4
-  .line 2:1738:5
+  .line 2:1739:5
   %method_symbol.1: [compiler.checker.checked.Procedure_Symbol] = load %method_symbol.ptr
   %5: [compiler.checker.checked.Procedure_Symbol] = const null
   %6: bool = cmp_eq %method_symbol.1 %5
   br %6 @2 @3
 @2:
-  .line 2:1739:9
+  .line 2:1740:9
   %7: [compiler.lexer.Token] = offset %member .super
   %8: [String] = offset %7 .lexeme
   %9: String = load %8
@@ -11074,7 +11088,7 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   %12: bool = cmp_ne %10 %11
   br %12 @4 @5
 @4:
-  .line 2:1740:13
+  .line 2:1741:13
   %13: [FILE] = load $stderr
   %14: [compiler.lexer.Token] = offset %member .super
   %15: [compiler.source.Source_Location] = offset %14 .location
@@ -11085,8 +11099,8 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   %20: String = struct .data $str_140 .length %19
   %21: [FILE] = call $([FILE]).write %18 %20
   %22: [FILE] = call $([FILE]).end_location_message %21
-  .line 2:1741:13
-  %23: [Any] = cast $str_181
+  .line 2:1742:13
+  %23: [Any] = cast $str_182
   %24: usize = const 1
   %25: usize = const 58
   %26: [FILE] = load $stderr
@@ -11095,7 +11109,7 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   call $exit %28
   jmp @5
 @5:
-  .line 2:1743:9
+  .line 2:1744:9
   %29: [FILE] = load $stderr
   %30: [compiler.lexer.Token] = offset %member .super
   %31: [compiler.source.Source_Location] = offset %30 .location
@@ -11114,8 +11128,8 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   %44: String = load %43
   %45: [FILE] = call $([FILE]).write %41 %44
   %46: [FILE] = call $([FILE]).end_location_message %45
-  .line 2:1744:9
-  %47: [Any] = cast $str_182
+  .line 2:1745:9
+  %47: [Any] = cast $str_183
   %48: usize = const 1
   %49: usize = const 58
   %50: [FILE] = load $stderr
@@ -11124,7 +11138,7 @@ $([compiler.checker.Checker]).check_type_member_access(%self, %receiver_type: [c
   call $exit %52
   jmp @3
 @3:
-  .line 2:1746:5
+  .line 2:1747:5
   %method_symbol.2: [compiler.checker.checked.Procedure_Symbol] = load %method_symbol.ptr
   %53: [compiler.checker.checked.Symbol] = cast %method_symbol.2
   %method_symbol.3: [compiler.checker.checked.Procedure_Symbol] = load %method_symbol.ptr
@@ -11140,14 +11154,14 @@ $([compiler.checker.Checker]).check_type_size_expression(%self, %type_size_expre
 @1:
   .bind self %self
   .bind type_size_expression %type_size_expression
-  .line 2:1750:5
+  .line 2:1751:5
   %sized_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &sized_type %sized_type.ptr
   %1: [[compiler.parser.parsed.Type]] = offset %type_size_expression .target_type
   %2: [compiler.parser.parsed.Type] = load %1
   %3: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %2
   store %sized_type.ptr %3
-  .line 2:1751:5
+  .line 2:1752:5
   %sized_type.1: [compiler.checker.checked.Type] = load %sized_type.ptr
   %4: [i32] = offset %sized_type.1 .kind
   %5: i32 = load %4
@@ -11155,7 +11169,7 @@ $([compiler.checker.Checker]).check_type_size_expression(%self, %type_size_expre
   %7: bool = cmp_eq %5 %6
   br %7 @2 @3
 @2:
-  .line 2:1752:9
+  .line 2:1753:9
   %8: [FILE] = load $stderr
   %9: [[compiler.parser.parsed.Type]] = offset %type_size_expression .target_type
   %10: [compiler.parser.parsed.Type] = load %9
@@ -11164,11 +11178,11 @@ $([compiler.checker.Checker]).check_type_size_expression(%self, %type_size_expre
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %8 %12 %13
   %15: usize = const 20
-  %16: String = struct .data $str_183 .length %15
+  %16: String = struct .data $str_184 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
-  .line 2:1753:9
-  %19: [Any] = cast $str_184
+  .line 2:1754:9
+  %19: [Any] = cast $str_185
   %20: usize = const 1
   %21: usize = const 58
   %22: [FILE] = load $stderr
@@ -11177,7 +11191,7 @@ $([compiler.checker.Checker]).check_type_size_expression(%self, %type_size_expre
   call $exit %24
   jmp @3
 @3:
-  .line 2:1755:5
+  .line 2:1756:5
   %sized_type.2: [compiler.checker.checked.Type] = load %sized_type.ptr
   %25: [[compiler.checker.checked.Type]] = offset %self .usize_type
   %26: [compiler.checker.checked.Type] = load %25
@@ -11190,26 +11204,26 @@ $([compiler.checker.Checker]).append_generic_method(%self, %generic_method: [com
 @1:
   .bind self %self
   .bind generic_method %generic_method
-  .line 2:1759:5
+  .line 2:1760:5
   %1: [[compiler.checker.checked.Generic_Method]] = offset %self .first_generic_method
   %2: [compiler.checker.checked.Generic_Method] = load %1
   %3: [compiler.checker.checked.Generic_Method] = const null
   %4: bool = cmp_eq %2 %3
   br %4 @2 @3
 @2:
-  .line 2:1760:9
+  .line 2:1761:9
   %5: [[compiler.checker.checked.Generic_Method]] = offset %self .first_generic_method
   store %5 %generic_method
   jmp @4
 @3:
-  .line 2:1762:9
+  .line 2:1763:9
   %6: [[compiler.checker.checked.Generic_Method]] = offset %self .last_generic_method
   %7: [compiler.checker.checked.Generic_Method] = load %6
   %8: [[compiler.checker.checked.Generic_Method]] = offset %7 .next
   store %8 %generic_method
   jmp @4
 @4:
-  .line 2:1764:5
+  .line 2:1765:5
   %9: [[compiler.checker.checked.Generic_Method]] = offset %self .last_generic_method
   store %9 %generic_method
   ret
@@ -11219,26 +11233,26 @@ $([compiler.checker.Checker]).append_method(%self, %method: [compiler.checker.ch
 @1:
   .bind self %self
   .bind method %method
-  .line 2:1768:5
+  .line 2:1769:5
   %1: [[compiler.checker.checked.Method]] = offset %self .first_method
   %2: [compiler.checker.checked.Method] = load %1
   %3: [compiler.checker.checked.Method] = const null
   %4: bool = cmp_eq %2 %3
   br %4 @2 @3
 @2:
-  .line 2:1769:9
+  .line 2:1770:9
   %5: [[compiler.checker.checked.Method]] = offset %self .first_method
   store %5 %method
   jmp @4
 @3:
-  .line 2:1771:9
+  .line 2:1772:9
   %6: [[compiler.checker.checked.Method]] = offset %self .last_method
   %7: [compiler.checker.checked.Method] = load %6
   %8: [[compiler.checker.checked.Method]] = offset %7 .next
   store %8 %method
   jmp @4
 @4:
-  .line 2:1773:5
+  .line 2:1774:5
   %9: [[compiler.checker.checked.Method]] = offset %self .last_method
   store %9 %method
   ret
@@ -11248,7 +11262,7 @@ $([compiler.checker.Checker]).begin_inference(%self, %generic_symbol: [compiler.
 @1:
   .bind self %self
   .bind generic_symbol %generic_symbol
-  .line 2:1778:5
+  .line 2:1779:5
   %inference_symbols.ptr: [[compiler.checker.checked.Symbols]] = alloc [compiler.checker.checked.Symbols]
   .bind &inference_symbols %inference_symbols.ptr
   %1: [compiler.checker.checked.Package_Symbol] = offset %generic_symbol .super
@@ -11258,17 +11272,17 @@ $([compiler.checker.Checker]).begin_inference(%self, %generic_symbol: [compiler.
   %5: [compiler.checker.checked.Symbols] = load %4
   %6: [compiler.checker.checked.Symbols] = call $compiler.checker.checked.new_symbols %5
   store %inference_symbols.ptr %6
-  .line 2:1779:5
+  .line 2:1780:5
   %first_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &first_type_argument %first_type_argument.ptr
   %7: [compiler.checker.checked.Type_Argument] = const null
   store %first_type_argument.ptr %7
-  .line 2:1780:5
+  .line 2:1781:5
   %last_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &last_type_argument %last_type_argument.ptr
   %8: [compiler.checker.checked.Type_Argument] = const null
   store %last_type_argument.ptr %8
-  .line 2:1781:5
+  .line 2:1782:5
   %type_parameter.ptr: [[compiler.parser.parsed.Type_Parameter]] = alloc [compiler.parser.parsed.Type_Parameter]
   .bind &type_parameter %type_parameter.ptr
   %9: [[compiler.parser.parsed.Procedure_Statement]] = offset %generic_symbol .parsed_statement
@@ -11278,13 +11292,13 @@ $([compiler.checker.Checker]).begin_inference(%self, %generic_symbol: [compiler.
   store %type_parameter.ptr %12
   jmp @2
 @2:
-  .line 2:1782:5
+  .line 2:1783:5
   %type_parameter.1: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %13: [compiler.parser.parsed.Type_Parameter] = const null
   %14: bool = cmp_ne %type_parameter.1 %13
   br %14 @3 @4
 @3:
-  .line 2:1783:9
+  .line 2:1784:9
   %placeholder.ptr: [[compiler.checker.checked.Placeholder_Type]] = alloc [compiler.checker.checked.Placeholder_Type]
   .bind &placeholder %placeholder.ptr
   %type_parameter.2: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
@@ -11295,7 +11309,7 @@ $([compiler.checker.Checker]).begin_inference(%self, %generic_symbol: [compiler.
   %19: String = load %18
   %20: [compiler.checker.checked.Placeholder_Type] = call $compiler.checker.checked.new_placeholder_type %19
   store %placeholder.ptr %20
-  .line 2:1784:9
+  .line 2:1785:9
   %inference_symbols.1: [compiler.checker.checked.Symbols] = load %inference_symbols.ptr
   %type_parameter.3: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %21: [[compiler.lexer.Identifier]] = offset %type_parameter.3 .name
@@ -11314,63 +11328,63 @@ $([compiler.checker.Checker]).begin_inference(%self, %generic_symbol: [compiler.
   %32: [compiler.checker.checked.Type_Symbol] = call $compiler.checker.checked.new_type_symbol %30 %31
   %33: [compiler.checker.checked.Symbol] = cast %32
   call $([compiler.checker.checked.Symbols]).append %inference_symbols.1 %25 %33
-  .line 2:1785:9
+  .line 2:1786:9
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   %placeholder.2: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %34: [compiler.checker.checked.Type] = cast %placeholder.2
   %35: [compiler.checker.checked.Type_Argument] = call $compiler.checker.checked.new_type_argument %34
   store %type_argument.ptr %35
-  .line 2:1786:9
+  .line 2:1787:9
   %last_type_argument.1: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %36: [compiler.checker.checked.Type_Argument] = const null
   %37: bool = cmp_eq %last_type_argument.1 %36
   br %37 @5 @6
 @5:
-  .line 2:1787:13
+  .line 2:1788:13
   %type_argument.1: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %first_type_argument.ptr %type_argument.1
   jmp @7
 @6:
-  .line 2:1789:13
+  .line 2:1790:13
   %last_type_argument.2: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %38: [[compiler.checker.checked.Type_Argument]] = offset %last_type_argument.2 .next
   %type_argument.2: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %38 %type_argument.2
   jmp @7
 @7:
-  .line 2:1791:9
+  .line 2:1792:9
   %type_argument.3: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %last_type_argument.ptr %type_argument.3
-  .line 2:1792:9
+  .line 2:1793:9
   %type_parameter.5: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %39: [[compiler.parser.parsed.Type_Parameter]] = offset %type_parameter.5 .next
   %40: [compiler.parser.parsed.Type_Parameter] = load %39
   store %type_parameter.ptr %40
   jmp @2
 @4:
-  .line 2:1795:5
+  .line 2:1796:5
   %saved_current_scope.ptr: [[compiler.checker.checked.Symbols]] = alloc [compiler.checker.checked.Symbols]
   .bind &saved_current_scope %saved_current_scope.ptr
   %41: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %42: [compiler.checker.checked.Symbols] = load %41
   store %saved_current_scope.ptr %42
-  .line 2:1796:5
+  .line 2:1797:5
   %43: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %inference_symbols.2: [compiler.checker.checked.Symbols] = load %inference_symbols.ptr
   store %43 %inference_symbols.2
-  .line 2:1797:5
+  .line 2:1798:5
   %signature.ptr: [[compiler.checker.checked.Procedure_Type]] = alloc [compiler.checker.checked.Procedure_Type]
   .bind &signature %signature.ptr
   %44: [[compiler.parser.parsed.Procedure_Statement]] = offset %generic_symbol .parsed_statement
   %45: [compiler.parser.parsed.Procedure_Statement] = load %44
   %46: [compiler.checker.checked.Procedure_Type] = call $([compiler.checker.Checker]).resolve_procedure_signature %self %45
   store %signature.ptr %46
-  .line 2:1798:5
+  .line 2:1799:5
   %47: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %saved_current_scope.1: [compiler.checker.checked.Symbols] = load %saved_current_scope.ptr
   store %47 %saved_current_scope.1
-  .line 2:1800:5
+  .line 2:1801:5
   %signature.1: [compiler.checker.checked.Procedure_Type] = load %signature.ptr
   %first_type_argument.1: [compiler.checker.checked.Type_Argument] = load %first_type_argument.ptr
   %48: compiler.checker.Placeholder_Inference = struct .signature %signature.1 .first_type_argument %first_type_argument.1
@@ -11384,36 +11398,36 @@ $([compiler.checker.Checker]).begin_instantiation(%self, %generic_symbol: [compi
   .bind first_type_argument %first_type_argument
   .bind type_argument_count %type_argument_count
   .bind location %location
-  .line 2:1804:5
+  .line 2:1805:5
   %1: [[compiler.parser.parsed.Procedure_Statement]] = offset %generic_symbol .parsed_statement
   %2: [compiler.parser.parsed.Procedure_Statement] = load %1
   %3: [[compiler.parser.parsed.Type_Parameter]] = offset %2 .first_type_parameter
   %4: [compiler.parser.parsed.Type_Parameter] = load %3
   call $([compiler.checker.Checker]).check_type_argument_count %self %4 %type_argument_count %location
-  .line 2:1806:5
+  .line 2:1807:5
   %inference.ptr: [compiler.checker.Placeholder_Inference] = alloc compiler.checker.Placeholder_Inference
   .bind &inference %inference.ptr
   %5: compiler.checker.Placeholder_Inference = call $([compiler.checker.Checker]).begin_inference %self %generic_symbol
   store %inference.ptr %5
-  .line 2:1807:5
+  .line 2:1808:5
   %placeholder_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &placeholder_argument %placeholder_argument.ptr
   %6: [[compiler.checker.checked.Type_Argument]] = offset %inference.ptr .first_type_argument
   %7: [compiler.checker.checked.Type_Argument] = load %6
   store %placeholder_argument.ptr %7
-  .line 2:1808:5
+  .line 2:1809:5
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   store %type_argument.ptr %first_type_argument
   jmp @2
 @2:
-  .line 2:1809:5
+  .line 2:1810:5
   %placeholder_argument.1: [compiler.checker.checked.Type_Argument] = load %placeholder_argument.ptr
   %8: [compiler.checker.checked.Type_Argument] = const null
   %9: bool = cmp_ne %placeholder_argument.1 %8
   br %9 @3 @4
 @3:
-  .line 2:1810:9
+  .line 2:1811:9
   %placeholder_argument.2: [compiler.checker.checked.Type_Argument] = load %placeholder_argument.ptr
   %10: [[compiler.checker.checked.Type]] = offset %placeholder_argument.2 .type
   %11: [compiler.checker.checked.Type] = load %10
@@ -11423,19 +11437,19 @@ $([compiler.checker.Checker]).begin_instantiation(%self, %generic_symbol: [compi
   %14: [[compiler.checker.checked.Type]] = offset %type_argument.1 .type
   %15: [compiler.checker.checked.Type] = load %14
   store %13 %15
-  .line 2:1811:9
+  .line 2:1812:9
   %placeholder_argument.3: [compiler.checker.checked.Type_Argument] = load %placeholder_argument.ptr
   %16: [[compiler.checker.checked.Type_Argument]] = offset %placeholder_argument.3 .next
   %17: [compiler.checker.checked.Type_Argument] = load %16
   store %placeholder_argument.ptr %17
-  .line 2:1812:9
+  .line 2:1813:9
   %type_argument.2: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %18: [[compiler.checker.checked.Type_Argument]] = offset %type_argument.2 .next
   %19: [compiler.checker.checked.Type_Argument] = load %18
   store %type_argument.ptr %19
   jmp @2
 @4:
-  .line 2:1814:5
+  .line 2:1815:5
   %inference.1: compiler.checker.Placeholder_Inference = load %inference.ptr
   ret %inference.1
 }
@@ -11446,19 +11460,19 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   .bind parameter_type %parameter_type
   .bind argument_type %argument_type
   .bind location %location
-  .line 2:1818:5
+  .line 2:1819:5
   %1: [i32] = offset %parameter_type .kind
   %2: i32 = load %1
   brx %2 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @4 @3 @7 @13 @3 @3 @16 @3 @3 @3 @3 @3 @3
 @4:
-  .line 2:1820:13
+  .line 2:1821:13
   %3: [i32] = offset %argument_type .kind
   %4: i32 = load %3
   %5: i32 = const 11
   %6: bool = cmp_eq %4 %5
   br %6 @5 @6
 @5:
-  .line 2:1821:17
+  .line 2:1822:17
   %7: [compiler.checker.checked.Multi_Pointer_Type] = cast %parameter_type
   %8: [[compiler.checker.checked.Type]] = offset %7 .pointee
   %9: [compiler.checker.checked.Type] = load %8
@@ -11470,12 +11484,12 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
 @6:
   jmp @2
 @7:
-  .line 2:1825:13
+  .line 2:1826:13
   %placeholder.ptr: [[compiler.checker.checked.Placeholder_Type]] = alloc [compiler.checker.checked.Placeholder_Type]
   .bind &placeholder %placeholder.ptr
   %13: [compiler.checker.checked.Placeholder_Type] = cast %parameter_type
   store %placeholder.ptr %13
-  .line 2:1826:13
+  .line 2:1827:13
   %placeholder.1: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %14: [[compiler.checker.checked.Type]] = offset %placeholder.1 .resolved
   %15: [compiler.checker.checked.Type] = load %14
@@ -11483,13 +11497,13 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   %17: bool = cmp_eq %15 %16
   br %17 @8 @9
 @8:
-  .line 2:1827:17
+  .line 2:1828:17
   %placeholder.2: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %18: [[compiler.checker.checked.Type]] = offset %placeholder.2 .resolved
   store %18 %argument_type
   jmp @10
 @9:
-  .line 2:1828:20
+  .line 2:1829:20
   %placeholder.3: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %19: [[compiler.checker.checked.Type]] = offset %placeholder.3 .resolved
   %20: [compiler.checker.checked.Type] = load %19
@@ -11497,16 +11511,16 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   %22: bool = not %21
   br %22 @11 @12
 @11:
-  .line 2:1829:17
+  .line 2:1830:17
   %23: [FILE] = load $stderr
   %24: i32 = const 1
   %25: [FILE] = call $([FILE]).begin_location_message %23 %location %24
   %26: usize = const 27
-  %27: String = struct .data $str_185 .length %26
+  %27: String = struct .data $str_186 .length %26
   %28: [FILE] = call $([FILE]).write %25 %27
   %29: [FILE] = call $([FILE]).end_location_message %28
-  .line 2:1830:17
-  %30: [Any] = cast $str_186
+  .line 2:1831:17
+  %30: [Any] = cast $str_187
   %31: usize = const 1
   %32: usize = const 58
   %33: [FILE] = load $stderr
@@ -11519,14 +11533,14 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
 @10:
   jmp @2
 @13:
-  .line 2:1834:13
+  .line 2:1835:13
   %36: [i32] = offset %argument_type .kind
   %37: i32 = load %36
   %38: i32 = const 14
   %39: bool = cmp_eq %37 %38
   br %39 @14 @15
 @14:
-  .line 2:1835:17
+  .line 2:1836:17
   %40: [compiler.checker.checked.Pointer_Type] = cast %parameter_type
   %41: [[compiler.checker.checked.Type]] = offset %40 .pointee
   %42: [compiler.checker.checked.Type] = load %41
@@ -11538,24 +11552,24 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
 @15:
   jmp @2
 @16:
-  .line 2:1839:13
+  .line 2:1840:13
   %46: [i32] = offset %argument_type .kind
   %47: i32 = load %46
   %48: i32 = const 17
   %49: bool = cmp_eq %47 %48
   br %49 @17 @18
 @17:
-  .line 2:1840:17
+  .line 2:1841:17
   %parameter_struct.ptr: [[compiler.checker.checked.Struct_Type]] = alloc [compiler.checker.checked.Struct_Type]
   .bind &parameter_struct %parameter_struct.ptr
   %50: [compiler.checker.checked.Struct_Type] = cast %parameter_type
   store %parameter_struct.ptr %50
-  .line 2:1841:17
+  .line 2:1842:17
   %argument_struct.ptr: [[compiler.checker.checked.Struct_Type]] = alloc [compiler.checker.checked.Struct_Type]
   .bind &argument_struct %argument_struct.ptr
   %51: [compiler.checker.checked.Struct_Type] = cast %argument_type
   store %argument_struct.ptr %51
-  .line 2:1842:17
+  .line 2:1843:17
   %parameter_struct.1: [compiler.checker.checked.Struct_Type] = load %parameter_struct.ptr
   %52: [[compiler.checker.checked.Generic_Struct_Symbol]] = offset %parameter_struct.1 .generic_symbol
   %53: [compiler.checker.checked.Generic_Struct_Symbol] = load %52
@@ -11575,14 +11589,14 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   %61: bool = phi @17 %55 @19 %60
   br %61 @21 @22
 @21:
-  .line 2:1843:21
+  .line 2:1844:21
   %parameter_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &parameter_type_argument %parameter_type_argument.ptr
   %parameter_struct.3: [compiler.checker.checked.Struct_Type] = load %parameter_struct.ptr
   %62: [[compiler.checker.checked.Type_Argument]] = offset %parameter_struct.3 .first_type_argument
   %63: [compiler.checker.checked.Type_Argument] = load %62
   store %parameter_type_argument.ptr %63
-  .line 2:1844:21
+  .line 2:1845:21
   %argument_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &argument_type_argument %argument_type_argument.ptr
   %argument_struct.2: [compiler.checker.checked.Struct_Type] = load %argument_struct.ptr
@@ -11591,13 +11605,13 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   store %argument_type_argument.ptr %65
   jmp @23
 @23:
-  .line 2:1845:21
+  .line 2:1846:21
   %parameter_type_argument.1: [compiler.checker.checked.Type_Argument] = load %parameter_type_argument.ptr
   %66: [compiler.checker.checked.Type_Argument] = const null
   %67: bool = cmp_ne %parameter_type_argument.1 %66
   br %67 @24 @25
 @24:
-  .line 2:1846:25
+  .line 2:1847:25
   %parameter_type_argument.2: [compiler.checker.checked.Type_Argument] = load %parameter_type_argument.ptr
   %68: [[compiler.checker.checked.Type]] = offset %parameter_type_argument.2 .type
   %69: [compiler.checker.checked.Type] = load %68
@@ -11605,12 +11619,12 @@ $([compiler.checker.Checker]).bind_placeholder(%self, %parameter_type: [compiler
   %70: [[compiler.checker.checked.Type]] = offset %argument_type_argument.1 .type
   %71: [compiler.checker.checked.Type] = load %70
   call $([compiler.checker.Checker]).bind_placeholder %self %69 %71 %location
-  .line 2:1847:25
+  .line 2:1848:25
   %parameter_type_argument.3: [compiler.checker.checked.Type_Argument] = load %parameter_type_argument.ptr
   %72: [[compiler.checker.checked.Type_Argument]] = offset %parameter_type_argument.3 .next
   %73: [compiler.checker.checked.Type_Argument] = load %72
   store %parameter_type_argument.ptr %73
-  .line 2:1848:25
+  .line 2:1849:25
   %argument_type_argument.2: [compiler.checker.checked.Type_Argument] = load %argument_type_argument.ptr
   %74: [[compiler.checker.checked.Type_Argument]] = offset %argument_type_argument.2 .next
   %75: [compiler.checker.checked.Type_Argument] = load %74
@@ -11632,7 +11646,7 @@ $([compiler.checker.Checker]).find_generic_method(%self, %name: String): [compil
 @1:
   .bind self %self
   .bind name %name
-  .line 2:1859:5
+  .line 2:1860:5
   %generic_method.ptr: [[compiler.checker.checked.Generic_Method]] = alloc [compiler.checker.checked.Generic_Method]
   .bind &generic_method %generic_method.ptr
   %1: [[compiler.checker.checked.Generic_Method]] = offset %self .first_generic_method
@@ -11640,13 +11654,13 @@ $([compiler.checker.Checker]).find_generic_method(%self, %name: String): [compil
   store %generic_method.ptr %2
   jmp @2
 @2:
-  .line 2:1860:5
+  .line 2:1861:5
   %generic_method.1: [compiler.checker.checked.Generic_Method] = load %generic_method.ptr
   %3: [compiler.checker.checked.Generic_Method] = const null
   %4: bool = cmp_ne %generic_method.1 %3
   br %4 @3 @4
 @3:
-  .line 2:1861:9
+  .line 2:1862:9
   %generic_method.2: [compiler.checker.checked.Generic_Method] = load %generic_method.ptr
   %5: [[compiler.checker.checked.Generic_Procedure_Symbol]] = offset %generic_method.2 .symbol
   %6: [compiler.checker.checked.Generic_Procedure_Symbol] = load %5
@@ -11657,20 +11671,20 @@ $([compiler.checker.Checker]).find_generic_method(%self, %name: String): [compil
   %11: bool = call $(String).equals %10 %name
   br %11 @5 @6
 @5:
-  .line 2:1862:13
+  .line 2:1863:13
   %generic_method.3: [compiler.checker.checked.Generic_Method] = load %generic_method.ptr
   %12: [[compiler.checker.checked.Generic_Procedure_Symbol]] = offset %generic_method.3 .symbol
   %13: [compiler.checker.checked.Generic_Procedure_Symbol] = load %12
   ret %13
 @6:
-  .line 2:1864:9
+  .line 2:1865:9
   %generic_method.4: [compiler.checker.checked.Generic_Method] = load %generic_method.ptr
   %14: [[compiler.checker.checked.Generic_Method]] = offset %generic_method.4 .next
   %15: [compiler.checker.checked.Generic_Method] = load %14
   store %generic_method.ptr %15
   jmp @2
 @4:
-  .line 2:1866:5
+  .line 2:1867:5
   %16: [compiler.checker.checked.Generic_Procedure_Symbol] = const null
   ret %16
 }
@@ -11681,19 +11695,19 @@ $([compiler.checker.Checker]).finish_inference(%self, %generic_symbol: [compiler
   .bind generic_symbol %generic_symbol
   .bind first_type_argument %first_type_argument
   .bind location %location
-  .line 2:1871:5
+  .line 2:1872:5
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   store %type_argument.ptr %first_type_argument
   jmp @2
 @2:
-  .line 2:1872:5
+  .line 2:1873:5
   %type_argument.1: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %1: [compiler.checker.checked.Type_Argument] = const null
   %2: bool = cmp_ne %type_argument.1 %1
   br %2 @3 @4
 @3:
-  .line 2:1873:9
+  .line 2:1874:9
   %placeholder.ptr: [[compiler.checker.checked.Placeholder_Type]] = alloc [compiler.checker.checked.Placeholder_Type]
   .bind &placeholder %placeholder.ptr
   %type_argument.2: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
@@ -11701,7 +11715,7 @@ $([compiler.checker.Checker]).finish_inference(%self, %generic_symbol: [compiler
   %4: [compiler.checker.checked.Type] = load %3
   %5: [compiler.checker.checked.Placeholder_Type] = cast %4
   store %placeholder.ptr %5
-  .line 2:1874:9
+  .line 2:1875:9
   %placeholder.1: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %6: [[compiler.checker.checked.Type]] = offset %placeholder.1 .resolved
   %7: [compiler.checker.checked.Type] = load %6
@@ -11709,16 +11723,16 @@ $([compiler.checker.Checker]).finish_inference(%self, %generic_symbol: [compiler
   %9: bool = cmp_eq %7 %8
   br %9 @5 @6
 @5:
-  .line 2:1875:13
+  .line 2:1876:13
   %10: [FILE] = load $stderr
   %11: i32 = const 1
   %12: [FILE] = call $([FILE]).begin_location_message %10 %location %11
   %13: usize = const 27
-  %14: String = struct .data $str_185 .length %13
+  %14: String = struct .data $str_186 .length %13
   %15: [FILE] = call $([FILE]).write %12 %14
   %16: [FILE] = call $([FILE]).end_location_message %15
-  .line 2:1876:13
-  %17: [Any] = cast $str_187
+  .line 2:1877:13
+  %17: [Any] = cast $str_188
   %18: usize = const 1
   %19: usize = const 58
   %20: [FILE] = load $stderr
@@ -11727,21 +11741,21 @@ $([compiler.checker.Checker]).finish_inference(%self, %generic_symbol: [compiler
   call $exit %22
   jmp @6
 @6:
-  .line 2:1878:9
+  .line 2:1879:9
   %type_argument.3: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %23: [[compiler.checker.checked.Type]] = offset %type_argument.3 .type
   %placeholder.2: [compiler.checker.checked.Placeholder_Type] = load %placeholder.ptr
   %24: [[compiler.checker.checked.Type]] = offset %placeholder.2 .resolved
   %25: [compiler.checker.checked.Type] = load %24
   store %23 %25
-  .line 2:1879:9
+  .line 2:1880:9
   %type_argument.4: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %26: [[compiler.checker.checked.Type_Argument]] = offset %type_argument.4 .next
   %27: [compiler.checker.checked.Type_Argument] = load %26
   store %type_argument.ptr %27
   jmp @2
 @4:
-  .line 2:1881:5
+  .line 2:1882:5
   %28: [compiler.checker.checked.Procedure_Symbol] = call $([compiler.checker.Checker]).instantiate_procedure %self %generic_symbol %first_type_argument
   ret %28
 }
@@ -11752,24 +11766,24 @@ $([compiler.checker.Checker]).make_type_parameter_scope(%self, %package: [compil
   .bind package %package
   .bind first_type_parameter %first_type_parameter
   .bind first_type_argument %first_type_argument
-  .line 2:1885:5
+  .line 2:1886:5
   %scope.ptr: [[compiler.checker.checked.Symbols]] = alloc [compiler.checker.checked.Symbols]
   .bind &scope %scope.ptr
   %1: [[compiler.checker.checked.Symbols]] = offset %package .symbols
   %2: [compiler.checker.checked.Symbols] = load %1
   %3: [compiler.checker.checked.Symbols] = call $compiler.checker.checked.new_symbols %2
   store %scope.ptr %3
-  .line 2:1886:5
+  .line 2:1887:5
   %type_parameter.ptr: [[compiler.parser.parsed.Type_Parameter]] = alloc [compiler.parser.parsed.Type_Parameter]
   .bind &type_parameter %type_parameter.ptr
   store %type_parameter.ptr %first_type_parameter
-  .line 2:1887:5
+  .line 2:1888:5
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   store %type_argument.ptr %first_type_argument
   jmp @2
 @2:
-  .line 2:1888:5
+  .line 2:1889:5
   %type_parameter.1: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %4: [compiler.parser.parsed.Type_Parameter] = const null
   %5: bool = cmp_ne %type_parameter.1 %4
@@ -11783,7 +11797,7 @@ $([compiler.checker.Checker]).make_type_parameter_scope(%self, %package: [compil
   %8: bool = phi @2 %5 @5 %7
   br %8 @3 @4
 @3:
-  .line 2:1889:9
+  .line 2:1890:9
   %scope.1: [compiler.checker.checked.Symbols] = load %scope.ptr
   %type_parameter.2: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %9: [[compiler.lexer.Identifier]] = offset %type_parameter.2 .name
@@ -11803,19 +11817,19 @@ $([compiler.checker.Checker]).make_type_parameter_scope(%self, %package: [compil
   %21: [compiler.checker.checked.Type_Symbol] = call $compiler.checker.checked.new_type_symbol %18 %20
   %22: [compiler.checker.checked.Symbol] = cast %21
   call $([compiler.checker.checked.Symbols]).append %scope.1 %13 %22
-  .line 2:1890:9
+  .line 2:1891:9
   %type_parameter.4: [compiler.parser.parsed.Type_Parameter] = load %type_parameter.ptr
   %23: [[compiler.parser.parsed.Type_Parameter]] = offset %type_parameter.4 .next
   %24: [compiler.parser.parsed.Type_Parameter] = load %23
   store %type_parameter.ptr %24
-  .line 2:1891:9
+  .line 2:1892:9
   %type_argument.3: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %25: [[compiler.checker.checked.Type_Argument]] = offset %type_argument.3 .next
   %26: [compiler.checker.checked.Type_Argument] = load %25
   store %type_argument.ptr %26
   jmp @2
 @4:
-  .line 2:1893:5
+  .line 2:1894:5
   %scope.2: [compiler.checker.checked.Symbols] = load %scope.ptr
   ret %scope.2
 }
@@ -11825,29 +11839,29 @@ $([compiler.checker.Checker]).receiver_accepts(%self, %receiver_type: [compiler.
   .bind self %self
   .bind receiver_type %receiver_type
   .bind object_type %object_type
-  .line 2:1897:5
+  .line 2:1898:5
   %1: bool = call $([compiler.checker.checked.Type]).equals %receiver_type %object_type
   br %1 @2 @3
 @2:
-  .line 2:1898:9
+  .line 2:1899:9
   %2: bool = const true
   ret %2
 @3:
-  .line 2:1900:5
+  .line 2:1901:5
   %3: [i32] = offset %object_type .kind
   %4: i32 = load %3
   %5: i32 = const 14
   %6: bool = cmp_eq %4 %5
   br %6 @4 @5
 @4:
-  .line 2:1901:9
+  .line 2:1902:9
   %pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.ptr
   %7: [compiler.checker.checked.Pointer_Type] = cast %object_type
   %8: [[compiler.checker.checked.Type]] = offset %7 .pointee
   %9: [compiler.checker.checked.Type] = load %8
   store %pointee.ptr %9
-  .line 2:1902:9
+  .line 2:1903:9
   %pointee.1: [compiler.checker.checked.Type] = load %pointee.ptr
   %10: [i32] = offset %pointee.1 .kind
   %11: i32 = load %10
@@ -11855,13 +11869,13 @@ $([compiler.checker.Checker]).receiver_accepts(%self, %receiver_type: [compiler.
   %13: bool = cmp_eq %11 %12
   br %13 @6 @7
 @6:
-  .line 2:1903:13
+  .line 2:1904:13
   %struct_type.ptr: [[compiler.checker.checked.Struct_Type]] = alloc [compiler.checker.checked.Struct_Type]
   .bind &struct_type %struct_type.ptr
   %pointee.2: [compiler.checker.checked.Type] = load %pointee.ptr
   %14: [compiler.checker.checked.Struct_Type] = cast %pointee.2
   store %struct_type.ptr %14
-  .line 2:1904:13
+  .line 2:1905:13
   %struct_type.1: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
   %15: [[compiler.checker.checked.Struct_Member]] = offset %struct_type.1 .first_member
   %16: [compiler.checker.checked.Struct_Member] = load %15
@@ -11882,7 +11896,7 @@ $([compiler.checker.Checker]).receiver_accepts(%self, %receiver_type: [compiler.
   %26: bool = phi @6 %18 @8 %25
   br %26 @10 @11
 @10:
-  .line 2:1905:17
+  .line 2:1906:17
   %struct_type.3: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
   %27: [[compiler.checker.checked.Struct_Member]] = offset %struct_type.3 .first_member
   %28: [compiler.checker.checked.Struct_Member] = load %27
@@ -11897,7 +11911,7 @@ $([compiler.checker.Checker]).receiver_accepts(%self, %receiver_type: [compiler.
 @7:
   jmp @5
 @5:
-  .line 2:1909:5
+  .line 2:1910:5
   %34: bool = const false
   ret %34
 }
@@ -11906,12 +11920,12 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
 @1:
   .bind self %self
   .bind expression %expression
-  .line 2:1913:5
+  .line 2:1914:5
   %1: [i32] = offset %expression .kind
   %2: i32 = load %1
   brx %2 @3 @4 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @7 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @3 @12 @3 @3 @3
 @4:
-  .line 2:1915:13
+  .line 2:1916:13
   %pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.ptr
   %3: [compiler.parser.parsed.Unary_Expression] = cast %expression
@@ -11919,13 +11933,13 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
   %5: [compiler.parser.parsed.Expression] = load %4
   %6: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_expression_type %self %5
   store %pointee.ptr %6
-  .line 2:1916:13
+  .line 2:1917:13
   %pointee.1: [compiler.checker.checked.Type] = load %pointee.ptr
   %7: [compiler.checker.checked.Type] = const null
   %8: bool = cmp_ne %pointee.1 %7
   br %8 @5 @6
 @5:
-  .line 2:1917:17
+  .line 2:1918:17
   %pointee.2: [compiler.checker.checked.Type] = load %pointee.ptr
   %9: [compiler.checker.checked.Pointer_Type] = call $compiler.checker.checked.new_pointer_type %pointee.2
   %10: [compiler.checker.checked.Type] = cast %9
@@ -11933,7 +11947,7 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
 @6:
   jmp @2
 @7:
-  .line 2:1921:13
+  .line 2:1922:13
   %symbol.ptr: [[compiler.checker.checked.Symbol]] = alloc [compiler.checker.checked.Symbol]
   .bind &symbol %symbol.ptr
   %11: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
@@ -11946,7 +11960,7 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
   %18: String = load %17
   %19: [compiler.checker.checked.Symbol] = call $([compiler.checker.checked.Symbols]).find %12 %18
   store %symbol.ptr %19
-  .line 2:1922:13
+  .line 2:1923:13
   %symbol.1: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %20: [compiler.checker.checked.Symbol] = const null
   %21: bool = cmp_ne %symbol.1 %20
@@ -11962,7 +11976,7 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
   %26: bool = phi @7 %21 @8 %25
   br %26 @10 @11
 @10:
-  .line 2:1923:17
+  .line 2:1924:17
   %symbol.3: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %27: [compiler.checker.checked.Type_Symbol] = cast %symbol.3
   %28: [[compiler.checker.checked.Type]] = offset %27 .type
@@ -11971,7 +11985,7 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
 @11:
   jmp @2
 @12:
-  .line 2:1927:13
+  .line 2:1928:13
   %30: [compiler.parser.parsed.Type_Expression] = cast %expression
   %31: [[compiler.parser.parsed.Type]] = offset %30 .type
   %32: [compiler.parser.parsed.Type] = load %31
@@ -11980,7 +11994,7 @@ $([compiler.checker.Checker]).resolve_expression_type(%self, %expression: [compi
 @3:
   jmp @2
 @2:
-  .line 2:1932:5
+  .line 2:1933:5
   %34: [compiler.checker.checked.Type] = const null
   ret %34
 }
@@ -11990,7 +12004,7 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   .bind self %self
   .bind receiver_type %receiver_type
   .bind name %name
-  .line 2:1936:5
+  .line 2:1937:5
   %method.ptr: [[compiler.checker.checked.Method]] = alloc [compiler.checker.checked.Method]
   .bind &method %method.ptr
   %1: [[compiler.checker.checked.Method]] = offset %self .first_method
@@ -11998,13 +12012,13 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   store %method.ptr %2
   jmp @2
 @2:
-  .line 2:1937:5
+  .line 2:1938:5
   %method.1: [compiler.checker.checked.Method] = load %method.ptr
   %3: [compiler.checker.checked.Method] = const null
   %4: bool = cmp_ne %method.1 %3
   br %4 @3 @4
 @3:
-  .line 2:1938:9
+  .line 2:1939:9
   %method.2: [compiler.checker.checked.Method] = load %method.ptr
   %5: [[compiler.checker.checked.Procedure_Symbol]] = offset %method.2 .symbol
   %6: [compiler.checker.checked.Procedure_Symbol] = load %5
@@ -12024,34 +12038,34 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   %15: bool = phi @3 %11 @5 %14
   br %15 @7 @8
 @7:
-  .line 2:1939:13
+  .line 2:1940:13
   %method.4: [compiler.checker.checked.Method] = load %method.ptr
   %16: [[compiler.checker.checked.Procedure_Symbol]] = offset %method.4 .symbol
   %17: [compiler.checker.checked.Procedure_Symbol] = load %16
   ret %17
 @8:
-  .line 2:1941:9
+  .line 2:1942:9
   %method.5: [compiler.checker.checked.Method] = load %method.ptr
   %18: [[compiler.checker.checked.Method]] = offset %method.5 .next
   %19: [compiler.checker.checked.Method] = load %18
   store %method.ptr %19
   jmp @2
 @4:
-  .line 2:1943:5
+  .line 2:1944:5
   %20: [i32] = offset %receiver_type .kind
   %21: i32 = load %20
   %22: i32 = const 14
   %23: bool = cmp_eq %21 %22
   br %23 @9 @10
 @9:
-  .line 2:1944:9
+  .line 2:1945:9
   %pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.ptr
   %24: [compiler.checker.checked.Pointer_Type] = cast %receiver_type
   %25: [[compiler.checker.checked.Type]] = offset %24 .pointee
   %26: [compiler.checker.checked.Type] = load %25
   store %pointee.ptr %26
-  .line 2:1945:9
+  .line 2:1946:9
   %pointee.1: [compiler.checker.checked.Type] = load %pointee.ptr
   %27: [i32] = offset %pointee.1 .kind
   %28: i32 = load %27
@@ -12059,13 +12073,13 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   %30: bool = cmp_eq %28 %29
   br %30 @11 @12
 @11:
-  .line 2:1946:13
+  .line 2:1947:13
   %struct_type.ptr: [[compiler.checker.checked.Struct_Type]] = alloc [compiler.checker.checked.Struct_Type]
   .bind &struct_type %struct_type.ptr
   %pointee.2: [compiler.checker.checked.Type] = load %pointee.ptr
   %31: [compiler.checker.checked.Struct_Type] = cast %pointee.2
   store %struct_type.ptr %31
-  .line 2:1947:13
+  .line 2:1948:13
   %struct_type.1: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
   %32: [[compiler.checker.checked.Struct_Member]] = offset %struct_type.1 .first_member
   %33: [compiler.checker.checked.Struct_Member] = load %32
@@ -12086,7 +12100,7 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   %43: bool = phi @11 %35 @13 %42
   br %43 @15 @16
 @15:
-  .line 2:1948:17
+  .line 2:1949:17
   %super_receiver_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &super_receiver_type %super_receiver_type.ptr
   %struct_type.3: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
@@ -12097,7 +12111,7 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
   %48: [compiler.checker.checked.Pointer_Type] = call $compiler.checker.checked.new_pointer_type %47
   %49: [compiler.checker.checked.Type] = cast %48
   store %super_receiver_type.ptr %49
-  .line 2:1949:17
+  .line 2:1950:17
   %super_receiver_type.1: [compiler.checker.checked.Type] = load %super_receiver_type.ptr
   %50: [compiler.checker.checked.Procedure_Symbol] = call $([compiler.checker.Checker]).resolve_method_symbol %self %super_receiver_type.1 %name
   ret %50
@@ -12106,7 +12120,7 @@ $([compiler.checker.Checker]).resolve_method_symbol(%self, %receiver_type: [comp
 @12:
   jmp @10
 @10:
-  .line 2:1953:5
+  .line 2:1954:5
   %51: [compiler.checker.checked.Procedure_Symbol] = const null
   ret %51
 }
@@ -12115,17 +12129,17 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
 @1:
   .bind self %self
   .bind type %type
-  .line 2:1958:5
+  .line 2:1959:5
   %1: [i32] = offset %type .kind
   %2: i32 = load %1
   brx %2 @3 @4 @3 @3 @3 @3 @3 @3 @3 @3 @3 @9 @3 @14 @15 @3 @3 @20 @3 @3 @3 @3 @3 @3
 @4:
-  .line 2:1960:13
+  .line 2:1961:13
   %array_type.ptr: [[compiler.checker.checked.Array_Type]] = alloc [compiler.checker.checked.Array_Type]
   .bind &array_type %array_type.ptr
   %3: [compiler.checker.checked.Array_Type] = cast %type
   store %array_type.ptr %3
-  .line 2:1961:13
+  .line 2:1962:13
   %item_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &item_type %item_type.ptr
   %array_type.1: [compiler.checker.checked.Array_Type] = load %array_type.ptr
@@ -12133,7 +12147,7 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %5: [compiler.checker.checked.Type] = load %4
   %6: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_placeholders %self %5
   store %item_type.ptr %6
-  .line 2:1962:13
+  .line 2:1963:13
   %item_type.1: [compiler.checker.checked.Type] = load %item_type.ptr
   %array_type.2: [compiler.checker.checked.Array_Type] = load %array_type.ptr
   %7: [[compiler.checker.checked.Type]] = offset %array_type.2 .item_type
@@ -12141,20 +12155,20 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %9: bool = cmp_eq %item_type.1 %8
   br %9 @5 @6
 @5:
-  .line 2:1963:17
+  .line 2:1964:17
   ret %type
 @6:
-  .line 2:1965:13
+  .line 2:1966:13
   %item_type.2: [compiler.checker.checked.Type] = load %item_type.ptr
   %10: [compiler.checker.checked.Type] = const null
   %11: bool = cmp_eq %item_type.2 %10
   br %11 @7 @8
 @7:
-  .line 2:1966:17
+  .line 2:1967:17
   %12: [compiler.checker.checked.Type] = const null
   ret %12
 @8:
-  .line 2:1968:13
+  .line 2:1969:13
   %item_type.3: [compiler.checker.checked.Type] = load %item_type.ptr
   %array_type.3: [compiler.checker.checked.Array_Type] = load %array_type.ptr
   %13: [u64] = offset %array_type.3 .size
@@ -12163,94 +12177,94 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %16: [compiler.checker.checked.Type] = cast %15
   ret %16
 @9:
-  .line 2:1971:13
+  .line 2:1972:13
   %pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.ptr
   %17: [compiler.checker.checked.Multi_Pointer_Type] = cast %type
   %18: [[compiler.checker.checked.Type]] = offset %17 .pointee
   %19: [compiler.checker.checked.Type] = load %18
   store %pointee.ptr %19
-  .line 2:1972:13
+  .line 2:1973:13
   %resolved_pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &resolved_pointee %resolved_pointee.ptr
   %pointee.1: [compiler.checker.checked.Type] = load %pointee.ptr
   %20: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_placeholders %self %pointee.1
   store %resolved_pointee.ptr %20
-  .line 2:1973:13
+  .line 2:1974:13
   %resolved_pointee.1: [compiler.checker.checked.Type] = load %resolved_pointee.ptr
   %pointee.2: [compiler.checker.checked.Type] = load %pointee.ptr
   %21: bool = cmp_eq %resolved_pointee.1 %pointee.2
   br %21 @10 @11
 @10:
-  .line 2:1974:17
+  .line 2:1975:17
   ret %type
 @11:
-  .line 2:1976:13
+  .line 2:1977:13
   %resolved_pointee.2: [compiler.checker.checked.Type] = load %resolved_pointee.ptr
   %22: [compiler.checker.checked.Type] = const null
   %23: bool = cmp_eq %resolved_pointee.2 %22
   br %23 @12 @13
 @12:
-  .line 2:1977:17
+  .line 2:1978:17
   %24: [compiler.checker.checked.Type] = const null
   ret %24
 @13:
-  .line 2:1979:13
+  .line 2:1980:13
   %resolved_pointee.3: [compiler.checker.checked.Type] = load %resolved_pointee.ptr
   %25: [compiler.checker.checked.Multi_Pointer_Type] = call $compiler.checker.checked.new_multi_pointer_type %resolved_pointee.3
   %26: [compiler.checker.checked.Type] = cast %25
   ret %26
 @14:
-  .line 2:1982:13
+  .line 2:1983:13
   %27: [compiler.checker.checked.Placeholder_Type] = cast %type
   %28: [[compiler.checker.checked.Type]] = offset %27 .resolved
   %29: [compiler.checker.checked.Type] = load %28
   ret %29
 @15:
-  .line 2:1985:13
+  .line 2:1986:13
   %pointee.2.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.2.ptr
   %30: [compiler.checker.checked.Pointer_Type] = cast %type
   %31: [[compiler.checker.checked.Type]] = offset %30 .pointee
   %32: [compiler.checker.checked.Type] = load %31
   store %pointee.2.ptr %32
-  .line 2:1986:13
+  .line 2:1987:13
   %resolved_pointee.2.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &resolved_pointee %resolved_pointee.2.ptr
   %pointee.2.1: [compiler.checker.checked.Type] = load %pointee.2.ptr
   %33: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_placeholders %self %pointee.2.1
   store %resolved_pointee.2.ptr %33
-  .line 2:1987:13
+  .line 2:1988:13
   %resolved_pointee.2.1: [compiler.checker.checked.Type] = load %resolved_pointee.2.ptr
   %pointee.2.2: [compiler.checker.checked.Type] = load %pointee.2.ptr
   %34: bool = cmp_eq %resolved_pointee.2.1 %pointee.2.2
   br %34 @16 @17
 @16:
-  .line 2:1988:17
+  .line 2:1989:17
   ret %type
 @17:
-  .line 2:1990:13
+  .line 2:1991:13
   %resolved_pointee.2.2: [compiler.checker.checked.Type] = load %resolved_pointee.2.ptr
   %35: [compiler.checker.checked.Type] = const null
   %36: bool = cmp_eq %resolved_pointee.2.2 %35
   br %36 @18 @19
 @18:
-  .line 2:1991:17
+  .line 2:1992:17
   %37: [compiler.checker.checked.Type] = const null
   ret %37
 @19:
-  .line 2:1993:13
+  .line 2:1994:13
   %resolved_pointee.2.3: [compiler.checker.checked.Type] = load %resolved_pointee.2.ptr
   %38: [compiler.checker.checked.Pointer_Type] = call $compiler.checker.checked.new_pointer_type %resolved_pointee.2.3
   %39: [compiler.checker.checked.Type] = cast %38
   ret %39
 @20:
-  .line 2:1996:13
+  .line 2:1997:13
   %struct_type.ptr: [[compiler.checker.checked.Struct_Type]] = alloc [compiler.checker.checked.Struct_Type]
   .bind &struct_type %struct_type.ptr
   %40: [compiler.checker.checked.Struct_Type] = cast %type
   store %struct_type.ptr %40
-  .line 2:1997:13
+  .line 2:1998:13
   %struct_type.1: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
   %41: [[compiler.checker.checked.Generic_Struct_Symbol]] = offset %struct_type.1 .generic_symbol
   %42: [compiler.checker.checked.Generic_Struct_Symbol] = load %41
@@ -12258,25 +12272,25 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %44: bool = cmp_eq %42 %43
   br %44 @21 @22
 @21:
-  .line 2:1998:17
+  .line 2:1999:17
   ret %type
 @22:
-  .line 2:2000:13
+  .line 2:2001:13
   %changed.ptr: [bool] = alloc bool
   .bind &changed %changed.ptr
   %45: bool = const false
   store %changed.ptr %45
-  .line 2:2001:13
+  .line 2:2002:13
   %first_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &first_type_argument %first_type_argument.ptr
   %46: [compiler.checker.checked.Type_Argument] = const null
   store %first_type_argument.ptr %46
-  .line 2:2002:13
+  .line 2:2003:13
   %last_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &last_type_argument %last_type_argument.ptr
   %47: [compiler.checker.checked.Type_Argument] = const null
   store %last_type_argument.ptr %47
-  .line 2:2003:13
+  .line 2:2004:13
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   %struct_type.2: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
@@ -12285,13 +12299,13 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   store %type_argument.ptr %49
   jmp @23
 @23:
-  .line 2:2004:13
+  .line 2:2005:13
   %type_argument.1: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %50: [compiler.checker.checked.Type_Argument] = const null
   %51: bool = cmp_ne %type_argument.1 %50
   br %51 @24 @25
 @24:
-  .line 2:2005:17
+  .line 2:2006:17
   %resolved_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &resolved_type %resolved_type.ptr
   %type_argument.2: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
@@ -12299,17 +12313,17 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %53: [compiler.checker.checked.Type] = load %52
   %54: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_placeholders %self %53
   store %resolved_type.ptr %54
-  .line 2:2006:17
+  .line 2:2007:17
   %resolved_type.1: [compiler.checker.checked.Type] = load %resolved_type.ptr
   %55: [compiler.checker.checked.Type] = const null
   %56: bool = cmp_eq %resolved_type.1 %55
   br %56 @26 @27
 @26:
-  .line 2:2007:21
+  .line 2:2008:21
   %57: [compiler.checker.checked.Type] = const null
   ret %57
 @27:
-  .line 2:2009:17
+  .line 2:2010:17
   %resolved_type.2: [compiler.checker.checked.Type] = load %resolved_type.ptr
   %type_argument.3: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %58: [[compiler.checker.checked.Type]] = offset %type_argument.3 .type
@@ -12317,54 +12331,54 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %60: bool = cmp_ne %resolved_type.2 %59
   br %60 @28 @29
 @28:
-  .line 2:2010:21
+  .line 2:2011:21
   %61: bool = const true
   store %changed.ptr %61
   jmp @29
 @29:
-  .line 2:2012:17
+  .line 2:2013:17
   %resolved_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &resolved_argument %resolved_argument.ptr
   %resolved_type.3: [compiler.checker.checked.Type] = load %resolved_type.ptr
   %62: [compiler.checker.checked.Type_Argument] = call $compiler.checker.checked.new_type_argument %resolved_type.3
   store %resolved_argument.ptr %62
-  .line 2:2013:17
+  .line 2:2014:17
   %last_type_argument.1: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %63: [compiler.checker.checked.Type_Argument] = const null
   %64: bool = cmp_eq %last_type_argument.1 %63
   br %64 @30 @31
 @30:
-  .line 2:2014:21
+  .line 2:2015:21
   %resolved_argument.1: [compiler.checker.checked.Type_Argument] = load %resolved_argument.ptr
   store %first_type_argument.ptr %resolved_argument.1
   jmp @32
 @31:
-  .line 2:2016:21
+  .line 2:2017:21
   %last_type_argument.2: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %65: [[compiler.checker.checked.Type_Argument]] = offset %last_type_argument.2 .next
   %resolved_argument.2: [compiler.checker.checked.Type_Argument] = load %resolved_argument.ptr
   store %65 %resolved_argument.2
   jmp @32
 @32:
-  .line 2:2018:17
+  .line 2:2019:17
   %resolved_argument.3: [compiler.checker.checked.Type_Argument] = load %resolved_argument.ptr
   store %last_type_argument.ptr %resolved_argument.3
-  .line 2:2019:17
+  .line 2:2020:17
   %type_argument.4: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   %66: [[compiler.checker.checked.Type_Argument]] = offset %type_argument.4 .next
   %67: [compiler.checker.checked.Type_Argument] = load %66
   store %type_argument.ptr %67
   jmp @23
 @25:
-  .line 2:2021:13
+  .line 2:2022:13
   %changed.1: bool = load %changed.ptr
   %68: bool = not %changed.1
   br %68 @33 @34
 @33:
-  .line 2:2022:17
+  .line 2:2023:17
   ret %type
 @34:
-  .line 2:2024:13
+  .line 2:2025:13
   %struct_type.3: [compiler.checker.checked.Struct_Type] = load %struct_type.ptr
   %69: [[compiler.checker.checked.Generic_Struct_Symbol]] = offset %struct_type.3 .generic_symbol
   %70: [compiler.checker.checked.Generic_Struct_Symbol] = load %69
@@ -12373,7 +12387,7 @@ $([compiler.checker.Checker]).resolve_placeholders(%self, %type: [compiler.check
   %72: [compiler.checker.checked.Type] = cast %71
   ret %72
 @3:
-  .line 2:2027:13
+  .line 2:2028:13
   ret %type
 @2:
 }
@@ -12382,22 +12396,22 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
 @1:
   .bind self %self
   .bind parsed_type %parsed_type
-  .line 2:2033:5
+  .line 2:2034:5
   %1: [i32] = offset %parsed_type .kind
   %2: i32 = load %1
   brx %2 @21 @22 @3 @23 @24 @2
 @3:
-  .line 2:2035:13
+  .line 2:2036:13
   %named_type.ptr: [[compiler.parser.parsed.Named_Type]] = alloc [compiler.parser.parsed.Named_Type]
   .bind &named_type %named_type.ptr
   %3: [compiler.parser.parsed.Named_Type] = cast %parsed_type
   store %named_type.ptr %3
-  .line 2:2036:13
+  .line 2:2037:13
   %symbol.ptr: [[compiler.checker.checked.Symbol]] = alloc [compiler.checker.checked.Symbol]
   .bind &symbol %symbol.ptr
   %4: [compiler.checker.checked.Symbol] = const null
   store %symbol.ptr %4
-  .line 2:2037:13
+  .line 2:2038:13
   %named_type.1: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %5: [[compiler.lexer.Identifier]] = offset %named_type.1 .module
   %6: [compiler.lexer.Identifier] = load %5
@@ -12405,7 +12419,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %8: bool = cmp_ne %6 %7
   br %8 @4 @5
 @4:
-  .line 2:2038:17
+  .line 2:2039:17
   %module_symbol.ptr: [[compiler.checker.checked.Symbol]] = alloc [compiler.checker.checked.Symbol]
   .bind &module_symbol %module_symbol.ptr
   %9: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
@@ -12418,13 +12432,13 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %15: String = load %14
   %16: [compiler.checker.checked.Symbol] = call $([compiler.checker.checked.Symbols]).find %10 %15
   store %module_symbol.ptr %16
-  .line 2:2039:17
+  .line 2:2040:17
   %module_symbol.1: [compiler.checker.checked.Symbol] = load %module_symbol.ptr
   %17: [compiler.checker.checked.Symbol] = const null
   %18: bool = cmp_eq %module_symbol.1 %17
   br %18 @7 @8
 @7:
-  .line 2:2040:21
+  .line 2:2041:21
   %19: [FILE] = load $stderr
   %named_type.3: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %20: [[compiler.lexer.Identifier]] = offset %named_type.3 .module
@@ -12435,11 +12449,11 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %25: i32 = const 1
   %26: [FILE] = call $([FILE]).begin_location_message %19 %24 %25
   %27: usize = const 17
-  %28: String = struct .data $str_188 .length %27
+  %28: String = struct .data $str_189 .length %27
   %29: [FILE] = call $([FILE]).write %26 %28
   %30: [FILE] = call $([FILE]).end_location_message %29
-  .line 2:2041:21
-  %31: [Any] = cast $str_189
+  .line 2:2042:21
+  %31: [Any] = cast $str_190
   %32: usize = const 1
   %33: usize = const 58
   %34: [FILE] = load $stderr
@@ -12448,7 +12462,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   call $exit %36
   jmp @8
 @8:
-  .line 2:2043:17
+  .line 2:2044:17
   %module_symbol.2: [compiler.checker.checked.Symbol] = load %module_symbol.ptr
   %37: [i32] = offset %module_symbol.2 .kind
   %38: i32 = load %37
@@ -12456,7 +12470,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %40: bool = cmp_ne %38 %39
   br %40 @9 @10
 @9:
-  .line 2:2044:21
+  .line 2:2045:21
   %41: [FILE] = load $stderr
   %named_type.4: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %42: [[compiler.lexer.Identifier]] = offset %named_type.4 .module
@@ -12467,11 +12481,11 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %47: i32 = const 1
   %48: [FILE] = call $([FILE]).begin_location_message %41 %46 %47
   %49: usize = const 13
-  %50: String = struct .data $str_190 .length %49
+  %50: String = struct .data $str_191 .length %49
   %51: [FILE] = call $([FILE]).write %48 %50
   %52: [FILE] = call $([FILE]).end_location_message %51
-  .line 2:2045:21
-  %53: [Any] = cast $str_191
+  .line 2:2046:21
+  %53: [Any] = cast $str_192
   %54: usize = const 1
   %55: usize = const 58
   %56: [FILE] = load $stderr
@@ -12480,7 +12494,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   call $exit %58
   jmp @10
 @10:
-  .line 2:2047:17
+  .line 2:2048:17
   %module_symbol.3: [compiler.checker.checked.Symbol] = load %module_symbol.ptr
   %59: [compiler.checker.checked.Import_Symbol] = cast %module_symbol.3
   %60: [[compiler.checker.checked.Package]] = offset %59 .package
@@ -12492,7 +12506,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   store %symbol.ptr %64
   jmp @6
 @5:
-  .line 2:2049:17
+  .line 2:2050:17
   %65: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %66: [compiler.checker.checked.Symbols] = load %65
   %named_type.6: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
@@ -12503,24 +12517,24 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %71: String = load %70
   %72: [compiler.checker.checked.Symbol] = call $([compiler.checker.checked.Symbols]).find %66 %71
   store %symbol.ptr %72
-  .line 2:2050:17
+  .line 2:2051:17
   %symbol.1: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %73: [compiler.checker.checked.Symbol] = const null
   %74: bool = cmp_eq %symbol.1 %73
   br %74 @11 @12
 @11:
-  .line 2:2051:21
+  .line 2:2052:21
   %package.ptr: [[compiler.checker.checked.Package]] = alloc [compiler.checker.checked.Package]
   .bind &package %package.ptr
   %75: [compiler.checker.checked.Package] = call $([compiler.checker.Checker]).current_package %self
   store %package.ptr %75
-  .line 2:2052:21
+  .line 2:2053:21
   %package.1: [compiler.checker.checked.Package] = load %package.ptr
   %76: [compiler.checker.checked.Package] = const null
   %77: bool = cmp_eq %package.1 %76
   br %77 @13 @14
 @13:
-  .line 2:2053:25
+  .line 2:2054:25
   %78: [FILE] = load $stderr
   %named_type.7: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %79: [compiler.parser.parsed.Type] = offset %named_type.7 .super
@@ -12529,11 +12543,11 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %82: i32 = const 1
   %83: [FILE] = call $([FILE]).begin_location_message %78 %81 %82
   %84: usize = const 12
-  %85: String = struct .data $str_192 .length %84
+  %85: String = struct .data $str_193 .length %84
   %86: [FILE] = call $([FILE]).write %83 %85
   %87: [FILE] = call $([FILE]).end_location_message %86
-  .line 2:2054:25
-  %88: [Any] = cast $str_193
+  .line 2:2055:25
+  %88: [Any] = cast $str_194
   %89: usize = const 1
   %90: usize = const 58
   %91: [FILE] = load $stderr
@@ -12542,7 +12556,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   call $exit %93
   jmp @14
 @14:
-  .line 2:2057:21
+  .line 2:2058:21
   %package.2: [compiler.checker.checked.Package] = load %package.ptr
   %named_type.8: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %94: [[compiler.lexer.Identifier]] = offset %named_type.8 .name
@@ -12553,7 +12567,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
 @12:
   jmp @6
 @6:
-  .line 2:2060:13
+  .line 2:2061:13
   %symbol.2: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %97: [i32] = offset %symbol.2 .kind
   %98: i32 = load %97
@@ -12561,7 +12575,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %100: bool = cmp_eq %98 %99
   br %100 @15 @16
 @15:
-  .line 2:2061:17
+  .line 2:2062:17
   %symbol.3: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %101: [compiler.checker.checked.Generic_Struct_Symbol] = cast %symbol.3
   %named_type.9: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
@@ -12569,7 +12583,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %103: [compiler.checker.checked.Type] = cast %102
   ret %103
 @16:
-  .line 2:2063:13
+  .line 2:2064:13
   %symbol.4: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %104: [i32] = offset %symbol.4 .kind
   %105: i32 = load %104
@@ -12577,7 +12591,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %107: bool = cmp_ne %105 %106
   br %107 @17 @18
 @17:
-  .line 2:2064:17
+  .line 2:2065:17
   %108: [FILE] = load $stderr
   %named_type.10: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %109: [compiler.parser.parsed.Type] = offset %named_type.10 .super
@@ -12586,11 +12600,11 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %112: i32 = const 1
   %113: [FILE] = call $([FILE]).begin_location_message %108 %111 %112
   %114: usize = const 20
-  %115: String = struct .data $str_194 .length %114
+  %115: String = struct .data $str_195 .length %114
   %116: [FILE] = call $([FILE]).write %113 %115
   %117: [FILE] = call $([FILE]).end_location_message %116
-  .line 2:2065:17
-  %118: [Any] = cast $str_195
+  .line 2:2066:17
+  %118: [Any] = cast $str_196
   %119: usize = const 1
   %120: usize = const 58
   %121: [FILE] = load $stderr
@@ -12599,7 +12613,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   call $exit %123
   jmp @18
 @18:
-  .line 2:2067:13
+  .line 2:2068:13
   %named_type.11: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %124: [[compiler.parser.parsed.Type_Argument]] = offset %named_type.11 .first_type_argument
   %125: [compiler.parser.parsed.Type_Argument] = load %124
@@ -12607,7 +12621,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %127: bool = cmp_ne %125 %126
   br %127 @19 @20
 @19:
-  .line 2:2068:17
+  .line 2:2069:17
   %128: [FILE] = load $stderr
   %named_type.12: [compiler.parser.parsed.Named_Type] = load %named_type.ptr
   %129: [compiler.parser.parsed.Type] = offset %named_type.12 .super
@@ -12616,11 +12630,11 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %132: i32 = const 1
   %133: [FILE] = call $([FILE]).begin_location_message %128 %131 %132
   %134: usize = const 18
-  %135: String = struct .data $str_196 .length %134
+  %135: String = struct .data $str_197 .length %134
   %136: [FILE] = call $([FILE]).write %133 %135
   %137: [FILE] = call $([FILE]).end_location_message %136
-  .line 2:2069:17
-  %138: [Any] = cast $str_197
+  .line 2:2070:17
+  %138: [Any] = cast $str_198
   %139: usize = const 1
   %140: usize = const 58
   %141: [FILE] = load $stderr
@@ -12629,19 +12643,19 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   call $exit %143
   jmp @20
 @20:
-  .line 2:2071:13
+  .line 2:2072:13
   %symbol.5: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %144: [compiler.checker.checked.Type_Symbol] = cast %symbol.5
   %145: [[compiler.checker.checked.Type]] = offset %144 .type
   %146: [compiler.checker.checked.Type] = load %145
   ret %146
 @21:
-  .line 2:2074:13
+  .line 2:2075:13
   %array_type.ptr: [[compiler.parser.parsed.Array_Type]] = alloc [compiler.parser.parsed.Array_Type]
   .bind &array_type %array_type.ptr
   %147: [compiler.parser.parsed.Array_Type] = cast %parsed_type
   store %array_type.ptr %147
-  .line 2:2075:13
+  .line 2:2076:13
   %item_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &item_type %item_type.ptr
   %array_type.1: [compiler.parser.parsed.Array_Type] = load %array_type.ptr
@@ -12649,7 +12663,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %149: [compiler.parser.parsed.Type] = load %148
   %150: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %149
   store %item_type.ptr %150
-  .line 2:2076:13
+  .line 2:2077:13
   %item_type.1: [compiler.checker.checked.Type] = load %item_type.ptr
   %array_type.2: [compiler.parser.parsed.Array_Type] = load %array_type.ptr
   %151: [[compiler.lexer.Integer]] = offset %array_type.2 .size
@@ -12660,12 +12674,12 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %156: [compiler.checker.checked.Type] = cast %155
   ret %156
 @22:
-  .line 2:2079:13
+  .line 2:2080:13
   %multi_pointer_type.ptr: [[compiler.parser.parsed.Multi_Pointer_Type]] = alloc [compiler.parser.parsed.Multi_Pointer_Type]
   .bind &multi_pointer_type %multi_pointer_type.ptr
   %157: [compiler.parser.parsed.Multi_Pointer_Type] = cast %parsed_type
   store %multi_pointer_type.ptr %157
-  .line 2:2080:13
+  .line 2:2081:13
   %pointee.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.ptr
   %multi_pointer_type.1: [compiler.parser.parsed.Multi_Pointer_Type] = load %multi_pointer_type.ptr
@@ -12673,18 +12687,18 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %159: [compiler.parser.parsed.Type] = load %158
   %160: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %159
   store %pointee.ptr %160
-  .line 2:2081:13
+  .line 2:2082:13
   %pointee.1: [compiler.checker.checked.Type] = load %pointee.ptr
   %161: [compiler.checker.checked.Multi_Pointer_Type] = call $compiler.checker.checked.new_multi_pointer_type %pointee.1
   %162: [compiler.checker.checked.Type] = cast %161
   ret %162
 @23:
-  .line 2:2084:13
+  .line 2:2085:13
   %pointer_type.ptr: [[compiler.parser.parsed.Pointer_Type]] = alloc [compiler.parser.parsed.Pointer_Type]
   .bind &pointer_type %pointer_type.ptr
   %163: [compiler.parser.parsed.Pointer_Type] = cast %parsed_type
   store %pointer_type.ptr %163
-  .line 2:2085:13
+  .line 2:2086:13
   %pointee.2.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &pointee %pointee.2.ptr
   %pointer_type.1: [compiler.parser.parsed.Pointer_Type] = load %pointer_type.ptr
@@ -12692,23 +12706,23 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %165: [compiler.parser.parsed.Type] = load %164
   %166: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %165
   store %pointee.2.ptr %166
-  .line 2:2086:13
+  .line 2:2087:13
   %pointee.2.1: [compiler.checker.checked.Type] = load %pointee.2.ptr
   %167: [compiler.checker.checked.Pointer_Type] = call $compiler.checker.checked.new_pointer_type %pointee.2.1
   %168: [compiler.checker.checked.Type] = cast %167
   ret %168
 @24:
-  .line 2:2089:13
+  .line 2:2090:13
   %procedure_type.ptr: [[compiler.parser.parsed.Procedure_Type]] = alloc [compiler.parser.parsed.Procedure_Type]
   .bind &procedure_type %procedure_type.ptr
   %169: [compiler.parser.parsed.Procedure_Type] = cast %parsed_type
   store %procedure_type.ptr %169
-  .line 2:2090:13
+  .line 2:2091:13
   %return_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &return_type %return_type.ptr
   %170: [compiler.checker.checked.Type] = const null
   store %return_type.ptr %170
-  .line 2:2091:13
+  .line 2:2092:13
   %procedure_type.1: [compiler.parser.parsed.Procedure_Type] = load %procedure_type.ptr
   %171: [[compiler.parser.parsed.Type]] = offset %procedure_type.1 .return_type
   %172: [compiler.parser.parsed.Type] = load %171
@@ -12716,7 +12730,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %174: bool = cmp_ne %172 %173
   br %174 @25 @26
 @25:
-  .line 2:2092:17
+  .line 2:2093:17
   %procedure_type.2: [compiler.parser.parsed.Procedure_Type] = load %procedure_type.ptr
   %175: [[compiler.parser.parsed.Type]] = offset %procedure_type.2 .return_type
   %176: [compiler.parser.parsed.Type] = load %175
@@ -12724,17 +12738,17 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   store %return_type.ptr %177
   jmp @26
 @26:
-  .line 2:2094:13
+  .line 2:2095:13
   %first_parameter.ptr: [[compiler.checker.checked.Procedure_Parameter]] = alloc [compiler.checker.checked.Procedure_Parameter]
   .bind &first_parameter %first_parameter.ptr
   %178: [compiler.checker.checked.Procedure_Parameter] = const null
   store %first_parameter.ptr %178
-  .line 2:2095:13
+  .line 2:2096:13
   %last_parameter.ptr: [[compiler.checker.checked.Procedure_Parameter]] = alloc [compiler.checker.checked.Procedure_Parameter]
   .bind &last_parameter %last_parameter.ptr
   %179: [compiler.checker.checked.Procedure_Parameter] = const null
   store %last_parameter.ptr %179
-  .line 2:2096:13
+  .line 2:2097:13
   %parsed_parameter.ptr: [[compiler.parser.parsed.Procedure_Parameter]] = alloc [compiler.parser.parsed.Procedure_Parameter]
   .bind &parsed_parameter %parsed_parameter.ptr
   %procedure_type.3: [compiler.parser.parsed.Procedure_Type] = load %procedure_type.ptr
@@ -12743,13 +12757,13 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   store %parsed_parameter.ptr %181
   jmp @27
 @27:
-  .line 2:2097:13
+  .line 2:2098:13
   %parsed_parameter.1: [compiler.parser.parsed.Procedure_Parameter] = load %parsed_parameter.ptr
   %182: [compiler.parser.parsed.Procedure_Parameter] = const null
   %183: bool = cmp_ne %parsed_parameter.1 %182
   br %183 @28 @29
 @28:
-  .line 2:2098:17
+  .line 2:2099:17
   %parameter_type.ptr: [[compiler.checker.checked.Type]] = alloc [compiler.checker.checked.Type]
   .bind &parameter_type %parameter_type.ptr
   %parsed_parameter.2: [compiler.parser.parsed.Procedure_Parameter] = load %parsed_parameter.ptr
@@ -12757,7 +12771,7 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %185: [compiler.parser.parsed.Type] = load %184
   %186: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %185
   store %parameter_type.ptr %186
-  .line 2:2099:17
+  .line 2:2100:17
   %parameter.ptr: [[compiler.checker.checked.Procedure_Parameter]] = alloc [compiler.checker.checked.Procedure_Parameter]
   .bind &parameter %parameter.ptr
   %187: [*]u8 = const null
@@ -12766,35 +12780,35 @@ $([compiler.checker.Checker]).resolve_type(%self, %parsed_type: [compiler.parser
   %parameter_type.1: [compiler.checker.checked.Type] = load %parameter_type.ptr
   %190: [compiler.checker.checked.Procedure_Parameter] = call $compiler.checker.checked.new_procedure_parameter %189 %parameter_type.1
   store %parameter.ptr %190
-  .line 2:2100:17
+  .line 2:2101:17
   %last_parameter.1: [compiler.checker.checked.Procedure_Parameter] = load %last_parameter.ptr
   %191: [compiler.checker.checked.Procedure_Parameter] = const null
   %192: bool = cmp_eq %last_parameter.1 %191
   br %192 @30 @31
 @30:
-  .line 2:2101:21
+  .line 2:2102:21
   %parameter.1: [compiler.checker.checked.Procedure_Parameter] = load %parameter.ptr
   store %first_parameter.ptr %parameter.1
   jmp @32
 @31:
-  .line 2:2103:21
+  .line 2:2104:21
   %last_parameter.2: [compiler.checker.checked.Procedure_Parameter] = load %last_parameter.ptr
   %193: [[compiler.checker.checked.Procedure_Parameter]] = offset %last_parameter.2 .next
   %parameter.2: [compiler.checker.checked.Procedure_Parameter] = load %parameter.ptr
   store %193 %parameter.2
   jmp @32
 @32:
-  .line 2:2105:17
+  .line 2:2106:17
   %parameter.3: [compiler.checker.checked.Procedure_Parameter] = load %parameter.ptr
   store %last_parameter.ptr %parameter.3
-  .line 2:2106:17
+  .line 2:2107:17
   %parsed_parameter.3: [compiler.parser.parsed.Procedure_Parameter] = load %parsed_parameter.ptr
   %194: [[compiler.parser.parsed.Procedure_Parameter]] = offset %parsed_parameter.3 .next
   %195: [compiler.parser.parsed.Procedure_Parameter] = load %194
   store %parsed_parameter.ptr %195
   jmp @27
 @29:
-  .line 2:2108:13
+  .line 2:2109:13
   %first_parameter.1: [compiler.checker.checked.Procedure_Parameter] = load %first_parameter.ptr
   %return_type.1: [compiler.checker.checked.Type] = load %return_type.ptr
   %196: [compiler.checker.checked.Procedure_Type] = call $compiler.checker.checked.new_procedure_type %first_parameter.1 %return_type.1
@@ -12808,7 +12822,7 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   .bind self %self
   .bind package %package
   .bind name %name
-  .line 2:2114:5
+  .line 2:2115:5
   %symbol.ptr: [[compiler.checker.checked.Symbol]] = alloc [compiler.checker.checked.Symbol]
   .bind &symbol %symbol.ptr
   %1: [[compiler.checker.checked.Symbols]] = offset %package .symbols
@@ -12818,17 +12832,17 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   %5: String = load %4
   %6: [compiler.checker.checked.Symbol] = call $([compiler.checker.checked.Symbols]).find_local %2 %5
   store %symbol.ptr %6
-  .line 2:2115:5
+  .line 2:2116:5
   %symbol.1: [compiler.checker.checked.Symbol] = load %symbol.ptr
   %7: [compiler.checker.checked.Symbol] = const null
   %8: bool = cmp_ne %symbol.1 %7
   br %8 @2 @3
 @2:
-  .line 2:2116:9
+  .line 2:2117:9
   %symbol.2: [compiler.checker.checked.Symbol] = load %symbol.ptr
   ret %symbol.2
 @3:
-  .line 2:2119:5
+  .line 2:2120:5
   %module.ptr: [[compiler.parser.parsed.Module]] = alloc [compiler.parser.parsed.Module]
   .bind &module %module.ptr
   %9: [[compiler.parser.parsed.Package]] = offset %package .parsed_package
@@ -12838,13 +12852,13 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   store %module.ptr %12
   jmp @4
 @4:
-  .line 2:2120:5
+  .line 2:2121:5
   %module.1: [compiler.parser.parsed.Module] = load %module.ptr
   %13: [compiler.parser.parsed.Module] = const null
   %14: bool = cmp_ne %module.1 %13
   br %14 @5 @6
 @5:
-  .line 2:2121:9
+  .line 2:2122:9
   %statement.ptr: [[compiler.parser.parsed.Statement]] = alloc [compiler.parser.parsed.Statement]
   .bind &statement %statement.ptr
   %module.2: [compiler.parser.parsed.Module] = load %module.ptr
@@ -12853,13 +12867,13 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   store %statement.ptr %16
   jmp @7
 @7:
-  .line 2:2122:9
+  .line 2:2123:9
   %statement.1: [compiler.parser.parsed.Statement] = load %statement.ptr
   %17: [compiler.parser.parsed.Statement] = const null
   %18: bool = cmp_ne %statement.1 %17
   br %18 @8 @9
 @8:
-  .line 2:2123:13
+  .line 2:2124:13
   %statement.2: [compiler.parser.parsed.Statement] = load %statement.ptr
   %19: [i32] = offset %statement.2 .kind
   %20: i32 = load %19
@@ -12867,13 +12881,13 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   %22: bool = cmp_eq %20 %21
   br %22 @10 @11
 @10:
-  .line 2:2124:17
+  .line 2:2125:17
   %type_statement.ptr: [[compiler.parser.parsed.Type_Statement]] = alloc [compiler.parser.parsed.Type_Statement]
   .bind &type_statement %type_statement.ptr
   %statement.3: [compiler.parser.parsed.Statement] = load %statement.ptr
   %23: [compiler.parser.parsed.Type_Statement] = cast %statement.3
   store %type_statement.ptr %23
-  .line 2:2125:17
+  .line 2:2126:17
   %type_statement.1: [compiler.parser.parsed.Type_Statement] = load %type_statement.ptr
   %24: [[compiler.lexer.Identifier]] = offset %type_statement.1 .name
   %25: [compiler.lexer.Identifier] = load %24
@@ -12886,25 +12900,25 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   %32: bool = call $(String).equals %28 %31
   br %32 @12 @13
 @12:
-  .line 2:2126:21
+  .line 2:2127:21
   %saved_symbols.ptr: [[compiler.checker.checked.Symbols]] = alloc [compiler.checker.checked.Symbols]
   .bind &saved_symbols %saved_symbols.ptr
   %33: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %34: [compiler.checker.checked.Symbols] = load %33
   store %saved_symbols.ptr %34
-  .line 2:2127:21
+  .line 2:2128:21
   %35: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %36: [[compiler.checker.checked.Symbols]] = offset %package .symbols
   %37: [compiler.checker.checked.Symbols] = load %36
   store %35 %37
-  .line 2:2128:21
+  .line 2:2129:21
   %type_statement.2: [compiler.parser.parsed.Type_Statement] = load %type_statement.ptr
   call $([compiler.checker.Checker]).check_global_type_statement %self %type_statement.2
-  .line 2:2129:21
+  .line 2:2130:21
   %38: [[compiler.checker.checked.Symbols]] = offset %self .current_scope
   %saved_symbols.1: [compiler.checker.checked.Symbols] = load %saved_symbols.ptr
   store %38 %saved_symbols.1
-  .line 2:2130:21
+  .line 2:2131:21
   %39: [[compiler.checker.checked.Symbols]] = offset %package .symbols
   %40: [compiler.checker.checked.Symbols] = load %39
   %41: [compiler.lexer.Token] = offset %name .super
@@ -12915,21 +12929,21 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
 @13:
   jmp @11
 @11:
-  .line 2:2133:13
+  .line 2:2134:13
   %statement.4: [compiler.parser.parsed.Statement] = load %statement.ptr
   %45: [[compiler.parser.parsed.Statement]] = offset %statement.4 .next
   %46: [compiler.parser.parsed.Statement] = load %45
   store %statement.ptr %46
   jmp @7
 @9:
-  .line 2:2135:9
+  .line 2:2136:9
   %module.3: [compiler.parser.parsed.Module] = load %module.ptr
   %47: [[compiler.parser.parsed.Module]] = offset %module.3 .next_module
   %48: [compiler.parser.parsed.Module] = load %47
   store %module.ptr %48
   jmp @4
 @6:
-  .line 2:2137:5
+  .line 2:2138:5
   %49: [FILE] = load $stderr
   %50: [compiler.lexer.Token] = offset %name .super
   %51: [compiler.source.Source_Location] = offset %50 .location
@@ -12937,11 +12951,11 @@ $([compiler.checker.Checker]).resolve_type_symbol(%self, %package: [compiler.che
   %53: i32 = const 1
   %54: [FILE] = call $([FILE]).begin_location_message %49 %52 %53
   %55: usize = const 12
-  %56: String = struct .data $str_192 .length %55
+  %56: String = struct .data $str_193 .length %55
   %57: [FILE] = call $([FILE]).write %54 %56
   %58: [FILE] = call $([FILE]).end_location_message %57
-  .line 2:2138:5
-  %59: [Any] = cast $str_198
+  .line 2:2139:5
+  %59: [Any] = cast $str_199
   %60: usize = const 1
   %61: usize = const 58
   %62: [FILE] = load $stderr
@@ -12955,14 +12969,14 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   .bind self %self
   .bind generic_symbol %generic_symbol
   .bind named_type %named_type
-  .line 2:2142:5
+  .line 2:2143:5
   %1: [[compiler.parser.parsed.Type_Argument]] = offset %named_type .first_type_argument
   %2: [compiler.parser.parsed.Type_Argument] = load %1
   %3: [compiler.parser.parsed.Type_Argument] = const null
   %4: bool = cmp_eq %2 %3
   br %4 @2 @3
 @2:
-  .line 2:2143:9
+  .line 2:2144:9
   %5: [FILE] = load $stderr
   %6: [compiler.parser.parsed.Type] = offset %named_type .super
   %7: [compiler.source.Source_Location] = offset %6 .location
@@ -12973,8 +12987,8 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   %12: String = struct .data $str_140 .length %11
   %13: [FILE] = call $([FILE]).write %10 %12
   %14: [FILE] = call $([FILE]).end_location_message %13
-  .line 2:2144:9
-  %15: [Any] = cast $str_199
+  .line 2:2145:9
+  %15: [Any] = cast $str_200
   %16: usize = const 1
   %17: usize = const 58
   %18: [FILE] = load $stderr
@@ -12983,22 +12997,22 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   call $exit %20
   jmp @3
 @3:
-  .line 2:2146:5
+  .line 2:2147:5
   %type_argument_count.ptr: [u64] = alloc u64
   .bind &type_argument_count %type_argument_count.ptr
   %21: u64 = const 0
   store %type_argument_count.ptr %21
-  .line 2:2147:5
+  .line 2:2148:5
   %first_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &first_type_argument %first_type_argument.ptr
   %22: [compiler.checker.checked.Type_Argument] = const null
   store %first_type_argument.ptr %22
-  .line 2:2148:5
+  .line 2:2149:5
   %last_type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &last_type_argument %last_type_argument.ptr
   %23: [compiler.checker.checked.Type_Argument] = const null
   store %last_type_argument.ptr %23
-  .line 2:2149:5
+  .line 2:2150:5
   %parsed_type_argument.ptr: [[compiler.parser.parsed.Type_Argument]] = alloc [compiler.parser.parsed.Type_Argument]
   .bind &parsed_type_argument %parsed_type_argument.ptr
   %24: [[compiler.parser.parsed.Type_Argument]] = offset %named_type .first_type_argument
@@ -13006,13 +13020,13 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   store %parsed_type_argument.ptr %25
   jmp @4
 @4:
-  .line 2:2150:5
+  .line 2:2151:5
   %parsed_type_argument.1: [compiler.parser.parsed.Type_Argument] = load %parsed_type_argument.ptr
   %26: [compiler.parser.parsed.Type_Argument] = const null
   %27: bool = cmp_ne %parsed_type_argument.1 %26
   br %27 @5 @6
 @5:
-  .line 2:2151:9
+  .line 2:2152:9
   %type_argument.ptr: [[compiler.checker.checked.Type_Argument]] = alloc [compiler.checker.checked.Type_Argument]
   .bind &type_argument %type_argument.ptr
   %parsed_type_argument.2: [compiler.parser.parsed.Type_Argument] = load %parsed_type_argument.ptr
@@ -13021,40 +13035,40 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   %30: [compiler.checker.checked.Type] = call $([compiler.checker.Checker]).resolve_type %self %29
   %31: [compiler.checker.checked.Type_Argument] = call $compiler.checker.checked.new_type_argument %30
   store %type_argument.ptr %31
-  .line 2:2152:9
+  .line 2:2153:9
   %last_type_argument.1: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %32: [compiler.checker.checked.Type_Argument] = const null
   %33: bool = cmp_eq %last_type_argument.1 %32
   br %33 @7 @8
 @7:
-  .line 2:2153:13
+  .line 2:2154:13
   %type_argument.1: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %first_type_argument.ptr %type_argument.1
   jmp @9
 @8:
-  .line 2:2155:13
+  .line 2:2156:13
   %last_type_argument.2: [compiler.checker.checked.Type_Argument] = load %last_type_argument.ptr
   %34: [[compiler.checker.checked.Type_Argument]] = offset %last_type_argument.2 .next
   %type_argument.2: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %34 %type_argument.2
   jmp @9
 @9:
-  .line 2:2157:9
+  .line 2:2158:9
   %type_argument.3: [compiler.checker.checked.Type_Argument] = load %type_argument.ptr
   store %last_type_argument.ptr %type_argument.3
-  .line 2:2158:9
+  .line 2:2159:9
   %type_argument_count.1: u64 = load %type_argument_count.ptr
   %35: u64 = const 1
   %36: u64 = add %type_argument_count.1 %35
   store %type_argument_count.ptr %36
-  .line 2:2159:9
+  .line 2:2160:9
   %parsed_type_argument.3: [compiler.parser.parsed.Type_Argument] = load %parsed_type_argument.ptr
   %37: [[compiler.parser.parsed.Type_Argument]] = offset %parsed_type_argument.3 .next
   %38: [compiler.parser.parsed.Type_Argument] = load %37
   store %parsed_type_argument.ptr %38
   jmp @4
 @6:
-  .line 2:2161:5
+  .line 2:2162:5
   %39: [[compiler.parser.parsed.Type_Statement]] = offset %generic_symbol .parsed_statement
   %40: [compiler.parser.parsed.Type_Statement] = load %39
   %41: [[compiler.parser.parsed.Type_Parameter]] = offset %40 .first_type_parameter
@@ -13064,7 +13078,7 @@ $([compiler.checker.Checker]).resolve_struct_instance(%self, %generic_symbol: [c
   %44: [compiler.source.Source_Location] = offset %43 .location
   %45: compiler.source.Source_Location = load %44
   call $([compiler.checker.Checker]).check_type_argument_count %self %42 %type_argument_count.2 %45
-  .line 2:2162:5
+  .line 2:2163:5
   %first_type_argument.1: [compiler.checker.checked.Type_Argument] = load %first_type_argument.ptr
   %46: [compiler.checker.checked.Struct_Type] = call $([compiler.checker.Checker]).instantiate_struct %self %generic_symbol %first_type_argument.1
   ret %46
@@ -13172,7 +13186,7 @@ $compiler.lowerer.lower(%checked_package: [compiler.checker.checked.Package], %d
   %type.2: [compiler.checker.checked.Type] = load %type.ptr
   %37: String = call $([compiler.checker.checked.Type]).name %type.2
   %38: usize = const 6
-  %39: String = struct .data $str_200 .length %38
+  %39: String = struct .data $str_201 .length %38
   %40: bool = call $(String).equals %37 %39
   jmp @11
 @11:
@@ -13464,7 +13478,7 @@ $compiler.lowerer.lower(%checked_package: [compiler.checker.checked.Package], %d
   %142: [String] = offset %141 .name
   %143: String = load %142
   %144: usize = const 4
-  %145: String = struct .data $str_201 .length %144
+  %145: String = struct .data $str_202 .length %144
   %146: bool = call $(String).equals %143 %145
   jmp @51
 @51:
@@ -13653,7 +13667,7 @@ $([compiler.lowerer.Lowerer]).procedure_name(%self, %procedure_symbol: [compiler
 @14:
   .line 3:160:13
   %62: usize = const 2
-  %63: String = struct .data $str_202 .length %62
+  %63: String = struct .data $str_203 .length %62
   %64: [string.builder.Builder] = call $([string.builder.Builder]).append %builder.ptr %63
   jmp @11
 @12:
@@ -13927,7 +13941,7 @@ $([compiler.lowerer.Lowerer]).lower_constant(%self, %expression: [compiler.check
   ret %39
 @3:
   .line 3:228:13
-  %40: [Any] = cast $str_203
+  %40: [Any] = cast $str_204
   %41: usize = const 1
   %42: usize = const 117
   %43: [FILE] = load $stderr
@@ -14206,7 +14220,7 @@ $([compiler.lowerer.Lowerer]).enum_name_procedure_name(%self, %enum_type: [compi
   %3: String = call $([compiler.lowerer.Lowerer]).type_name %self %2
   %4: [string.builder.Builder] = call $([string.builder.Builder]).append %builder.ptr %3
   %5: usize = const 5
-  %6: String = struct .data $str_204 .length %5
+  %6: String = struct .data $str_205 .length %5
   %7: [string.builder.Builder] = call $([string.builder.Builder]).append %4 %6
   %8: String = call $([string.builder.Builder]).build %7
   ret %8
@@ -14505,7 +14519,7 @@ $([compiler.lowerer.Lowerer]).lower_panic_statement(%self, %panic_statement: [co
   %15: [string.builder.Builder] = call $([string.builder.Builder]).append_decimal %9 %14
   .line 3:372:5
   %16: usize = const 8
-  %17: String = struct .data $str_205 .length %16
+  %17: String = struct .data $str_206 .length %16
   %18: [string.builder.Builder] = call $([string.builder.Builder]).append %message.ptr %17
   .line 3:373:5
   %19: [[compiler.lexer.String]] = offset %panic_statement .message
@@ -14592,7 +14606,7 @@ $([compiler.lowerer.Lowerer]).lower_panic_statement(%self, %panic_statement: [co
   %stderr_global.ptr: [[compiler.ir.Value]] = alloc [compiler.ir.Value]
   .bind &stderr_global %stderr_global.ptr
   %67: usize = const 6
-  %68: String = struct .data $str_206 .length %67
+  %68: String = struct .data $str_207 .length %67
   %69: [compiler.ir.Value] = call $([compiler.lowerer.Lowerer]).find_global %self %68
   store %stderr_global.ptr %69
   .line 3:400:5
@@ -14618,7 +14632,7 @@ $([compiler.lowerer.Lowerer]).lower_panic_statement(%self, %panic_statement: [co
   %fwrite_callee.ptr: [[compiler.ir.Value]] = alloc [compiler.ir.Value]
   .bind &fwrite_callee %fwrite_callee.ptr
   %80: usize = const 6
-  %81: String = struct .data $str_207 .length %80
+  %81: String = struct .data $str_208 .length %80
   %82: [compiler.ir.Value] = call $([compiler.lowerer.Lowerer]).find_global %self %81
   store %fwrite_callee.ptr %82
   .line 3:408:5
@@ -14733,7 +14747,7 @@ $([compiler.lowerer.Lowerer]).lower_panic_statement(%self, %panic_statement: [co
   %exit_callee.ptr: [[compiler.ir.Value]] = alloc [compiler.ir.Value]
   .bind &exit_callee %exit_callee.ptr
   %126: usize = const 4
-  %127: String = struct .data $str_208 .length %126
+  %127: String = struct .data $str_209 .length %126
   %128: [compiler.ir.Value] = call $([compiler.lowerer.Lowerer]).find_global %self %127
   store %exit_callee.ptr %128
   .line 3:431:5
@@ -14801,7 +14815,7 @@ $([compiler.lowerer.Lowerer]).lower_main_wrapper(%self, %main_procedure: [compil
   %wrapper.ptr: [[compiler.ir.Procedure]] = alloc [compiler.ir.Procedure]
   .bind &wrapper %wrapper.ptr
   %1: usize = const 4
-  %2: String = struct .data $str_201 .length %1
+  %2: String = struct .data $str_202 .length %1
   %3: [[compiler.ir.Type]] = offset %main_procedure .return_type
   %4: [compiler.ir.Type] = load %3
   %5: [compiler.ir.Procedure] = call $compiler.ir.new_procedure %2 %4
@@ -15229,7 +15243,7 @@ $([compiler.lowerer.Lowerer]).lower_assignment_statement(%self, %assignment_stat
   jmp @2
 @3:
   .line 3:560:13
-  %29: [Any] = cast $str_209
+  %29: [Any] = cast $str_210
   %30: usize = const 1
   %31: usize = const 103
   %32: [FILE] = load $stderr
@@ -18035,7 +18049,7 @@ $([compiler.lowerer.Lowerer]).string_global(%self, %value: String): [compiler.ir
   %name.ptr: [String] = alloc String
   .bind &name %name.ptr
   %25: usize = const 4
-  %26: String = struct .data $str_210 .length %25
+  %26: String = struct .data $str_211 .length %25
   %27: [string.builder.Builder] = call $([string.builder.Builder]).append %name_builder.ptr %26
   %28: [usize] = offset %self .string_counter
   %29: usize = load %28
@@ -18259,7 +18273,7 @@ $([compiler.lowerer.Lowerer]).find_scope(%self, %symbol: [compiler.checker.check
   jmp @2
 @4:
   .line 3:1341:5
-  %23: [Any] = cast $str_211
+  %23: [Any] = cast $str_212
   %24: usize = const 1
   %25: usize = const 88
   %26: [FILE] = load $stderr
@@ -18516,7 +18530,7 @@ $([compiler.lowerer.Lowerer]).lower_type(%self, %type: [compiler.checker.checked
   ret %65
 @5:
   .line 3:1431:13
-  %66: [Any] = cast $str_212
+  %66: [Any] = cast $str_213
   %67: usize = const 1
   %68: usize = const 91
   %69: [FILE] = load $stderr
@@ -18693,7 +18707,7 @@ $([compiler.lowerer.Lowerer]).type_name(%self, %named_type: [compiler.checker.ch
 @15:
   .line 3:1471:13
   %47: usize = const 2
-  %48: String = struct .data $str_202 .length %47
+  %48: String = struct .data $str_203 .length %47
   %49: [string.builder.Builder] = call $([string.builder.Builder]).append %builder.ptr %48
   jmp @12
 @13:
@@ -19020,11 +19034,11 @@ $([compiler.parser.Parser]).parse_package(%self, %source_dir: String, %package: 
   %37: i32 = const 1
   %38: [FILE] = call $([FILE]).begin_location_message %34 %36 %37
   %39: usize = const 22
-  %40: String = struct .data $str_213 .length %39
+  %40: String = struct .data $str_214 .length %39
   %41: [FILE] = call $([FILE]).write %38 %40
   %42: [FILE] = call $([FILE]).end_location_message %41
   .line 4:60:13
-  %43: [Any] = cast $str_214
+  %43: [Any] = cast $str_215
   %44: usize = const 1
   %45: usize = const 54
   %46: [FILE] = load $stderr
@@ -19036,13 +19050,13 @@ $([compiler.parser.Parser]).parse_package(%self, %source_dir: String, %package: 
   .line 4:62:9
   %49: [FILE] = load $stderr
   %50: usize = const 24
-  %51: String = struct .data $str_215 .length %50
+  %51: String = struct .data $str_216 .length %50
   %52: [FILE] = call $([FILE]).write %49 %51
   %package_path.2: String = load %package_path.ptr
   %53: [FILE] = call $([FILE]).write %52 %package_path.2
   %54: [FILE] = call $([FILE]).end_line %53
   .line 4:63:9
-  %55: [Any] = cast $str_216
+  %55: [Any] = cast $str_217
   %56: usize = const 1
   %57: usize = const 54
   %58: [FILE] = load $stderr
@@ -19090,7 +19104,7 @@ $([compiler.parser.Parser]).parse_package(%self, %source_dir: String, %package: 
 @17:
   %package_dir_entry_name.1: String = load %package_dir_entry_name.ptr
   %71: usize = const 5
-  %72: String = struct .data $str_217 .length %71
+  %72: String = struct .data $str_218 .length %71
   %73: [usize] = offset %package_dir_entry_name.ptr .length
   %74: usize = load %73
   %75: usize = const 5
@@ -19232,7 +19246,7 @@ $([compiler.parser.Parser]).parse_module(%self, %module_source: compiler.source.
   .line 4:111:13
   %22: [compiler.lexer.Lexer] = offset %self .lexer
   %23: usize = const 6
-  %24: String = struct .data $str_218 .length %23
+  %24: String = struct .data $str_219 .length %23
   %25: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %24
   %26: bool = call $([compiler.lexer.Lexer]).matches_one %22 %25
   br %26 @12 @13
@@ -19245,7 +19259,7 @@ $([compiler.parser.Parser]).parse_module(%self, %module_source: compiler.source.
   .line 4:113:20
   %28: [compiler.lexer.Lexer] = offset %self .lexer
   %29: usize = const 4
-  %30: String = struct .data $str_219 .length %29
+  %30: String = struct .data $str_220 .length %29
   %31: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %30
   %32: bool = call $([compiler.lexer.Lexer]).matches_one %28 %31
   br %32 @15 @16
@@ -19258,7 +19272,7 @@ $([compiler.parser.Parser]).parse_module(%self, %module_source: compiler.source.
   .line 4:115:20
   %34: [compiler.lexer.Lexer] = offset %self .lexer
   %35: usize = const 5
-  %36: String = struct .data $str_220 .length %35
+  %36: String = struct .data $str_221 .length %35
   %37: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %36
   %38: bool = call $([compiler.lexer.Lexer]).matches_one %34 %37
   br %38 @18 @19
@@ -19271,7 +19285,7 @@ $([compiler.parser.Parser]).parse_module(%self, %module_source: compiler.source.
   .line 4:117:20
   %40: [compiler.lexer.Lexer] = offset %self .lexer
   %41: usize = const 3
-  %42: String = struct .data $str_221 .length %41
+  %42: String = struct .data $str_222 .length %41
   %43: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %42
   %44: bool = call $([compiler.lexer.Lexer]).matches_one %40 %43
   br %44 @21 @22
@@ -19451,7 +19465,7 @@ $([compiler.parser.Parser]).parse_procedure_statement(%self): [compiler.parser.p
   store %location.ptr %2
   .line 4:167:5
   %3: usize = const 4
-  %4: String = struct .data $str_222 .length %3
+  %4: String = struct .data $str_223 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:168:5
   %6: i32 = const 1
@@ -19643,7 +19657,7 @@ $([compiler.parser.Parser]).parse_procedure_statement(%self): [compiler.parser.p
   %82: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %81
   .line 4:217:9
   %83: usize = const 8
-  %84: String = struct .data $str_223 .length %83
+  %84: String = struct .data $str_224 .length %83
   %85: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %84
   .line 4:218:9
   %86: bool = const true
@@ -19684,11 +19698,11 @@ $([compiler.parser.Parser]).parse_procedure_statement(%self): [compiler.parser.p
   %106: i32 = const 1
   %107: [FILE] = call $([FILE]).begin_location_message %100 %105 %106
   %108: usize = const 22
-  %109: String = struct .data $str_224 .length %108
+  %109: String = struct .data $str_225 .length %108
   %110: [FILE] = call $([FILE]).write %107 %109
   %111: [FILE] = call $([FILE]).end_location_message %110
   .line 4:225:9
-  %112: [Any] = cast $str_225
+  %112: [Any] = cast $str_226
   %113: usize = const 1
   %114: usize = const 55
   %115: [FILE] = load $stderr
@@ -19954,7 +19968,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:304:12
   %6: [compiler.lexer.Lexer] = offset %self .lexer
   %7: usize = const 5
-  %8: String = struct .data $str_226 .length %7
+  %8: String = struct .data $str_227 .length %7
   %9: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %8
   %10: bool = call $([compiler.lexer.Lexer]).matches_one %6 %9
   br %10 @5 @6
@@ -19966,7 +19980,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:306:12
   %12: [compiler.lexer.Lexer] = offset %self .lexer
   %13: usize = const 5
-  %14: String = struct .data $str_220 .length %13
+  %14: String = struct .data $str_221 .length %13
   %15: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %14
   %16: bool = call $([compiler.lexer.Lexer]).matches_one %12 %15
   br %16 @8 @9
@@ -19978,7 +19992,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:308:12
   %18: [compiler.lexer.Lexer] = offset %self .lexer
   %19: usize = const 8
-  %20: String = struct .data $str_227 .length %19
+  %20: String = struct .data $str_228 .length %19
   %21: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %20
   %22: bool = call $([compiler.lexer.Lexer]).matches_one %18 %21
   br %22 @11 @12
@@ -19990,7 +20004,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:310:12
   %24: [compiler.lexer.Lexer] = offset %self .lexer
   %25: usize = const 4
-  %26: String = struct .data $str_228 .length %25
+  %26: String = struct .data $str_229 .length %25
   %27: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %26
   %28: bool = call $([compiler.lexer.Lexer]).matches_one %24 %27
   br %28 @14 @15
@@ -20002,7 +20016,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:312:12
   %30: [compiler.lexer.Lexer] = offset %self .lexer
   %31: usize = const 5
-  %32: String = struct .data $str_229 .length %31
+  %32: String = struct .data $str_230 .length %31
   %33: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %32
   %34: bool = call $([compiler.lexer.Lexer]).matches_one %30 %33
   br %34 @17 @18
@@ -20014,7 +20028,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:314:12
   %36: [compiler.lexer.Lexer] = offset %self .lexer
   %37: usize = const 2
-  %38: String = struct .data $str_230 .length %37
+  %38: String = struct .data $str_231 .length %37
   %39: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %38
   %40: bool = call $([compiler.lexer.Lexer]).matches_one %36 %39
   br %40 @20 @21
@@ -20026,7 +20040,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:316:12
   %42: [compiler.lexer.Lexer] = offset %self .lexer
   %43: usize = const 3
-  %44: String = struct .data $str_221 .length %43
+  %44: String = struct .data $str_222 .length %43
   %45: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %44
   %46: bool = call $([compiler.lexer.Lexer]).matches_one %42 %45
   br %46 @23 @24
@@ -20038,7 +20052,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:318:12
   %48: [compiler.lexer.Lexer] = offset %self .lexer
   %49: usize = const 5
-  %50: String = struct .data $str_231 .length %49
+  %50: String = struct .data $str_232 .length %49
   %51: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %50
   %52: bool = call $([compiler.lexer.Lexer]).matches_one %48 %51
   br %52 @26 @27
@@ -20050,7 +20064,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:320:12
   %54: [compiler.lexer.Lexer] = offset %self .lexer
   %55: usize = const 6
-  %56: String = struct .data $str_232 .length %55
+  %56: String = struct .data $str_233 .length %55
   %57: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %56
   %58: bool = call $([compiler.lexer.Lexer]).matches_one %54 %57
   br %58 @29 @30
@@ -20062,7 +20076,7 @@ $([compiler.parser.Parser]).parse_statement(%self): [compiler.parser.parsed.Stat
   .line 4:322:12
   %60: [compiler.lexer.Lexer] = offset %self .lexer
   %61: usize = const 6
-  %62: String = struct .data $str_233 .length %61
+  %62: String = struct .data $str_234 .length %61
   %63: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %62
   %64: bool = call $([compiler.lexer.Lexer]).matches_one %60 %63
   br %64 @32 @33
@@ -20163,7 +20177,7 @@ $([compiler.parser.Parser]).parse_break_statement(%self): [compiler.parser.parse
   store %location.ptr %2
   .line 4:340:5
   %3: usize = const 5
-  %4: String = struct .data $str_226 .length %3
+  %4: String = struct .data $str_227 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:341:5
   %location.1: compiler.source.Source_Location = load %location.ptr
@@ -20182,7 +20196,7 @@ $([compiler.parser.Parser]).parse_const_statement(%self): [compiler.parser.parse
   store %location.ptr %2
   .line 4:346:5
   %3: usize = const 5
-  %4: String = struct .data $str_220 .length %3
+  %4: String = struct .data $str_221 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:347:5
   %6: i32 = const 1
@@ -20225,7 +20239,7 @@ $([compiler.parser.Parser]).parse_continue_statement(%self): [compiler.parser.pa
   store %location.ptr %2
   .line 4:358:5
   %3: usize = const 8
-  %4: String = struct .data $str_227 .length %3
+  %4: String = struct .data $str_228 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:359:5
   %location.1: compiler.source.Source_Location = load %location.ptr
@@ -20244,7 +20258,7 @@ $([compiler.parser.Parser]).parse_loop_statement(%self): [compiler.parser.parsed
   store %location.ptr %2
   .line 4:364:5
   %3: usize = const 4
-  %4: String = struct .data $str_228 .length %3
+  %4: String = struct .data $str_229 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:365:5
   %6: i32 = const 1
@@ -20272,7 +20286,7 @@ $([compiler.parser.Parser]).parse_while_statement(%self): [compiler.parser.parse
   store %location.ptr %2
   .line 4:372:5
   %3: usize = const 5
-  %4: String = struct .data $str_229 .length %3
+  %4: String = struct .data $str_230 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:373:5
   %6: i32 = const 1
@@ -20309,7 +20323,7 @@ $([compiler.parser.Parser]).parse_if_statement(%self): [compiler.parser.parsed.S
   store %location.ptr %2
   .line 4:382:5
   %3: usize = const 2
-  %4: String = struct .data $str_230 .length %3
+  %4: String = struct .data $str_231 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:383:5
   %6: i32 = const 1
@@ -20336,7 +20350,7 @@ $([compiler.parser.Parser]).parse_if_statement(%self): [compiler.parser.parsed.S
   %13: [compiler.lexer.Lexer] = offset %self .lexer
   %14: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %15: usize = const 4
-  %16: String = struct .data $str_234 .length %15
+  %16: String = struct .data $str_235 .length %15
   %17: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %16
   %18: bool = call $([compiler.lexer.Lexer]).matches_two %13 %14 %17
   br %18 @2 @3
@@ -20346,7 +20360,7 @@ $([compiler.parser.Parser]).parse_if_statement(%self): [compiler.parser.parsed.S
   %20: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %19
   .line 4:390:9
   %21: usize = const 4
-  %22: String = struct .data $str_234 .length %21
+  %22: String = struct .data $str_235 .length %21
   %23: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %22
   .line 4:391:9
   %24: i32 = const 1
@@ -20354,7 +20368,7 @@ $([compiler.parser.Parser]).parse_if_statement(%self): [compiler.parser.parsed.S
   .line 4:392:9
   %26: [compiler.lexer.Lexer] = offset %self .lexer
   %27: usize = const 2
-  %28: String = struct .data $str_230 .length %27
+  %28: String = struct .data $str_231 .length %27
   %29: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %28
   %30: bool = call $([compiler.lexer.Lexer]).matches_one %26 %29
   br %30 @4 @5
@@ -20391,7 +20405,7 @@ $([compiler.parser.Parser]).parse_variable_declaration_statement(%self): [compil
   store %location.ptr %2
   .line 4:408:5
   %3: usize = const 3
-  %4: String = struct .data $str_221 .length %3
+  %4: String = struct .data $str_222 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:409:5
   %6: i32 = const 1
@@ -20463,14 +20477,14 @@ $([compiler.parser.Parser]).parse_variable_declaration_statement(%self): [compil
   .line 4:425:9
   %36: [compiler.lexer.Lexer] = offset %self .lexer
   %37: usize = const 8
-  %38: String = struct .data $str_223 .length %37
+  %38: String = struct .data $str_224 .length %37
   %39: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %38
   %40: bool = call $([compiler.lexer.Lexer]).matches_one %36 %39
   br %40 @6 @7
 @6:
   .line 4:426:13
   %41: usize = const 8
-  %42: String = struct .data $str_223 .length %41
+  %42: String = struct .data $str_224 .length %41
   %43: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %42
   .line 4:427:13
   %44: bool = const true
@@ -20521,7 +20535,7 @@ $([compiler.parser.Parser]).parse_panic_statement(%self): [compiler.parser.parse
   store %location.ptr %2
   .line 4:448:5
   %3: usize = const 5
-  %4: String = struct .data $str_231 .length %3
+  %4: String = struct .data $str_232 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:449:5
   %message.ptr: [[compiler.lexer.String]] = alloc [compiler.lexer.String]
@@ -20561,7 +20575,7 @@ $([compiler.parser.Parser]).parse_return_statement(%self): [compiler.parser.pars
   store %location.ptr %2
   .line 4:459:5
   %3: usize = const 6
-  %4: String = struct .data $str_232 .length %3
+  %4: String = struct .data $str_233 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:460:5
   %expression.ptr: [[compiler.parser.parsed.Expression]] = alloc [compiler.parser.parsed.Expression]
@@ -20601,7 +20615,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   store %location.ptr %2
   .line 4:470:5
   %3: usize = const 6
-  %4: String = struct .data $str_233 .length %3
+  %4: String = struct .data $str_234 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:471:5
   %6: i32 = const 1
@@ -20662,7 +20676,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %27: [compiler.lexer.Lexer] = offset %self .lexer
   %28: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %29: usize = const 4
-  %30: String = struct .data $str_235 .length %29
+  %30: String = struct .data $str_236 .length %29
   %31: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %30
   %32: bool = call $([compiler.lexer.Lexer]).matches_two %27 %28 %31
   %33: bool = not %32
@@ -20677,7 +20691,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %36: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %35
   .line 4:488:9
   %37: usize = const 4
-  %38: String = struct .data $str_235 .length %37
+  %38: String = struct .data $str_236 .length %37
   %39: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %38
   .line 4:489:9
   %40: i32 = const 1
@@ -20699,7 +20713,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %44: [compiler.lexer.Lexer] = offset %self .lexer
   %45: compiler.lexer.match.Match = load $compiler.lexer.match.required_space
   %46: usize = const 2
-  %47: String = struct .data $str_236 .length %46
+  %47: String = struct .data $str_237 .length %46
   %48: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %47
   %49: bool = call $([compiler.lexer.Lexer]).matches_two %44 %45 %48
   br %49 @12 @13
@@ -20709,7 +20723,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %51: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %50
   .line 4:494:13
   %52: usize = const 2
-  %53: String = struct .data $str_236 .length %52
+  %53: String = struct .data $str_237 .length %52
   %54: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %53
   .line 4:495:13
   %55: i32 = const 1
@@ -20781,11 +20795,11 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %76: i32 = const 1
   %77: [FILE] = call $([FILE]).begin_location_message %70 %75 %76
   %78: usize = const 13
-  %79: String = struct .data $str_237 .length %78
+  %79: String = struct .data $str_238 .length %78
   %80: [FILE] = call $([FILE]).write %77 %79
   %81: [FILE] = call $([FILE]).end_location_message %80
   .line 4:512:9
-  %82: [Any] = cast $str_238
+  %82: [Any] = cast $str_239
   %83: usize = const 1
   %84: usize = const 55
   %85: [FILE] = load $stderr
@@ -20803,7 +20817,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %89: [compiler.lexer.Lexer] = offset %self .lexer
   %90: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %91: usize = const 4
-  %92: String = struct .data $str_234 .length %91
+  %92: String = struct .data $str_235 .length %91
   %93: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %92
   %94: bool = call $([compiler.lexer.Lexer]).matches_two %89 %90 %93
   br %94 @19 @20
@@ -20814,7 +20828,7 @@ $([compiler.parser.Parser]).parse_switch_statement(%self): [compiler.parser.pars
   %97: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %96
   .line 4:518:9
   %98: usize = const 4
-  %99: String = struct .data $str_234 .length %98
+  %99: String = struct .data $str_235 .length %98
   %100: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %99
   .line 4:519:9
   %101: i32 = const 1
@@ -20890,7 +20904,7 @@ $([compiler.parser.Parser]).parse_logic_or_expression(%self): [compiler.parser.p
   %2: [compiler.lexer.Lexer] = offset %self .lexer
   %3: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %4: usize = const 2
-  %5: String = struct .data $str_236 .length %4
+  %5: String = struct .data $str_237 .length %4
   %6: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %5
   %7: bool = call $([compiler.lexer.Lexer]).matches_two %2 %3 %6
   br %7 @3 @4
@@ -20906,7 +20920,7 @@ $([compiler.parser.Parser]).parse_logic_or_expression(%self): [compiler.parser.p
   %11: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %10
   .line 4:542:9
   %12: usize = const 2
-  %13: String = struct .data $str_236 .length %12
+  %13: String = struct .data $str_237 .length %12
   %14: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %13
   .line 4:543:9
   %15: i32 = const 1
@@ -20944,7 +20958,7 @@ $([compiler.parser.Parser]).parse_logic_and_expression(%self): [compiler.parser.
   %2: [compiler.lexer.Lexer] = offset %self .lexer
   %3: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %4: usize = const 3
-  %5: String = struct .data $str_239 .length %4
+  %5: String = struct .data $str_240 .length %4
   %6: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %5
   %7: bool = call $([compiler.lexer.Lexer]).matches_two %2 %3 %6
   br %7 @3 @4
@@ -20960,7 +20974,7 @@ $([compiler.parser.Parser]).parse_logic_and_expression(%self): [compiler.parser.
   %11: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %10
   .line 4:555:9
   %12: usize = const 3
-  %13: String = struct .data $str_239 .length %12
+  %13: String = struct .data $str_240 .length %12
   %14: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %13
   .line 4:556:9
   %15: i32 = const 1
@@ -21732,7 +21746,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   .line 4:722:5
   %1: [compiler.lexer.Lexer] = offset %self .lexer
   %2: usize = const 9
-  %3: String = struct .data $str_240 .length %2
+  %3: String = struct .data $str_241 .length %2
   %4: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %3
   %5: bool = call $([compiler.lexer.Lexer]).matches_one %1 %4
   br %5 @2 @3
@@ -21745,7 +21759,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   store %location.ptr %7
   .line 4:724:9
   %8: usize = const 9
-  %9: String = struct .data $str_240 .length %8
+  %9: String = struct .data $str_241 .length %8
   %10: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %9
   .line 4:725:9
   %11: i32 = const 0
@@ -21776,7 +21790,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   .line 4:732:12
   %23: [compiler.lexer.Lexer] = offset %self .lexer
   %24: usize = const 14
-  %25: String = struct .data $str_241 .length %24
+  %25: String = struct .data $str_242 .length %24
   %26: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %25
   %27: bool = call $([compiler.lexer.Lexer]).matches_one %23 %26
   br %27 @5 @6
@@ -21789,7 +21803,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   store %location.2.ptr %29
   .line 4:734:9
   %30: usize = const 14
-  %31: String = struct .data $str_241 .length %30
+  %31: String = struct .data $str_242 .length %30
   %32: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %31
   .line 4:735:9
   %33: i32 = const 0
@@ -21882,7 +21896,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   .line 4:754:12
   %71: [compiler.lexer.Lexer] = offset %self .lexer
   %72: usize = const 3
-  %73: String = struct .data $str_242 .length %72
+  %73: String = struct .data $str_243 .length %72
   %74: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %73
   %75: bool = call $([compiler.lexer.Lexer]).matches_one %71 %74
   br %75 @14 @15
@@ -21895,7 +21909,7 @@ $([compiler.parser.Parser]).parse_unary_expression(%self): [compiler.parser.pars
   store %location.5.ptr %77
   .line 4:756:9
   %78: usize = const 3
-  %79: String = struct .data $str_242 .length %78
+  %79: String = struct .data $str_243 .length %78
   %80: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %79
   .line 4:757:9
   %81: i32 = const 1
@@ -21981,14 +21995,14 @@ $([compiler.parser.Parser]).parse_access_expression(%self): [compiler.parser.par
   .line 4:776:20
   %23: [compiler.lexer.Lexer] = offset %self .lexer
   %24: usize = const 2
-  %25: String = struct .data $str_243 .length %24
+  %25: String = struct .data $str_244 .length %24
   %26: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %25
   %27: bool = call $([compiler.lexer.Lexer]).matches_one %23 %26
   br %27 @10 @11
 @10:
   .line 4:777:17
   %28: usize = const 2
-  %29: String = struct .data $str_243 .length %28
+  %29: String = struct .data $str_244 .length %28
   %30: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %29
   .line 4:778:17
   %31: i32 = const 0
@@ -22202,7 +22216,7 @@ $([compiler.parser.Parser]).parse_primary_expression(%self): [compiler.parser.pa
   .line 4:822:5
   %1: [compiler.lexer.Lexer] = offset %self .lexer
   %2: usize = const 5
-  %3: String = struct .data $str_244 .length %2
+  %3: String = struct .data $str_245 .length %2
   %4: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %3
   %5: bool = call $([compiler.lexer.Lexer]).matches_one %1 %4
   br %5 @2 @3
@@ -22224,7 +22238,7 @@ $([compiler.parser.Parser]).parse_primary_expression(%self): [compiler.parser.pa
   .line 4:825:12
   %12: [compiler.lexer.Lexer] = offset %self .lexer
   %13: usize = const 4
-  %14: String = struct .data $str_245 .length %13
+  %14: String = struct .data $str_246 .length %13
   %15: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %14
   %16: bool = call $([compiler.lexer.Lexer]).matches_one %12 %15
   br %16 @5 @6
@@ -22242,7 +22256,7 @@ $([compiler.parser.Parser]).parse_primary_expression(%self): [compiler.parser.pa
   .line 4:828:12
   %19: [compiler.lexer.Lexer] = offset %self .lexer
   %20: usize = const 4
-  %21: String = struct .data $str_246 .length %20
+  %21: String = struct .data $str_247 .length %20
   %22: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %21
   %23: bool = call $([compiler.lexer.Lexer]).matches_one %19 %22
   br %23 @8 @9
@@ -22630,7 +22644,7 @@ $([compiler.parser.Parser]).parse_call_arguments(%self): [compiler.parser.parsed
   %65: i32 = const 2
   %66: [FILE] = call $([FILE]).begin_location_message %60 %64 %65
   %67: usize = const 49
-  %68: String = struct .data $str_247 .length %67
+  %68: String = struct .data $str_248 .length %67
   %69: [FILE] = call $([FILE]).write %66 %68
   %70: [FILE] = call $([FILE]).end_location_message %69
   .line 4:911:17
@@ -22688,7 +22702,7 @@ $([compiler.parser.Parser]).parse_call_arguments(%self): [compiler.parser.parsed
   %94: i32 = const 2
   %95: [FILE] = call $([FILE]).begin_location_message %88 %93 %94
   %96: usize = const 47
-  %97: String = struct .data $str_248 .length %96
+  %97: String = struct .data $str_249 .length %96
   %98: [FILE] = call $([FILE]).write %95 %97
   %99: [FILE] = call $([FILE]).end_location_message %98
   .line 4:920:17
@@ -22868,14 +22882,14 @@ $([compiler.parser.Parser]).parse_type(%self): [compiler.parser.parsed.Type] {
   .line 4:972:5
   %38: [compiler.lexer.Lexer] = offset %self .lexer
   %39: usize = const 4
-  %40: String = struct .data $str_222 .length %39
+  %40: String = struct .data $str_223 .length %39
   %41: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %40
   %42: bool = call $([compiler.lexer.Lexer]).matches_one %38 %41
   br %42 @8 @9
 @8:
   .line 4:973:9
   %43: usize = const 4
-  %44: String = struct .data $str_222 .length %43
+  %44: String = struct .data $str_223 .length %43
   %45: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %44
   .line 4:974:9
   %46: i32 = const 1
@@ -23059,7 +23073,7 @@ $([compiler.parser.Parser]).parse_type_specifier(%self): [compiler.parser.parsed
   .line 4:1017:12
   %7: [compiler.lexer.Lexer] = offset %self .lexer
   %8: usize = const 8
-  %9: String = struct .data $str_223 .length %8
+  %9: String = struct .data $str_224 .length %8
   %10: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %9
   %11: bool = call $([compiler.lexer.Lexer]).matches_one %7 %10
   br %11 @5 @6
@@ -23071,7 +23085,7 @@ $([compiler.parser.Parser]).parse_type_specifier(%self): [compiler.parser.parsed
   .line 4:1019:12
   %13: [compiler.lexer.Lexer] = offset %self .lexer
   %14: usize = const 4
-  %15: String = struct .data $str_249 .length %14
+  %15: String = struct .data $str_250 .length %14
   %16: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %15
   %17: bool = call $([compiler.lexer.Lexer]).matches_one %13 %16
   br %17 @8 @9
@@ -23119,7 +23133,7 @@ $([compiler.parser.Parser]).parse_external_type_specifier(%self): [compiler.pars
   store %location.ptr %2
   .line 4:1033:5
   %3: usize = const 8
-  %4: String = struct .data $str_223 .length %3
+  %4: String = struct .data $str_224 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:1034:5
   %location.1: compiler.source.Source_Location = load %location.ptr
@@ -23138,7 +23152,7 @@ $([compiler.parser.Parser]).parse_enum_type_specifier(%self): [compiler.parser.p
   store %location.ptr %2
   .line 4:1039:5
   %3: usize = const 4
-  %4: String = struct .data $str_249 .length %3
+  %4: String = struct .data $str_250 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:1040:5
   %6: i32 = const 1
@@ -23264,7 +23278,7 @@ $([compiler.parser.Parser]).parse_struct_type_specifier(%self): [compiler.parser
   store %location.ptr %2
   .line 4:1072:5
   %3: usize = const 6
-  %4: String = struct .data $str_250 .length %3
+  %4: String = struct .data $str_251 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:1073:5
   %6: i32 = const 1
@@ -23405,7 +23419,7 @@ $([compiler.parser.Parser]).parse_import_statement(%self): [compiler.parser.pars
   store %location.ptr %2
   .line 4:1109:5
   %3: usize = const 6
-  %4: String = struct .data $str_218 .length %3
+  %4: String = struct .data $str_219 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:1110:5
   %6: i32 = const 1
@@ -23462,7 +23476,7 @@ $([compiler.parser.Parser]).parse_import_statement(%self): [compiler.parser.pars
   %23: [compiler.lexer.Lexer] = offset %self .lexer
   %24: compiler.lexer.match.Match = load $compiler.lexer.match.optional_space
   %25: usize = const 2
-  %26: String = struct .data $str_243 .length %25
+  %26: String = struct .data $str_244 .length %25
   %27: compiler.lexer.match.Match = call $compiler.lexer.match.keyword %26
   %28: bool = call $([compiler.lexer.Lexer]).matches_two %23 %24 %27
   br %28 @5 @6
@@ -23472,7 +23486,7 @@ $([compiler.parser.Parser]).parse_import_statement(%self): [compiler.parser.pars
   %30: [compiler.lexer.Space] = call $([compiler.parser.Parser]).consume_space %self %29
   .line 4:1123:9
   %31: usize = const 2
-  %32: String = struct .data $str_243 .length %31
+  %32: String = struct .data $str_244 .length %31
   %33: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %32
   .line 4:1124:9
   %34: i32 = const 1
@@ -23574,7 +23588,7 @@ $([compiler.parser.Parser]).parse_type_statement(%self): [compiler.parser.parsed
   store %location.ptr %2
   .line 4:1149:5
   %3: usize = const 4
-  %4: String = struct .data $str_219 .length %3
+  %4: String = struct .data $str_220 .length %3
   %5: [compiler.lexer.Identifier] = call $([compiler.parser.Parser]).consume_keyword %self %4
   .line 4:1150:5
   %6: i32 = const 1
@@ -23752,11 +23766,11 @@ $([compiler.parser.Parser]).consume_other(%self, %expected: u8): [compiler.lexer
   %19: i32 = const 1
   %20: [FILE] = call $([FILE]).begin_location_message %16 %18 %19
   %21: usize = const 16
-  %22: String = struct .data $str_251 .length %21
+  %22: String = struct .data $str_252 .length %21
   %23: [FILE] = call $([FILE]).write %20 %22
   %24: [FILE] = call $([FILE]).end_location_message %23
   .line 4:1194:5
-  %25: [Any] = cast $str_252
+  %25: [Any] = cast $str_253
   %26: usize = const 1
   %27: usize = const 56
   %28: [FILE] = load $stderr
@@ -23846,11 +23860,11 @@ $([compiler.parser.Parser]).consume_two_other(%self, %first: u8, %second: u8): [
   %35: i32 = const 1
   %36: [FILE] = call $([FILE]).begin_location_message %32 %34 %35
   %37: usize = const 16
-  %38: String = struct .data $str_251 .length %37
+  %38: String = struct .data $str_252 .length %37
   %39: [FILE] = call $([FILE]).write %36 %38
   %40: [FILE] = call $([FILE]).end_location_message %39
   .line 4:1208:5
-  %41: [Any] = cast $str_253
+  %41: [Any] = cast $str_254
   %42: usize = const 1
   %43: usize = const 56
   %44: [FILE] = load $stderr
@@ -23893,11 +23907,11 @@ $([compiler.parser.Parser]).consume_character(%self): [compiler.lexer.Character]
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %10 %12 %13
   %15: usize = const 16
-  %16: String = struct .data $str_251 .length %15
+  %16: String = struct .data $str_252 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
   .line 4:1218:5
-  %19: [Any] = cast $str_254
+  %19: [Any] = cast $str_255
   %20: usize = const 1
   %21: usize = const 56
   %22: [FILE] = load $stderr
@@ -23940,11 +23954,11 @@ $([compiler.parser.Parser]).consume_comment(%self): [compiler.lexer.Comment] {
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %10 %12 %13
   %15: usize = const 16
-  %16: String = struct .data $str_251 .length %15
+  %16: String = struct .data $str_252 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
   .line 4:1228:5
-  %19: [Any] = cast $str_255
+  %19: [Any] = cast $str_256
   %20: usize = const 1
   %21: usize = const 56
   %22: [FILE] = load $stderr
@@ -24051,11 +24065,11 @@ $([compiler.parser.Parser]).consume_end_of_line(%self): [compiler.lexer.End_Of_L
   %32: i32 = const 1
   %33: [FILE] = call $([FILE]).begin_location_message %29 %31 %32
   %34: usize = const 16
-  %35: String = struct .data $str_251 .length %34
+  %35: String = struct .data $str_252 .length %34
   %36: [FILE] = call $([FILE]).write %33 %35
   %37: [FILE] = call $([FILE]).end_location_message %36
   .line 4:1257:5
-  %38: [Any] = cast $str_256
+  %38: [Any] = cast $str_257
   %39: usize = const 1
   %40: usize = const 56
   %41: [FILE] = load $stderr
@@ -24098,11 +24112,11 @@ $([compiler.parser.Parser]).consume_identifier(%self): [compiler.lexer.Identifie
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %10 %12 %13
   %15: usize = const 16
-  %16: String = struct .data $str_251 .length %15
+  %16: String = struct .data $str_252 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
   .line 4:1267:5
-  %19: [Any] = cast $str_257
+  %19: [Any] = cast $str_258
   %20: usize = const 1
   %21: usize = const 56
   %22: [FILE] = load $stderr
@@ -24155,11 +24169,11 @@ $([compiler.parser.Parser]).consume_keyword(%self, %lexeme: String): [compiler.l
   %17: i32 = const 1
   %18: [FILE] = call $([FILE]).begin_location_message %14 %16 %17
   %19: usize = const 16
-  %20: String = struct .data $str_251 .length %19
+  %20: String = struct .data $str_252 .length %19
   %21: [FILE] = call $([FILE]).write %18 %20
   %22: [FILE] = call $([FILE]).end_location_message %21
   .line 4:1277:5
-  %23: [Any] = cast $str_258
+  %23: [Any] = cast $str_259
   %24: usize = const 1
   %25: usize = const 56
   %26: [FILE] = load $stderr
@@ -24202,11 +24216,11 @@ $([compiler.parser.Parser]).consume_integer(%self): [compiler.lexer.Integer] {
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %10 %12 %13
   %15: usize = const 16
-  %16: String = struct .data $str_251 .length %15
+  %16: String = struct .data $str_252 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
   .line 4:1287:5
-  %19: [Any] = cast $str_259
+  %19: [Any] = cast $str_260
   %20: usize = const 1
   %21: usize = const 56
   %22: [FILE] = load $stderr
@@ -24249,11 +24263,11 @@ $([compiler.parser.Parser]).consume_string(%self): [compiler.lexer.String] {
   %13: i32 = const 1
   %14: [FILE] = call $([FILE]).begin_location_message %10 %12 %13
   %15: usize = const 16
-  %16: String = struct .data $str_251 .length %15
+  %16: String = struct .data $str_252 .length %15
   %17: [FILE] = call $([FILE]).write %14 %16
   %18: [FILE] = call $([FILE]).end_location_message %17
   .line 4:1297:5
-  %19: [Any] = cast $str_260
+  %19: [Any] = cast $str_261
   %20: usize = const 1
   %21: usize = const 56
   %22: [FILE] = load $stderr
@@ -24307,7 +24321,7 @@ $([compiler.parser.Parser]).consume_space(%self, %count: i32): [compiler.lexer.S
   %19: i32 = const 2
   %20: [FILE] = call $([FILE]).begin_location_message %13 %18 %19
   %21: usize = const 9
-  %22: String = struct .data $str_261 .length %21
+  %22: String = struct .data $str_262 .length %21
   %23: [FILE] = call $([FILE]).write %20 %22
   %space.2: [compiler.lexer.Space] = load %space.ptr
   %24: [i32] = offset %space.2 .count
@@ -24315,12 +24329,12 @@ $([compiler.parser.Parser]).consume_space(%self, %count: i32): [compiler.lexer.S
   %26: i64 = cast %25
   %27: [FILE] = call $([FILE]).write_i64 %23 %26
   %28: usize = const 14
-  %29: String = struct .data $str_262 .length %28
+  %29: String = struct .data $str_263 .length %28
   %30: [FILE] = call $([FILE]).write %27 %29
   %31: i64 = cast %count
   %32: [FILE] = call $([FILE]).write_i64 %30 %31
   %33: usize = const 14
-  %34: String = struct .data $str_263 .length %33
+  %34: String = struct .data $str_264 .length %33
   %35: [FILE] = call $([FILE]).write %32 %34
   %36: [FILE] = call $([FILE]).end_location_message %35
   jmp @5
@@ -24342,12 +24356,12 @@ $([compiler.parser.Parser]).consume_space(%self, %count: i32): [compiler.lexer.S
   %42: i32 = const 2
   %43: [FILE] = call $([FILE]).begin_location_message %39 %41 %42
   %44: usize = const 24
-  %45: String = struct .data $str_264 .length %44
+  %45: String = struct .data $str_265 .length %44
   %46: [FILE] = call $([FILE]).write %43 %45
   %47: i64 = cast %count
   %48: [FILE] = call $([FILE]).write_i64 %46 %47
   %49: usize = const 14
-  %50: String = struct .data $str_263 .length %49
+  %50: String = struct .data $str_264 .length %49
   %51: [FILE] = call $([FILE]).write %48 %50
   %52: [FILE] = call $([FILE]).end_location_message %51
   jmp @7
@@ -24374,7 +24388,7 @@ $([FILE]).write_binary_instruction(%self, %instruction: [compiler.ir.Binary_Inst
   %2: [FILE] = call $([FILE]).write_value_definition %self %1
   .line 5:6:5
   %3: usize = const 3
-  %4: String = struct .data $str_265 .length %3
+  %4: String = struct .data $str_266 .length %3
   %5: [FILE] = call $([FILE]).write %self %4
   %6: [FILE] = call $([FILE]).write %5 %operation
   %7: u8 = const ' '
@@ -24424,7 +24438,7 @@ $([FILE]).write_block(%self, %block: [compiler.ir.Block]): [FILE] {
 @3:
   .line 5:17:9
   %14: usize = const 2
-  %15: String = struct .data $str_266 .length %14
+  %15: String = struct .data $str_267 .length %14
   %16: [FILE] = call $([FILE]).write %self %15
   .line 5:18:9
   %instruction.2: [compiler.ir.Instruction] = load %instruction.ptr
@@ -24462,13 +24476,13 @@ $([FILE]).write_const(%self, %value: u64, %type: [compiler.ir.Type], %lexeme: St
 @4:
   .line 5:28:13
   %7: usize = const 4
-  %8: String = struct .data $str_246 .length %7
+  %8: String = struct .data $str_247 .length %7
   %9: [FILE] = call $([FILE]).write %self %8
   ret %9
 @5:
   .line 5:30:9
   %10: usize = const 5
-  %11: String = struct .data $str_244 .length %10
+  %11: String = struct .data $str_245 .length %10
   %12: [FILE] = call $([FILE]).write %self %11
   ret %12
 @3:
@@ -24490,7 +24504,7 @@ $([FILE]).write_const(%self, %value: u64, %type: [compiler.ir.Type], %lexeme: St
 @8:
   .line 5:33:9
   %22: usize = const 4
-  %23: String = struct .data $str_245 .length %22
+  %23: String = struct .data $str_246 .length %22
   %24: [FILE] = call $([FILE]).write %self %23
   ret %24
 @9:
@@ -24524,7 +24538,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:44:13
   %3: [compiler.ir.Binary_Instruction] = cast %instruction
   %4: usize = const 3
-  %5: String = struct .data $str_267 .length %4
+  %5: String = struct .data $str_268 .length %4
   %6: [FILE] = call $([FILE]).write_binary_instruction %self %3 %5
   jmp @2
 @4:
@@ -24539,7 +24553,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %9: [FILE] = call $([FILE]).write_value_definition %self %8
   .line 5:49:13
   %10: usize = const 9
-  %11: String = struct .data $str_268 .length %10
+  %11: String = struct .data $str_269 .length %10
   %12: [FILE] = call $([FILE]).write %self %11
   .line 5:50:13
   %alloc_instruction.2: [compiler.ir.Alloc_Instruction] = load %alloc_instruction.ptr
@@ -24555,7 +24569,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %bind_instruction.ptr %16
   .line 5:54:13
   %17: usize = const 6
-  %18: String = struct .data $str_269 .length %17
+  %18: String = struct .data $str_270 .length %17
   %19: [FILE] = call $([FILE]).write %self %18
   .line 5:55:13
   %bind_instruction.1: [compiler.ir.Bind_Instruction] = load %bind_instruction.ptr
@@ -24585,21 +24599,21 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:62:13
   %32: [compiler.ir.Binary_Instruction] = cast %instruction
   %33: usize = const 3
-  %34: String = struct .data $str_239 .length %33
+  %34: String = struct .data $str_240 .length %33
   %35: [FILE] = call $([FILE]).write_binary_instruction %self %32 %34
   jmp @2
 @9:
   .line 5:65:13
   %36: [compiler.ir.Binary_Instruction] = cast %instruction
   %37: usize = const 2
-  %38: String = struct .data $str_236 .length %37
+  %38: String = struct .data $str_237 .length %37
   %39: [FILE] = call $([FILE]).write_binary_instruction %self %36 %38
   jmp @2
 @10:
   .line 5:68:13
   %40: [compiler.ir.Binary_Instruction] = cast %instruction
   %41: usize = const 3
-  %42: String = struct .data $str_270 .length %41
+  %42: String = struct .data $str_271 .length %41
   %43: [FILE] = call $([FILE]).write_binary_instruction %self %40 %42
   jmp @2
 @11:
@@ -24610,7 +24624,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %br_instruction.ptr %44
   .line 5:72:13
   %45: usize = const 3
-  %46: String = struct .data $str_271 .length %45
+  %46: String = struct .data $str_272 .length %45
   %47: [FILE] = call $([FILE]).write %self %46
   .line 5:73:13
   %br_instruction.1: [compiler.ir.Br_Instruction] = load %br_instruction.ptr
@@ -24619,7 +24633,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %50: [FILE] = call $([FILE]).write_value_reference %self %49
   .line 5:74:13
   %51: usize = const 2
-  %52: String = struct .data $str_272 .length %51
+  %52: String = struct .data $str_273 .length %51
   %53: [FILE] = call $([FILE]).write %self %52
   %br_instruction.2: [compiler.ir.Br_Instruction] = load %br_instruction.ptr
   %54: [[compiler.ir.Block]] = offset %br_instruction.2 .true_block
@@ -24630,7 +24644,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %59: [FILE] = call $([FILE]).write_u64 %53 %58
   .line 5:75:13
   %60: usize = const 2
-  %61: String = struct .data $str_272 .length %60
+  %61: String = struct .data $str_273 .length %60
   %62: [FILE] = call $([FILE]).write %self %61
   %br_instruction.3: [compiler.ir.Br_Instruction] = load %br_instruction.ptr
   %63: [[compiler.ir.Block]] = offset %br_instruction.3 .false_block
@@ -24648,7 +24662,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %brx_instruction.ptr %69
   .line 5:79:13
   %70: usize = const 4
-  %71: String = struct .data $str_273 .length %70
+  %71: String = struct .data $str_274 .length %70
   %72: [FILE] = call $([FILE]).write %self %71
   .line 5:80:13
   %brx_instruction.1: [compiler.ir.Brx_Instruction] = load %brx_instruction.ptr
@@ -24672,7 +24686,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
 @14:
   .line 5:83:17
   %80: usize = const 2
-  %81: String = struct .data $str_272 .length %80
+  %81: String = struct .data $str_273 .length %80
   %82: [FILE] = call $([FILE]).write %self %81
   %target.2: [compiler.ir.Brx_Target] = load %target.ptr
   %83: [[compiler.ir.Block]] = offset %target.2 .block
@@ -24690,7 +24704,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
 @15:
   .line 5:86:13
   %91: usize = const 2
-  %92: String = struct .data $str_272 .length %91
+  %92: String = struct .data $str_273 .length %91
   %93: [FILE] = call $([FILE]).write %self %92
   %brx_instruction.3: [compiler.ir.Brx_Instruction] = load %brx_instruction.ptr
   %94: [[compiler.ir.Block]] = offset %brx_instruction.3 .default_block
@@ -24724,13 +24738,13 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %110: [FILE] = call $([FILE]).write_value_definition %self %109
   .line 5:92:17
   %111: usize = const 3
-  %112: String = struct .data $str_265 .length %111
+  %112: String = struct .data $str_266 .length %111
   %113: [FILE] = call $([FILE]).write %self %112
   jmp @18
 @18:
   .line 5:94:13
   %114: usize = const 5
-  %115: String = struct .data $str_274 .length %114
+  %115: String = struct .data $str_275 .length %114
   %116: [FILE] = call $([FILE]).write %self %115
   .line 5:95:13
   %call_instruction.3: [compiler.ir.Call_Instruction] = load %call_instruction.ptr
@@ -24780,7 +24794,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %133: [FILE] = call $([FILE]).write_value_definition %self %132
   .line 5:106:13
   %134: usize = const 8
-  %135: String = struct .data $str_275 .length %134
+  %135: String = struct .data $str_276 .length %134
   %136: [FILE] = call $([FILE]).write %self %135
   .line 5:107:13
   %cast_instruction.2: [compiler.ir.Cast_Instruction] = load %cast_instruction.ptr
@@ -24792,42 +24806,42 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:110:13
   %140: [compiler.ir.Binary_Instruction] = cast %instruction
   %141: usize = const 6
-  %142: String = struct .data $str_276 .length %141
+  %142: String = struct .data $str_277 .length %141
   %143: [FILE] = call $([FILE]).write_binary_instruction %self %140 %142
   jmp @2
 @24:
   .line 5:113:13
   %144: [compiler.ir.Binary_Instruction] = cast %instruction
   %145: usize = const 6
-  %146: String = struct .data $str_277 .length %145
+  %146: String = struct .data $str_278 .length %145
   %147: [FILE] = call $([FILE]).write_binary_instruction %self %144 %146
   jmp @2
 @25:
   .line 5:116:13
   %148: [compiler.ir.Binary_Instruction] = cast %instruction
   %149: usize = const 6
-  %150: String = struct .data $str_278 .length %149
+  %150: String = struct .data $str_279 .length %149
   %151: [FILE] = call $([FILE]).write_binary_instruction %self %148 %150
   jmp @2
 @26:
   .line 5:119:13
   %152: [compiler.ir.Binary_Instruction] = cast %instruction
   %153: usize = const 6
-  %154: String = struct .data $str_279 .length %153
+  %154: String = struct .data $str_280 .length %153
   %155: [FILE] = call $([FILE]).write_binary_instruction %self %152 %154
   jmp @2
 @27:
   .line 5:122:13
   %156: [compiler.ir.Binary_Instruction] = cast %instruction
   %157: usize = const 6
-  %158: String = struct .data $str_280 .length %157
+  %158: String = struct .data $str_281 .length %157
   %159: [FILE] = call $([FILE]).write_binary_instruction %self %156 %158
   jmp @2
 @28:
   .line 5:125:13
   %160: [compiler.ir.Binary_Instruction] = cast %instruction
   %161: usize = const 6
-  %162: String = struct .data $str_281 .length %161
+  %162: String = struct .data $str_282 .length %161
   %163: [FILE] = call $([FILE]).write_binary_instruction %self %160 %162
   jmp @2
 @29:
@@ -24842,7 +24856,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %166: [FILE] = call $([FILE]).write_value_definition %self %165
   .line 5:130:13
   %167: usize = const 9
-  %168: String = struct .data $str_282 .length %167
+  %168: String = struct .data $str_283 .length %167
   %169: [FILE] = call $([FILE]).write %self %168
   %const_instruction.2: [compiler.ir.Const_Instruction] = load %const_instruction.ptr
   %170: [u64] = offset %const_instruction.2 .value
@@ -24860,7 +24874,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:133:13
   %178: [compiler.ir.Binary_Instruction] = cast %instruction
   %179: usize = const 3
-  %180: String = struct .data $str_283 .length %179
+  %180: String = struct .data $str_284 .length %179
   %181: [FILE] = call $([FILE]).write_binary_instruction %self %178 %180
   jmp @2
 @31:
@@ -24871,7 +24885,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %jmp_instruction.ptr %182
   .line 5:137:13
   %183: usize = const 5
-  %184: String = struct .data $str_284 .length %183
+  %184: String = struct .data $str_285 .length %183
   %185: [FILE] = call $([FILE]).write %self %184
   %jmp_instruction.1: [compiler.ir.Jmp_Instruction] = load %jmp_instruction.ptr
   %186: [[compiler.ir.Block]] = offset %jmp_instruction.1 .block
@@ -24889,7 +24903,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %line_instruction.ptr %192
   .line 5:141:13
   %193: usize = const 6
-  %194: String = struct .data $str_285 .length %193
+  %194: String = struct .data $str_286 .length %193
   %195: [FILE] = call $([FILE]).write %self %194
   %line_instruction.1: [compiler.ir.Line_Instruction] = load %line_instruction.ptr
   %196: [[compiler.ir.Source_File]] = offset %line_instruction.1 .source_file
@@ -24927,7 +24941,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %216: [FILE] = call $([FILE]).write_value_definition %self %215
   .line 5:148:13
   %217: usize = const 8
-  %218: String = struct .data $str_286 .length %217
+  %218: String = struct .data $str_287 .length %217
   %219: [FILE] = call $([FILE]).write %self %218
   .line 5:149:13
   %load_instruction.2: [compiler.ir.Load_Instruction] = load %load_instruction.ptr
@@ -24939,14 +24953,14 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:152:13
   %223: [compiler.ir.Binary_Instruction] = cast %instruction
   %224: usize = const 3
-  %225: String = struct .data $str_287 .length %224
+  %225: String = struct .data $str_288 .length %224
   %226: [FILE] = call $([FILE]).write_binary_instruction %self %223 %225
   jmp @2
 @35:
   .line 5:155:13
   %227: [compiler.ir.Binary_Instruction] = cast %instruction
   %228: usize = const 3
-  %229: String = struct .data $str_288 .length %228
+  %229: String = struct .data $str_289 .length %228
   %230: [FILE] = call $([FILE]).write_binary_instruction %self %227 %229
   jmp @2
 @36:
@@ -24961,7 +24975,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %233: [FILE] = call $([FILE]).write_value_definition %self %232
   .line 5:160:13
   %234: usize = const 7
-  %235: String = struct .data $str_289 .length %234
+  %235: String = struct .data $str_290 .length %234
   %236: [FILE] = call $([FILE]).write %self %235
   .line 5:161:13
   %neg_instruction.2: [compiler.ir.Neg_Instruction] = load %neg_instruction.ptr
@@ -24981,7 +24995,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %242: [FILE] = call $([FILE]).write_value_definition %self %241
   .line 5:166:13
   %243: usize = const 7
-  %244: String = struct .data $str_290 .length %243
+  %244: String = struct .data $str_291 .length %243
   %245: [FILE] = call $([FILE]).write %self %244
   .line 5:167:13
   %not_instruction.2: [compiler.ir.Not_Instruction] = load %not_instruction.ptr
@@ -25001,7 +25015,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %251: [FILE] = call $([FILE]).write_value_definition %self %250
   .line 5:172:13
   %252: usize = const 10
-  %253: String = struct .data $str_291 .length %252
+  %253: String = struct .data $str_292 .length %252
   %254: [FILE] = call $([FILE]).write %self %253
   .line 5:173:13
   %offset_instruction.2: [compiler.ir.Offset_Instruction] = load %offset_instruction.ptr
@@ -25029,7 +25043,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %265: [FILE] = call $([FILE]).write_value_definition %self %264
   .line 5:180:13
   %266: usize = const 6
-  %267: String = struct .data $str_292 .length %266
+  %267: String = struct .data $str_293 .length %266
   %268: [FILE] = call $([FILE]).write %self %267
   .line 5:181:13
   %entry.ptr: [[compiler.ir.Phi_Entry]] = alloc [compiler.ir.Phi_Entry]
@@ -25048,7 +25062,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
 @41:
   .line 5:183:17
   %273: usize = const 2
-  %274: String = struct .data $str_272 .length %273
+  %274: String = struct .data $str_273 .length %273
   %275: [FILE] = call $([FILE]).write %self %274
   %entry.2: [compiler.ir.Phi_Entry] = load %entry.ptr
   %276: [[compiler.ir.Block]] = offset %entry.2 .block
@@ -25080,7 +25094,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %ret_instruction.ptr %289
   .line 5:190:13
   %290: usize = const 3
-  %291: String = struct .data $str_293 .length %290
+  %291: String = struct .data $str_294 .length %290
   %292: [FILE] = call $([FILE]).write %self %291
   .line 5:191:13
   %ret_instruction.1: [compiler.ir.Ret_Instruction] = load %ret_instruction.ptr
@@ -25105,14 +25119,14 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:197:13
   %302: [compiler.ir.Binary_Instruction] = cast %instruction
   %303: usize = const 3
-  %304: String = struct .data $str_294 .length %303
+  %304: String = struct .data $str_295 .length %303
   %305: [FILE] = call $([FILE]).write_binary_instruction %self %302 %304
   jmp @2
 @47:
   .line 5:200:13
   %306: [compiler.ir.Binary_Instruction] = cast %instruction
   %307: usize = const 3
-  %308: String = struct .data $str_295 .length %307
+  %308: String = struct .data $str_296 .length %307
   %309: [FILE] = call $([FILE]).write_binary_instruction %self %306 %308
   jmp @2
 @48:
@@ -25123,7 +25137,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   store %store_instruction.ptr %310
   .line 5:204:13
   %311: usize = const 6
-  %312: String = struct .data $str_296 .length %311
+  %312: String = struct .data $str_297 .length %311
   %313: [FILE] = call $([FILE]).write %self %312
   .line 5:205:13
   %store_instruction.1: [compiler.ir.Store_Instruction] = load %store_instruction.ptr
@@ -25151,7 +25165,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %324: [FILE] = call $([FILE]).write_value_definition %self %323
   .line 5:212:13
   %325: usize = const 9
-  %326: String = struct .data $str_297 .length %325
+  %326: String = struct .data $str_298 .length %325
   %327: [FILE] = call $([FILE]).write %self %326
   .line 5:213:13
   %field.ptr: [[compiler.ir.Struct_Instruction_Field]] = alloc [compiler.ir.Struct_Instruction_Field]
@@ -25170,7 +25184,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
 @51:
   .line 5:215:17
   %332: usize = const 2
-  %333: String = struct .data $str_298 .length %332
+  %333: String = struct .data $str_299 .length %332
   %334: [FILE] = call $([FILE]).write %self %333
   %field.2: [compiler.ir.Struct_Instruction_Field] = load %field.ptr
   %335: [String] = offset %field.2 .name
@@ -25203,7 +25217,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %347: [FILE] = call $([FILE]).write_value_definition %self %346
   .line 5:223:13
   %348: usize = const 10
-  %349: String = struct .data $str_291 .length %348
+  %349: String = struct .data $str_292 .length %348
   %350: [FILE] = call $([FILE]).write %self %349
   .line 5:224:13
   %offset_instruction.2.2: [compiler.ir.Struct_Offset_Instruction] = load %offset_instruction.2.ptr
@@ -25212,7 +25226,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   %353: [FILE] = call $([FILE]).write_value_reference %self %352
   .line 5:225:13
   %354: usize = const 2
-  %355: String = struct .data $str_298 .length %354
+  %355: String = struct .data $str_299 .length %354
   %356: [FILE] = call $([FILE]).write %self %355
   %offset_instruction.2.3: [compiler.ir.Struct_Offset_Instruction] = load %offset_instruction.2.ptr
   %357: [String] = offset %offset_instruction.2.3 .member
@@ -25223,7 +25237,7 @@ $([FILE]).write_instruction(%self, %instruction: [compiler.ir.Instruction]): [FI
   .line 5:228:13
   %360: [compiler.ir.Binary_Instruction] = cast %instruction
   %361: usize = const 3
-  %362: String = struct .data $str_299 .length %361
+  %362: String = struct .data $str_300 .length %361
   %363: [FILE] = call $([FILE]).write_binary_instruction %self %360 %362
   jmp @2
 @2:
@@ -25269,7 +25283,7 @@ $([FILE]).write_procedure(%self, %procedure: [compiler.ir.Procedure]): [FILE] {
 @5:
   .line 5:240:13
   %14: usize = const 2
-  %15: String = struct .data $str_202 .length %14
+  %15: String = struct .data $str_203 .length %14
   %16: [FILE] = call $([FILE]).write %self %15
   jmp @6
 @6:
@@ -25318,7 +25332,7 @@ $([FILE]).write_procedure(%self, %procedure: [compiler.ir.Procedure]): [FILE] {
 @12:
   .line 5:252:9
   %33: usize = const 2
-  %34: String = struct .data $str_300 .length %33
+  %34: String = struct .data $str_301 .length %33
   %35: [FILE] = call $([FILE]).write %self %34
   .line 5:253:9
   %36: [[compiler.ir.Type]] = offset %procedure .return_type
@@ -25328,7 +25342,7 @@ $([FILE]).write_procedure(%self, %procedure: [compiler.ir.Procedure]): [FILE] {
 @13:
   .line 5:255:5
   %39: usize = const 2
-  %40: String = struct .data $str_301 .length %39
+  %40: String = struct .data $str_302 .length %39
   %41: [FILE] = call $([FILE]).write %self %40
   %42: [FILE] = call $([FILE]).end_line %41
   .line 5:257:5
@@ -25380,7 +25394,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @2:
   .line 5:270:9
   %8: usize = const 4
-  %9: String = struct .data $str_302 .length %8
+  %9: String = struct .data $str_303 .length %8
   %10: [FILE] = call $([FILE]).write %self %9
   .line 5:271:9
   %index.ptr: [usize] = alloc usize
@@ -25413,7 +25427,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @8:
   .line 5:275:17
   %21: usize = const 2
-  %22: String = struct .data $str_303 .length %21
+  %22: String = struct .data $str_304 .length %21
   %23: [FILE] = call $([FILE]).write %self %22
   jmp @10
 @9:
@@ -25425,7 +25439,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @11:
   .line 5:277:17
   %26: usize = const 2
-  %27: String = struct .data $str_304 .length %26
+  %27: String = struct .data $str_305 .length %26
   %28: [FILE] = call $([FILE]).write %self %27
   jmp @13
 @12:
@@ -25437,7 +25451,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @14:
   .line 5:279:17
   %31: usize = const 2
-  %32: String = struct .data $str_305 .length %31
+  %32: String = struct .data $str_306 .length %31
   %33: [FILE] = call $([FILE]).write %self %32
   jmp @16
 @15:
@@ -25449,7 +25463,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @17:
   .line 5:281:17
   %36: usize = const 2
-  %37: String = struct .data $str_306 .length %36
+  %37: String = struct .data $str_307 .length %36
   %38: [FILE] = call $([FILE]).write %self %37
   jmp @19
 @18:
@@ -25461,7 +25475,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @20:
   .line 5:283:17
   %41: usize = const 2
-  %42: String = struct .data $str_307 .length %41
+  %42: String = struct .data $str_308 .length %41
   %43: [FILE] = call $([FILE]).write %self %42
   jmp @22
 @21:
@@ -25499,7 +25513,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @23:
   .line 5:291:9
   %53: usize = const 3
-  %54: String = struct .data $str_265 .length %53
+  %54: String = struct .data $str_266 .length %53
   %55: [FILE] = call $([FILE]).write %self %54
   .line 5:292:9
   %56: [[compiler.ir.Const_Payload]] = offset %global .constant
@@ -25527,7 +25541,7 @@ $([FILE]).write_global(%self, %global: [compiler.ir.Global]): [FILE] {
 @26:
   .line 5:294:9
   %74: usize = const 11
-  %75: String = struct .data $str_308 .length %74
+  %75: String = struct .data $str_309 .length %74
   %76: [FILE] = call $([FILE]).write %self %75
   jmp @27
 @27:
@@ -25560,7 +25574,7 @@ $([FILE]).write_program(%self, %program: [compiler.ir.Program]): [FILE] {
 @3:
   .line 5:302:9
   %5: usize = const 8
-  %6: String = struct .data $str_309 .length %5
+  %6: String = struct .data $str_310 .length %5
   %7: [FILE] = call $([FILE]).write %self %6
   %source_file.2: [compiler.ir.Source_File] = load %source_file.ptr
   %8: [usize] = offset %source_file.2 .index
@@ -25568,7 +25582,7 @@ $([FILE]).write_program(%self, %program: [compiler.ir.Program]): [FILE] {
   %10: u64 = cast %9
   %11: [FILE] = call $([FILE]).write_u64 %7 %10
   %12: usize = const 2
-  %13: String = struct .data $str_310 .length %12
+  %13: String = struct .data $str_311 .length %12
   %14: [FILE] = call $([FILE]).write %11 %13
   %source_file.3: [compiler.ir.Source_File] = load %source_file.ptr
   %15: [String] = offset %source_file.3 .ir_path
@@ -25765,7 +25779,7 @@ $([FILE]).write_type(%self, %type: [compiler.ir.Type]): [FILE] {
 @11:
   .line 5:362:13
   %35: usize = const 3
-  %36: String = struct .data $str_311 .length %35
+  %36: String = struct .data $str_312 .length %35
   %37: [FILE] = call $([FILE]).write %self %36
   .line 5:363:13
   %38: [compiler.ir.Multi_Pointer_Type] = cast %type
@@ -25775,7 +25789,7 @@ $([FILE]).write_type(%self, %type: [compiler.ir.Type]): [FILE] {
   jmp @2
 @12:
   .line 5:366:13
-  %42: [Any] = cast $str_312
+  %42: [Any] = cast $str_313
   %43: usize = const 1
   %44: usize = const 57
   %45: [FILE] = load $stderr
@@ -25811,7 +25825,7 @@ $([FILE]).write_type(%self, %type: [compiler.ir.Type]): [FILE] {
   store %procedure_type.ptr %60
   .line 5:378:13
   %61: usize = const 6
-  %62: String = struct .data $str_313 .length %61
+  %62: String = struct .data $str_314 .length %61
   %63: [FILE] = call $([FILE]).write %self %62
   .line 5:379:13
   %parameter.ptr: [[compiler.ir.Procedure_Type_Parameter]] = alloc [compiler.ir.Procedure_Type_Parameter]
@@ -25840,7 +25854,7 @@ $([FILE]).write_type(%self, %type: [compiler.ir.Type]): [FILE] {
 @19:
   .line 5:383:21
   %70: usize = const 2
-  %71: String = struct .data $str_202 .length %70
+  %71: String = struct .data $str_203 .length %70
   %72: [FILE] = call $([FILE]).write %self %71
   jmp @20
 @20:
@@ -25874,7 +25888,7 @@ $([FILE]).write_type(%self, %type: [compiler.ir.Type]): [FILE] {
 @21:
   .line 5:391:17
   %87: usize = const 2
-  %88: String = struct .data $str_300 .length %87
+  %88: String = struct .data $str_301 .length %87
   %89: [FILE] = call $([FILE]).write %self %88
   .line 5:392:17
   %procedure_type.3: [compiler.ir.Procedure_Type] = load %procedure_type.ptr
@@ -25932,13 +25946,13 @@ $([FILE]).write_type_declaration(%self, %type: [compiler.ir.Named_Type]): [FILE]
   .bind type %type
   .line 5:418:5
   %1: usize = const 5
-  %2: String = struct .data $str_314 .length %1
+  %2: String = struct .data $str_315 .length %1
   %3: [FILE] = call $([FILE]).write %self %2
   %4: [String] = offset %type .name
   %5: String = load %4
   %6: [FILE] = call $([FILE]).write %3 %5
   %7: usize = const 3
-  %8: String = struct .data $str_265 .length %7
+  %8: String = struct .data $str_266 .length %7
   %9: [FILE] = call $([FILE]).write %6 %8
   .line 5:419:5
   %10: [compiler.ir.Type] = offset %type .super
@@ -25950,7 +25964,7 @@ $([FILE]).write_type_declaration(%self, %type: [compiler.ir.Named_Type]): [FILE]
 @2:
   .line 5:420:9
   %15: usize = const 8
-  %16: String = struct .data $str_315 .length %15
+  %16: String = struct .data $str_316 .length %15
   %17: [FILE] = call $([FILE]).write %self %16
   %18: [FILE] = call $([FILE]).end_line %17
   .line 5:421:9
@@ -25970,14 +25984,14 @@ $([FILE]).write_type_declaration(%self, %type: [compiler.ir.Named_Type]): [FILE]
 @6:
   .line 5:423:13
   %24: usize = const 2
-  %25: String = struct .data $str_266 .length %24
+  %25: String = struct .data $str_267 .length %24
   %26: [FILE] = call $([FILE]).write %self %25
   %member.2: [compiler.ir.Struct_Member] = load %member.ptr
   %27: [String] = offset %member.2 .name
   %28: String = load %27
   %29: [FILE] = call $([FILE]).write %26 %28
   %30: usize = const 2
-  %31: String = struct .data $str_300 .length %30
+  %31: String = struct .data $str_301 .length %30
   %32: [FILE] = call $([FILE]).write %29 %31
   .line 5:424:13
   %member.3: [compiler.ir.Struct_Member] = load %member.ptr
@@ -26000,7 +26014,7 @@ $([FILE]).write_type_declaration(%self, %type: [compiler.ir.Named_Type]): [FILE]
 @3:
   .line 5:430:9
   %41: usize = const 6
-  %42: String = struct .data $str_316 .length %41
+  %42: String = struct .data $str_317 .length %41
   %43: [FILE] = call $([FILE]).write %self %42
   jmp @4
 @4:
@@ -26017,7 +26031,7 @@ $([FILE]).write_value_definition(%self, %value: [compiler.ir.Value]): [FILE] {
   %1: [FILE] = call $([FILE]).write_value_reference %self %value
   .line 5:437:5
   %2: usize = const 2
-  %3: String = struct .data $str_300 .length %2
+  %3: String = struct .data $str_301 .length %2
   %4: [FILE] = call $([FILE]).write %self %3
   .line 5:438:5
   %5: [[compiler.ir.Type]] = offset %value .type
@@ -27172,7 +27186,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
 @5:
   .line 13:117:13
   %14: usize = const 3
-  %15: String = struct .data $str_317 .length %14
+  %15: String = struct .data $str_318 .length %14
   %16: [FILE] = call $([FILE]).write %file %15
   %17: [compiler.checker.checked.Multi_Pointer_Type] = cast %type
   %18: [[compiler.checker.checked.Type]] = offset %17 .pointee
@@ -27182,7 +27196,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
 @6:
   .line 13:120:13
   %21: usize = const 4
-  %22: String = struct .data $str_245 .length %21
+  %22: String = struct .data $str_246 .length %21
   %23: [FILE] = call $([FILE]).write %file %22
   ret %23
 @7:
@@ -27209,7 +27223,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
   store %procedure_type.ptr %34
   .line 13:130:13
   %35: usize = const 6
-  %36: String = struct .data $str_313 .length %35
+  %36: String = struct .data $str_314 .length %35
   %37: [FILE] = call $([FILE]).write %file %36
   .line 13:131:13
   %parameter.ptr: [[compiler.checker.checked.Procedure_Parameter]] = alloc [compiler.checker.checked.Procedure_Parameter]
@@ -27244,7 +27258,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
 @13:
   .line 13:136:21
   %49: usize = const 2
-  %50: String = struct .data $str_202 .length %49
+  %50: String = struct .data $str_203 .length %49
   %51: [FILE] = call $([FILE]).write %file %50
   jmp @14
 @14:
@@ -27260,7 +27274,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
 @15:
   .line 13:140:17
   %56: usize = const 5
-  %57: String = struct .data $str_318 .length %56
+  %57: String = struct .data $str_319 .length %56
   %58: [FILE] = call $([FILE]).write %file %57
   %procedure_type.3: [compiler.checker.checked.Procedure_Type] = load %procedure_type.ptr
   %59: [[compiler.checker.checked.Type]] = offset %procedure_type.3 .return_type
@@ -27348,7 +27362,7 @@ $([FILE]).write_checked_type(%file, %type: [compiler.checker.checked.Type]): [FI
 @26:
   .line 13:160:25
   %96: usize = const 2
-  %97: String = struct .data $str_202 .length %96
+  %97: String = struct .data $str_203 .length %96
   %98: [FILE] = call $([FILE]).write %file %97
   jmp @23
 @24:
@@ -28328,7 +28342,7 @@ $([compiler.lexer.Identifier]).merge_with(%self, %separator: [compiler.lexer.Oth
   br %14 @2 @3
 @2:
   .line 15:137:9
-  %15: [Any] = cast $str_319
+  %15: [Any] = cast $str_320
   %16: usize = const 1
   %17: usize = const 93
   %18: [FILE] = load $stderr
@@ -28355,7 +28369,7 @@ $([compiler.lexer.Identifier]).merge_with(%self, %separator: [compiler.lexer.Oth
   br %34 @4 @5
 @4:
   .line 15:140:9
-  %35: [Any] = cast $str_320
+  %35: [Any] = cast $str_321
   %36: usize = const 1
   %37: usize = const 90
   %38: [FILE] = load $stderr
@@ -28413,7 +28427,7 @@ $([compiler.lexer.Other]).merge_with(%self, %another: [compiler.lexer.Other]): [
   br %14 @2 @3
 @2:
   .line 15:153:9
-  %15: [Any] = cast $str_321
+  %15: [Any] = cast $str_322
   %16: usize = const 1
   %17: usize = const 86
   %18: [FILE] = load $stderr
@@ -30580,7 +30594,7 @@ $([FILE]).begin_location_message(%file, %location: compiler.source.Source_Locati
   .line 22:16:5
   %1: [FILE] = call $([FILE]).write_location %file %location
   %2: usize = const 2
-  %3: String = struct .data $str_300 .length %2
+  %3: String = struct .data $str_301 .length %2
   %4: [FILE] = call $([FILE]).write %1 %3
   %5: [FILE] = call $([FILE]).style %4 %style
   ret %5
@@ -30607,7 +30621,7 @@ $([FILE]).style(%file, %style: i32): [FILE] {
 @2:
   .line 22:25:9
   %3: usize = const 7
-  %4: String = struct .data $str_322 .length %3
+  %4: String = struct .data $str_323 .length %3
   %5: [FILE] = call $([FILE]).write %file %4
   ret %5
 @3:
@@ -30618,13 +30632,13 @@ $([FILE]).style(%file, %style: i32): [FILE] {
 @4:
   .line 22:28:9
   %8: usize = const 7
-  %9: String = struct .data $str_323 .length %8
+  %9: String = struct .data $str_324 .length %8
   %10: [FILE] = call $([FILE]).write %file %9
   ret %10
 @5:
   .line 22:30:5
   %11: usize = const 4
-  %12: String = struct .data $str_324 .length %11
+  %12: String = struct .data $str_325 .length %11
   %13: [FILE] = call $([FILE]).write %file %12
   ret %13
 }
@@ -30667,7 +30681,7 @@ $compiler.source.load(%file_path: String): compiler.source.Source {
   .bind &file %file.ptr
   %1: [*]u8 = call $(String).data %file_path
   %2: usize = const 1
-  %3: String = struct .data $str_325 .length %2
+  %3: String = struct .data $str_326 .length %2
   %4: [*]u8 = call $(String).data %3
   %5: [FILE] = call $fopen %1 %4
   store %file.ptr %5
@@ -30678,7 +30692,7 @@ $compiler.source.load(%file_path: String): compiler.source.Source {
   br %7 @2 @3
 @2:
   .line 23:12:9
-  %8: [Any] = cast $str_326
+  %8: [Any] = cast $str_327
   %9: usize = const 1
   %10: usize = const 74
   %11: [FILE] = load $stderr
@@ -30700,7 +30714,7 @@ $compiler.source.load(%file_path: String): compiler.source.Source {
   %file.3: [FILE] = load %file.ptr
   %19: i32 = call $fclose %file.3
   .line 23:17:9
-  %20: [Any] = cast $str_327
+  %20: [Any] = cast $str_328
   %21: usize = const 1
   %22: usize = const 84
   %23: [FILE] = load $stderr
@@ -30729,7 +30743,7 @@ $compiler.source.load(%file_path: String): compiler.source.Source {
   %file.6: [FILE] = load %file.ptr
   %33: i32 = call $fclose %file.6
   .line 23:22:9
-  %34: [Any] = cast $str_328
+  %34: [Any] = cast $str_329
   %35: usize = const 1
   %36: usize = const 86
   %37: [FILE] = load $stderr
@@ -30767,7 +30781,7 @@ $compiler.source.load(%file_path: String): compiler.source.Source {
   %file.8: [FILE] = load %file.ptr
   %48: i32 = call $fclose %file.8
   .line 23:29:9
-  %49: [Any] = cast $str_329
+  %49: [Any] = cast $str_330
   %50: usize = const 1
   %51: usize = const 84
   %52: [FILE] = load $stderr
@@ -31060,7 +31074,7 @@ $compiler.source.relative_path(%from_dir: String, %to_path: String): String {
 @16:
   .line 24:52:9
   %38: usize = const 3
-  %39: String = struct .data $str_330 .length %38
+  %39: String = struct .data $str_331 .length %38
   %40: [string.builder.Builder] = call $([string.builder.Builder]).append %builder.ptr %39
   .line 24:53:9
   %41: bool = call $([compiler.source.Path_Cursor]).advance %from_cursor.ptr
@@ -31113,7 +31127,7 @@ $compiler.source.relative_path(%from_dir: String, %to_path: String): String {
 @23:
   .line 24:66:9
   %55: usize = const 1
-  %56: String = struct .data $str_331 .length %55
+  %56: String = struct .data $str_332 .length %55
   ret %56
 @24:
   .line 24:68:5
@@ -34498,7 +34512,7 @@ $([allocator.Arena]).alloc(%self, %size: usize, %alignment: usize): [Any] {
   br %14 @4 @5
 @4:
   .line 26:22:9
-  %15: [Any] = cast $str_332
+  %15: [Any] = cast $str_333
   %16: usize = const 1
   %17: usize = const 61
   %18: [FILE] = load $stderr
@@ -34590,7 +34604,7 @@ $([allocator.Arena]).reserve(%self, %size: usize) {
   br %4 @2 @3
 @2:
   .line 26:49:9
-  %5: [Any] = cast $str_333
+  %5: [Any] = cast $str_334
   %6: usize = const 1
   %7: usize = const 70
   %8: [FILE] = load $stderr
@@ -34636,7 +34650,7 @@ $([allocator.Arena]).reserve(%self, %size: usize) {
   br %26 @6 @7
 @6:
   .line 26:57:9
-  %27: [Any] = cast $str_334
+  %27: [Any] = cast $str_335
   %28: usize = const 1
   %29: usize = const 79
   %30: [FILE] = load $stderr
@@ -34765,7 +34779,7 @@ $compiler.ir.new_alloc_instruction(%variable: [compiler.ir.Variable]): [compiler
   %5: String = load %4
   %6: [string.builder.Builder] = call $([string.builder.Builder]).append %name_builder.ptr %5
   %7: usize = const 4
-  %8: String = struct .data $str_335 .length %7
+  %8: String = struct .data $str_336 .length %7
   %9: [string.builder.Builder] = call $([string.builder.Builder]).append %6 %8
   %10: String = call $([string.builder.Builder]).build %9
   store %result_name.ptr %10
@@ -35668,7 +35682,7 @@ $([compiler.ir.Type]).name_string(%self): String {
   store %builder.2.ptr %32
   .line 28:204:13
   %33: usize = const 3
-  %34: String = struct .data $str_311 .length %33
+  %34: String = struct .data $str_312 .length %33
   %35: [string.builder.Builder] = call $([string.builder.Builder]).append %builder.2.ptr %34
   %36: [compiler.ir.Multi_Pointer_Type] = cast %self
   %37: [[compiler.ir.Type]] = offset %36 .pointee
@@ -35734,7 +35748,7 @@ $([compiler.ir.Type]).name_string(%self): String {
   ret %68
 @3:
   .line 28:232:13
-  %69: [Any] = cast $str_336
+  %69: [Any] = cast $str_337
   %70: usize = const 1
   %71: usize = const 76
   %72: [FILE] = load $stderr
@@ -36004,7 +36018,7 @@ $([compiler.ir.Type]).size(%self): usize {
   ret %43
 @3:
   .line 28:328:13
-  %44: [Any] = cast $str_337
+  %44: [Any] = cast $str_338
   %45: usize = const 1
   %46: usize = const 88
   %47: [FILE] = load $stderr
@@ -36957,7 +36971,7 @@ $([string.builder.Builder]).append_char(%self, %char: u8): [string.builder.Build
   br %8 @2 @3
 @2:
   .line 30:20:9
-  %9: [Any] = cast $str_338
+  %9: [Any] = cast $str_339
   %10: usize = const 1
   %11: usize = const 75
   %12: [FILE] = load $stderr
@@ -36975,7 +36989,7 @@ $([string.builder.Builder]).append_char(%self, %char: u8): [string.builder.Build
   br %19 @4 @5
 @4:
   .line 30:23:9
-  %20: [Any] = cast $str_339
+  %20: [Any] = cast $str_340
   %21: usize = const 1
   %22: usize = const 68
   %23: [FILE] = load $stderr
