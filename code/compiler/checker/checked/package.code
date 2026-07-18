@@ -2,6 +2,11 @@ import allocator
 import compiler.parser.parsed
 import compiler.source
 
+type Declaration = struct {
+    symbol: ^Symbol
+    next: ^Declaration
+}
+
 type Module = struct {
     source: source.Source
     next_module: ^Module
@@ -15,13 +20,24 @@ type Package = struct {
     name: str
     parsed_package: ^parsed.Package
     symbols: ^Symbols
-    first_method: ^Method
+    first_declaration: ^Declaration
+    last_declaration: ^Declaration
     first_module: ^Module
     next_package: ^Package
 }
 
 proc new_package(name: str, parsed_package: ^parsed.Package, symbols: ^Symbols) -> ^Package {
-    let result = allocator.new(Package(name: name, parsed_package: parsed_package, symbols: symbols, first_method: null, first_module: null, next_package: null))
+    let result = allocator.new(Package(name: name, parsed_package: parsed_package, symbols: symbols, first_declaration: null, last_declaration: null, first_module: null, next_package: null))
     symbols.package = result
     return result
+}
+
+proc (^Package).append_declaration(self, symbol: ^Symbol) {
+    let declaration = allocator.new(Declaration(symbol: symbol, next: null))
+    if self.first_declaration == null {
+        self.first_declaration = declaration
+    } else {
+        self.last_declaration.next = declaration
+    }
+    self.last_declaration = declaration
 }

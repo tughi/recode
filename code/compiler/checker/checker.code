@@ -62,8 +62,6 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
     checker.check_all_declarations()
     checker.check_all_procedure_bodies()
 
-    main_checked_package.first_method = checker.first_method
-
     return main_checked_package
 }
 
@@ -364,6 +362,7 @@ proc (^Checker).check_global_variable_statement(self, variable_statement: ^parse
     }
     let variable_symbol = checked.new_variable_symbol(name: name, package: self.current_package(), type: variable_type, expression: expression, is_global: true, is_external: variable_statement.is_external, external_name: external_name)
     self.current_scope.append(name: name, symbol: variable_symbol.as(^checked.Symbol))
+    self.current_package().append_declaration(variable_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_Statement) {
@@ -453,8 +452,10 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let procedure_symbol = checked.new_procedure_symbol(name: name, package: self.current_package(), procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
     if receiver_type != null {
         self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
+    } else {
+        self.current_scope.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
     }
-    self.current_scope.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
+    self.current_package().append_declaration(procedure_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).declare_generic_procedure(self, procedure_statement: ^parsed.Procedure_Statement) {
@@ -481,8 +482,10 @@ proc (^Checker).declare_generic_procedure(self, procedure_statement: ^parsed.Pro
     let generic_symbol = checked.new_generic_procedure_symbol(name: name, package: self.current_package(), parsed_statement: procedure_statement)
     if procedure_statement.receiver != null {
         self.append_generic_method(checked.new_generic_method(generic_symbol))
+    } else {
+        self.current_scope.append(name: name, symbol: generic_symbol.as(^checked.Symbol))
     }
-    self.current_scope.append(name: name, symbol: generic_symbol.as(^checked.Symbol))
+    self.current_package().append_declaration(generic_symbol.as(^checked.Symbol))
 }
 
 proc (^Checker).declare_generic_struct(self, type_statement: ^parsed.Type_Statement) {

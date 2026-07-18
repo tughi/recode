@@ -1,0 +1,16 @@
+type Number = struct {
+    value: i32
+}
+
+proc (^Number).get(self, value: i32) -> i32 {
+    return self.value + value
+}
+
+proc get(value: i32) -> i32 {
+    return value
+}
+
+proc main() -> i32 {
+    let number = Number(value: 2)
+    return get(40) + number.get(2) - 44
+}
