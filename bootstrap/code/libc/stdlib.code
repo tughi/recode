@@ -1,3 +1,4 @@
+proc calloc(count: usize, size: usize) -> ^Any = external
 proc malloc(size: usize) -> ^Any = external
 proc realloc(block: ^Any, size: usize) -> ^Any = external
 proc free(block: ^Any) = external

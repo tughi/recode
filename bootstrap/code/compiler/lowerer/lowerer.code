@@ -57,43 +57,36 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
         block_counter: 0
     )
 
-    let symbols = checked_package.symbols
-    while symbols != null {
-        let symbol_entry = symbols.first
-        while symbol_entry != null {
-            if symbol_entry.symbol.kind == .Type {
-                let type = symbol_entry.symbol.as(^checked.Type_Symbol).type
-                if type.kind == .Struct and type.name().equals("String") {
-                    lowerer.string_type = type.as(^checked.Struct_Type)
-                }
-            }
-            symbol_entry = symbol_entry.next
+    let string_symbol = checked_package.symbols.find("String")
+    if string_symbol != null and string_symbol.kind == .Type {
+        let type = string_symbol.as(^checked.Type_Symbol).type
+        if type.kind == .Struct {
+            lowerer.string_type = type.as(^checked.Struct_Type)
         }
-        symbols = symbols.parent
     }
 
     // Declare all procedures first, so calls can reference any procedure.
     let package = checked_package
     while package != null {
-        let entry = package.symbols.first
-        while entry != null {
-            if entry.symbol.kind == .Generic_Procedure {
-                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+        let declaration = package.first_declaration
+        while declaration != null {
+            if declaration.symbol.kind == .Generic_Procedure {
+                let procedure_instance = declaration.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
                 while procedure_instance != null {
                     lowerer.declare_procedure(procedure_instance.symbol)
                     procedure_instance = procedure_instance.next
                 }
-            } else if entry.symbol.kind == .Procedure {
-                lowerer.declare_procedure(entry.symbol.as(^checked.Procedure_Symbol))
-            } else if entry.symbol.kind == .Variable {
-                let variable_symbol = entry.symbol.as(^checked.Variable_Symbol)
+            } else if declaration.symbol.kind == .Procedure {
+                lowerer.declare_procedure(declaration.symbol.as(^checked.Procedure_Symbol))
+            } else if declaration.symbol.kind == .Variable {
+                let variable_symbol = declaration.symbol.as(^checked.Variable_Symbol)
                 if variable_symbol.is_external {
                     lowerer.declare_external_variable(variable_symbol)
                 } else {
                     lowerer.declare_global_variable(variable_symbol)
                 }
             }
-            entry = entry.next
+            declaration = declaration.next
         }
         package = package.next_package
     }
@@ -101,22 +94,22 @@ proc lower(checked_package: ^checked.Package, debug_info: bool, output_dir: str)
     let main_procedure: ^ir.Procedure = null
     package = checked_package
     while package != null {
-        let entry = package.symbols.first
-        while entry != null {
-            if entry.symbol.kind == .Generic_Procedure {
-                let procedure_instance = entry.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
+        let declaration = package.first_declaration
+        while declaration != null {
+            if declaration.symbol.kind == .Generic_Procedure {
+                let procedure_instance = declaration.symbol.as(^checked.Generic_Procedure_Symbol).first_instance
                 while procedure_instance != null {
                     lowerer.define_procedure(procedure_instance.symbol)
                     procedure_instance = procedure_instance.next
                 }
-            } else if entry.symbol.kind == .Procedure {
-                let procedure_symbol = entry.symbol.as(^checked.Procedure_Symbol)
+            } else if declaration.symbol.kind == .Procedure {
+                let procedure_symbol = declaration.symbol.as(^checked.Procedure_Symbol)
                 let procedure = lowerer.define_procedure(procedure_symbol)
                 if package == checked_package and procedure_symbol.receiver_type == null and procedure_symbol.name.equals("main") {
                     main_procedure = procedure
                 }
             }
-            entry = entry.next
+            declaration = declaration.next
         }
         package = package.next_package
     }
@@ -329,8 +322,9 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
     procedure.append_block(block)
     self.current_block = block
 
-    let member = enum_type.first_member
-    while member != null {
+    let member_iterator = enum_type.members.iterator()
+    while member_iterator.has_next() {
+        let member = member_iterator.next()
         let member_value = ir.new_const_instruction(
             name: self.fresh_name()
             type: ir.new_primitive_type(.i32)
@@ -358,7 +352,6 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
 
         self.current_procedure.append_block(next_block)
         self.current_block = next_block
-        member = member.next
     }
     // No member matched: return an empty string.
     let empty_value = self.lower_string_struct("")
@@ -625,10 +618,11 @@ proc (^Lowerer).lower_switch_statement(self, switch_statement: ^checked.Switch_S
     }
 
     let brx_instruction = ir.new_brx_instruction(value: operand, default_block: else_block)
-    let member = switch_statement.operand.type.as(^checked.Enum_Type).first_member
-    while member != null {
+    let member_count = switch_statement.operand.type.as(^checked.Enum_Type).members.size
+    let member_index = 0usize
+    while member_index < member_count {
         brx_instruction.append_target(ir.new_brx_target(block: null))
-        member = member.next
+        member_index = member_index + 1
     }
     self.current_block.append_instruction(brx_instruction.as(^ir.Instruction))
 

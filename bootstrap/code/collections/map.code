@@ -1,0 +1,150 @@
+import allocator
+import libc
+
+type Map<K, V> = struct {
+    buckets: [^]^Map_Entry<K, V>
+    capacity: usize
+    size: usize
+    first_entry: ^Map_Entry<K, V>
+    last_entry: ^Map_Entry<K, V>
+}
+
+type Map_Entry<K, V> = struct {
+    hash: u64
+    key: K
+    value: V
+    next: ^Map_Entry<K, V>
+    order_next: ^Map_Entry<K, V>
+    order_prev: ^Map_Entry<K, V>
+}
+
+proc empty_map<K, V>() -> Map<K, V> {
+    return Map<K, V>(buckets: null, capacity: 0, size: 0, first_entry: null, last_entry: null)
+}
+
+proc (^Map<K, V>).get<K, V>(self, key: K) -> V {
+    if self.size == 0 {
+        return null
+    }
+    let hash = key.hash()
+    let entry = self.buckets[hash.as(usize) & (self.capacity - 1)]
+    while entry != null {
+        if entry.hash == hash and entry.key.equals(key) {
+            return entry.value
+        }
+        entry = entry.next
+    }
+    return null
+}
+
+proc (^Map<K, V>).grow<K, V>(self) {
+    let old_buckets = self.buckets
+    let old_capacity = self.capacity
+    let new_capacity = 16usize
+    if old_capacity != 0 {
+        new_capacity = old_capacity * 2
+    }
+    let new_buckets = allocator.new_array<^Map_Entry<K, V>>(new_capacity)
+    libc.memset(new_buckets.as(^Any), 0, type_size(^Map_Entry<K, V>) * new_capacity)
+    let old_index = 0usize
+    while old_index < old_capacity {
+        let entry = old_buckets[old_index]
+        while entry != null {
+            let next = entry.next
+            let new_index = entry.hash.as(usize) & (new_capacity - 1)
+            entry.next = new_buckets[new_index]
+            new_buckets[new_index] = entry
+            entry = next
+        }
+        old_index = old_index + 1
+    }
+    self.buckets = new_buckets
+    self.capacity = new_capacity
+}
+
+proc (^Map<K, V>).put<K, V>(self, key: K, value: V) {
+    if self.size * 4 >= self.capacity * 3 {
+        self.grow()
+    }
+    let hash = key.hash()
+    let index = hash.as(usize) & (self.capacity - 1)
+    let entry = self.buckets[index]
+    while entry != null {
+        if entry.hash == hash and entry.key.equals(key) {
+            entry.value = value
+            return
+        }
+        entry = entry.next
+    }
+    let new_entry = allocator.new(Map_Entry<K, V>(
+        hash: hash
+        key: key
+        value: value
+        next: self.buckets[index]
+        order_next: null
+        order_prev: self.last_entry
+    ))
+    self.buckets[index] = new_entry
+    if self.last_entry == null {
+        self.first_entry = new_entry
+    } else {
+        self.last_entry.order_next = new_entry
+    }
+    self.last_entry = new_entry
+    self.size = self.size + 1
+}
+
+proc (^Map<K, V>).remove<K, V>(self, key: K) -> bool {
+    if self.size == 0 {
+        return false
+    }
+    let hash = key.hash()
+    let index = hash.as(usize) & (self.capacity - 1)
+    let entry = self.buckets[index]
+    let previous: ^Map_Entry<K, V> = null
+    while entry != null {
+        if entry.hash == hash and entry.key.equals(key) {
+            if previous == null {
+                self.buckets[index] = entry.next
+            } else {
+                previous.next = entry.next
+            }
+            if entry.order_prev == null {
+                self.first_entry = entry.order_next
+            } else {
+                entry.order_prev.order_next = entry.order_next
+            }
+            if entry.order_next == null {
+                self.last_entry = entry.order_prev
+            } else {
+                entry.order_next.order_prev = entry.order_prev
+            }
+            self.size = self.size - 1
+            return true
+        }
+        previous = entry
+        entry = entry.next
+    }
+    return false
+}
+
+type Map_Iterator<K, V> = struct {
+    next_entry: ^Map_Entry<K, V>
+}
+
+proc (^Map<K, V>).iterator<K, V>(self) -> Map_Iterator<K, V> {
+    return Map_Iterator<K, V>(next_entry: self.first_entry)
+}
+
+proc (^Map_Iterator<K, V>).has_next<K, V>(self) -> bool {
+    return self.next_entry != null
+}
+
+proc (^Map_Iterator<K, V>).next<K, V>(self) -> V {
+    if self.next_entry == null {
+        panic "Iterator exhausted"
+    }
+    let value = self.next_entry.value
+    self.next_entry = self.next_entry.order_next
+    return value
+}

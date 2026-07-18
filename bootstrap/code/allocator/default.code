@@ -14,3 +14,7 @@ proc new<T>(value: T) -> ^T {
     result.^ = value
     return result
 }
+
+proc new_array<T>(capacity: usize) -> [^]T {
+    return alloc(type_size(T) * capacity, type_alignment(T)).as([^]T)
+}
