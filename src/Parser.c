@@ -1655,6 +1655,10 @@ static IR_External_Function check_external_function(Parser *parser, IR_Function 
         if (return_type == any_ptr_type && parameter_count == 1 && parameters[0]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__malloc;
         }
+    } else if (string_equals_cstr(name, "$memcmp")) {
+        if (return_type == i32_type && parameter_count == 3 && parameters[0]->type == any_ptr_type && parameters[1]->type == any_ptr_type && parameters[2]->type == usize_type) {
+            return IR_EXTERNAL_FUNCTION__memcmp;
+        }
     } else if (string_equals_cstr(name, "$memcpy")) {
         if (return_type == any_ptr_type && parameter_count == 3 && parameters[0]->type == any_ptr_type && parameters[1]->type == any_ptr_type && parameters[2]->type == usize_type) {
             return IR_EXTERNAL_FUNCTION__memcpy;

@@ -1,0 +1,111 @@
+; exit: 0
+
+type File = opaque
+
+$fclose: [proc ([File]): i32] = external
+$fflush: [proc ([File]): i32] = external
+$fopen: [proc ([*]u8, [*]u8): [File]] = external
+$fputs: [proc ([*]u8, [File]): i32] = external
+$fread: [proc ([*]u8, usize, usize, [File]): usize] = external
+$free: [proc ([Any]): void] = external
+$fseek: [proc ([File], i64, i32): i32] = external
+$ftell: [proc ([File]): i64] = external
+$fwrite: [proc ([Any], usize, usize, [File]): usize] = external
+$malloc: [proc (usize): [Any]] = external
+$memcmp: [proc ([Any], [Any], usize): i32] = external
+$memcpy: [proc ([Any], [Any], usize): [Any]] = external
+$strlen: [proc ([*]u8): usize] = external
+
+$path: [*]u8 = "build/stdio_roundtrip.txt"
+$mode_write: [*]u8 = "w"
+$mode_read: [*]u8 = "r"
+$message: [*]u8 = "stdio round-trip"
+
+$main(): i32 {
+@1:
+  %len: usize = call $strlen $message
+  %0: usize = const 16
+  %1: bool = cmp_eq %len %0
+  br %1 @2 @10
+@2:
+  %out: [File] = call $fopen $path $mode_write
+  %2: [File] = const null
+  %3: bool = cmp_ne %out %2
+  br %3 @3 @11
+@3:
+  %4: i32 = call $fputs $message %out
+  %msg: [Any] = cast $message
+  %5: usize = const 1
+  %6: usize = call $fwrite %msg %5 %len %out
+  %7: bool = cmp_eq %6 %len
+  br %7 @4 @12
+@4:
+  %8: i32 = call $fflush %out
+  %9: i64 = call $ftell %out
+  %10: i64 = const 32
+  %11: bool = cmp_eq %9 %10
+  br %11 @5 @13
+@5:
+  %12: i32 = call $fclose %out
+  %in: [File] = call $fopen $path $mode_read
+  %13: [File] = const null
+  %14: bool = cmp_ne %in %13
+  br %14 @6 @14
+@6:
+  %15: i64 = const 16
+  %16: i32 = const 0
+  %17: i32 = call $fseek %in %15 %16
+  %18: i64 = call $ftell %in
+  %19: bool = cmp_eq %18 %15
+  br %19 @7 @15
+@7:
+  %buf: [Any] = call $malloc %len
+  %bytes: [*]u8 = cast %buf
+  %20: usize = call $fread %bytes %5 %len %in
+  %21: bool = cmp_eq %20 %len
+  br %21 @8 @16
+@8:
+  %22: i32 = call $memcmp %buf %msg %len
+  %23: i32 = const 0
+  %24: bool = cmp_eq %22 %23
+  br %24 @9 @17
+@9:
+  %buf2: [Any] = call $malloc %len
+  %25: [Any] = call $memcpy %buf2 %buf %len
+  %26: i32 = call $memcmp %buf2 %msg %len
+  %27: i32 = call $fclose %in
+  call $free %buf
+  call $free %buf2
+  %28: bool = cmp_eq %26 %23
+  br %28 @18 @19
+@10:
+  %29: i32 = const 1
+  ret %29
+@11:
+  %30: i32 = const 2
+  ret %30
+@12:
+  %31: i32 = const 3
+  ret %31
+@13:
+  %32: i32 = const 4
+  ret %32
+@14:
+  %33: i32 = const 5
+  ret %33
+@15:
+  %34: i32 = const 6
+  ret %34
+@16:
+  %35: i32 = const 7
+  ret %35
+@17:
+  %36: i32 = const 8
+  ret %36
+@18:
+  %37: i32 = const 0
+  ret %37
+@19:
+  %38: i32 = const 9
+  ret %38
+}

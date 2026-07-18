@@ -2246,6 +2246,13 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
         *(uint8_t **)return_address = result;
         break;
     }
+    case IR_EXTERNAL_FUNCTION__memcmp: {
+        void *a = (void *)*(uint8_t **)argument_addresses[0];
+        void *b = (void *)*(uint8_t **)argument_addresses[1];
+        size_t size = *(size_t *)argument_addresses[2];
+        *(int32_t *)return_address = memcmp(a, b, size);
+        break;
+    }
     case IR_EXTERNAL_FUNCTION__memcpy: {
         void *destination = (void *)*(uint8_t **)argument_addresses[0];
         void *source = (void *)*(uint8_t **)argument_addresses[1];

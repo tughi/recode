@@ -301,6 +301,7 @@ typedef enum {
     IR_EXTERNAL_FUNCTION__fwrite,
     IR_EXTERNAL_FUNCTION__get_dirent_name,
     IR_EXTERNAL_FUNCTION__malloc,
+    IR_EXTERNAL_FUNCTION__memcmp,
     IR_EXTERNAL_FUNCTION__memcpy,
     IR_EXTERNAL_FUNCTION__opendir,
     IR_EXTERNAL_FUNCTION__readdir,
