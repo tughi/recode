@@ -1,4 +1,8 @@
+proc memcmp(a: ^Any, b: ^Any, size: usize) -> i32 = external
+
 proc memcpy(destination: ^Any, source: ^Any, size: usize) -> ^Any = external
+
+proc memset(destination: ^Any, value: i32, size: usize) -> ^Any = external
 
 proc strlen(s: [^]u8) -> usize = external
 

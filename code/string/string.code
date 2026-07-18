@@ -1,24 +1,28 @@
+import libc
 import string.builder
 
 proc (str).equals(self, other: str) -> bool {
     if self.length != other.length {
         return false
     }
-    let self_data = self.data()
-    let other_data = other.data()
-    let index = 0usize
-    while index < self.length {
-        if self_data[index] != other_data[index] {
-            return false
-        }
-        index = index + 1
-    }
-    return true
+    return libc.memcmp(self.data().as(^Any), other.data().as(^Any), self.length) == 0
 }
 
 proc (str).data(self) -> [^]u8 {
     let copy = self
     return (^copy).as(^String).data
+}
+
+proc (str).hash(self) -> u64 {
+    // FNV-1a
+    let hash = 14695981039346656037u64
+    let data = self.data()
+    let index = 0usize
+    while index < self.length {
+        hash = (hash ^ data[index].as(u64)) * 1099511628211
+        index = index + 1
+    }
+    return hash
 }
 
 proc (str).char_at(self, index: usize) -> u8 {
