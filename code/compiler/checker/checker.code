@@ -1,3 +1,4 @@
+import collections
 import compiler.checker.checked
 import compiler.lexer
 import compiler.parser.parsed
@@ -10,11 +11,12 @@ type Checker = struct {
     current_scope: ^checked.Symbols
     first_package: ^checked.Package
     last_package: ^checked.Package
-    first_method: ^checked.Method
-    last_method: ^checked.Method
+    methods: collections.Map<u64, ^checked.Procedure_Symbol>
     first_generic_method: ^checked.Generic_Method
     last_generic_method: ^checked.Generic_Method
     return_type: ^checked.Type
+    types: collections.Map<u64, ^checked.Type>
+    placeholder_count: u64
     bool_type: ^checked.Type
     i32_type: ^checked.Type
     module_type: ^checked.Type
@@ -37,11 +39,12 @@ proc check(builtin_package: ^parsed.Package, main_package: ^parsed.Package) -> ^
         current_scope: null
         first_package: null
         last_package: null
-        first_method: null
-        last_method: null
+        methods: collections.empty_map<u64, ^checked.Procedure_Symbol>()
         first_generic_method: null
         last_generic_method: null
         return_type: null
+        types: collections.empty_map<u64, ^checked.Type>()
+        placeholder_count: 0
         bool_type: null
         i32_type: null
         module_type: checked.new_named_type(kind: .Module, name: "Module", package_name: "").as(^checked.Type)
@@ -395,7 +398,7 @@ proc (^Checker).check_global_type_statement(self, type_statement: ^parsed.Type_S
             }
         }
         case .External {
-            let type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name()).as(^checked.Type)
+            let type = self.resolve_external_type(name)
             let symbol = checked.new_type_symbol(name: name, type: type).as(^checked.Symbol)
             self.current_scope.append(name: name, symbol: symbol)
         }
@@ -451,7 +454,7 @@ proc (^Checker).check_procedure_signature(self, procedure_statement: ^parsed.Pro
     let procedure_type = self.resolve_procedure_signature(procedure_statement)
     let procedure_symbol = checked.new_procedure_symbol(name: name, package: self.current_package(), procedure_type: procedure_type, receiver_type: receiver_type, body: null, is_external: procedure_statement.is_external, external_name: external_name)
     if receiver_type != null {
-        self.append_method(checked.new_method(receiver_type: receiver_type, symbol: procedure_symbol))
+        self.append_method(procedure_symbol)
     } else {
         self.current_scope.append(name: name, symbol: procedure_symbol.as(^checked.Symbol))
     }
@@ -630,9 +633,14 @@ proc (^Checker).instantiate_struct(self, generic_symbol: ^checked.Generic_Struct
     let instance = checked.new_struct_type(name: generic_symbol.name, package_name: generic_symbol.package.name)
     instance.generic_symbol = generic_symbol
     instance.first_type_argument = first_type_argument
+    let type_argument = first_type_argument
+    while type_argument != null {
+        instance.hash = checked.combine_type_hash(instance.hash, type_argument.type.hash())
+        type_argument = type_argument.next
+    }
 
     // Instances with unresolved type arguments are transient: no members, never memoized.
-    let type_argument = first_type_argument
+    type_argument = first_type_argument
     while type_argument != null {
         if self.resolve_placeholders(type_argument.type) != type_argument.type {
             return instance
@@ -1127,7 +1135,7 @@ proc (^Checker).check_address_of_expression(self, unary_expression: ^parsed.Unar
         libc.stderr.begin_location_message(unary_expression.operand.location, style: .Error).write("Cannot take address of this expression").end_location_message()
         panic
     }
-    let pointer_type = checked.new_pointer_type(pointee: operand.type).as(^checked.Type)
+    let pointer_type = self.resolve_pointer_type(pointee: operand.type)
     return checked.new_address_of_expression(operand: operand, type: pointer_type).as(^checked.Expression)
 }
 
@@ -1238,7 +1246,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
                             placeholder_signature = inference.signature
                             inferred_placeholders = inference.first_type_argument
                         } else if object.type.kind != .Pointer {
-                            let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                            let pointer_type = self.resolve_pointer_type(pointee: object.type)
                             if self.receiver_accepts(receiver_type, object_type: pointer_type) {
                                 object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
                                 generic_symbol = generic_method.symbol
@@ -1252,7 +1260,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
                 if generic_symbol == null {
                     let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
                     if method_symbol == null and object.type.kind != .Pointer {
-                        method_symbol = self.resolve_method_symbol(receiver_type: checked.new_pointer_type(pointee: object.type).as(^checked.Type), name: member_access.member.lexeme)
+                        method_symbol = self.resolve_method_symbol(receiver_type: self.resolve_pointer_type(pointee: object.type), name: member_access.member.lexeme)
                     }
                     if method_symbol != null {
                         libc.stderr.begin_location_message(instantiation.operand.location, style: .Error).write("Not a generic procedure").end_location_message()
@@ -1293,7 +1301,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         } else {
             let method_symbol = self.resolve_method_symbol(receiver_type: object.type, name: member_access.member.lexeme)
             if method_symbol == null and object.type.kind != .Pointer {
-                let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                let pointer_type = self.resolve_pointer_type(pointee: object.type)
                 method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member_access.member.lexeme)
                 if method_symbol != null {
                     object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
@@ -1311,7 +1319,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
                         if self.resolve_placeholders(receiver_parameter_type) == null {
                             self.bind_placeholder(receiver_parameter_type, object.type, member_access.operand.location)
                             if self.resolve_placeholders(receiver_parameter_type) == null and object.type.kind != .Pointer {
-                                self.bind_placeholder(receiver_parameter_type, checked.new_pointer_type(pointee: object.type).as(^checked.Type), member_access.operand.location)
+                                self.bind_placeholder(receiver_parameter_type, self.resolve_pointer_type(pointee: object.type), member_access.operand.location)
                             }
                         }
                         let receiver_type = self.resolve_placeholders(receiver_parameter_type)
@@ -1322,7 +1330,7 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
                                 placeholder_signature = inference.signature
                                 inferred_placeholders = inference.first_type_argument
                             } else if object.type.kind != .Pointer {
-                                let pointer_type = checked.new_pointer_type(pointee: object.type).as(^checked.Type)
+                                let pointer_type = self.resolve_pointer_type(pointee: object.type)
                                 if self.receiver_accepts(receiver_type, object_type: pointer_type) {
                                     object = checked.new_address_of_expression(operand: object, type: pointer_type).as(^checked.Expression)
                                     receiver = object
@@ -1692,7 +1700,7 @@ proc (^Checker).check_object_member_access(self, object: ^checked.Expression, me
     }
     let method_symbol = self.resolve_method_symbol(receiver_type: object_expression.type, name: member.lexeme)
     if method_symbol == null and object_expression.type.kind != .Pointer {
-        let pointer_type = checked.new_pointer_type(pointee: object_expression.type).as(^checked.Type)
+        let pointer_type = self.resolve_pointer_type(pointee: object_expression.type)
         method_symbol = self.resolve_method_symbol(receiver_type: pointer_type, name: member.lexeme)
     }
     if method_symbol != null {
@@ -1768,13 +1776,8 @@ proc (^Checker).append_generic_method(self, generic_method: ^checked.Generic_Met
     self.last_generic_method = generic_method
 }
 
-proc (^Checker).append_method(self, method: ^checked.Method) {
-    if self.first_method == null {
-        self.first_method = method
-    } else {
-        self.last_method.next = method
-    }
-    self.last_method = method
+proc (^Checker).append_method(self, symbol: ^checked.Procedure_Symbol) {
+    self.methods.put(checked.method_hash(name: symbol.name, receiver_type: symbol.receiver_type), symbol)
 }
 
 proc (^Checker).begin_inference(self, generic_symbol: ^checked.Generic_Procedure_Symbol) -> Placeholder_Inference {
@@ -1784,7 +1787,8 @@ proc (^Checker).begin_inference(self, generic_symbol: ^checked.Generic_Procedure
     let last_type_argument: ^checked.Type_Argument = null
     let type_parameter = generic_symbol.parsed_statement.first_type_parameter
     while type_parameter != null {
-        let placeholder = checked.new_placeholder_type(type_parameter.name.lexeme)
+        self.placeholder_count = self.placeholder_count + 1
+        let placeholder = checked.new_placeholder_type(type_parameter.name.lexeme, discriminator: self.placeholder_count)
         inference_symbols.append(name: type_parameter.name.lexeme, symbol: checked.new_type_symbol(name: type_parameter.name.lexeme, type: placeholder.as(^checked.Type)).as(^checked.Symbol))
         let type_argument = checked.new_type_argument(placeholder.as(^checked.Type))
         if last_type_argument == null {
@@ -1906,7 +1910,7 @@ proc (^Checker).receiver_accepts(self, receiver_type: ^checked.Type, object_type
         if pointee.kind == .Struct {
             let struct_type = pointee.as(^checked.Struct_Type)
             if struct_type.first_member != null and struct_type.first_member.name.equals("super") {
-                return self.receiver_accepts(receiver_type, object_type: checked.new_pointer_type(pointee: struct_type.first_member.type).as(^checked.Type))
+                return self.receiver_accepts(receiver_type, object_type: self.resolve_pointer_type(pointee: struct_type.first_member.type))
             }
         }
     }
@@ -1918,7 +1922,7 @@ proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) ->
         case .Address_Of {
             let pointee = self.resolve_expression_type(expression.as(^parsed.Unary_Expression).operand)
             if pointee != null {
-                return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+                return self.resolve_pointer_type(pointee: pointee)
             }
         }
         case .Identifier {
@@ -1937,19 +1941,19 @@ proc (^Checker).resolve_expression_type(self, expression: ^parsed.Expression) ->
 }
 
 proc (^Checker).resolve_method_symbol(self, receiver_type: ^checked.Type, name: str) -> ^checked.Procedure_Symbol {
-    let method = self.first_method
-    while method != null {
-        if method.symbol.name.equals(name) and method.receiver_type.equals(receiver_type) {
-            return method.symbol
+    let method_symbol = self.methods.get(checked.method_hash(name: name, receiver_type: receiver_type))
+    if method_symbol != null {
+        if not method_symbol.name.equals(name) or not method_symbol.receiver_type.equals(receiver_type) {
+            panic "Method hash collision"
         }
-        method = method.next
+        return method_symbol
     }
     if receiver_type.kind == .Pointer {
         let pointee = receiver_type.as(^checked.Pointer_Type).pointee
         if pointee.kind == .Struct {
             let struct_type = pointee.as(^checked.Struct_Type)
             if struct_type.first_member != null and struct_type.first_member.name.equals("super") {
-                let super_receiver_type = checked.new_pointer_type(pointee: struct_type.first_member.type).as(^checked.Type)
+                let super_receiver_type = self.resolve_pointer_type(pointee: struct_type.first_member.type)
                 return self.resolve_method_symbol(receiver_type: super_receiver_type, name: name)
             }
         }
@@ -1969,7 +1973,7 @@ proc (^Checker).resolve_placeholders(self, type: ^checked.Type) -> ^checked.Type
             if item_type == null {
                 return null
             }
-            return checked.new_array_type(item_type: item_type, size: array_type.size).as(^checked.Type)
+            return self.resolve_array_type(item_type: item_type, size: array_type.size)
         }
         case .Multi_Pointer {
             let pointee = type.as(^checked.Multi_Pointer_Type).pointee
@@ -1980,7 +1984,7 @@ proc (^Checker).resolve_placeholders(self, type: ^checked.Type) -> ^checked.Type
             if resolved_pointee == null {
                 return null
             }
-            return checked.new_multi_pointer_type(pointee: resolved_pointee).as(^checked.Type)
+            return self.resolve_multi_pointer_type(pointee: resolved_pointee)
         }
         case .Placeholder {
             return type.as(^checked.Placeholder_Type).resolved
@@ -1994,7 +1998,7 @@ proc (^Checker).resolve_placeholders(self, type: ^checked.Type) -> ^checked.Type
             if resolved_pointee == null {
                 return null
             }
-            return checked.new_pointer_type(pointee: resolved_pointee).as(^checked.Type)
+            return self.resolve_pointer_type(pointee: resolved_pointee)
         }
         case .Struct {
             let struct_type = type.as(^checked.Struct_Type)
@@ -2077,17 +2081,17 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
         case .Array {
             let array_type = parsed_type.as(^parsed.Array_Type)
             let item_type = self.resolve_type(array_type.item_type)
-            return checked.new_array_type(item_type: item_type, size: array_type.size.value).as(^checked.Type)
+            return self.resolve_array_type(item_type: item_type, size: array_type.size.value)
         }
         case .Multi_Pointer {
             let multi_pointer_type = parsed_type.as(^parsed.Multi_Pointer_Type)
             let pointee = self.resolve_type(multi_pointer_type.pointee)
-            return checked.new_multi_pointer_type(pointee: pointee).as(^checked.Type)
+            return self.resolve_multi_pointer_type(pointee: pointee)
         }
         case .Pointer {
             let pointer_type = parsed_type.as(^parsed.Pointer_Type)
             let pointee = self.resolve_type(pointer_type.pointee)
-            return checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+            return self.resolve_pointer_type(pointee: pointee)
         }
         case .Procedure {
             let procedure_type = parsed_type.as(^parsed.Procedure_Type)
@@ -2112,6 +2116,62 @@ proc (^Checker).resolve_type(self, parsed_type: ^parsed.Type) -> ^checked.Type {
             return checked.new_procedure_type(first_parameter: first_parameter, return_type: return_type).as(^checked.Type)
         }
     }
+}
+
+proc (^Checker).resolve_array_type(self, item_type: ^checked.Type, size: u64) -> ^checked.Type {
+    let hash = checked.array_type_hash(item_type: item_type, size: size)
+    let existing_type = self.types.get(hash)
+    if existing_type != null {
+        if existing_type.kind != .Array or not existing_type.as(^checked.Array_Type).item_type.equals(item_type) or existing_type.as(^checked.Array_Type).size != size {
+            panic "Checked type hash collision"
+        }
+        return existing_type
+    }
+    let array_type = checked.new_array_type(item_type: item_type, size: size).as(^checked.Type)
+    self.types.put(hash, array_type)
+    return array_type
+}
+
+proc (^Checker).resolve_external_type(self, name: str) -> ^checked.Type {
+    let hash = checked.named_type_hash(kind: .External, name: name)
+    let existing_type = self.types.get(hash)
+    if existing_type != null {
+        if existing_type.kind != .External or not existing_type.name().equals(name) {
+            panic "Checked type hash collision"
+        }
+        return existing_type
+    }
+    let external_type = checked.new_named_type(kind: .External, name: name, package_name: self.package_name()).as(^checked.Type)
+    self.types.put(hash, external_type)
+    return external_type
+}
+
+proc (^Checker).resolve_multi_pointer_type(self, pointee: ^checked.Type) -> ^checked.Type {
+    let hash = checked.multi_pointer_type_hash(pointee)
+    let existing_type = self.types.get(hash)
+    if existing_type != null {
+        if existing_type.kind != .Multi_Pointer or not existing_type.as(^checked.Multi_Pointer_Type).pointee.equals(pointee) {
+            panic "Checked type hash collision"
+        }
+        return existing_type
+    }
+    let multi_pointer_type = checked.new_multi_pointer_type(pointee: pointee).as(^checked.Type)
+    self.types.put(hash, multi_pointer_type)
+    return multi_pointer_type
+}
+
+proc (^Checker).resolve_pointer_type(self, pointee: ^checked.Type) -> ^checked.Type {
+    let hash = checked.pointer_type_hash(pointee)
+    let existing_type = self.types.get(hash)
+    if existing_type != null {
+        if existing_type.kind != .Pointer or not existing_type.as(^checked.Pointer_Type).pointee.equals(pointee) {
+            panic "Checked type hash collision"
+        }
+        return existing_type
+    }
+    let pointer_type = checked.new_pointer_type(pointee: pointee).as(^checked.Type)
+    self.types.put(hash, pointer_type)
+    return pointer_type
 }
 
 proc (^Checker).resolve_type_symbol(self, package: ^checked.Package, name: ^lexer.Identifier) -> ^checked.Symbol {

@@ -1,6 +1,14 @@
 import allocator
 import libc
 
+proc (u64).equals(self, other: u64) -> bool {
+    return self == other
+}
+
+proc (u64).hash(self) -> u64 {
+    return self
+}
+
 type Map<K, V> = struct {
     buckets: [^]^Map_Entry<K, V>
     capacity: usize

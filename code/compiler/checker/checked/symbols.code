@@ -103,14 +103,8 @@ proc new_import_symbol(name: str, package: ^Package) -> ^Import_Symbol {
     ))
 }
 
-type Method = struct {
-    receiver_type: ^Type
-    symbol: ^Procedure_Symbol
-    next: ^Method
-}
-
-proc new_method(receiver_type: ^Type, symbol: ^Procedure_Symbol) -> ^Method {
-    return allocator.new(Method(receiver_type: receiver_type, symbol: symbol, next: null))
+proc method_hash(name: str, receiver_type: ^Type) -> u64 {
+    return combine_type_hash(name.hash(), receiver_type.hash())
 }
 
 type Package_Symbol = struct {

@@ -30,6 +30,24 @@ type Type_Kind = enum {
 
 type Type = struct {
     kind: Type_Kind
+    hash: u64
+}
+
+proc (^Type).hash(self) -> u64 {
+    return self.hash
+}
+
+proc combine_type_hash(hash: u64, value: u64) -> u64 {
+    return (hash ^ value) * 1099511628211
+}
+
+proc type_kind_hash(kind: Type_Kind) -> u64 {
+    return combine_type_hash(14695981039346656037u64, kind.value.as(u64))
+}
+
+proc named_type_hash(kind: Type_Kind, name: str) -> u64 {
+    // The package is excluded: external types unify by name across packages.
+    return combine_type_hash(type_kind_hash(kind), name.hash())
 }
 
 type Array_Type = struct {
@@ -38,9 +56,13 @@ type Array_Type = struct {
     size: u64
 }
 
+proc array_type_hash(item_type: ^Type, size: u64) -> u64 {
+    return combine_type_hash(combine_type_hash(type_kind_hash(.Array), item_type.hash()), size)
+}
+
 proc new_array_type(item_type: ^Type, size: u64) -> ^Array_Type {
     return allocator.new(Array_Type(
-        super: Type(kind: .Array)
+        super: Type(kind: .Array, hash: array_type_hash(item_type: item_type, size: size))
         item_type: item_type
         size: size
     ))
@@ -60,9 +82,17 @@ type Enum_Type = struct {
     members: collections.Map<str, ^Enum_Member>
 }
 
+proc enum_type_hash(name: str, package_name: str) -> u64 {
+    return combine_type_hash(named_type_hash(kind: .Enum, name: name), package_name.hash())
+}
+
 proc new_enum_type(name: str, package_name: str) -> ^Enum_Type {
     return allocator.new(Enum_Type(
-        super: Named_Type(super: Type(kind: .Enum), name: name, package_name: package_name)
+        super: Named_Type(
+            super: Type(kind: .Enum, hash: enum_type_hash(name: name, package_name: package_name))
+            name: name
+            package_name: package_name
+        )
         members: collections.empty_map<str, ^Enum_Member>()
     ))
 }
@@ -80,9 +110,13 @@ type Multi_Pointer_Type = struct {
     pointee: ^Type
 }
 
+proc multi_pointer_type_hash(pointee: ^Type) -> u64 {
+    return combine_type_hash(type_kind_hash(.Multi_Pointer), pointee.hash())
+}
+
 proc new_multi_pointer_type(pointee: ^Type) -> ^Multi_Pointer_Type {
     return allocator.new(Multi_Pointer_Type(
-        super: Type(kind: .Multi_Pointer)
+        super: Type(kind: .Multi_Pointer, hash: multi_pointer_type_hash(pointee))
         pointee: pointee
     ))
 }
@@ -158,68 +192,72 @@ proc (^Type).name(self) -> str {
 }
 
 proc (^Type).equals(self, other: ^Type) -> bool {
+    if self == other {
+        return true
+    }
     if self.kind != other.kind {
         return false
     }
     switch self.kind {
-        case .Array {
-            return self.as(^Array_Type).size == other.as(^Array_Type).size and self.as(^Array_Type).item_type.equals(other.as(^Array_Type).item_type)
-        }
-        case .Enum {
-            let self_named = self.as(^Named_Type)
-            let other_named = other.as(^Named_Type)
-            return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
-        }
-        case .External {
-            return self.name().equals(other.name())
-        }
-        case .Multi_Pointer {
-            return self.as(^Multi_Pointer_Type).pointee.equals(other.as(^Multi_Pointer_Type).pointee)
-        }
-        case .Placeholder {
-            return self == other
-        }
-        case .Pointer {
-            return self.as(^Pointer_Type).pointee.equals(other.as(^Pointer_Type).pointee)
-        }
-        case .Struct {
-            let self_struct = self.as(^Struct_Type)
-            let other_struct = other.as(^Struct_Type)
-            if self_struct.generic_symbol != null or other_struct.generic_symbol != null {
-                if self_struct.generic_symbol != other_struct.generic_symbol {
+        case .Procedure {
+            // Procedure types are not interned: their parameters carry names the body checker relies on.
+            let self_procedure = self.as(^Procedure_Type)
+            let other_procedure = other.as(^Procedure_Type)
+            let self_parameter = self_procedure.first_parameter
+            let other_parameter = other_procedure.first_parameter
+            while self_parameter != null and other_parameter != null {
+                if not self_parameter.parameter_type.equals(other_parameter.parameter_type) {
                     return false
                 }
-                let self_type_argument = self_struct.first_type_argument
-                let other_type_argument = other_struct.first_type_argument
-                while self_type_argument != null {
-                    if not self_type_argument.type.equals(other_type_argument.type) {
-                        return false
-                    }
-                    self_type_argument = self_type_argument.next
-                    other_type_argument = other_type_argument.next
-                }
-                return true
+                self_parameter = self_parameter.next
+                other_parameter = other_parameter.next
             }
-            let self_named = self.as(^Named_Type)
-            let other_named = other.as(^Named_Type)
-            return self_named.name.equals(other_named.name) and self_named.package_name.equals(other_named.package_name)
+            if self_parameter != null or other_parameter != null {
+                return false
+            }
+            if self_procedure.return_type == null or other_procedure.return_type == null {
+                return self_procedure.return_type == other_procedure.return_type
+            }
+            return self_procedure.return_type.equals(other_procedure.return_type)
+        }
+        case .Struct {
+            // Transient generic instances (unresolved type arguments) are never memoized.
+            let self_struct = self.as(^Struct_Type)
+            let other_struct = other.as(^Struct_Type)
+            if self_struct.generic_symbol == null or self_struct.generic_symbol != other_struct.generic_symbol {
+                return false
+            }
+            let self_type_argument = self_struct.first_type_argument
+            let other_type_argument = other_struct.first_type_argument
+            while self_type_argument != null {
+                if not self_type_argument.type.equals(other_type_argument.type) {
+                    return false
+                }
+                self_type_argument = self_type_argument.next
+                other_type_argument = other_type_argument.next
+            }
+            return true
         }
         else {
-            return true
+            return false
         }
     }
 }
 
 proc new_named_type(kind: Type_Kind, name: str, package_name: str) -> ^Named_Type {
     return allocator.new(Named_Type(
-        super: Type(kind: kind)
+        super: Type(kind: kind, hash: named_type_hash(kind: kind, name: name))
         name: name
         package_name: package_name
     ))
 }
 
+proc null_type_hash() -> u64 {
+    return type_kind_hash(.Null)
+}
+
 proc new_null_type() -> ^Type {
-    return allocator.new(Type(kind: .Null))
+    return allocator.new(Type(kind: .Null, hash: null_type_hash()))
 }
 
 type Placeholder_Type = struct {
@@ -228,9 +266,14 @@ type Placeholder_Type = struct {
     resolved: ^Type
 }
 
-proc new_placeholder_type(name: str) -> ^Placeholder_Type {
+proc placeholder_type_hash(name: str, discriminator: u64) -> u64 {
+    // The discriminator keeps same-named placeholders of different inferences distinct.
+    return combine_type_hash(named_type_hash(kind: .Placeholder, name: name), discriminator)
+}
+
+proc new_placeholder_type(name: str, discriminator: u64) -> ^Placeholder_Type {
     return allocator.new(Placeholder_Type(
-        super: Type(kind: .Placeholder)
+        super: Type(kind: .Placeholder, hash: placeholder_type_hash(name: name, discriminator: discriminator))
         name: name
         resolved: null
     ))
@@ -241,9 +284,13 @@ type Pointer_Type = struct {
     pointee: ^Type
 }
 
+proc pointer_type_hash(pointee: ^Type) -> u64 {
+    return combine_type_hash(type_kind_hash(.Pointer), pointee.hash())
+}
+
 proc new_pointer_type(pointee: ^Type) -> ^Pointer_Type {
     return allocator.new(Pointer_Type(
-        super: Type(kind: .Pointer)
+        super: Type(kind: .Pointer, hash: pointer_type_hash(pointee))
         pointee: pointee
     ))
 }
@@ -264,9 +311,22 @@ type Procedure_Type = struct {
     return_type: ^Type
 }
 
+proc procedure_type_hash(first_parameter: ^Procedure_Parameter, return_type: ^Type) -> u64 {
+    let hash = type_kind_hash(.Procedure)
+    let parameter = first_parameter
+    while parameter != null {
+        hash = combine_type_hash(hash, parameter.parameter_type.hash())
+        parameter = parameter.next
+    }
+    if return_type != null {
+        hash = combine_type_hash(hash, return_type.hash())
+    }
+    return hash
+}
+
 proc new_procedure_type(first_parameter: ^Procedure_Parameter, return_type: ^Type) -> ^Procedure_Type {
     return allocator.new(Procedure_Type(
-        super: Type(kind: .Procedure)
+        super: Type(kind: .Procedure, hash: procedure_type_hash(first_parameter: first_parameter, return_type: return_type))
         first_parameter: first_parameter
         return_type: return_type
     ))
@@ -291,9 +351,13 @@ type Struct_Type = struct {
     last_member: ^Struct_Member
 }
 
+proc struct_type_hash(name: str, package_name: str) -> u64 {
+    return combine_type_hash(named_type_hash(kind: .Struct, name: name), package_name.hash())
+}
+
 proc new_struct_type(name: str, package_name: str) -> ^Struct_Type {
     return allocator.new(Struct_Type(
-        super: Named_Type(super: Type(kind: .Struct), name: name, package_name: package_name)
+        super: Named_Type(super: Type(kind: .Struct, hash: struct_type_hash(name: name, package_name: package_name)), name: name, package_name: package_name)
         generic_symbol: null
         first_type_argument: null
         first_member: null
