@@ -1142,42 +1142,6 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool
     debugger->mode = DEBUGGER_MODE__CONTINUE;
 }
 
-static File *load_sources(IR_Module *module) {
-    if (module->source_files.size == 0) {
-        return NULL;
-    }
-    File *sources = calloc(module->source_files.size, sizeof(File));
-    String ir_path = module->lexed_file.file.path;
-    size_t dir_length = 0;
-    for (size_t i = ir_path.length; i > 0; i--) {
-        if (ir_path.content[i - 1] == '/') {
-            dir_length = i;
-            break;
-        }
-    }
-    for (size_t i = 0; i < module->source_files.size; i++) {
-        String path = module->source_files.items[i];
-        char *resolved = malloc(dir_length + path.length + 1);
-        size_t resolved_length = 0;
-        if (path.length > 0 && path.content[0] != '/') {
-            memcpy(resolved, ir_path.content, dir_length);
-            resolved_length = dir_length;
-        }
-        memcpy(resolved + resolved_length, path.content, path.length);
-        resolved_length += path.length;
-        resolved[resolved_length] = '\0';
-        FILE *stream = fopen(resolved, "r");
-        if (stream == NULL) {
-            fprintf(stderr, "Cannot open source file: %s\n", resolved);
-            free(resolved);
-            continue;
-        }
-        fclose(stream);
-        sources[i] = load_file((String){resolved, resolved_length});
-    }
-    return sources;
-}
-
 static void debugger_restart(Debugger *debugger) {
     for (size_t i = 0; i < debugger->heap_allocations_size; i++) {
         free(debugger->heap_allocations[i].address);
@@ -1218,7 +1182,7 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
     Debugger debugger = {
         .observer = {.on_step = debugger_on_step, .on_heap_alloc = debugger_on_heap_alloc, .on_heap_free = debugger_on_heap_free},
         .module = module,
-        .sources = load_sources(module),
+        .sources = ir_load_source_files(module),
         .mode = DEBUGGER_MODE__STEP,
         .next_depth = 0,
         .gui = {.font = load_bitmap_font("fonts/Code.font"), .root_panel = &split_panel.panel},

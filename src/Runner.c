@@ -43,7 +43,8 @@ int main(int argc, char *argv[]) {
         file = load_file(path);
     }
 
-    IR_Module *module = parse(tokenize(file), debug_mode);
+    Parse_Mode parse_mode = debug_mode ? PARSE_MODE__DEBUG : (profile_mode ? PARSE_MODE__PROFILE : PARSE_MODE__RUN);
+    IR_Module *module = parse(tokenize(file), parse_mode);
 
     if (debug_mode) {
         return (int)debug(module, argc - arg_index, argv + arg_index);

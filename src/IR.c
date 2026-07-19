@@ -440,3 +440,39 @@ void ir_source_file_list_add(IR_Source_File_List *list, String path) {
     }
     list->items[list->size++] = path;
 }
+
+File *ir_load_source_files(IR_Module *module) {
+    if (module->source_files.size == 0) {
+        return NULL;
+    }
+    File *sources = calloc(module->source_files.size, sizeof(File));
+    String ir_path = module->lexed_file.file.path;
+    size_t dir_length = 0;
+    for (size_t i = ir_path.length; i > 0; i--) {
+        if (ir_path.content[i - 1] == '/') {
+            dir_length = i;
+            break;
+        }
+    }
+    for (size_t i = 0; i < module->source_files.size; i++) {
+        String path = module->source_files.items[i];
+        char *resolved = malloc(dir_length + path.length + 1);
+        size_t resolved_length = 0;
+        if (path.length > 0 && path.content[0] != '/') {
+            memcpy(resolved, ir_path.content, dir_length);
+            resolved_length = dir_length;
+        }
+        memcpy(resolved + resolved_length, path.content, path.length);
+        resolved_length += path.length;
+        resolved[resolved_length] = '\0';
+        FILE *stream = fopen(resolved, "r");
+        if (stream == NULL) {
+            fprintf(stderr, "Cannot open source file: %s\n", resolved);
+            free(resolved);
+            continue;
+        }
+        fclose(stream);
+        sources[i] = load_file((String){resolved, resolved_length});
+    }
+    return sources;
+}

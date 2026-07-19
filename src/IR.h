@@ -156,6 +156,7 @@ typedef struct IR_Dbg_Bind_Instruction {
 
 typedef struct IR_Dbg_Line_Instruction {
     Source_Location location;
+    uint64_t profile_time;
 } IR_Dbg_Line_Instruction;
 
 typedef struct IR_Jmp_Instruction {
@@ -378,3 +379,5 @@ typedef struct IR_Module {
     uint32_t globals_size;
     struct Profile_Call *profile_calls;
 } IR_Module;
+
+File *ir_load_source_files(IR_Module *module);

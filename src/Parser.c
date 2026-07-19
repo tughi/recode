@@ -31,7 +31,7 @@ typedef struct {
     IR_Instruction_List forward_references;
     uint32_t function_frame_size;
     uint32_t globals_frame_size;
-    bool debug;
+    Parse_Mode mode;
 } Parser;
 
 typedef union {
@@ -1419,13 +1419,15 @@ static void check_function(Parser *parser, IR_Function *function) {
         for (size_t i = 0; i < block->instructions.size; i++) {
             check_instruction(parser, function, block->instructions.items[i]);
         }
-        if (!parser->debug) {
+        if (parser->mode != PARSE_MODE__DEBUG) {
+            bool keep_lines = parser->mode == PARSE_MODE__PROFILE;
             size_t kept = 0;
             for (size_t i = 0; i < block->instructions.size; i++) {
                 IR_Instruction *instruction = block->instructions.items[i];
-                if (instruction->kind != IR_INSTRUCTION__DBG_BIND && instruction->kind != IR_INSTRUCTION__DBG_LINE) {
-                    block->instructions.items[kept++] = instruction;
+                if (instruction->kind == IR_INSTRUCTION__DBG_BIND || (instruction->kind == IR_INSTRUCTION__DBG_LINE && !keep_lines)) {
+                    continue;
                 }
+                block->instructions.items[kept++] = instruction;
             }
             block->instructions.size = kept;
         }
@@ -1962,7 +1964,7 @@ static void parse_source_declaration(Parser *parser) {
     advance(parser);
 }
 
-IR_Module *parse(Lexed_File lexed_file, bool debug) {
+IR_Module *parse(Lexed_File lexed_file, Parse_Mode mode) {
     IR_Module *module = calloc(1, sizeof(IR_Module));
     module->lexed_file = lexed_file;
 
@@ -1976,7 +1978,7 @@ IR_Module *parse(Lexed_File lexed_file, bool debug) {
     parser.forward_references = (IR_Instruction_List){0};
     parser.function_frame_size = 0;
     parser.globals_frame_size = 0;
-    parser.debug = debug;
+    parser.mode = mode;
 
     parser.current = fetch_token(&parser);
     parser.next = fetch_token(&parser);
