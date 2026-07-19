@@ -9,6 +9,7 @@
 int main(int argc, char *argv[]) {
     bool debug_mode = false;
     bool profile_mode = false;
+    const char *profile_path = NULL;
     int arg_index = 1;
     while (arg_index < argc) {
         if (strcmp(argv[arg_index], "-d") == 0) {
@@ -17,13 +18,21 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[arg_index], "-p") == 0) {
             profile_mode = true;
             arg_index++;
+        } else if (strcmp(argv[arg_index], "-o") == 0) {
+            if (arg_index + 1 >= argc) {
+                fprintf(stderr, "Runner: -o requires an output file\n");
+                return 1;
+            }
+            profile_mode = true;
+            profile_path = argv[arg_index + 1];
+            arg_index += 2;
         } else {
             break;
         }
     }
 
     if (arg_index >= argc) {
-        fprintf(stderr, "Usage: Runner [-d | -p] IR [args...]\n");
+        fprintf(stderr, "Usage: Runner [-d | -p [-o FILE]] IR [args...]\n");
         return 1;
     }
     if (debug_mode && profile_mode) {
@@ -51,7 +60,11 @@ int main(int argc, char *argv[]) {
     }
     int64_t result = interpret(module, argc - arg_index, argv + arg_index, NULL, profile_mode);
     if (profile_mode) {
-        profile_show(module);
+        if (profile_path != NULL) {
+            profile_save(module, profile_path);
+        } else {
+            profile_show(module);
+        }
     }
     return (int)result;
 }

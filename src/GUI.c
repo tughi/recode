@@ -97,6 +97,8 @@ Font load_bitmap_font(const char *path) {
 }
 
 bool draw_text(Font font, String text, Color color, Vector2 *position, float max_right) {
+    position->x = roundf(position->x);
+    position->y = roundf(position->y);
     for (size_t i = 0; i < text.length; i++) {
         int codepoint = text.content[i];
         int glyph_index = GetGlyphIndex(font, codepoint);
@@ -287,7 +289,7 @@ float text_panel_draw_gutter(Font font, Rectangle bounds, float row_y, size_t li
     int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
     Color number_color = line == current_line || line == view_line ? GRAY : DARKGRAY;
     Color dim_color = {number_color.r, number_color.g, number_color.b, number_color.a / 2};
-    Vector2 number_position = {bounds.x, row_y};
+    Vector2 number_position = {roundf(bounds.x), roundf(row_y)};
     for (int j = 0; number_text[j] != '\0'; j++) {
         int codepoint = number_text[j];
         Color color = (size_t)j < leading ? dim_color : number_color;

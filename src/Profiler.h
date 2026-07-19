@@ -23,4 +23,6 @@ typedef struct Profile_Call {
 
 Profile_Call *profile_call_child(Profile_Call *parent, IR_Function *function);
 
+void profile_save(IR_Module *module, const char *path);
+
 void profile_show(IR_Module *module);

@@ -1,5 +1,6 @@
 #include "Profiler.h"
 #include "GUI.h"
+#include <inttypes.h>
 #include <math.h>
 #include <raylib.h>
 #include <stdio.h>
@@ -128,7 +129,40 @@ static int format_bytes(char *buffer, size_t buffer_size, uint64_t bytes) {
     return snprintf(buffer, buffer_size, "%llu B", (unsigned long long)bytes);
 }
 
-static void draw_header(Profiler *profiler, Rectangle bounds, bool memory, const char *hints) {
+#define TAB_COUNT 4
+#define BUTTON_COUNT (TAB_COUNT + 1)
+
+static const char *button_labels[BUTTON_COUNT] = {"Flamegraph", "Memory", "Functions", "Sandwich", "?"};
+
+static Panel *tab_panel(Profiler *profiler, size_t index) {
+    if (index <= 1) {
+        return profiler->flamegraph_panel;
+    }
+    if (index == 2) {
+        return profiler->functions_panel;
+    }
+    return profiler->sandwich_panel;
+}
+
+static bool tab_active(Profiler *profiler, size_t index) {
+    if (profiler->gui.root_panel != tab_panel(profiler, index)) {
+        return false;
+    }
+    if (index <= 1) {
+        return profiler->memory_mode == (index == 1);
+    }
+    return true;
+}
+
+static void header_buttons(Font font, float right, float top, Rectangle buttons[BUTTON_COUNT]) {
+    for (size_t i = BUTTON_COUNT; i-- > 0;) {
+        float width = measure_text_width(font, string_from((char *)button_labels[i])) + 20.0f;
+        buttons[i] = (Rectangle){right - width, top, width, HEADER_HEIGHT - 16.0f};
+        right = buttons[i].x - (i == BUTTON_COUNT - 1 ? 14.0f : 6.0f);
+    }
+}
+
+static void draw_header(Profiler *profiler, Rectangle bounds, bool memory) {
     DrawRectangle((int)bounds.x, (int)bounds.y, (int)bounds.width, HEADER_HEIGHT, (Color){36, 36, 42, 255});
     char total[64];
     if (memory) {
@@ -138,9 +172,28 @@ static void draw_header(Profiler *profiler, Rectangle bounds, bool memory, const
     } else {
         snprintf(total, sizeof(total), "%.3f ms total", (double)profile_nanoseconds(profiler->total_time) / 1e6);
     }
+    Font font = profiler->gui.font;
+    Rectangle buttons[BUTTON_COUNT];
+    header_buttons(font, bounds.x + bounds.width - 8.0f, bounds.y + 8.0f, buttons);
+    float text_y = bounds.y + 8.0f + floorf((HEADER_HEIGHT - 16.0f - (float)font.baseSize) / 2.0f);
+    Vector2 mouse = GetMousePosition();
+    for (size_t i = 0; i < BUTTON_COUNT; i++) {
+        Rectangle button = buttons[i];
+        bool active = i < TAB_COUNT ? tab_active(profiler, i) : profiler->show_help;
+        bool hovered = CheckCollisionPointRec(mouse, button);
+        Color fill = active ? (Color){70, 70, 86, 255} : hovered ? (Color){56, 56, 68, 255} : (Color){44, 44, 52, 255};
+        DrawRectangleRec(button, fill);
+        if (active) {
+            DrawRectangleLinesEx(button, 1.0f, (Color){110, 110, 130, 255});
+        }
+        draw_clipped_text(font, string_from((char *)button_labels[i]), button.x + 10.0f, text_y, button.x + button.width, active ? RAYWHITE : LIGHTGRAY);
+        if (hovered) {
+            SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+        }
+    }
     char header[256];
-    int length = snprintf(header, sizeof(header), "%.*s   %s   %s", STRING(profiler->module->lexed_file.file.path), total, hints);
-    draw_clipped_text(profiler->gui.font, (String){header, (size_t)length}, bounds.x + 8.0f, bounds.y + 12.0f, bounds.x + bounds.width - 8.0f, RAYWHITE);
+    int length = snprintf(header, sizeof(header), "%.*s   %s", STRING(profiler->module->lexed_file.file.path), total);
+    draw_clipped_text(font, (String){header, (size_t)length}, bounds.x + 8.0f, text_y, buttons[0].x - 12.0f, RAYWHITE);
 }
 
 static IR_Instruction *function_first_line(IR_Function *function) {
@@ -313,6 +366,9 @@ static void draw_subtree_children(Profiler *profiler, Profile_Call *node, float 
         if (called && child_width < MIN_NODE_WIDTH) {
             child_width = MIN_NODE_WIDTH;
         }
+        if (!called && child_width <= 0.0f) {
+            continue;
+        }
         if (child_x + child_width > x + width) {
             child_width = x + width - child_x;
         }
@@ -337,19 +393,46 @@ static size_t call_depth(Profile_Call *node) {
     return depth;
 }
 
-static size_t call_max_depth(Profile_Call *node) {
+// Depth of the deepest *drawn* row: mirrors draw_subtree_children's layout and
+// stops where rectangles collapse below one pixel, so the scroll range matches
+// what is actually visible.
+static size_t call_max_depth(Profiler *profiler, Profile_Call *node, float width) {
     size_t max_depth = 0;
+    uint64_t node_metric = call_metric(profiler, node);
+    if (node_metric == 0) {
+        return 0;
+    }
+    float child_x = 0.0f;
     for (size_t i = 0; i < node->children_size; i++) {
-        size_t child_depth = call_max_depth(node->children[i]) + 1;
-        if (child_depth > max_depth) {
-            max_depth = child_depth;
+        Profile_Call *child = node->children[i];
+        uint64_t child_metric = call_metric(profiler, child);
+        float child_width = width * (double)child_metric / (double)node_metric;
+        bool called = profiler->memory_mode ? child_metric > 0 : child->calls > 0;
+        if (called && child_width < MIN_NODE_WIDTH) {
+            child_width = MIN_NODE_WIDTH;
         }
+        if (!called && child_width <= 0.0f) {
+            continue;
+        }
+        if (child_x + child_width > width) {
+            child_width = width - child_x;
+        }
+        if (child_width <= 0.0f) {
+            break;
+        }
+        if (child_width >= 1.0f) {
+            size_t child_depth = call_max_depth(profiler, child, child_width) + 1;
+            if (child_depth > max_depth) {
+                max_depth = child_depth;
+            }
+        }
+        child_x += child_width;
     }
     return max_depth;
 }
 
-static float flamegraph_content_height(Profile_Call *focus) {
-    return (float)(call_depth(focus) + 1 + call_max_depth(focus)) * ROW_HEIGHT;
+static float flamegraph_content_height(Profiler *profiler, Profile_Call *focus, float width) {
+    return (float)(call_depth(focus) + 1 + call_max_depth(profiler, focus, width)) * ROW_HEIGHT;
 }
 
 static void draw_tooltip(Profiler *profiler, Profile_Call *node) {
@@ -403,9 +486,9 @@ static void flamegraph_panel_draw(Flamegraph_Panel *flamegraph_panel, GUI *gui, 
     }
     draw_subtree(profiler, focus, bounds.x, base + (float)focus_depth * ROW_HEIGHT, bounds.width, ROW_HEIGHT);
     EndScissorMode();
-    draw_panel_scrollbar(flame_bounds, flamegraph_content_height(focus), &flamegraph_panel->scrollbar);
+    draw_panel_scrollbar(flame_bounds, flamegraph_content_height(profiler, focus, bounds.width), &flamegraph_panel->scrollbar);
 
-    draw_header(profiler, bounds, profiler->memory_mode, profiler->memory_mode ? "click: zoom, right: reset, middle: source, M: time, Tab: functions, ?: guide, Q: quit" : "click: zoom, right: reset, middle: source, M: memory, Tab: functions, ?: guide, Q: quit");
+    draw_header(profiler, bounds, profiler->memory_mode);
     if (profiler->hovered != NULL) {
         draw_tooltip(profiler, profiler->hovered);
     }
@@ -427,7 +510,7 @@ static void flamegraph_panel_handle_input(Flamegraph_Panel *flamegraph_panel, GU
         profiler->hovered = NULL;
     }
     float flame_height = flamegraph_panel->panel.bounds.height - HEADER_HEIGHT;
-    scrollbar_wheel_input(&flamegraph_panel->scrollbar, flame_height, flamegraph_content_height(profiler->focus), ROW_HEIGHT);
+    scrollbar_wheel_input(&flamegraph_panel->scrollbar, flame_height, flamegraph_content_height(profiler, profiler->focus, flamegraph_panel->panel.bounds.width), ROW_HEIGHT);
 }
 
 static void flamegraph_panel_handle_step(Flamegraph_Panel *flamegraph_panel, GUI *gui) {
@@ -452,19 +535,22 @@ static Flamegraph_Panel make_flamegraph_panel(float weight) {
     };
 }
 
-static float sandwich_content_height(Profiler *profiler) {
-    return (float)(call_max_depth(profiler->sandwich_callers) + 1 + call_max_depth(profiler->sandwich_callees)) * ROW_HEIGHT;
+static float sandwich_content_height(Profiler *profiler, float width) {
+    return (float)(call_max_depth(profiler, profiler->sandwich_callers, width) + 1 + call_max_depth(profiler, profiler->sandwich_callees, width)) * ROW_HEIGHT;
 }
 
 static void sandwich_panel_draw(Sandwich_Panel *sandwich_panel, GUI *gui, Rectangle bounds) {
     Profiler *profiler = gui->context;
+    // The sandwich always shows time; memory mode belongs to the Memory tab.
+    bool memory_mode = profiler->memory_mode;
+    profiler->memory_mode = false;
     DrawRectangleRec(bounds, (Color){24, 24, 28, 255});
     profiler->hovered = NULL;
 
     Profile_Call *callers = profiler->sandwich_callers;
     Profile_Call *callees = profiler->sandwich_callees;
     Rectangle flame_bounds = {bounds.x, bounds.y + HEADER_HEIGHT, bounds.width, bounds.height - HEADER_HEIGHT};
-    size_t callers_depth = call_max_depth(callers);
+    size_t callers_depth = call_max_depth(profiler, callers, bounds.width);
     if (profiler->sandwich_scroll_pending) {
         float snap = (float)callers_depth * ROW_HEIGHT - (flame_bounds.height - ROW_HEIGHT) / 2.0f;
         sandwich_panel->scrollbar.scroll_y = snap > 0.0f ? snap : 0.0f;
@@ -476,14 +562,13 @@ static void sandwich_panel_draw(Sandwich_Panel *sandwich_panel, GUI *gui, Rectan
     draw_subtree_children(profiler, callers, bounds.x, center_y - ROW_HEIGHT, bounds.width, -ROW_HEIGHT);
     draw_subtree(profiler, callees, bounds.x, center_y, bounds.width, ROW_HEIGHT);
     EndScissorMode();
-    draw_panel_scrollbar(flame_bounds, sandwich_content_height(profiler), &sandwich_panel->scrollbar);
+    draw_panel_scrollbar(flame_bounds, sandwich_content_height(profiler, bounds.width), &sandwich_panel->scrollbar);
 
-    char hints[256];
-    snprintf(hints, sizeof(hints), "%.*s: callers above, callees below   click: re-root, middle: source, M: %s, Tab: flamegraph, ?: guide, Q: quit", STRING(callees->function->name), profiler->memory_mode ? "time" : "memory");
-    draw_header(profiler, bounds, profiler->memory_mode, hints);
+    draw_header(profiler, bounds, false);
     if (profiler->hovered != NULL) {
         draw_tooltip(profiler, profiler->hovered);
     }
+    profiler->memory_mode = memory_mode;
 }
 
 static void sandwich_panel_handle_input(Sandwich_Panel *sandwich_panel, GUI *gui) {
@@ -497,8 +582,11 @@ static void sandwich_panel_handle_input(Sandwich_Panel *sandwich_panel, GUI *gui
         gui->root_panel = profiler->functions_panel;
         profiler->hovered = NULL;
     }
+    bool memory_mode = profiler->memory_mode;
+    profiler->memory_mode = false;
     float flame_height = sandwich_panel->panel.bounds.height - HEADER_HEIGHT;
-    scrollbar_wheel_input(&sandwich_panel->scrollbar, flame_height, sandwich_content_height(profiler), ROW_HEIGHT);
+    scrollbar_wheel_input(&sandwich_panel->scrollbar, flame_height, sandwich_content_height(profiler, sandwich_panel->panel.bounds.width), ROW_HEIGHT);
+    profiler->memory_mode = memory_mode;
 }
 
 static void sandwich_panel_handle_step(Sandwich_Panel *sandwich_panel, GUI *gui) {
@@ -675,7 +763,7 @@ static Color header_color(Sort_Column column, Sort_Column active_column, bool ho
 static void draw_column_header(Font font, String label, float left, float right, float y, Color color, bool active, bool descending) {
     draw_clipped_text(font, label, left, y, right, color);
     int codepoint = active ? (descending ? HEADER_GLYPH__ARROW_DOWN : HEADER_GLYPH__ARROW_UP) : HEADER_GLYPH__HOLLOW_BULLET;
-    DrawTextCodepoint(font, codepoint, (Vector2){right - HEADER_GLYPH_WIDTH, y}, (float)font.baseSize, color);
+    DrawTextCodepoint(font, codepoint, (Vector2){roundf(right - HEADER_GLYPH_WIDTH), roundf(y)}, (float)font.baseSize, color);
 }
 
 static void draw_value_bar(Profiler *profiler, Font font, IR_Function *function, bool active, double fraction, String text, float left, float right, float y) {
@@ -750,7 +838,7 @@ static void functions_panel_draw(Functions_Panel *functions_panel, GUI *gui, Rec
     EndScissorMode();
     draw_panel_scrollbar(rows_bounds, (float)profiler->functions_size * ROW_HEIGHT, &functions_panel->scrollbar);
 
-    draw_header(profiler, bounds, false, "click a column to sort, a row for source   Tab: sandwich, ?: guide, Q: quit");
+    draw_header(profiler, bounds, false);
 }
 
 static void functions_panel_handle_input(Functions_Panel *functions_panel, GUI *gui) {
@@ -905,7 +993,7 @@ typedef struct {
     bool heading;
 } Help_Line;
 
-static const Help_Line help_lines[] = {
+static const Help_Line help_profile_lines[] = {
     {"Reading the profile", true},
     {"", false},
     {"Self    time spent in the function's own instructions, callees excluded.", false},
@@ -915,39 +1003,80 @@ static const Help_Line help_lines[] = {
     {"Calls   how many times the function was entered.", false},
     {"        Self divided by Calls is the average cost of one call.", false},
     {"", false},
+};
+
+static const Help_Line help_flamegraph_lines[] = {
+    {"Flamegraph", true},
+    {"", false},
+    {"Width is the share of the parent's time.", false},
+    {"Color is heat: dark red marks the sorted column's maximum, yellow near zero.", false},
+    {"Left-click zooms into a subtree, right-click resets, middle-click opens source.", false},
+};
+
+static const Help_Line help_memory_lines[] = {
+    {"Memory", true},
+    {"", false},
+    {"An allocation flamegraph: width is the share of the parent's allocated bytes,", false},
+    {"every allocation in a subtree rolled up into its parents.", false},
+    {"Color is heat: dark red marks the sorted column's maximum, yellow near zero.", false},
+    {"Left-click zooms into a subtree, right-click resets, middle-click opens source.", false},
+};
+
+static const Help_Line help_functions_lines[] = {
+    {"Functions", true},
+    {"", false},
+    {"Click a column header to sort, click it again to reverse; the sorted column", false},
+    {"drives the heat colors in every view. Click a row to open its source.", false},
+    {"", false},
     {"What the numbers say", true},
     {"", false},
     {"High Self               a hot worker: check its source lines.", false},
     {"High Total, low Self    a coordinator: the cost is in its callees.", false},
     {"High Calls, low Self    call overhead: fewer, fatter calls help.", false},
     {"Self equals Total       a leaf: it calls nothing (externals always are).", false},
-    {"", false},
-    {"Flamegraph", true},
-    {"", false},
-    {"Width is the share of the parent's time (or bytes in memory mode).", false},
-    {"Color is heat: dark red marks the sorted column's maximum, yellow near zero.", false},
-    {"Left-click zooms into a subtree, right-click resets, middle-click opens source.", false},
-    {"", false},
+};
+
+static const Help_Line help_sandwich_lines[] = {
     {"Sandwich", true},
     {"", false},
     {"The selected function at full width in the middle; its merged callers stack", false},
     {"upward above it, its merged callees stack downward below.", false},
     {"Left-click re-roots the view on any frame, middle-click opens source.", false},
-    {"", false},
-    {"Keys", true},
-    {"", false},
-    {"Tab  flamegraph / functions / sandwich    M  time / memory    ?  this guide    Q  quit", false},
 };
 
+typedef struct {
+    const Help_Line *lines;
+    size_t size;
+} Help_Section;
+
 static void draw_help(Profiler *profiler) {
+    Help_Section view;
+    if (profiler->gui.root_panel == profiler->functions_panel) {
+        view = (Help_Section){help_functions_lines, sizeof(help_functions_lines) / sizeof(help_functions_lines[0])};
+    } else if (profiler->gui.root_panel == profiler->sandwich_panel) {
+        view = (Help_Section){help_sandwich_lines, sizeof(help_sandwich_lines) / sizeof(help_sandwich_lines[0])};
+    } else if (profiler->memory_mode) {
+        view = (Help_Section){help_memory_lines, sizeof(help_memory_lines) / sizeof(help_memory_lines[0])};
+    } else {
+        view = (Help_Section){help_flamegraph_lines, sizeof(help_flamegraph_lines) / sizeof(help_flamegraph_lines[0])};
+    }
+    Help_Section sections[] = {
+        {help_profile_lines, sizeof(help_profile_lines) / sizeof(help_profile_lines[0])},
+        view,
+    };
+    size_t sections_size = sizeof(sections) / sizeof(sections[0]);
+
     Font font = profiler->gui.font;
     float line_height = (float)font.baseSize + 2.0f;
-    size_t lines_size = sizeof(help_lines) / sizeof(help_lines[0]);
+    size_t lines_size = 0;
     float text_width = 0.0f;
-    for (size_t i = 0; i < lines_size; i++) {
-        float line_width = measure_text_width(font, string_from((char *)help_lines[i].text));
-        if (line_width > text_width) {
-            text_width = line_width;
+    for (size_t s = 0; s < sections_size; s++) {
+        lines_size += sections[s].size;
+        for (size_t i = 0; i < sections[s].size; i++) {
+            float line_width = measure_text_width(font, string_from((char *)sections[s].lines[i].text));
+            if (line_width > text_width) {
+                text_width = line_width;
+            }
         }
     }
     float padding = 24.0f;
@@ -959,9 +1088,12 @@ static void draw_help(Profiler *profiler) {
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){0, 0, 0, 160});
     DrawRectangle((int)box_x, (int)box_y, (int)box_width, (int)box_height, (Color){30, 30, 36, 255});
     DrawRectangleLines((int)box_x, (int)box_y, (int)box_width, (int)box_height, (Color){90, 90, 90, 255});
-    for (size_t i = 0; i < lines_size; i++) {
-        Vector2 position = {box_x + padding, box_y + padding + (float)i * line_height};
-        draw_text(font, string_from((char *)help_lines[i].text), help_lines[i].heading ? RAYWHITE : LIGHTGRAY, &position, box_x + box_width);
+    size_t line = 0;
+    for (size_t s = 0; s < sections_size; s++) {
+        for (size_t i = 0; i < sections[s].size; i++, line++) {
+            Vector2 position = {box_x + padding, box_y + padding + (float)line * line_height};
+            draw_text(font, string_from((char *)sections[s].lines[i].text), sections[s].lines[i].heading ? RAYWHITE : LIGHTGRAY, &position, box_x + box_width);
+        }
     }
 }
 
@@ -1004,7 +1136,7 @@ void profile_show(IR_Module *module) {
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(1000, 600, "Code IR Profiler");
-    SetExitKey(KEY_Q);
+    SetExitKey(KEY_NULL);
     SetTargetFPS(60);
 
     Flamegraph_Panel flamegraph_panel = make_flamegraph_panel(1.0f);
@@ -1021,7 +1153,7 @@ void profile_show(IR_Module *module) {
         .focus = root,
         .functions = functions,
         .functions_size = functions_size,
-        .sort_column = SORT_COLUMN__SELF_TIME,
+        .sort_column = SORT_COLUMN__TOTAL_TIME,
         .max_calls = max_calls,
         .total_bytes = total_bytes,
         .sources = ir_load_source_files(module),
@@ -1044,6 +1176,13 @@ void profile_show(IR_Module *module) {
             if (IsKeyPressed(KEY_ESCAPE)) {
                 profiler.show_help = false;
             }
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                Rectangle buttons[BUTTON_COUNT];
+                header_buttons(profiler.gui.font, (float)GetScreenWidth() - 8.0f, 8.0f, buttons);
+                if (CheckCollisionPointRec(GetMousePosition(), buttons[TAB_COUNT])) {
+                    profiler.show_help = false;
+                }
+            }
             Panel *root_panel = profiler.gui.root_panel;
             root_panel->bounds = (Rectangle){0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
             BeginDrawing();
@@ -1053,18 +1192,24 @@ void profile_show(IR_Module *module) {
             EndDrawing();
             continue;
         }
-        if (IsKeyPressed(KEY_TAB)) {
-            if (profiler.gui.root_panel == profiler.flamegraph_panel) {
-                profiler.gui.root_panel = profiler.functions_panel;
-            } else if (profiler.gui.root_panel == profiler.functions_panel) {
-                profiler.gui.root_panel = profiler.sandwich_panel;
-            } else {
-                profiler.gui.root_panel = profiler.flamegraph_panel;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            Rectangle buttons[BUTTON_COUNT];
+            header_buttons(profiler.gui.font, (float)GetScreenWidth() - 8.0f, 8.0f, buttons);
+            Vector2 mouse = GetMousePosition();
+            for (size_t i = 0; i < BUTTON_COUNT; i++) {
+                if (CheckCollisionPointRec(mouse, buttons[i])) {
+                    if (i < TAB_COUNT) {
+                        profiler.gui.root_panel = tab_panel(&profiler, i);
+                        if (i <= 1 && profiler.memory_mode != (i == 1)) {
+                            profiler.memory_mode = i == 1;
+                            flamegraph_panel.scrollbar.scroll_y = 0;
+                        }
+                        profiler.hovered = NULL;
+                    } else {
+                        profiler.show_help = true;
+                    }
+                }
             }
-            profiler.hovered = NULL;
-        }
-        if (IsKeyPressed(KEY_M)) {
-            profiler.memory_mode = !profiler.memory_mode;
         }
         gui_render_frame(&profiler.gui);
     }
@@ -1077,4 +1222,100 @@ void profile_show(IR_Module *module) {
     free(functions);
     UnloadFont(profiler.gui.font);
     CloseWindow();
+}
+
+static void save_call_tree(FILE *file, Profile_Call *node, int depth) {
+    fprintf(file, "%14" PRIu64 " %12" PRIu64 " %12" PRIu64 "  %*s%.*s\n", profile_nanoseconds(node->time), node->calls, node->bytes, depth * 2, "", STRING(node->function->name));
+    for (size_t i = 0; i < node->children_size; i++) {
+        save_call_tree(file, node->children[i], depth + 1);
+    }
+}
+
+void profile_save(IR_Module *module, const char *path) {
+    Profile_Call *root = module->profile_calls;
+    if (root == NULL) {
+        return;
+    }
+    for (size_t i = 0; i < root->children_size; i++) {
+        root->time += root->children[i]->time;
+    }
+    if (root->time == 0) {
+        return;
+    }
+    root = root->children[0];
+    uint64_t total_bytes = accumulate_bytes(root);
+
+    FILE *file = fopen(path, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Runner: cannot write profile to %s\n", path);
+        return;
+    }
+
+    fprintf(file, "total: %" PRIu64 " ns\n", profile_nanoseconds(root->time));
+    fprintf(file, "allocated: %" PRIu64 " bytes\n", total_bytes);
+
+    IR_Function **functions = malloc(module->functions.size * sizeof(IR_Function *));
+    size_t functions_size = 0;
+    for (size_t i = 0; i < module->functions.size; i++) {
+        IR_Function *function = module->functions.items[i];
+        if (function->profile.calls > 0) {
+            functions[functions_size++] = function;
+        }
+    }
+    qsort(functions, functions_size, sizeof(IR_Function *), compare_by_self_time);
+
+    fprintf(file, "\nfunctions:\n");
+    fprintf(file, "     self (ns)   total (ns)        calls  function\n");
+    for (size_t i = 0; i < functions_size; i++) {
+        IR_Function *function = functions[i];
+        fprintf(file, "%14" PRIu64 " %12" PRIu64 " %12" PRIu64 "  %.*s\n", profile_nanoseconds(function->profile.exclusive_time), profile_nanoseconds(function->profile.inclusive_time), function->profile.calls, STRING(function->name));
+    }
+    free(functions);
+
+    fprintf(file, "\ncalls:\n");
+    fprintf(file, "     time (ns)        calls        bytes  function\n");
+    save_call_tree(file, root, 0);
+
+    for (size_t s = 0; s < module->source_files.size; s++) {
+        String source = module->source_files.items[s];
+        uint64_t *line_times = NULL;
+        size_t lines_size = 0;
+        for (size_t f = 0; f < module->functions.size; f++) {
+            IR_Function *function = module->functions.items[f];
+            for (size_t b = 0; b < function->blocks.size; b++) {
+                IR_Block *block = function->blocks.items[b];
+                for (size_t i = 0; i < block->instructions.size; i++) {
+                    IR_Instruction *instruction = block->instructions.items[i];
+                    if (instruction->kind != IR_INSTRUCTION__DBG_LINE || instruction->dbg_line_instruction.profile_time == 0) {
+                        continue;
+                    }
+                    Source_Location location = instruction->dbg_line_instruction.location;
+                    if (location.line < 1 || !string_equals(location.source, source)) {
+                        continue;
+                    }
+                    if (location.line > lines_size) {
+                        line_times = realloc(line_times, location.line * sizeof(uint64_t));
+                        memset(line_times + lines_size, 0, (location.line - lines_size) * sizeof(uint64_t));
+                        lines_size = location.line;
+                    }
+                    line_times[location.line - 1] += instruction->dbg_line_instruction.profile_time;
+                }
+            }
+        }
+        bool header_written = false;
+        for (size_t line = 0; line < lines_size; line++) {
+            if (line_times[line] == 0) {
+                continue;
+            }
+            if (!header_written) {
+                fprintf(file, "\nlines: %.*s\n", STRING(source));
+                fprintf(file, "     time (ns)  line\n");
+                header_written = true;
+            }
+            fprintf(file, "%14" PRIu64 "  %zu\n", profile_nanoseconds(line_times[line]), line + 1);
+        }
+        free(line_times);
+    }
+
+    fclose(file);
 }
