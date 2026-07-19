@@ -1,12 +1,12 @@
 import allocator
+import collections
 import compiler.checker.checked
 import string
 
 type Program = struct {
     first_source_file: ^Source_File
     last_source_file: ^Source_File
-    first_type: ^Named_Type
-    last_type: ^Named_Type
+    named_types: collections.Map<str, ^Named_Type>
     first_global: ^Global
     last_global: ^Global
     first_procedure: ^Procedure
@@ -14,16 +14,19 @@ type Program = struct {
 }
 
 proc new_program() -> ^Program {
-    return allocator.new(Program(first_source_file: null, last_source_file: null, first_type: null, last_type: null, first_global: null, last_global: null, first_procedure: null, last_procedure: null))
+    return allocator.new(Program(
+        first_source_file: null
+        last_source_file: null
+        named_types: collections.empty_map<str, ^Named_Type>()
+        first_global: null
+        last_global: null
+        first_procedure: null
+        last_procedure: null
+    ))
 }
 
 proc (^Program).append_type(self, type: ^Named_Type) {
-    if self.first_type == null {
-        self.first_type = type
-    } else {
-        self.last_type.next_type = type
-    }
-    self.last_type = type
+    self.named_types.put(type.name, type)
 }
 
 proc (^Program).append_global(self, global: ^Global) {

@@ -1,4 +1,5 @@
 import allocator
+import collections
 import compiler.parser.parsed
 
 type Symbol_Kind = enum {
@@ -202,21 +203,14 @@ proc new_variable_symbol(name: str, package: ^Package, type: ^Type, expression: 
     ))
 }
 
-type Symbol_Entry = struct {
-    name: str
-    symbol: ^Symbol
-    next: ^Symbol_Entry
-}
-
 type Symbols = struct {
     parent: ^Symbols
     package: ^Package
-    first: ^Symbol_Entry
-    last: ^Symbol_Entry
+    map: collections.Map<str, ^Symbol>
 }
 
 proc new_symbols(parent: ^Symbols) -> ^Symbols {
-    return allocator.new(Symbols(parent: parent, package: null, first: null, last: null))
+    return allocator.new(Symbols(parent: parent, package: null, map: collections.empty_map<str, ^Symbol>()))
 }
 
 proc (^Symbols).find(self, name: str) -> ^Symbol {
@@ -228,22 +222,9 @@ proc (^Symbols).find(self, name: str) -> ^Symbol {
 }
 
 proc (^Symbols).find_local(self, name: str) -> ^Symbol {
-    let entry = self.first
-    while entry != null {
-        if entry.name.equals(name) {
-            return entry.symbol
-        }
-        entry = entry.next
-    }
-    return null
+    return self.map.get(name)
 }
 
 proc (^Symbols).append(self, name: str, symbol: ^Symbol) {
-    let entry = allocator.new(Symbol_Entry(name: name, symbol: symbol, next: null))
-    if self.first == null {
-        self.first = entry
-    } else {
-        self.last.next = entry
-    }
-    self.last = entry
+    self.map.put(name, symbol)
 }

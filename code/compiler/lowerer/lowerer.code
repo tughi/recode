@@ -1428,12 +1428,9 @@ proc (^Lowerer).lower_type(self, type: ^checked.Type) -> ^ir.Type {
 }
 
 proc (^Lowerer).lower_external_type(self, name: str) -> ^ir.Type {
-    let existing_type = self.program.first_type
-    while existing_type != null {
-        if existing_type.name.equals(name) {
-            return existing_type.as(^ir.Type)
-        }
-        existing_type = existing_type.next_type
+    let existing_type = self.program.named_types.get(name)
+    if existing_type != null {
+        return existing_type.as(^ir.Type)
     }
     let opaque_type = ir.new_opaque_type(name)
     self.program.append_type(opaque_type.as(^ir.Named_Type))
@@ -1471,12 +1468,9 @@ proc (^Lowerer).type_name(self, named_type: ^checked.Named_Type) -> str {
 
 proc (^Lowerer).lower_struct_type(self, checked_struct_type: ^checked.Struct_Type) -> ^ir.Type {
     let name = self.type_name(checked_struct_type.as(^checked.Named_Type))
-    let existing_type = self.program.first_type
-    while existing_type != null {
-        if existing_type.name.equals(name) {
-            return existing_type.as(^ir.Type)
-        }
-        existing_type = existing_type.next_type
+    let existing_type = self.program.named_types.get(name)
+    if existing_type != null {
+        return existing_type.as(^ir.Type)
     }
     let struct_type = ir.new_struct_type(name)
     self.program.append_type(struct_type.as(^ir.Named_Type))
