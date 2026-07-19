@@ -49,6 +49,11 @@ typedef struct {
     Scrollbar scrollbar;
 } Profile_Source_Panel;
 
+typedef struct {
+    Panel panel;
+    Scrollbar scrollbar;
+} Sandwich_Panel;
+
 typedef enum {
     SORT_COLUMN__FUNCTION,
     SORT_COLUMN__SELF_TIME,
@@ -78,9 +83,13 @@ typedef struct {
     String selected_source_path;
     uint64_t *line_times;
     uint64_t max_line_time;
+    Profile_Call *sandwich_callers;
+    Profile_Call *sandwich_callees;
+    bool sandwich_scroll_pending;
     Panel *flamegraph_panel;
     Panel *functions_panel;
     Panel *source_panel;
+    Panel *sandwich_panel;
 } Profiler;
 
 static double function_metric(Sort_Column sort_column, IR_Function *function) {
@@ -147,9 +156,73 @@ static IR_Instruction *function_first_line(IR_Function *function) {
     return NULL;
 }
 
+static void free_calls(Profile_Call *node) {
+    for (size_t i = 0; i < node->children_size; i++) {
+        free_calls(node->children[i]);
+    }
+    free(node->children);
+    free(node);
+}
+
+static void merge_callees(Profile_Call *merged, Profile_Call *node) {
+    for (size_t i = 0; i < node->children_size; i++) {
+        Profile_Call *child = node->children[i];
+        Profile_Call *merged_child = profile_call_child(merged, child->function);
+        merged_child->time += child->time;
+        merged_child->calls += child->calls;
+        merged_child->bytes += child->bytes;
+        merge_callees(merged_child, child);
+    }
+}
+
+// The whole ancestor chain of an occurrence gets the occurrence's weight.
+static void merge_callers(Profile_Call *merged, Profile_Call *node) {
+    Profile_Call *merged_node = merged;
+    for (Profile_Call *caller = node->parent; caller != NULL; caller = caller->parent) {
+        merged_node = profile_call_child(merged_node, caller->function);
+        merged_node->time += node->time;
+        merged_node->calls += node->calls;
+        merged_node->bytes += node->bytes;
+    }
+}
+
+// Node time/bytes are inclusive, so only outermost occurrences count — an inner
+// recursive occurrence is already contained in its ancestor's totals.
+static void merge_occurrences(Profiler *profiler, Profile_Call *node, bool inside) {
+    bool matches = node->function == profiler->selected_function;
+    if (matches && !inside) {
+        Profile_Call *callees = profiler->sandwich_callees;
+        callees->time += node->time;
+        callees->calls += node->calls;
+        callees->bytes += node->bytes;
+        merge_callees(callees, node);
+        merge_callers(profiler->sandwich_callers, node);
+    }
+    for (size_t i = 0; i < node->children_size; i++) {
+        merge_occurrences(profiler, node->children[i], inside || matches);
+    }
+}
+
+static void build_sandwich(Profiler *profiler) {
+    if (profiler->sandwich_callees != NULL) {
+        free_calls(profiler->sandwich_callees);
+        free_calls(profiler->sandwich_callers);
+    }
+    profiler->sandwich_callees = calloc(1, sizeof(Profile_Call));
+    profiler->sandwich_callees->function = profiler->selected_function;
+    profiler->sandwich_callers = calloc(1, sizeof(Profile_Call));
+    profiler->sandwich_callers->function = profiler->selected_function;
+    merge_occurrences(profiler, profiler->root, false);
+    profiler->sandwich_callers->time = profiler->sandwich_callees->time;
+    profiler->sandwich_callers->calls = profiler->sandwich_callees->calls;
+    profiler->sandwich_callers->bytes = profiler->sandwich_callees->bytes;
+    profiler->sandwich_scroll_pending = true;
+}
+
 static void select_function(Profiler *profiler, IR_Function *function) {
     profiler->selected_function = function;
     profiler->selected_source = NULL;
+    build_sandwich(profiler);
     IR_Instruction *first_line = function_first_line(function);
     if (first_line == NULL || profiler->sources == NULL) {
         return;
@@ -224,8 +297,9 @@ static uint64_t call_metric(Profiler *profiler, Profile_Call *node) {
     return profiler->memory_mode ? node->bytes : node->time;
 }
 
-static void draw_subtree(Profiler *profiler, Profile_Call *node, float x, float y, float width) {
-    draw_node(profiler, node, x, y, width);
+static void draw_subtree(Profiler *profiler, Profile_Call *node, float x, float y, float width, float row_step);
+
+static void draw_subtree_children(Profiler *profiler, Profile_Call *node, float x, float y, float width, float row_step) {
     uint64_t node_metric = call_metric(profiler, node);
     if (node_metric == 0) {
         return;
@@ -245,9 +319,14 @@ static void draw_subtree(Profiler *profiler, Profile_Call *node, float x, float 
         if (child_width <= 0.0f) {
             break;
         }
-        draw_subtree(profiler, child, child_x, y + ROW_HEIGHT, child_width);
+        draw_subtree(profiler, child, child_x, y, child_width, row_step);
         child_x += child_width;
     }
+}
+
+static void draw_subtree(Profiler *profiler, Profile_Call *node, float x, float y, float width, float row_step) {
+    draw_node(profiler, node, x, y, width);
+    draw_subtree_children(profiler, node, x, y + row_step, width, row_step);
 }
 
 static size_t call_depth(Profile_Call *node) {
@@ -322,7 +401,7 @@ static void flamegraph_panel_draw(Flamegraph_Panel *flamegraph_panel, GUI *gui, 
         draw_node(profiler, ancestor, bounds.x, y, bounds.width);
         ancestor = ancestor->parent;
     }
-    draw_subtree(profiler, focus, bounds.x, base + (float)focus_depth * ROW_HEIGHT, bounds.width);
+    draw_subtree(profiler, focus, bounds.x, base + (float)focus_depth * ROW_HEIGHT, bounds.width, ROW_HEIGHT);
     EndScissorMode();
     draw_panel_scrollbar(flame_bounds, flamegraph_content_height(focus), &flamegraph_panel->scrollbar);
 
@@ -368,6 +447,77 @@ static Flamegraph_Panel make_flamegraph_panel(float weight) {
             .handle_input = (void (*)(Panel *, GUI *))flamegraph_panel_handle_input,
             .handle_step = (void (*)(Panel *, GUI *))flamegraph_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) flamegraph_panel_pick,
+            .weight = weight,
+        },
+    };
+}
+
+static float sandwich_content_height(Profiler *profiler) {
+    return (float)(call_max_depth(profiler->sandwich_callers) + 1 + call_max_depth(profiler->sandwich_callees)) * ROW_HEIGHT;
+}
+
+static void sandwich_panel_draw(Sandwich_Panel *sandwich_panel, GUI *gui, Rectangle bounds) {
+    Profiler *profiler = gui->context;
+    DrawRectangleRec(bounds, (Color){24, 24, 28, 255});
+    profiler->hovered = NULL;
+
+    Profile_Call *callers = profiler->sandwich_callers;
+    Profile_Call *callees = profiler->sandwich_callees;
+    Rectangle flame_bounds = {bounds.x, bounds.y + HEADER_HEIGHT, bounds.width, bounds.height - HEADER_HEIGHT};
+    size_t callers_depth = call_max_depth(callers);
+    if (profiler->sandwich_scroll_pending) {
+        float snap = (float)callers_depth * ROW_HEIGHT - (flame_bounds.height - ROW_HEIGHT) / 2.0f;
+        sandwich_panel->scrollbar.scroll_y = snap > 0.0f ? snap : 0.0f;
+        profiler->sandwich_scroll_pending = false;
+    }
+    float center_y = flame_bounds.y - floorf(sandwich_panel->scrollbar.scroll_y) + (float)callers_depth * ROW_HEIGHT;
+
+    BeginScissorMode((int)flame_bounds.x, (int)flame_bounds.y, (int)flame_bounds.width, (int)flame_bounds.height);
+    draw_subtree_children(profiler, callers, bounds.x, center_y - ROW_HEIGHT, bounds.width, -ROW_HEIGHT);
+    draw_subtree(profiler, callees, bounds.x, center_y, bounds.width, ROW_HEIGHT);
+    EndScissorMode();
+    draw_panel_scrollbar(flame_bounds, sandwich_content_height(profiler), &sandwich_panel->scrollbar);
+
+    char hints[256];
+    snprintf(hints, sizeof(hints), "%.*s: callers above, callees below   click: re-root, middle: source, M: %s, Tab: flamegraph, ?: guide, Q: quit", STRING(callees->function->name), profiler->memory_mode ? "time" : "memory");
+    draw_header(profiler, bounds, profiler->memory_mode, hints);
+    if (profiler->hovered != NULL) {
+        draw_tooltip(profiler, profiler->hovered);
+    }
+}
+
+static void sandwich_panel_handle_input(Sandwich_Panel *sandwich_panel, GUI *gui) {
+    Profiler *profiler = gui->context;
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && profiler->hovered != NULL && profiler->hovered->function != profiler->selected_function) {
+        select_function(profiler, profiler->hovered->function);
+        profiler->hovered = NULL;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) && profiler->hovered != NULL) {
+        select_function(profiler, profiler->hovered->function);
+        gui->root_panel = profiler->functions_panel;
+        profiler->hovered = NULL;
+    }
+    float flame_height = sandwich_panel->panel.bounds.height - HEADER_HEIGHT;
+    scrollbar_wheel_input(&sandwich_panel->scrollbar, flame_height, sandwich_content_height(profiler), ROW_HEIGHT);
+}
+
+static void sandwich_panel_handle_step(Sandwich_Panel *sandwich_panel, GUI *gui) {
+    (void)sandwich_panel;
+    (void)gui;
+}
+
+static Panel *sandwich_panel_pick(Sandwich_Panel *sandwich_panel, Vector2 position) {
+    (void)position;
+    return &sandwich_panel->panel;
+}
+
+static Sandwich_Panel make_sandwich_panel(float weight) {
+    return (Sandwich_Panel){
+        .panel = {
+            .draw = (void (*)(Panel *, GUI *, Rectangle))sandwich_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))sandwich_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))sandwich_panel_handle_step,
+            .pick = (Panel * (*)(Panel *, Vector2)) sandwich_panel_pick,
             .weight = weight,
         },
     };
@@ -600,7 +750,7 @@ static void functions_panel_draw(Functions_Panel *functions_panel, GUI *gui, Rec
     EndScissorMode();
     draw_panel_scrollbar(rows_bounds, (float)profiler->functions_size * ROW_HEIGHT, &functions_panel->scrollbar);
 
-    draw_header(profiler, bounds, false, "click a column to sort, a row for source   Tab: flamegraph, ?: guide, Q: quit");
+    draw_header(profiler, bounds, false, "click a column to sort, a row for source   Tab: sandwich, ?: guide, Q: quit");
 }
 
 static void functions_panel_handle_input(Functions_Panel *functions_panel, GUI *gui) {
@@ -778,9 +928,15 @@ static const Help_Line help_lines[] = {
     {"Color is heat: dark red marks the sorted column's maximum, yellow near zero.", false},
     {"Left-click zooms into a subtree, right-click resets, middle-click opens source.", false},
     {"", false},
+    {"Sandwich", true},
+    {"", false},
+    {"The selected function at full width in the middle; its merged callers stack", false},
+    {"upward above it, its merged callees stack downward below.", false},
+    {"Left-click re-roots the view on any frame, middle-click opens source.", false},
+    {"", false},
     {"Keys", true},
     {"", false},
-    {"Tab  flamegraph / functions    M  time / memory    ?  this guide    Q  quit", false},
+    {"Tab  flamegraph / functions / sandwich    M  time / memory    ?  this guide    Q  quit", false},
 };
 
 static void draw_help(Profiler *profiler) {
@@ -854,6 +1010,7 @@ void profile_show(IR_Module *module) {
     Flamegraph_Panel flamegraph_panel = make_flamegraph_panel(1.0f);
     Functions_Panel functions_panel = make_functions_panel(0.5f);
     Profile_Source_Panel source_panel = make_profile_source_panel(1.0f);
+    Sandwich_Panel sandwich_panel = make_sandwich_panel(1.0f);
     Panel *functions_children[] = {&functions_panel.panel, &source_panel.panel};
     Split_Panel functions_split = make_split_panel(1.0f, SPLIT_DIRECTION__VERTICAL, functions_children, 2);
     Profiler profiler = {
@@ -871,6 +1028,7 @@ void profile_show(IR_Module *module) {
         .flamegraph_panel = &flamegraph_panel.panel,
         .functions_panel = &functions_split.panel,
         .source_panel = &source_panel.panel,
+        .sandwich_panel = &sandwich_panel.panel,
     };
     profiler.gui.context = &profiler;
     sort_functions(&profiler);
@@ -896,7 +1054,13 @@ void profile_show(IR_Module *module) {
             continue;
         }
         if (IsKeyPressed(KEY_TAB)) {
-            profiler.gui.root_panel = profiler.gui.root_panel == profiler.flamegraph_panel ? profiler.functions_panel : profiler.flamegraph_panel;
+            if (profiler.gui.root_panel == profiler.flamegraph_panel) {
+                profiler.gui.root_panel = profiler.functions_panel;
+            } else if (profiler.gui.root_panel == profiler.functions_panel) {
+                profiler.gui.root_panel = profiler.sandwich_panel;
+            } else {
+                profiler.gui.root_panel = profiler.flamegraph_panel;
+            }
             profiler.hovered = NULL;
         }
         if (IsKeyPressed(KEY_M)) {
@@ -905,6 +1069,10 @@ void profile_show(IR_Module *module) {
         gui_render_frame(&profiler.gui);
     }
 
+    if (profiler.sandwich_callees != NULL) {
+        free_calls(profiler.sandwich_callees);
+        free_calls(profiler.sandwich_callers);
+    }
     free(profiler.line_times);
     free(functions);
     UnloadFont(profiler.gui.font);
