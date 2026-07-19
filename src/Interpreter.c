@@ -24,6 +24,7 @@ struct Interpreter {
     bool aborted;
     bool profiling;
     uint64_t *profile_child_time;
+    Profile_Call *profile_current_call;
 };
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -2314,7 +2315,7 @@ static void call_external(Interpreter *interpreter, IR_Function *function, uint8
     }
 }
 
-static void profile_function_exit(Interpreter *interpreter, IR_Function *function, uint64_t start_time, uint64_t child_time, uint64_t *caller_child_time) {
+static void profile_function_exit(Interpreter *interpreter, IR_Function *function, uint64_t start_time, uint64_t child_time, uint64_t *caller_child_time, Profile_Call *call, Profile_Call *caller_call) {
     uint64_t elapsed = profile_time() - start_time;
     function->profile.exclusive_time += elapsed - child_time;
     function->profile.active_calls--;
@@ -2325,6 +2326,8 @@ static void profile_function_exit(Interpreter *interpreter, IR_Function *functio
     if (caller_child_time != NULL) {
         *caller_child_time += elapsed;
     }
+    call->time += elapsed;
+    interpreter->profile_current_call = caller_call;
 }
 
 static void run_function(Interpreter *interpreter, IR_Function *function, uint8_t **argument_addresses, size_t argument_count, uint8_t *return_address, Source_Location call_location) {
@@ -2336,18 +2339,24 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
     uint64_t profile_start = 0;
     uint64_t child_time = 0;
     uint64_t *caller_child_time = NULL;
+    Profile_Call *call = NULL;
+    Profile_Call *caller_call = NULL;
     if (profiling) {
         function->profile.calls++;
         function->profile.active_calls++;
         caller_child_time = interpreter->profile_child_time;
         interpreter->profile_child_time = &child_time;
+        caller_call = interpreter->profile_current_call;
+        call = profile_call_child(caller_call, function);
+        call->calls++;
+        interpreter->profile_current_call = call;
         profile_start = profile_time();
     }
 
     if (function->is_external) {
         call_external(interpreter, function, argument_addresses, return_address, call_location);
         if (profiling) {
-            profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+            profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time, call, caller_call);
         }
         return;
     }
@@ -2393,7 +2402,7 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
                 interpreter->current_frame = frame.caller;
                 interpreter->stack_used -= frame_size;
                 if (profiling) {
-                    profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+                    profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time, call, caller_call);
                 }
                 return;
             }
@@ -2414,7 +2423,7 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
             interpreter->current_frame = frame.caller;
             interpreter->stack_used -= frame_size;
             if (profiling) {
-                profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time);
+                profile_function_exit(interpreter, function, profile_start, child_time, caller_child_time, call, caller_call);
             }
             return;
         }
@@ -2427,6 +2436,10 @@ static void run_function(Interpreter *interpreter, IR_Function *function, uint8_
 int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer, bool profiling) {
     String main_name = string_from("$main");
     Interpreter interpreter = {.module = module, .observer = observer, .profiling = profiling};
+    if (profiling) {
+        module->profile_calls = calloc(1, sizeof(Profile_Call));
+        interpreter.profile_current_call = module->profile_calls;
+    }
     prepare_module(module);
     IR_Function *main_function = find_function(&interpreter, main_name);
     if (main_function == NULL) {

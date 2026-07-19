@@ -1,8 +1,8 @@
 #include "Debugger.h"
+#include "GUI.h"
 #include "IR.h"
 #include "Interpreter.h"
 #include "String.h"
-#include <limits.h>
 #include <math.h>
 #include <raylib.h>
 #include <stdio.h>
@@ -16,8 +16,6 @@ typedef enum {
     DEBUGGER_MODE__SOURCE_NEXT,
     DEBUGGER_MODE__CONTINUE,
 } Debugger_Mode;
-
-typedef struct Panel Panel;
 
 typedef struct {
     String name;
@@ -57,7 +55,7 @@ typedef struct {
     size_t next_depth;
     double last_render_time;
     IR_Instruction_List breakpoints;
-    Font font;
+    GUI gui;
     Call_Frame *current_frame;
     Call_Frame *selected_frame;
     Source_Location last_origin;
@@ -76,30 +74,12 @@ typedef struct {
     Var_Node *var_nodes;
     size_t var_nodes_size;
     size_t var_nodes_capacity;
-    Panel *root_panel;
-    Panel *active_panel;
     Panel *ir_panel;
     Panel *source_panel;
     bool source_stepping;
     double last_interaction_time;
     bool restart_requested;
 } Debugger;
-
-struct Panel {
-    void (*draw)(Panel *self, Debugger *debugger, Rectangle bounds);
-    void (*handle_input)(Panel *self, Debugger *debugger);
-    void (*handle_step)(Panel *self, Debugger *debugger);
-    Panel *(*pick)(Panel *self, Vector2 position);
-    Rectangle bounds;
-    float weight;
-};
-
-typedef struct {
-    float scroll_y;
-    bool dragging;
-    float drag_offset;
-    float opacity;
-} Scrollbar;
 
 typedef struct {
     Panel panel;
@@ -110,19 +90,6 @@ typedef struct {
     Panel panel;
     Scrollbar scrollbar;
 } Source_Panel;
-
-typedef enum {
-    SPLIT_DIRECTION__HORIZONTAL,
-    SPLIT_DIRECTION__VERTICAL,
-} Split_Direction;
-
-typedef struct {
-    Panel panel;
-    Split_Direction direction;
-    Panel **children;
-    size_t children_size;
-    size_t dragged_gutter;
-} Split_Panel;
 
 typedef struct {
     Panel panel;
@@ -138,8 +105,6 @@ typedef struct {
     Panel panel;
     Scrollbar scrollbar;
 } Memory_Panel;
-
-#define GUTTER_SIZE 4
 
 static bool is_breakpoint(Debugger *debugger, IR_Instruction *instruction) {
     for (size_t i = 0; i < debugger->breakpoints.size; i++) {
@@ -340,194 +305,8 @@ static size_t frame_depth(Call_Frame *frame) {
     return depth;
 }
 
-static bool draw_text(Font font, String text, Color color, Vector2 *position, float max_right) {
-    for (size_t i = 0; i < text.length; i++) {
-        int codepoint = text.content[i];
-        int glyph_index = GetGlyphIndex(font, codepoint);
-        DrawTextCodepoint(font, codepoint, *position, font.baseSize, color);
-        position->x += (float)font.glyphs[glyph_index].advanceX;
-        if (position->x > max_right) {
-            return false;
-        }
-    }
-    return true;
-}
-
 static bool draw_token_text(Font font, Token *token, Color color, Vector2 *position, float max_right) {
     return draw_text(font, token->lexeme, color, position, max_right);
-}
-
-static void draw_panel_scrollbar(Rectangle bounds, float content_height, Scrollbar *scrollbar) {
-    if (content_height <= bounds.height) {
-        scrollbar->dragging = false;
-        scrollbar->opacity = 0;
-        return;
-    }
-    float scrollbar_width = 8;
-    float track_x = bounds.x + bounds.width - scrollbar_width;
-    float thumb_height = bounds.height * bounds.height / content_height;
-    if (thumb_height < 20) {
-        thumb_height = 20;
-    }
-    float max_scroll = content_height - bounds.height;
-    float thumb_travel = bounds.height - thumb_height;
-    float thumb_y = bounds.y + thumb_travel * (scrollbar->scroll_y / max_scroll);
-
-    Vector2 mouse = GetMousePosition();
-    Rectangle thumb_rect = {track_x, thumb_y, scrollbar_width, thumb_height};
-    if (scrollbar->dragging) {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            float new_thumb_y = mouse.y - scrollbar->drag_offset;
-            scrollbar->scroll_y = (new_thumb_y - bounds.y) / thumb_travel * max_scroll;
-            if (scrollbar->scroll_y < 0) {
-                scrollbar->scroll_y = 0;
-            }
-            if (scrollbar->scroll_y > max_scroll) {
-                scrollbar->scroll_y = max_scroll;
-            }
-            thumb_y = bounds.y + thumb_travel * (scrollbar->scroll_y / max_scroll);
-        } else {
-            scrollbar->dragging = false;
-        }
-    } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse, thumb_rect)) {
-        scrollbar->dragging = true;
-        scrollbar->drag_offset = mouse.y - thumb_y;
-    }
-
-    bool active = scrollbar->dragging || CheckCollisionPointRec(mouse, bounds);
-    float fade_step = GetFrameTime() / 0.2f;
-    scrollbar->opacity += active ? fade_step : -fade_step;
-    if (scrollbar->opacity < 0) {
-        scrollbar->opacity = 0;
-    }
-    if (scrollbar->opacity > 1) {
-        scrollbar->opacity = 1;
-    }
-    if (scrollbar->opacity <= 0) {
-        return;
-    }
-    Color thumb_color = scrollbar->dragging ? LIGHTGRAY : GRAY;
-    thumb_color.a = (unsigned char)(thumb_color.a * scrollbar->opacity);
-    DrawRectangle((int)track_x, (int)bounds.y, (int)scrollbar_width, (int)bounds.height, (Color){255, 255, 255, (unsigned char)(40 * scrollbar->opacity)});
-    DrawRectangle((int)track_x, (int)thumb_y, (int)scrollbar_width, (int)thumb_height, thumb_color);
-}
-
-static float text_panel_gutter_width(Debugger *debugger, size_t lines_size) {
-    Font font = debugger->font;
-    int gutter_digits = 1;
-    for (size_t n = lines_size; n >= 10; n /= 10) {
-        gutter_digits++;
-    }
-    int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
-    return (float)(gutter_digits * digit_advance) + digit_advance;
-}
-
-#define SCROLL_MARGIN_LINES 5
-
-static void text_panel_scroll_to_line(Scrollbar *scrollbar, float panel_height, size_t line, size_t lines_size, int line_height) {
-    if (line == 0) {
-        return;
-    }
-    float margin = (float)(SCROLL_MARGIN_LINES * line_height);
-    if (margin > (panel_height - line_height) / 2) {
-        margin = (panel_height - line_height) / 2;
-        if (margin < 0) {
-            margin = 0;
-        }
-    }
-    float line_y = (float)(line - 1) * line_height;
-    if (line_y - margin < scrollbar->scroll_y) {
-        scrollbar->scroll_y = line_y - margin;
-        if (scrollbar->scroll_y < 0) {
-            scrollbar->scroll_y = 0;
-        }
-    } else if (line_y + line_height + margin > scrollbar->scroll_y + panel_height) {
-        scrollbar->scroll_y = line_y + line_height + margin - panel_height;
-        float max_scroll = (float)lines_size * line_height - panel_height;
-        if (max_scroll < 0) {
-            max_scroll = 0;
-        }
-        if (scrollbar->scroll_y > max_scroll) {
-            scrollbar->scroll_y = max_scroll;
-        }
-    }
-}
-
-static size_t text_panel_scroll_input(Debugger *debugger, Panel *panel, Scrollbar *scrollbar, size_t lines_size) {
-    int line_height = debugger->font.baseSize;
-    float panel_height = panel->bounds.height;
-    float content_height = (float)lines_size * line_height;
-    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
-
-    float wheel = GetMouseWheelMove();
-    if (wheel != 0) {
-        scrollbar->scroll_y -= wheel * line_height * 3;
-    }
-    if (IsKeyDown(KEY_UP)) {
-        scrollbar->scroll_y -= line_height * 0.5f;
-    }
-    if (IsKeyDown(KEY_DOWN)) {
-        scrollbar->scroll_y += line_height * 0.5f;
-    }
-    if (IsKeyPressed(KEY_PAGE_UP) || IsKeyPressedRepeat(KEY_PAGE_UP)) {
-        scrollbar->scroll_y -= panel_height;
-    }
-    if (IsKeyPressed(KEY_PAGE_DOWN) || IsKeyPressedRepeat(KEY_PAGE_DOWN)) {
-        scrollbar->scroll_y += panel_height;
-    }
-    if (IsKeyPressed(KEY_HOME)) {
-        scrollbar->scroll_y = 0;
-    }
-    if (IsKeyPressed(KEY_END)) {
-        scrollbar->scroll_y = max_scroll;
-    }
-    if (scrollbar->scroll_y > max_scroll) {
-        scrollbar->scroll_y = max_scroll;
-    }
-    if (scrollbar->scroll_y < 0) {
-        scrollbar->scroll_y = 0;
-    }
-
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mouse = GetMousePosition();
-        Rectangle bounds = panel->bounds;
-        float gutter_width = text_panel_gutter_width(debugger, lines_size);
-        if (mouse.x >= bounds.x && mouse.x < bounds.x + gutter_width && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
-            return (size_t)((mouse.y - bounds.y + scrollbar->scroll_y) / line_height) + 1;
-        }
-    }
-    return 0;
-}
-
-static float text_panel_draw_gutter(Debugger *debugger, Rectangle bounds, float row_y, size_t line, size_t current_line, size_t view_line, int gutter_digits, float gutter_width, bool has_breakpoint) {
-    Font font = debugger->font;
-    int line_height = font.baseSize;
-    if (line == current_line) {
-        DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKBLUE);
-    } else if (line == view_line) {
-        DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, DARKPURPLE);
-    }
-    if (has_breakpoint) {
-        DrawRectangle((int)bounds.x, (int)row_y, (int)gutter_width, line_height, MAROON);
-    }
-
-    char number_text[32];
-    snprintf(number_text, sizeof(number_text), "%0*zu", gutter_digits, line);
-    size_t leading = 0;
-    while (leading + 1 < (size_t)gutter_digits && number_text[leading] == '0') {
-        leading++;
-    }
-    int digit_advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
-    Color number_color = line == current_line || line == view_line ? GRAY : DARKGRAY;
-    Color dim_color = {number_color.r, number_color.g, number_color.b, number_color.a / 2};
-    Vector2 number_position = {bounds.x, row_y};
-    for (int j = 0; number_text[j] != '\0'; j++) {
-        int codepoint = number_text[j];
-        Color color = (size_t)j < leading ? dim_color : number_color;
-        DrawTextCodepoint(font, codepoint, number_position, font.baseSize, color);
-        number_position.x += digit_advance;
-    }
-    return bounds.x + gutter_width;
 }
 
 static Panel *ir_panel_pick(IR_Panel *ir_panel, Vector2 position) {
@@ -535,9 +314,10 @@ static Panel *ir_panel_pick(IR_Panel *ir_panel, Vector2 position) {
     return &ir_panel->panel;
 }
 
-static void ir_panel_handle_step(IR_Panel *ir_panel, Debugger *debugger) {
+static void ir_panel_handle_step(IR_Panel *ir_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     size_t line = debugger->current_frame->instruction->location.line;
-    text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->module->lexed_file.lines_size, debugger->font.baseSize);
+    text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, line, debugger->module->lexed_file.lines_size, gui->font.baseSize);
 }
 
 static void navigate_to_source(Debugger *debugger, Source_Location location) {
@@ -550,7 +330,7 @@ static void navigate_to_source(Debugger *debugger, Source_Location location) {
             }
             debugger->view_origin = location;
             Source_Panel *source_panel = (Source_Panel *)debugger->source_panel;
-            text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, location.line, file->lines_size, debugger->font.baseSize);
+            text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, location.line, file->lines_size, debugger->gui.font.baseSize);
             return;
         }
     }
@@ -584,9 +364,10 @@ static void navigate_to_directive(Debugger *debugger, size_t line) {
     }
 }
 
-static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
+static void ir_panel_handle_input(IR_Panel *ir_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     size_t lines_size = debugger->module->lexed_file.lines_size;
-    size_t line = text_panel_scroll_input(debugger, &ir_panel->panel, &ir_panel->scrollbar, lines_size);
+    size_t line = text_panel_scroll_input(gui->font, &ir_panel->panel, &ir_panel->scrollbar, lines_size);
     if (line != 0) {
         IR_Instruction *instruction = find_instruction_at_line(debugger->module, line);
         if (instruction != NULL) {
@@ -597,9 +378,9 @@ static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         Vector2 mouse = GetMousePosition();
         Rectangle bounds = ir_panel->panel.bounds;
-        float gutter_width = text_panel_gutter_width(debugger, lines_size);
+        float gutter_width = text_panel_gutter_width(gui->font, lines_size);
         if (mouse.x >= bounds.x + gutter_width && mouse.x < bounds.x + bounds.width - 8 && mouse.y >= bounds.y && mouse.y < bounds.y + bounds.height) {
-            size_t clicked_line = (size_t)((mouse.y - bounds.y + ir_panel->scrollbar.scroll_y) / debugger->font.baseSize) + 1;
+            size_t clicked_line = (size_t)((mouse.y - bounds.y + ir_panel->scrollbar.scroll_y) / gui->font.baseSize) + 1;
             if (clicked_line <= lines_size) {
                 navigate_to_directive(debugger, clicked_line);
             }
@@ -607,7 +388,8 @@ static void ir_panel_handle_input(IR_Panel *ir_panel, Debugger *debugger) {
     }
 }
 
-static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle bounds) {
+static void ir_panel_draw(IR_Panel *ir_panel, GUI *gui, Rectangle bounds) {
+    Debugger *debugger = gui->context;
     static const Color colors[TOKEN_KINDS] = {
         [TOKEN_KIND__CHARACTER] = BEIGE,
         [TOKEN_KIND__COMMENT] = GRAY,
@@ -622,7 +404,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
     Lexed_File *lexed_file = &debugger->module->lexed_file;
     size_t lines_size = lexed_file->lines_size;
     size_t current_line = debugger->current_frame == NULL ? 0 : debugger->current_frame->instruction->location.line;
-    Font font = debugger->font;
+    Font font = gui->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
     float bottom = bounds.y + bounds.height;
@@ -634,7 +416,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
     for (size_t n = lines_size; n >= 10; n /= 10) {
         gutter_digits++;
     }
-    float gutter_width = text_panel_gutter_width(debugger, lines_size);
+    float gutter_width = text_panel_gutter_width(font, lines_size);
 
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
     for (size_t i = first_line; i < lines_size; i++) {
@@ -642,7 +424,7 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
         if (row_y >= bottom) {
             break;
         }
-        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, 0, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
+        float source_x = text_panel_draw_gutter(font, bounds, row_y, i + 1, current_line, 0, gutter_digits, gutter_width, ir_line_has_breakpoint(debugger, i + 1));
 
         Vector2 position = {source_x, row_y};
         Token *line_token = lexed_file->lines[i];
@@ -668,9 +450,9 @@ static void ir_panel_draw(IR_Panel *ir_panel, Debugger *debugger, Rectangle boun
 static IR_Panel make_ir_panel(float weight) {
     return (IR_Panel){
         .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))ir_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))ir_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))ir_panel_handle_step,
+            .draw = (void (*)(Panel *, GUI *, Rectangle))ir_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))ir_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))ir_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) ir_panel_pick,
             .weight = weight,
         },
@@ -697,22 +479,24 @@ static Panel *source_panel_pick(Source_Panel *source_panel, Vector2 position) {
     return &source_panel->panel;
 }
 
-static void source_panel_handle_step(Source_Panel *source_panel, Debugger *debugger) {
+static void source_panel_handle_step(Source_Panel *source_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     debugger->view_origin = (Source_Location){0};
     File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
     }
     size_t line = debugger_current_origin(debugger).line;
-    text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, text->lines_size, debugger->font.baseSize);
+    text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height, line, text->lines_size, gui->font.baseSize);
 }
 
-static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debugger) {
+static void source_panel_handle_input(Source_Panel *source_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
     }
-    size_t line = text_panel_scroll_input(debugger, &source_panel->panel, &source_panel->scrollbar, text->lines_size);
+    size_t line = text_panel_scroll_input(gui->font, &source_panel->panel, &source_panel->scrollbar, text->lines_size);
     if (line != 0) {
         IR_Instruction *instruction = find_instruction_at_origin_line(debugger->module, source_panel_origin(debugger).source, line);
         if (instruction != NULL) {
@@ -721,7 +505,8 @@ static void source_panel_handle_input(Source_Panel *source_panel, Debugger *debu
     }
 }
 
-static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Rectangle bounds) {
+static void source_panel_draw(Source_Panel *source_panel, GUI *gui, Rectangle bounds) {
+    Debugger *debugger = gui->context;
     File *text = source_panel_text(debugger);
     if (text == NULL) {
         return;
@@ -729,7 +514,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     size_t lines_size = text->lines_size;
     Source_Location origin = debugger_current_origin(debugger);
     size_t current_line = debugger->current_frame != NULL && string_equals(source_panel_origin(debugger).source, origin.source) ? origin.line : 0;
-    Font font = debugger->font;
+    Font font = gui->font;
     int line_height = font.baseSize;
     float right = bounds.x + bounds.width;
     float bottom = bounds.y + bounds.height;
@@ -741,7 +526,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
     for (size_t n = lines_size; n >= 10; n /= 10) {
         gutter_digits++;
     }
-    float gutter_width = text_panel_gutter_width(debugger, lines_size);
+    float gutter_width = text_panel_gutter_width(font, lines_size);
 
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
     for (size_t i = first_line; i < lines_size; i++) {
@@ -749,7 +534,7 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
         if (row_y >= bottom) {
             break;
         }
-        float source_x = text_panel_draw_gutter(debugger, bounds, row_y, i + 1, current_line, debugger->view_origin.line, gutter_digits, gutter_width, source_line_has_breakpoint(debugger, i + 1));
+        float source_x = text_panel_draw_gutter(font, bounds, row_y, i + 1, current_line, debugger->view_origin.line, gutter_digits, gutter_width, source_line_has_breakpoint(debugger, i + 1));
         Vector2 position = {source_x, row_y};
         draw_text(font, text->lines[i], LIGHTGRAY, &position, right);
     }
@@ -761,163 +546,21 @@ static void source_panel_draw(Source_Panel *source_panel, Debugger *debugger, Re
 static Source_Panel make_source_panel(float weight) {
     return (Source_Panel){
         .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))source_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))source_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))source_panel_handle_step,
+            .draw = (void (*)(Panel *, GUI *, Rectangle))source_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))source_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))source_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) source_panel_pick,
             .weight = weight,
         },
     };
 }
 
-static Rectangle split_panel_child_bounds(Split_Panel *split, size_t index, Rectangle bounds) {
-    float gutters_total = (float)((split->children_size - 1) * GUTTER_SIZE);
-    if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
-        float available = bounds.width - gutters_total;
-        float remaining = available;
-        float x = bounds.x;
-        for (size_t i = 0; i < index; i++) {
-            float width = remaining * split->children[i]->weight;
-            x += width + GUTTER_SIZE;
-            remaining -= width;
-        }
-        return (Rectangle){floorf(x), bounds.y, floorf(remaining * split->children[index]->weight), bounds.height};
-    } else {
-        float available = bounds.height - gutters_total;
-        float remaining = available;
-        float y = bounds.y;
-        for (size_t i = 0; i < index; i++) {
-            float height = remaining * split->children[i]->weight;
-            y += height + GUTTER_SIZE;
-            remaining -= height;
-        }
-        return (Rectangle){bounds.x, floorf(y), bounds.width, floorf(remaining * split->children[index]->weight)};
-    }
-}
-
-static Rectangle split_panel_gutter_bounds(Split_Panel *split, size_t index, Rectangle bounds) {
-    Rectangle child = split_panel_child_bounds(split, index, bounds);
-    if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
-        return (Rectangle){child.x + child.width, bounds.y, GUTTER_SIZE, bounds.height};
-    } else {
-        return (Rectangle){bounds.x, child.y + child.height, bounds.width, GUTTER_SIZE};
-    }
-}
-
-static void split_panel_draw(Split_Panel *split, Debugger *debugger, Rectangle bounds) {
-    for (size_t i = 0; i < split->children_size; i++) {
-        Panel *child = split->children[i];
-        Rectangle child_bounds = split_panel_child_bounds(split, i, bounds);
-        child->bounds = child_bounds;
-        child->draw(child, debugger, child_bounds);
-    }
-    bool dragging = debugger->active_panel == &split->panel && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-    for (size_t i = 0; i + 1 < split->children_size; i++) {
-        Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
-        Color color = dragging && i == split->dragged_gutter ? GRAY : DARKGRAY;
-        DrawRectangleRec(gutter, color);
-    }
-}
-
-static void split_panel_handle_step(Split_Panel *split, Debugger *debugger) {
-    for (size_t i = 0; i < split->children_size; i++) {
-        Panel *child = split->children[i];
-        child->bounds = split_panel_child_bounds(split, i, split->panel.bounds);
-        child->handle_step(child, debugger);
-    }
-}
-
-static void split_panel_handle_input(Split_Panel *split, Debugger *debugger) {
-    (void)debugger;
-    Vector2 mouse = GetMousePosition();
-    Rectangle bounds = split->panel.bounds;
-    MouseCursor resize_cursor = split->direction == SPLIT_DIRECTION__HORIZONTAL ? MOUSE_CURSOR_RESIZE_EW : MOUSE_CURSOR_RESIZE_NS;
-
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        for (size_t i = 0; i + 1 < split->children_size; i++) {
-            Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
-            if (CheckCollisionPointRec(mouse, gutter)) {
-                split->dragged_gutter = i;
-                break;
-            }
-        }
-    }
-
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        SetMouseCursor(resize_cursor);
-        size_t i = split->dragged_gutter;
-        float gutters_total = (float)((split->children_size - 1) * GUTTER_SIZE);
-        float new_weight;
-        if (split->direction == SPLIT_DIRECTION__HORIZONTAL) {
-            float available = bounds.width - gutters_total;
-            float remaining = available;
-            float x = bounds.x;
-            for (size_t k = 0; k < i; k++) {
-                float width = remaining * split->children[k]->weight;
-                x += width + GUTTER_SIZE;
-                remaining -= width;
-            }
-            new_weight = (mouse.x - x) / remaining;
-        } else {
-            float available = bounds.height - gutters_total;
-            float remaining = available;
-            float y = bounds.y;
-            for (size_t k = 0; k < i; k++) {
-                float height = remaining * split->children[k]->weight;
-                y += height + GUTTER_SIZE;
-                remaining -= height;
-            }
-            new_weight = (mouse.y - y) / remaining;
-        }
-        if (new_weight < 0.05f) {
-            new_weight = 0.05f;
-        }
-        if (new_weight > 0.95f) {
-            new_weight = 0.95f;
-        }
-        split->children[i]->weight = new_weight;
-        return;
-    }
-
-    for (size_t i = 0; i + 1 < split->children_size; i++) {
-        Rectangle gutter = split_panel_gutter_bounds(split, i, bounds);
-        if (CheckCollisionPointRec(mouse, gutter)) {
-            SetMouseCursor(resize_cursor);
-            break;
-        }
-    }
-}
-
-static Panel *split_panel_pick(Split_Panel *split, Vector2 position) {
-    for (size_t i = 0; i < split->children_size; i++) {
-        Panel *child = split->children[i];
-        if (CheckCollisionPointRec(position, child->bounds)) {
-            return child->pick(child, position);
-        }
-    }
-    return &split->panel;
-}
-
-static Split_Panel make_split_panel(float weight, Split_Direction direction, Panel **children, size_t children_size) {
-    return (Split_Panel){
-        .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))split_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))split_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))split_panel_handle_step,
-            .pick = (Panel * (*)(Panel *, Vector2)) split_panel_pick,
-            .weight = weight,
-        },
-        .direction = direction,
-        .children = children,
-        .children_size = children_size,
-    };
-}
-
-static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Rectangle bounds) {
+static void stack_panel_draw(Stack_Panel *stack_panel, GUI *gui, Rectangle bounds) {
+    Debugger *debugger = gui->context;
     if (debugger->current_frame == NULL) {
         return;
     }
-    Font font = debugger->font;
+    Font font = gui->font;
     int line_height = font.baseSize;
     float bottom = bounds.y + bounds.height;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
@@ -955,25 +598,14 @@ static void stack_panel_draw(Stack_Panel *stack_panel, Debugger *debugger, Recta
     draw_panel_scrollbar(bounds, content_height, &stack_panel->scrollbar);
 }
 
-static void stack_panel_handle_input(Stack_Panel *stack_panel, Debugger *debugger) {
+static void stack_panel_handle_input(Stack_Panel *stack_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     if (debugger->current_frame == NULL) {
         return;
     }
-    int line_height = debugger->font.baseSize;
-    float panel_height = stack_panel->panel.bounds.height;
+    int line_height = gui->font.baseSize;
     float content_height = (float)frame_depth(debugger->current_frame) * line_height;
-    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
-
-    float wheel = GetMouseWheelMove();
-    if (wheel != 0) {
-        stack_panel->scrollbar.scroll_y -= wheel * line_height * 3;
-    }
-    if (stack_panel->scrollbar.scroll_y > max_scroll) {
-        stack_panel->scrollbar.scroll_y = max_scroll;
-    }
-    if (stack_panel->scrollbar.scroll_y < 0) {
-        stack_panel->scrollbar.scroll_y = 0;
-    }
+    scrollbar_wheel_input(&stack_panel->scrollbar, stack_panel->panel.bounds.height, content_height, line_height);
 
     if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         return;
@@ -997,12 +629,12 @@ static void stack_panel_handle_input(Stack_Panel *stack_panel, Debugger *debugge
         navigate_to_source(debugger, frame_state->origin);
     } else {
         IR_Panel *ir_panel = (IR_Panel *)debugger->ir_panel;
-        text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, frame->instruction->location.line, debugger->module->lexed_file.lines_size, debugger->font.baseSize);
+        text_panel_scroll_to_line(&ir_panel->scrollbar, ir_panel->panel.bounds.height, frame->instruction->location.line, debugger->module->lexed_file.lines_size, gui->font.baseSize);
     }
 }
 
-static void stack_panel_handle_step(Stack_Panel *stack_panel, Debugger *debugger) {
-    (void)debugger;
+static void stack_panel_handle_step(Stack_Panel *stack_panel, GUI *gui) {
+    (void)gui;
     stack_panel->scrollbar.scroll_y = 0;
 }
 
@@ -1014,9 +646,9 @@ static Panel *stack_panel_pick(Stack_Panel *stack_panel, Vector2 position) {
 static Stack_Panel make_stack_panel(float weight) {
     return (Stack_Panel){
         .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))stack_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))stack_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))stack_panel_handle_step,
+            .draw = (void (*)(Panel *, GUI *, Rectangle))stack_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))stack_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))stack_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) stack_panel_pick,
             .weight = weight,
         },
@@ -1261,12 +893,13 @@ static void draw_variable_line(Font font, Rectangle bounds, float y, Var_Node *n
     DrawTextEx(font, value_text, (Vector2){bounds.x + bounds.width - value_size.x, y}, line_height, 0, RAYWHITE);
 }
 
-static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *debugger, Rectangle bounds) {
+static void variables_panel_draw(Variables_Panel *variables_panel, GUI *gui, Rectangle bounds) {
+    Debugger *debugger = gui->context;
     if (debugger->current_frame == NULL) {
         return;
     }
     build_var_nodes(debugger);
-    Font font = debugger->font;
+    Font font = gui->font;
     int line_height = font.baseSize;
     BeginScissorMode((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height);
     float y = bounds.y - floorf(variables_panel->scrollbar.scroll_y);
@@ -1282,23 +915,12 @@ static void variables_panel_draw(Variables_Panel *variables_panel, Debugger *deb
     draw_panel_scrollbar(bounds, content_height, &variables_panel->scrollbar);
 }
 
-static void variables_panel_handle_input(Variables_Panel *variables_panel, Debugger *debugger) {
+static void variables_panel_handle_input(Variables_Panel *variables_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
     build_var_nodes(debugger);
-    int line_height = debugger->font.baseSize;
-    float panel_height = variables_panel->panel.bounds.height;
+    int line_height = gui->font.baseSize;
     float content_height = (float)debugger->var_nodes_size * line_height;
-    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
-
-    float wheel = GetMouseWheelMove();
-    if (wheel != 0) {
-        variables_panel->scrollbar.scroll_y -= wheel * line_height * 3;
-    }
-    if (variables_panel->scrollbar.scroll_y > max_scroll) {
-        variables_panel->scrollbar.scroll_y = max_scroll;
-    }
-    if (variables_panel->scrollbar.scroll_y < 0) {
-        variables_panel->scrollbar.scroll_y = 0;
-    }
+    scrollbar_wheel_input(&variables_panel->scrollbar, variables_panel->panel.bounds.height, content_height, line_height);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         Vector2 mouse = GetMousePosition();
@@ -1323,8 +945,8 @@ static void variables_panel_handle_input(Variables_Panel *variables_panel, Debug
     }
 }
 
-static void variables_panel_handle_step(Variables_Panel *variables_panel, Debugger *debugger) {
-    (void)debugger;
+static void variables_panel_handle_step(Variables_Panel *variables_panel, GUI *gui) {
+    (void)gui;
     variables_panel->scrollbar.scroll_y = 0;
 }
 
@@ -1336,20 +958,21 @@ static Panel *variables_panel_pick(Variables_Panel *variables_panel, Vector2 pos
 static Variables_Panel make_variables_panel(float weight) {
     return (Variables_Panel){
         .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))variables_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))variables_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))variables_panel_handle_step,
+            .draw = (void (*)(Panel *, GUI *, Rectangle))variables_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))variables_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))variables_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) variables_panel_pick,
             .weight = weight,
         },
     };
 }
 
-static void memory_panel_draw(Memory_Panel *memory_panel, Debugger *debugger, Rectangle bounds) {
+static void memory_panel_draw(Memory_Panel *memory_panel, GUI *gui, Rectangle bounds) {
+    Debugger *debugger = gui->context;
     if (debugger->memory_target == NULL) {
         return;
     }
-    Font font = debugger->font;
+    Font font = gui->font;
     int line_height = font.baseSize;
     int advance = font.glyphs[GetGlyphIndex(font, '0')].advanceX;
     size_t rows = (debugger->memory_target_size + 15) / 16;
@@ -1393,27 +1016,16 @@ static void memory_panel_draw(Memory_Panel *memory_panel, Debugger *debugger, Re
     draw_panel_scrollbar(bounds, (float)(rows + 1) * line_height, &memory_panel->scrollbar);
 }
 
-static void memory_panel_handle_input(Memory_Panel *memory_panel, Debugger *debugger) {
-    int line_height = debugger->font.baseSize;
-    float panel_height = memory_panel->panel.bounds.height;
+static void memory_panel_handle_input(Memory_Panel *memory_panel, GUI *gui) {
+    Debugger *debugger = gui->context;
+    int line_height = gui->font.baseSize;
     size_t rows = debugger->memory_target == NULL ? 0 : (debugger->memory_target_size + 15) / 16 + 1;
     float content_height = (float)rows * line_height;
-    float max_scroll = content_height > panel_height ? content_height - panel_height : 0;
-
-    float wheel = GetMouseWheelMove();
-    if (wheel != 0) {
-        memory_panel->scrollbar.scroll_y -= wheel * line_height * 3;
-    }
-    if (memory_panel->scrollbar.scroll_y > max_scroll) {
-        memory_panel->scrollbar.scroll_y = max_scroll;
-    }
-    if (memory_panel->scrollbar.scroll_y < 0) {
-        memory_panel->scrollbar.scroll_y = 0;
-    }
+    scrollbar_wheel_input(&memory_panel->scrollbar, memory_panel->panel.bounds.height, content_height, line_height);
 }
 
-static void memory_panel_handle_step(Memory_Panel *memory_panel, Debugger *debugger) {
-    (void)debugger;
+static void memory_panel_handle_step(Memory_Panel *memory_panel, GUI *gui) {
+    (void)gui;
     memory_panel->scrollbar.scroll_y = 0;
 }
 
@@ -1425,9 +1037,9 @@ static Panel *memory_panel_pick(Memory_Panel *memory_panel, Vector2 position) {
 static Memory_Panel make_memory_panel(float weight) {
     return (Memory_Panel){
         .panel = {
-            .draw = (void (*)(Panel *, Debugger *, Rectangle))memory_panel_draw,
-            .handle_input = (void (*)(Panel *, Debugger *))memory_panel_handle_input,
-            .handle_step = (void (*)(Panel *, Debugger *))memory_panel_handle_step,
+            .draw = (void (*)(Panel *, GUI *, Rectangle))memory_panel_draw,
+            .handle_input = (void (*)(Panel *, GUI *))memory_panel_handle_input,
+            .handle_step = (void (*)(Panel *, GUI *))memory_panel_handle_step,
             .pick = (Panel * (*)(Panel *, Vector2)) memory_panel_pick,
             .weight = weight,
         },
@@ -1435,23 +1047,12 @@ static Memory_Panel make_memory_panel(float weight) {
 }
 
 static void debugger_render_frame(Debugger *debugger) {
-    debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
-
-    if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        debugger->active_panel = debugger->root_panel->pick(debugger->root_panel, GetMousePosition());
-    }
-    if (debugger->active_panel == debugger->source_panel) {
+    gui_render_frame(&debugger->gui);
+    if (debugger->gui.active_panel == debugger->source_panel) {
         debugger->source_stepping = true;
-    } else if (debugger->active_panel == debugger->ir_panel) {
+    } else if (debugger->gui.active_panel == debugger->ir_panel) {
         debugger->source_stepping = false;
     }
-    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    debugger->active_panel->handle_input(debugger->active_panel, debugger);
-
-    BeginDrawing();
-    ClearBackground(BLACK);
-    debugger->root_panel->draw(debugger->root_panel, debugger, debugger->root_panel->bounds);
-    EndDrawing();
 }
 
 static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool *aborted) {
@@ -1498,8 +1099,6 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool
         } else if (IsKeyPressed(KEY_R)) {
             debugger->restart_requested = true;
             *aborted = true;
-        } else if (IsKeyPressed(KEY_Q)) {
-            exit(0);
         }
         return;
     }
@@ -1508,8 +1107,8 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool
     debugger->selected_frame = current_frame;
     debugger->last_origin = debugger_current_origin(debugger);
 
-    debugger->root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
-    debugger->root_panel->handle_step(debugger->root_panel, debugger);
+    debugger->gui.root_panel->bounds = (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()};
+    debugger->gui.root_panel->handle_step(debugger->gui.root_panel, &debugger->gui);
 
     while (!WindowShouldClose()) {
         debugger_render_frame(debugger);
@@ -1539,102 +1138,8 @@ static void debugger_on_step(Observer *observer, Call_Frame *current_frame, bool
             *aborted = true;
             return;
         }
-        if (IsKeyPressed(KEY_Q)) {
-            exit(0);
-        }
     }
     debugger->mode = DEBUGGER_MODE__CONTINUE;
-}
-
-Font load_bitmap_font(const char *path) {
-    char resolved_path[PATH_MAX];
-    const char *runner_home = getenv("RUNNER_HOME");
-    if (runner_home != NULL && runner_home[0] != '\0') {
-        snprintf(resolved_path, sizeof(resolved_path), "%s/%s", runner_home, path);
-        path = resolved_path;
-    }
-
-    FILE *file = fopen(path, "r");
-    if (file == NULL) {
-        fprintf(stderr, "Cannot open font file: %s\n", path);
-        return (Font){0};
-    }
-
-    int font_height = 0;
-    int font_base_line = 0;
-
-    int glyphs_capacity = 95; // printable ASCII characters
-    int glyphs_size = 0;
-    GlyphInfo *glyphs = malloc(sizeof(GlyphInfo) * glyphs_capacity);
-
-    char line[256];
-    while (fgets(line, sizeof(line), file) != NULL) {
-        if (strncmp(line, "font.height: ", 13) == 0) {
-            font_height = atoi(line + 13);
-        } else if (strncmp(line, "font.base_line: ", 16) == 0) {
-            font_base_line = atoi(line + 16);
-        } else if (strncmp(line, "glyph:", 6) == 0) {
-            if (fgets(line, sizeof(line), file) == NULL) {
-                break;
-            }
-            int glyph_code = atoi(line + strlen("glyph.width:"));
-            if (fgets(line, sizeof(line), file) == NULL) {
-                break;
-            }
-            int glyph_width = atoi(line + strlen("glyph.width:"));
-            Image glyph_image = GenImageColor(glyph_width, font_height, BLANK);
-            for (int row = 0; row < font_height; row++) {
-                if (fgets(line, sizeof(line), file) == NULL) {
-                    break;
-                }
-                for (int column = 0; column < glyph_width; column++) {
-                    if (line[column * 2] == 'F') {
-                        ImageDrawPixel(&glyph_image, column, row, WHITE);
-                    }
-                }
-            }
-            if (glyphs_size == glyphs_capacity) {
-                glyphs_capacity += glyphs_capacity / 2;
-                glyphs = realloc(glyphs, sizeof(GlyphInfo) * glyphs_capacity);
-            }
-            glyphs[glyphs_size] = (GlyphInfo){
-                .value = glyph_code,
-                .offsetX = 0,
-                .offsetY = 0,
-                .advanceX = glyph_width,
-                .image = glyph_image,
-            };
-            glyphs_size++;
-        }
-    }
-    fclose(file);
-
-    int atlas_width = 0;
-    for (int i = 0; i < glyphs_size; i++) {
-        atlas_width += (int)glyphs[i].image.width;
-    }
-
-    Image atlas = GenImageColor(atlas_width, font_height, BLANK);
-    Rectangle *recs = malloc(sizeof(Rectangle) * glyphs_size);
-    int x = 0;
-    for (int i = 0; i < glyphs_size; i++) {
-        int width = glyphs[i].image.width;
-        ImageDraw(&atlas, glyphs[i].image, (Rectangle){0, 0, width, font_height}, (Rectangle){x, 0, width, font_height}, WHITE);
-        recs[i] = (Rectangle){x, 0, width, font_height};
-        x += width;
-    }
-
-    Font font = {
-        .baseSize = font_height,
-        .glyphCount = glyphs_size,
-        .glyphPadding = 0,
-        .texture = LoadTextureFromImage(atlas),
-        .recs = recs,
-        .glyphs = glyphs,
-    };
-    UnloadImage(atlas);
-    (void)font_base_line;
-    return font;
 }
 
 static File *load_sources(IR_Module *module) {
@@ -1695,6 +1200,7 @@ static void debugger_restart(Debugger *debugger) {
 int64_t debug(IR_Module *module, int argc, char *argv[]) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "Code IR Debugger");
+    SetExitKey(KEY_Q);
     SetTargetFPS(60);
 
     bool has_origins = module->source_files.size > 0;
@@ -1715,12 +1221,12 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         .sources = load_sources(module),
         .mode = DEBUGGER_MODE__STEP,
         .next_depth = 0,
-        .font = load_bitmap_font("fonts/Code.font"),
-        .root_panel = &split_panel.panel,
+        .gui = {.font = load_bitmap_font("fonts/Code.font"), .root_panel = &split_panel.panel},
         .ir_panel = &ir_panel.panel,
         .source_panel = &source_panel.panel,
         .source_stepping = has_origins,
     };
+    debugger.gui.context = &debugger;
     int64_t result = interpret(module, argc, argv, &debugger.observer, false);
     while (debugger.restart_requested) {
         debugger_restart(&debugger);
@@ -1739,7 +1245,7 @@ int64_t debug(IR_Module *module, int argc, char *argv[]) {
         }
     }
 
-    UnloadFont(debugger.font);
+    UnloadFont(debugger.gui.font);
     CloseWindow();
     return result;
 }

@@ -376,4 +376,5 @@ typedef struct IR_Module {
     IR_Global_Variable_List global_variables;
     IR_Type_List types;
     uint32_t globals_size;
+    struct Profile_Call *profile_calls;
 } IR_Module;

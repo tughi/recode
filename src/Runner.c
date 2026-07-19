@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     }
     int64_t result = interpret(module, argc - arg_index, argv + arg_index, NULL, profile_mode);
     if (profile_mode) {
-        profile_report(module);
+        profile_show(module);
     }
     return (int)result;
 }
