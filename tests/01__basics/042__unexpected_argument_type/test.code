@@ -1,0 +1,9 @@
+proc take(value: bool) {
+    return
+}
+
+proc main() -> i32 {
+    let n = 42
+    take(n)
+    return 0
+}

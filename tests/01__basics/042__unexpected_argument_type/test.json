@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/042__unexpected_argument_type/test.code:7:10: Expected type bool but got i32"
+        ]
+    }
+}

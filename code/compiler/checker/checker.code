@@ -1408,6 +1408,10 @@ proc (^Checker).check_call_expression(self, call_expression: ^parsed.Call_Expres
         let expected_type = self.resolve_placeholders(parameter.parameter_type)
         let argument_expression = self.check_expression(parsed_argument.expression, expected_type: expected_type)
         self.bind_placeholder(parameter.parameter_type, argument_expression.type, parsed_argument.expression.location)
+        let resolved_parameter_type = self.resolve_placeholders(parameter.parameter_type)
+        if resolved_parameter_type != null and resolved_parameter_type.kind != .Pointer {
+            self.require_same_type(resolved_parameter_type, argument_expression.type, parsed_argument.expression.location)
+        }
         let argument = checked.new_call_argument(argument_expression)
         if last_argument == null {
             first_argument = argument
