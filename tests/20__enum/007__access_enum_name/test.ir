@@ -44,26 +44,20 @@ $test.main(): i32 {
 
 $test.Direction.name(%value: i32): String {
 @1:
-  %1: i32 = const 0
-  %2: bool = cmp_eq %value %1
-  br %2 @2 @3
-@2:
-  %3: usize = const 2
-  %4: String = struct .data $str_1 .length %3
-  ret %4
+  brx %value @3 @4 @2
 @3:
-  %5: i32 = const 1
-  %6: bool = cmp_eq %value %5
-  br %6 @4 @5
+  %1: usize = const 2
+  %2: String = struct .data $str_1 .length %1
+  ret %2
 @4:
-  %7: usize = const 4
-  %8: String = struct .data $str_2 .length %7
-  ret %8
-@5:
-  %9: [*]u8 = const null
-  %10: usize = const 0
-  %11: String = struct .data %9 .length %10
-  ret %11
+  %3: usize = const 4
+  %4: String = struct .data $str_2 .length %3
+  ret %4
+@2:
+  %5: [*]u8 = const null
+  %6: usize = const 0
+  %7: String = struct .data %5 .length %6
+  ret %7
 }
 
 $main(): i32 {

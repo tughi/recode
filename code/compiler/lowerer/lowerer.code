@@ -322,38 +322,38 @@ proc (^Lowerer).define_enum_name_procedure(self, enum_type: ^checked.Enum_Type) 
     procedure.append_block(block)
     self.current_block = block
 
+    // Out-of-range value: return an empty string.
+    let default_block = self.create_block()
+
+    let brx_instruction = ir.new_brx_instruction(value: parameter, default_block: default_block)
+    let member_count = enum_type.members.size
+    let member_index = 0usize
+    while member_index < member_count {
+        brx_instruction.append_target(ir.new_brx_target(block: null))
+        member_index = member_index + 1
+    }
+    self.current_block.append_instruction(brx_instruction.as(^ir.Instruction))
+
     let member_iterator = enum_type.members.iterator()
     while member_iterator.has_next() {
         let member = member_iterator.next()
-        let member_value = ir.new_const_instruction(
-            name: self.fresh_name()
-            type: ir.new_primitive_type(.i32)
-            value: member.value
-            lexeme: ""
-        )
-        self.current_block.append_instruction(member_value.as(^ir.Instruction))
-        let matches = ir.new_binary_instruction(
-            kind: .Compare_Equal
-            name: self.fresh_name()
-            type: ir.new_primitive_type(.bool)
-            left: parameter
-            right: member_value.as(^ir.Value)
-        )
-        self.current_block.append_instruction(matches.as(^ir.Instruction))
+        let member_block = self.create_block()
+        let target = brx_instruction.first_target
+        let member_value = member.value
+        while member_value > 0 {
+            target = target.next
+            member_value = member_value - 1
+        }
+        target.block = member_block
 
-        let match_block = self.create_block()
-        let next_block = self.create_block()
-        self.current_block.append_instruction(ir.new_br_instruction(condition: matches.as(^ir.Value), true_block: match_block, false_block: next_block).as(^ir.Instruction))
-
-        self.current_procedure.append_block(match_block)
-        self.current_block = match_block
+        self.current_procedure.append_block(member_block)
+        self.current_block = member_block
         let name_value = self.lower_string_struct(member.name)
         self.current_block.append_instruction(ir.new_ret_instruction(value: name_value).as(^ir.Instruction))
-
-        self.current_procedure.append_block(next_block)
-        self.current_block = next_block
     }
-    // No member matched: return an empty string.
+
+    self.current_procedure.append_block(default_block)
+    self.current_block = default_block
     let empty_value = self.lower_string_struct("")
     self.current_block.append_instruction(ir.new_ret_instruction(value: empty_value).as(^ir.Instruction))
 }
