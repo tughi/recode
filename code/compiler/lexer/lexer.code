@@ -23,20 +23,32 @@ proc lex(source: source.Source) -> ^Token {
     let first: ^Token = null
     let last: ^Token = null
     loop {
-        let token = lexer.scan_token(lexer.scan_position)
-        lexer.scan_position = lexer.scan_position + token.lexeme.length
+        let scan_position = lexer.scan_position
+        let space_before = 0u32
+        while lexer.source_content[scan_position] == ' ' {
+            scan_position = scan_position + 1
+            space_before = space_before + 1
+        }
+        lexer.scan_column = lexer.scan_column + space_before
+
+        let token = lexer.scan_token(scan_position)
+        token.space_before = space_before
+
+        lexer.scan_position = scan_position + token.lexeme.length
         if token.kind == .End_Of_Line {
             lexer.scan_line = lexer.scan_line + 1
             lexer.scan_column = 1
         } else {
             lexer.scan_column = lexer.scan_column + token.lexeme.length.as(u32)
         }
+
         if first == null {
             first = token
         } else {
             last.next = token
         }
         last = token
+
         if token.kind == .End_Of_File {
             token.next = token // null safety
             break
@@ -58,9 +70,6 @@ proc (^Lexer).scan_token(self, source_position: usize) -> ^Token {
     }
     if next_char.is_digit() {
         return self.scan_integer(source_position)
-    }
-    if next_char == ' ' {
-        return self.scan_space(source_position)
     }
     if next_char == '\'' {
         return self.scan_character(source_position)
@@ -161,16 +170,6 @@ proc (^Lexer).scan_integer(self, source_position: usize) -> ^Integer {
         }
     }
     return new_integer(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), value: value, base: base)
-}
-
-proc (^Lexer).scan_space(self, source_position: usize) -> ^Space {
-    let count = 0
-    let position = source_position
-    while self.source_content[position] == ' ' {
-        position = position + 1
-        count = count + 1
-    }
-    return new_space(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), count: count)
 }
 
 proc (^Lexer).scan_string(self, source_position: usize) -> ^Token {

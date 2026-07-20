@@ -59,7 +59,6 @@ proc string_literal() -> Match {
 
 type Check_Result = enum {
     No_Match
-    Optional
     Match
 }
 
@@ -107,26 +106,21 @@ proc (^Match).check(self, token: ^lexer.Token) -> Check_Result {
             }
         }
         case .Keyword {
-            if token.kind == .Identifier {
-                if token.lexeme.equals(self.keyword) {
-                    return .Match
-                }
+            if token.kind == .Identifier and token.lexeme.equals(self.keyword) {
+                return .Match
             }
         }
         case .Other {
-            if token.kind == .Other {
-                if token.lexeme.char_at(0) == self.other {
-                    return .Match
-                }
+            if token.kind == .Other and token.lexeme.char_at(0) == self.other {
+                return .Match
             }
         }
         case .Space {
-            if not self.required {
-                if token.kind == .Space {
+            if self.required {
+                if token.space_before >= 1 {
                     return .Match
                 }
-                return .Optional
-            } else if token.kind == .Space {
+            } else {
                 return .Match
             }
         }

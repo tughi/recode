@@ -22,36 +22,52 @@ proc (^Parser).advance(self) {
 }
 
 proc (^Parser).matches_one(self, first: match.Match) -> bool {
-    return first.check(self.token) == .Match
+    let token = self.token
+    if first.kind != .Space and token.space_before != 0 {
+        return false
+    }
+    return first.check(token) == .Match
 }
 
 proc (^Parser).matches_two(self, first: match.Match, second: match.Match) -> bool {
     let token = self.token
-    let first_result = first.check(token)
-    if first_result == .No_Match {
+    if first.kind != .Space and token.space_before != 0 {
         return false
     }
-    if first_result == .Match {
+    if first.check(token) != .Match {
+        return false
+    }
+    if first.kind != .Space {
         token = token.next
+        if second.kind != .Space and token.space_before != 0 {
+            return false
+        }
     }
     return second.check(token) == .Match
 }
 
 proc (^Parser).matches_three(self, first: match.Match, second: match.Match, third: match.Match) -> bool {
     let token = self.token
-    let first_result = first.check(token)
-    if first_result == .No_Match {
+    if first.kind != .Space and token.space_before != 0 {
         return false
     }
-    if first_result == .Match {
-        token = token.next
-    }
-    let second_result = second.check(token)
-    if second_result == .No_Match {
+    if first.check(token) != .Match {
         return false
     }
-    if second_result == .Match {
+    if first.kind != .Space {
         token = token.next
+        if second.kind != .Space and token.space_before != 0 {
+            return false
+        }
+    }
+    if second.check(token) != .Match {
+        return false
+    }
+    if second.kind != .Space {
+        token = token.next
+        if third.kind != .Space and token.space_before != 0 {
+            return false
+        }
     }
     return third.check(token) == .Match
 }
@@ -1342,18 +1358,9 @@ proc (^Parser).consume_string(self) -> ^lexer.String {
     panic
 }
 
-proc (^Parser).consume_space(self, count: i32) -> ^lexer.Space {
-    let token = self.token
-    if token.kind == .Space {
-        self.advance()
-        let space = token.as(^lexer.Space)
-        if space.count != count {
-            libc.stderr.begin_location_message(self.token.location, style: .Warning).write("Consumed ").write_i64(value: space.count.as(i64)).write(" spaces where ").write_i64(value: count.as(i64)).write(" were expected").end_location_message()
-        }
-        return space
+proc (^Parser).consume_space(self, count: i32) {
+    if self.token.space_before.as(i32) != count {
+        libc.stderr.begin_location_message(self.token.location, style: .Warning).write("Consumed ").write_i64(value: self.token.space_before.as(i64)).write(" spaces where ").write_i64(value: count.as(i64)).write(" were expected").end_location_message()
     }
-    if count > 0 {
-        libc.stderr.begin_location_message(token.location, style: .Warning).write("Consumed 0 spaces where ").write_i64(value: count.as(i64)).write(" were expected").end_location_message()
-    }
-    return lexer.new_space(lexeme: "", location: token.location, count: 0)
+    self.token.space_before = 0
 }
