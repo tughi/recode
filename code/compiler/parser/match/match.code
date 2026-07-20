@@ -63,8 +63,7 @@ type Check_Result = enum {
     Match
 }
 
-proc (^Match).check(self, lexer: ^lexer.Lexer, lookahead: usize) -> Check_Result {
-    let token = lexer.peek_token(lookahead)
+proc (^Match).check(self, token: ^lexer.Token) -> Check_Result {
     switch self.kind {
         case .Character {
             if token.kind == .Character {
@@ -138,39 +137,4 @@ proc (^Match).check(self, lexer: ^lexer.Lexer, lookahead: usize) -> Check_Result
         }
     }
     return .No_Match
-}
-
-proc (^lexer.Lexer).matches_one(self, first: Match) -> bool {
-    return first.check(self, 1) == .Match
-}
-
-proc (^lexer.Lexer).matches_two(self, first: Match, second: Match) -> bool {
-    let lookahead = 1usize
-    let first_result = first.check(self, lookahead)
-    if first_result == .No_Match {
-        return false
-    }
-    if first_result == .Match {
-        lookahead = lookahead + 1
-    }
-    return second.check(self, lookahead) == .Match
-}
-
-proc (^lexer.Lexer).matches_three(self, first: Match, second: Match, third: Match) -> bool {
-    let lookahead = 1usize
-    let first_result = first.check(self, lookahead)
-    if first_result == .No_Match {
-        return false
-    }
-    if first_result == .Match {
-        lookahead = lookahead + 1
-    }
-    let second_result = second.check(self, lookahead)
-    if second_result == .No_Match {
-        return false
-    }
-    if second_result == .Match {
-        lookahead = lookahead + 1
-    }
-    return third.check(self, lookahead) == .Match
 }

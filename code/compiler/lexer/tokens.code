@@ -19,6 +19,7 @@ type Token = struct {
     kind: Token_Kind
     lexeme: str
     location: source.Source_Location
+    next: ^Token
 }
 
 type Character = struct {
@@ -28,7 +29,7 @@ type Character = struct {
 
 proc new_character(lexeme: str, location: source.Source_Location, value: u8) -> ^Character {
     return allocator.new(Character(
-        super: Token(kind: .Character, lexeme: lexeme, location: location)
+        super: Token(kind: .Character, lexeme: lexeme, location: location, next: null)
         value: value
     ))
 }
@@ -39,7 +40,7 @@ type Comment = struct {
 
 proc new_comment(lexeme: str, location: source.Source_Location) -> ^Comment {
     return allocator.new(Comment(
-        super: Token(kind: .Comment, lexeme: lexeme, location: location)
+        super: Token(kind: .Comment, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -49,7 +50,7 @@ type End_Of_File = struct {
 
 proc new_end_of_file(lexeme: str, location: source.Source_Location) -> ^End_Of_File {
     return allocator.new(End_Of_File(
-        super: Token(kind: .End_Of_File, lexeme: lexeme, location: location)
+        super: Token(kind: .End_Of_File, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -59,7 +60,7 @@ type End_Of_Line = struct {
 
 proc new_end_of_line(lexeme: str, location: source.Source_Location) -> ^End_Of_Line {
     return allocator.new(End_Of_Line(
-        super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location)
+        super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -69,7 +70,7 @@ type Error = struct {
 
 proc new_error(lexeme: str, location: source.Source_Location) -> ^Error {
     return allocator.new(Error(
-        super: Token(kind: .Error, lexeme: lexeme, location: location)
+        super: Token(kind: .Error, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -79,7 +80,7 @@ type Identifier = struct {
 
 proc new_identifier(lexeme: str, location: source.Source_Location) -> ^Identifier {
     return allocator.new(Identifier(
-        super: Token(kind: .Identifier, lexeme: lexeme, location: location)
+        super: Token(kind: .Identifier, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -91,7 +92,7 @@ type Integer = struct {
 
 proc new_integer(lexeme: str, location: source.Source_Location, value: u64, base: i32) -> ^Integer {
     return allocator.new(Integer(
-        super: Token(kind: .Integer, lexeme: lexeme, location: location)
+        super: Token(kind: .Integer, lexeme: lexeme, location: location, next: null)
         value: value
         base: base
     ))
@@ -103,7 +104,7 @@ type Other = struct {
 
 proc new_other(lexeme: str, location: source.Source_Location) -> ^Other {
     return allocator.new(Other(
-        super: Token(kind: .Other, lexeme: lexeme, location: location)
+        super: Token(kind: .Other, lexeme: lexeme, location: location, next: null)
     ))
 }
 
@@ -114,7 +115,7 @@ type Space = struct {
 
 proc new_space(lexeme: str, location: source.Source_Location, count: i32) -> ^Space {
     return allocator.new(Space(
-        super: Token(kind: .Space, lexeme: lexeme, location: location)
+        super: Token(kind: .Space, lexeme: lexeme, location: location, next: null)
         count: count
     ))
 }
@@ -126,7 +127,7 @@ type String = struct {
 
 proc new_string(lexeme: str, location: source.Source_Location, value: str) -> ^String {
     return allocator.new(String(
-        super: Token(kind: .String, lexeme: lexeme, location: location)
+        super: Token(kind: .String, lexeme: lexeme, location: location, next: null)
         value: value
     ))
 }
