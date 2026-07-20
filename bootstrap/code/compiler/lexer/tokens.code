@@ -11,7 +11,6 @@ type Token_Kind = enum {
     Identifier
     Integer
     Other
-    Space
     String
 }
 
@@ -19,6 +18,8 @@ type Token = struct {
     kind: Token_Kind
     lexeme: str
     location: source.Source_Location
+    next: ^Token
+    space_before: u32
 }
 
 type Character = struct {
@@ -28,7 +29,7 @@ type Character = struct {
 
 proc new_character(lexeme: str, location: source.Source_Location, value: u8) -> ^Character {
     return allocator.new(Character(
-        super: Token(kind: .Character, lexeme: lexeme, location: location)
+        super: Token(kind: .Character, lexeme: lexeme, location: location, next: null, space_before: 0)
         value: value
     ))
 }
@@ -39,7 +40,7 @@ type Comment = struct {
 
 proc new_comment(lexeme: str, location: source.Source_Location) -> ^Comment {
     return allocator.new(Comment(
-        super: Token(kind: .Comment, lexeme: lexeme, location: location)
+        super: Token(kind: .Comment, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -49,7 +50,7 @@ type End_Of_File = struct {
 
 proc new_end_of_file(lexeme: str, location: source.Source_Location) -> ^End_Of_File {
     return allocator.new(End_Of_File(
-        super: Token(kind: .End_Of_File, lexeme: lexeme, location: location)
+        super: Token(kind: .End_Of_File, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -59,7 +60,7 @@ type End_Of_Line = struct {
 
 proc new_end_of_line(lexeme: str, location: source.Source_Location) -> ^End_Of_Line {
     return allocator.new(End_Of_Line(
-        super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location)
+        super: Token(kind: .End_Of_Line, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -69,7 +70,7 @@ type Error = struct {
 
 proc new_error(lexeme: str, location: source.Source_Location) -> ^Error {
     return allocator.new(Error(
-        super: Token(kind: .Error, lexeme: lexeme, location: location)
+        super: Token(kind: .Error, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -79,7 +80,7 @@ type Identifier = struct {
 
 proc new_identifier(lexeme: str, location: source.Source_Location) -> ^Identifier {
     return allocator.new(Identifier(
-        super: Token(kind: .Identifier, lexeme: lexeme, location: location)
+        super: Token(kind: .Identifier, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -91,7 +92,7 @@ type Integer = struct {
 
 proc new_integer(lexeme: str, location: source.Source_Location, value: u64, base: i32) -> ^Integer {
     return allocator.new(Integer(
-        super: Token(kind: .Integer, lexeme: lexeme, location: location)
+        super: Token(kind: .Integer, lexeme: lexeme, location: location, next: null, space_before: 0)
         value: value
         base: base
     ))
@@ -103,19 +104,7 @@ type Other = struct {
 
 proc new_other(lexeme: str, location: source.Source_Location) -> ^Other {
     return allocator.new(Other(
-        super: Token(kind: .Other, lexeme: lexeme, location: location)
-    ))
-}
-
-type Space = struct {
-    super: Token
-    count: i32
-}
-
-proc new_space(lexeme: str, location: source.Source_Location, count: i32) -> ^Space {
-    return allocator.new(Space(
-        super: Token(kind: .Space, lexeme: lexeme, location: location)
-        count: count
+        super: Token(kind: .Other, lexeme: lexeme, location: location, next: null, space_before: 0)
     ))
 }
 
@@ -126,7 +115,7 @@ type String = struct {
 
 proc new_string(lexeme: str, location: source.Source_Location, value: str) -> ^String {
     return allocator.new(String(
-        super: Token(kind: .String, lexeme: lexeme, location: location)
+        super: Token(kind: .String, lexeme: lexeme, location: location, next: null, space_before: 0)
         value: value
     ))
 }
@@ -141,10 +130,12 @@ proc (^Identifier).merge_with(self, separator: ^Other, another: ^Identifier) -> 
     }
 
     // Merge by extending self's lexeme
-    return new_identifier(
+    let merged = new_identifier(
         lexeme: self.lexeme.slice(0, self.lexeme.length + separator.lexeme.length + another.lexeme.length)
         location: self.location
     )
+    merged.space_before = self.space_before
+    return merged
 }
 
 proc (^Other).merge_with(self, another: ^Other) -> ^Other {
@@ -154,8 +145,10 @@ proc (^Other).merge_with(self, another: ^Other) -> ^Other {
     }
 
     // Merge by extending self's lexeme
-    return new_other(
+    let merged = new_other(
         lexeme: self.lexeme.slice(0, self.lexeme.length + another.lexeme.length)
         location: self.location
     )
+    merged.space_before = self.space_before
+    return merged
 }

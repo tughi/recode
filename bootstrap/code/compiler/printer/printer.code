@@ -305,11 +305,11 @@ proc (^libc.FILE).write_program(self, program: ^ir.Program) -> ^libc.FILE {
             self.end_line()
         }
     }
-    let named_type = program.first_type
-    while named_type != null {
+    let named_type_iterator = program.named_types.iterator()
+    while named_type_iterator.has_next() {
+        let named_type = named_type_iterator.next()
         self.write_type_declaration(named_type)
         self.end_line()
-        named_type = named_type.next_type
     }
     let global = program.first_global
     while global != null {

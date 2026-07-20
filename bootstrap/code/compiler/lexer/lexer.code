@@ -1,4 +1,3 @@
-import compiler.lexer.match
 import compiler.source
 import string
 
@@ -9,43 +8,58 @@ type Lexer = struct {
     scan_position: usize
     scan_line: u32
     scan_column: u32
-    token_cache: Token_Cache
 }
 
-proc create(source: source.Source) -> Lexer {
-    match.init()
-    return Lexer(
+proc lex(source: source.Source) -> ^Token {
+    let lexer = Lexer(
         source: source
         source_content: source.content.data()
         source_content_length: source.content.length
         scan_position: 0
         scan_line: 1
         scan_column: 1
-        token_cache: Token_Cache(tokens: [3]^Token(null, null, null), size: 0, start: 0)
     )
-}
 
-proc (^Lexer).location(self) -> source.Source_Location {
-    return self.peek_token(1).location
+    let first: ^Token = null
+    let last: ^Token = null
+    loop {
+        let scan_position = lexer.scan_position
+        let space_before = 0u32
+        while lexer.source_content[scan_position] == ' ' {
+            scan_position = scan_position + 1
+            space_before = space_before + 1
+        }
+        lexer.scan_column = lexer.scan_column + space_before
+
+        let token = lexer.scan_token(scan_position)
+        token.space_before = space_before
+
+        lexer.scan_position = scan_position + token.lexeme.length
+        if token.kind == .End_Of_Line {
+            lexer.scan_line = lexer.scan_line + 1
+            lexer.scan_column = 1
+        } else {
+            lexer.scan_column = lexer.scan_column + token.lexeme.length.as(u32)
+        }
+
+        if first == null {
+            first = token
+        } else {
+            last.next = token
+        }
+        last = token
+
+        if token.kind == .End_Of_File {
+            token.next = token // null safety
+            break
+        }
+    }
+
+    return first
 }
 
 proc (^Lexer).scan_location(self) -> source.Source_Location {
     return source.Source_Location(source: self.source, line: self.scan_line, column: self.scan_column)
-}
-
-proc (^Lexer).peek_token(self, lookahead: usize) -> ^Token {
-    while self.token_cache.size < lookahead {
-        let token = self.scan_token(self.scan_position)
-        self.scan_position = self.scan_position + token.lexeme.length
-        if token.kind == .End_Of_Line {
-            self.scan_line = self.scan_line + 1
-            self.scan_column = 1
-        } else {
-            self.scan_column = self.scan_column + token.lexeme.length.as(u32)
-        }
-        self.token_cache.append(token)
-    }
-    return self.token_cache.at(index: lookahead - 1)
 }
 
 
@@ -56,9 +70,6 @@ proc (^Lexer).scan_token(self, source_position: usize) -> ^Token {
     }
     if next_char.is_digit() {
         return self.scan_integer(source_position)
-    }
-    if next_char == ' ' {
-        return self.scan_space(source_position)
     }
     if next_char == '\'' {
         return self.scan_character(source_position)
@@ -161,16 +172,6 @@ proc (^Lexer).scan_integer(self, source_position: usize) -> ^Integer {
     return new_integer(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), value: value, base: base)
 }
 
-proc (^Lexer).scan_space(self, source_position: usize) -> ^Space {
-    let count = 0
-    let position = source_position
-    while self.source_content[position] == ' ' {
-        position = position + 1
-        count = count + 1
-    }
-    return new_space(lexeme: self.source.content.slice(source_position, position), location: self.scan_location(), count: count)
-}
-
 proc (^Lexer).scan_string(self, source_position: usize) -> ^Token {
     let position = source_position + 1
     let value = string.new_builder()
@@ -219,10 +220,6 @@ proc (u8).escape_char_value(self) -> u8 {
 
 proc (u8).is_escape_char(self) -> bool {
     return self == 'n' or self == '"' or self == '\'' or self == '\\' or self == 't' or self == '0' or self == 'e'
-}
-
-proc (^Lexer).advance(self) {
-    self.token_cache.remove_first()
 }
 
 proc (u8).is_identifier_start(self) -> bool {
