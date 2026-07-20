@@ -82,8 +82,6 @@ typedef struct {
     IR_Function *selected_function;
     File *selected_source;
     String selected_source_path;
-    uint64_t *line_times;
-    uint64_t max_line_time;
     Profile_Call *sandwich_callers;
     Profile_Call *sandwich_callees;
     bool sandwich_scroll_pending;
@@ -293,31 +291,6 @@ static void select_function(Profiler *profiler, IR_Function *function) {
     }
     profiler->selected_source = file;
     profiler->selected_source_path = path;
-
-    free(profiler->line_times);
-    profiler->line_times = calloc(file->lines_size, sizeof(uint64_t));
-    profiler->max_line_time = 0;
-    for (size_t f = 0; f < profiler->module->functions.size; f++) {
-        IR_Function *module_function = profiler->module->functions.items[f];
-        for (size_t b = 0; b < module_function->blocks.size; b++) {
-            IR_Block *block = module_function->blocks.items[b];
-            for (size_t i = 0; i < block->instructions.size; i++) {
-                IR_Instruction *instruction = block->instructions.items[i];
-                if (instruction->kind != IR_INSTRUCTION__DBG_LINE) {
-                    continue;
-                }
-                Source_Location location = instruction->dbg_line_instruction.location;
-                if (location.line < 1 || location.line > file->lines_size || !string_equals(location.source, path)) {
-                    continue;
-                }
-                uint64_t line_time = profiler->line_times[location.line - 1] + instruction->dbg_line_instruction.profile_time;
-                profiler->line_times[location.line - 1] = line_time;
-                if (line_time > profiler->max_line_time) {
-                    profiler->max_line_time = line_time;
-                }
-            }
-        }
-    }
 
     Profile_Source_Panel *source_panel = (Profile_Source_Panel *)profiler->source_panel;
     text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height - ROW_HEIGHT, first_line->dbg_line_instruction.location.line, file->lines_size, profiler->gui.font.baseSize);
@@ -895,12 +868,6 @@ static Functions_Panel make_functions_panel(float weight) {
     };
 }
 
-#define LINE_COST_WIDTH (7 * 9.0f)
-
-static Color heat_color(double heat) {
-    return (Color){(unsigned char)(130.0 + 125.0 * heat), (unsigned char)(130.0 - 30.0 * heat), (unsigned char)(130.0 - 70.0 * heat), 255};
-}
-
 static void profile_source_panel_draw(Profile_Source_Panel *source_panel, GUI *gui, Rectangle bounds) {
     Profiler *profiler = gui->context;
     Font font = gui->font;
@@ -931,21 +898,13 @@ static void profile_source_panel_draw(Profile_Source_Panel *source_panel, GUI *g
         gutter_digits++;
     }
     float gutter_width = text_panel_gutter_width(font, lines_size);
-    Rectangle gutter_bounds = {bounds.x + LINE_COST_WIDTH, text_bounds.y, bounds.width - LINE_COST_WIDTH, text_bounds.height};
+    Rectangle gutter_bounds = {bounds.x, text_bounds.y, bounds.width, text_bounds.height};
 
     BeginScissorMode((int)text_bounds.x, (int)text_bounds.y, (int)text_bounds.width, (int)text_bounds.height);
     for (size_t i = first_line; i < lines_size; i++) {
         float row_y = y_origin + (float)(i - first_line) * (float)line_height;
         if (row_y >= bottom) {
             break;
-        }
-        uint64_t line_time = profiler->line_times[i];
-        if (line_time > 0) {
-            char percent[32];
-            double fraction = profiler->total_time > 0 ? (double)line_time / (double)profiler->total_time : 0.0;
-            int percent_length = snprintf(percent, sizeof(percent), "%.1f%%", fraction * 100.0);
-            double heat = profiler->max_line_time > 0 ? (double)line_time / (double)profiler->max_line_time : 0.0;
-            draw_text_right_aligned(font, (String){percent, (size_t)percent_length}, bounds.x + LINE_COST_WIDTH - 6.0f, row_y, heat_color(heat));
         }
         float source_x = text_panel_draw_gutter(font, gutter_bounds, row_y, i + 1, 0, 0, gutter_digits, gutter_width, false);
         Vector2 position = {source_x, row_y};
@@ -1218,7 +1177,6 @@ void profile_show(IR_Module *module) {
         free_calls(profiler.sandwich_callees);
         free_calls(profiler.sandwich_callers);
     }
-    free(profiler.line_times);
     free(functions);
     UnloadFont(profiler.gui.font);
     CloseWindow();
@@ -1275,47 +1233,6 @@ void profile_save(IR_Module *module, const char *path) {
     fprintf(file, "\ncalls:\n");
     fprintf(file, "     time (ns)        calls        bytes  function\n");
     save_call_tree(file, root, 0);
-
-    for (size_t s = 0; s < module->source_files.size; s++) {
-        String source = module->source_files.items[s];
-        uint64_t *line_times = NULL;
-        size_t lines_size = 0;
-        for (size_t f = 0; f < module->functions.size; f++) {
-            IR_Function *function = module->functions.items[f];
-            for (size_t b = 0; b < function->blocks.size; b++) {
-                IR_Block *block = function->blocks.items[b];
-                for (size_t i = 0; i < block->instructions.size; i++) {
-                    IR_Instruction *instruction = block->instructions.items[i];
-                    if (instruction->kind != IR_INSTRUCTION__DBG_LINE || instruction->dbg_line_instruction.profile_time == 0) {
-                        continue;
-                    }
-                    Source_Location location = instruction->dbg_line_instruction.location;
-                    if (location.line < 1 || !string_equals(location.source, source)) {
-                        continue;
-                    }
-                    if (location.line > lines_size) {
-                        line_times = realloc(line_times, location.line * sizeof(uint64_t));
-                        memset(line_times + lines_size, 0, (location.line - lines_size) * sizeof(uint64_t));
-                        lines_size = location.line;
-                    }
-                    line_times[location.line - 1] += instruction->dbg_line_instruction.profile_time;
-                }
-            }
-        }
-        bool header_written = false;
-        for (size_t line = 0; line < lines_size; line++) {
-            if (line_times[line] == 0) {
-                continue;
-            }
-            if (!header_written) {
-                fprintf(file, "\nlines: %.*s\n", STRING(source));
-                fprintf(file, "     time (ns)  line\n");
-                header_written = true;
-            }
-            fprintf(file, "%14" PRIu64 "  %zu\n", profile_nanoseconds(line_times[line]), line + 1);
-        }
-        free(line_times);
-    }
 
     fclose(file);
 }

@@ -25,8 +25,6 @@ struct Interpreter {
     bool profiling;
     uint64_t *profile_child_time;
     Profile_Call *profile_current_call;
-    uint64_t *profile_line_time;
-    uint64_t profile_line_start;
 };
 
 static void print_runtime_error(Interpreter *interpreter, Source_Location location, const char *format, ...) {
@@ -849,22 +847,6 @@ static Step execute_dbg_instruction(Interpreter *interpreter, IR_Instruction *in
     return (Step){.kind = STEP_NEXT};
 }
 
-static Step execute_dbg_line_profile_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
-    (void)frame_data;
-    (void)return_address;
-    (void)previous_block;
-    uint64_t *line_time = &instruction->dbg_line_instruction.profile_time;
-    if (interpreter->profile_line_time != line_time) {
-        uint64_t now = profile_time();
-        if (interpreter->profile_line_time != NULL) {
-            *interpreter->profile_line_time += now - interpreter->profile_line_start;
-        }
-        interpreter->profile_line_time = line_time;
-        interpreter->profile_line_start = now;
-    }
-    return (Step){.kind = STEP_NEXT};
-}
-
 static Step execute_div_i8_instruction(Interpreter *interpreter, IR_Instruction *instruction, uint8_t *frame_data, uint8_t *return_address, IR_Block *previous_block) {
     (void)return_address;
     (void)previous_block;
@@ -1586,7 +1568,7 @@ static Step execute_xor_u64_instruction(Interpreter *interpreter, IR_Instruction
     return (Step){.kind = STEP_NEXT};
 }
 
-static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction, bool profiling) {
+static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction) {
     switch (instruction->kind) {
     case IR_INSTRUCTION__ADD:
         switch (instruction->result.type->kind) {
@@ -1820,9 +1802,8 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction, 
         }
         break;
     case IR_INSTRUCTION__DBG_BIND:
-        return execute_dbg_instruction;
     case IR_INSTRUCTION__DBG_LINE:
-        return profiling ? execute_dbg_line_profile_instruction : execute_dbg_instruction;
+        return execute_dbg_instruction;
     case IR_INSTRUCTION__DIV:
         switch (instruction->result.type->kind) {
         case IR_TYPE__I8:
@@ -2027,7 +2008,7 @@ static IR_Instruction_Execute instruction_executor(IR_Instruction *instruction, 
     return execute_placeholder_instruction;
 }
 
-static void prepare_module(IR_Module *module, bool profiling) {
+static void prepare_module(IR_Module *module) {
     for (size_t f = 0; f < module->functions.size; f++) {
         IR_Function *function = module->functions.items[f];
         if (function->is_external) {
@@ -2036,7 +2017,7 @@ static void prepare_module(IR_Module *module, bool profiling) {
         for (size_t b = 0; b < function->blocks.size; b++) {
             IR_Block *block = function->blocks.items[b];
             for (size_t i = 0; i < block->instructions.size; i++) {
-                block->instructions.items[i]->execute = instruction_executor(block->instructions.items[i], profiling);
+                block->instructions.items[i]->execute = instruction_executor(block->instructions.items[i]);
             }
         }
     }
@@ -2468,7 +2449,7 @@ int64_t interpret(IR_Module *module, int argc, char *argv[], Observer *observer,
         module->profile_calls = calloc(1, sizeof(Profile_Call));
         interpreter.profile_current_call = module->profile_calls;
     }
-    prepare_module(module, profiling);
+    prepare_module(module);
     IR_Function *main_function = find_function(&interpreter, main_name);
     if (main_function == NULL) {
         fprintf(stderr, "%.*s: No $main function\n", STRING(module->lexed_file.file.path));

@@ -156,7 +156,6 @@ typedef struct IR_Dbg_Bind_Instruction {
 
 typedef struct IR_Dbg_Line_Instruction {
     Source_Location location;
-    uint64_t profile_time;
 } IR_Dbg_Line_Instruction;
 
 typedef struct IR_Jmp_Instruction {
