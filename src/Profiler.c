@@ -82,6 +82,8 @@ typedef struct {
     IR_Function *selected_function;
     File *selected_source;
     String selected_source_path;
+    size_t selected_line_first; // 0 = none
+    size_t selected_line_last;
     Profile_Call *sandwich_callers;
     Profile_Call *sandwich_callees;
     bool sandwich_scroll_pending;
@@ -207,6 +209,31 @@ static IR_Instruction *function_first_line(IR_Function *function) {
     return NULL;
 }
 
+static bool function_line_range(IR_Function *function, String path, size_t *first, size_t *last) {
+    bool found = false;
+    for (size_t b = 0; b < function->blocks.size; b++) {
+        IR_Block *block = function->blocks.items[b];
+        for (size_t i = 0; i < block->instructions.size; i++) {
+            IR_Instruction *instruction = block->instructions.items[i];
+            if (instruction->kind != IR_INSTRUCTION__DBG_LINE) {
+                continue;
+            }
+            Source_Location location = instruction->dbg_line_instruction.location;
+            if (!string_equals(location.source, path)) {
+                continue;
+            }
+            if (!found || location.line < *first) {
+                *first = location.line;
+            }
+            if (!found || location.line > *last) {
+                *last = location.line;
+            }
+            found = true;
+        }
+    }
+    return found;
+}
+
 static void free_calls(Profile_Call *node) {
     for (size_t i = 0; i < node->children_size; i++) {
         free_calls(node->children[i]);
@@ -273,6 +300,8 @@ static void build_sandwich(Profiler *profiler) {
 static void select_function(Profiler *profiler, IR_Function *function) {
     profiler->selected_function = function;
     profiler->selected_source = NULL;
+    profiler->selected_line_first = 0;
+    profiler->selected_line_last = 0;
     build_sandwich(profiler);
     IR_Instruction *first_line = function_first_line(function);
     if (first_line == NULL || profiler->sources == NULL) {
@@ -291,6 +320,7 @@ static void select_function(Profiler *profiler, IR_Function *function) {
     }
     profiler->selected_source = file;
     profiler->selected_source_path = path;
+    function_line_range(function, path, &profiler->selected_line_first, &profiler->selected_line_last);
 
     Profile_Source_Panel *source_panel = (Profile_Source_Panel *)profiler->source_panel;
     text_panel_scroll_to_line(&source_panel->scrollbar, source_panel->panel.bounds.height - ROW_HEIGHT, first_line->dbg_line_instruction.location.line, file->lines_size, profiler->gui.font.baseSize);
@@ -906,7 +936,11 @@ static void profile_source_panel_draw(Profile_Source_Panel *source_panel, GUI *g
         if (row_y >= bottom) {
             break;
         }
-        float source_x = text_panel_draw_gutter(font, gutter_bounds, row_y, i + 1, 0, 0, gutter_digits, gutter_width, false);
+        size_t line = i + 1;
+        if (profiler->selected_line_first != 0 && line >= profiler->selected_line_first && line <= profiler->selected_line_last) {
+            DrawRectangle((int)bounds.x, (int)row_y, (int)bounds.width, line_height, (Color){40, 44, 58, 255});
+        }
+        float source_x = text_panel_draw_gutter(font, gutter_bounds, row_y, line, 0, 0, gutter_digits, gutter_width, false);
         Vector2 position = {source_x, row_y};
         draw_text(font, file->lines[i], LIGHTGRAY, &position, right);
     }
