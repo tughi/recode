@@ -1,0 +1,10 @@
+{
+    "compile": {
+        "args": [
+            "-O"
+        ]
+    },
+    "execute": {
+        "error": 10
+    }
+}

@@ -1,0 +1,27 @@
+proc main() -> i32 {
+    return empty_arm(7) + countdown(5) + trivial_loop()
+}
+
+proc countdown(n: i32) -> i32 {
+    let i = n
+    loop {
+        if i <= 0 {
+            break
+        }
+        i = i - 1
+    }
+    return i
+}
+
+proc empty_arm(n: i32) -> i32 {
+    if n > 0 {
+    }
+    return n
+}
+
+proc trivial_loop() -> i32 {
+    loop {
+        break
+    }
+    return 3
+}

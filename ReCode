@@ -42,6 +42,7 @@ def run(command, **kwargs):
 
 @dataclasses.dataclass
 class TestData:
+    compile_args: List[str]
     compile_error: int
     compile_stderr: List[str]
     execute_args: List[str]
@@ -50,6 +51,8 @@ class TestData:
     execute_stdout: List[str]
 
     def has_data(self) -> bool:
+        if self.compile_args:
+            return True
         if self.compile_error:
             return True
         if self.compile_stderr:
@@ -68,6 +71,7 @@ class TestData:
 def load_test_data(test_dir: str) -> TestData:
     test_data = json.loads(open(f"{test_dir}/test.json").read()) if os.path.exists(f"{test_dir}/test.json") else {}
     return TestData(
+        compile_args=test_data.get("compile", {}).get("args", []),
         compile_error=test_data.get("compile", {}).get("error", 0),
         compile_stderr=test_data.get("compile", {}).get("stderr", []),
         execute_args=test_data.get("execute", {}).get("args", []),
@@ -84,6 +88,8 @@ def save_test_data(test_dir: str, test_data: TestData) -> None:
     else:
         compile_data = {}
         execute_data = {}
+        if test_data.compile_args:
+            compile_data["args"] = test_data.compile_args
         if test_data.compile_error:
             compile_data["error"] = test_data.compile_error
         else:
@@ -122,7 +128,7 @@ def collect_test_data(test_dir: str, compiler_ir: str, expect_test_data: TestDat
 
     actual_test_data = dataclasses.replace(expect_test_data)
 
-    compiler_command = ["Runner", compiler_ir, "-o", build_dir, "-n", "test", test_dir]
+    compiler_command = ["Runner", compiler_ir, *expect_test_data.compile_args, "-o", build_dir, "-n", "test", test_dir]
     compiler_result = subprocess.run(compiler_command, capture_output=True, text=True)
     actual_test_data.compile_error = compiler_result.returncode
     actual_test_data.compile_stderr = clean_lines(compiler_result.stderr)

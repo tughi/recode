@@ -1,0 +1,19 @@
+import compiler.ir
+
+proc optimize(program: ^ir.Program) {
+    let procedure = program.first_procedure
+    while procedure != null {
+        optimize_procedure(procedure)
+        procedure = procedure.next
+    }
+}
+
+proc optimize_procedure(procedure: ^ir.Procedure) {
+    let changed = true
+    while changed {
+        changed = false
+        // if remove_jump_blocks(procedure) {
+        //     changed = true
+        // }
+    }
+}
