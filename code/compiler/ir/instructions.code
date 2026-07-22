@@ -51,6 +51,29 @@ proc (^Block).append_instruction(self, instruction: ^Instruction) {
         self.last_instruction.next_instruction = instruction
     }
     self.last_instruction = instruction
+
+    switch instruction.kind {
+        case .Br {
+            let br_instruction = instruction.as(^Br_Instruction)
+            br_instruction.true_block.predecessors.append(self)
+            br_instruction.false_block.predecessors.append(self)
+        }
+        case .Brx {
+            let brx_instruction = instruction.as(^Brx_Instruction)
+            let target = brx_instruction.first_target
+            while target != null {
+                target.block.predecessors.append(self)
+                target = target.next
+            }
+            brx_instruction.default_block.predecessors.append(self)
+        }
+        case .Jmp {
+            instruction.as(^Jmp_Instruction).block.predecessors.append(self)
+        }
+        else {
+            // ignored
+        }
+    }
 }
 
 proc (^Block).is_terminated(self) -> bool {

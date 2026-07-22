@@ -1,0 +1,49 @@
+import allocator
+
+type List<T> = struct {
+    first_item: ^List_Item<T>
+    last_item: ^List_Item<T>
+    size: usize
+}
+
+type List_Item<T> = struct {
+    value: T
+    next_item: ^List_Item<T>
+    prev_item: ^List_Item<T>
+}
+
+proc empty_list<T>() -> List<T> {
+    return List<T>(first_item: null, last_item: null, size: 0)
+}
+
+proc (^List<T>).append<T>(self, value: T) {
+    let item = allocator.new(List_Item<T>(value: value, next_item: null, prev_item: self.last_item))
+    if self.first_item == null {
+        self.first_item = item
+    } else {
+        self.last_item.next_item = item
+    }
+    self.last_item = item
+    self.size = self.size + 1
+}
+
+type List_Iterator<T> = struct {
+    next_item: ^List_Item<T>
+}
+
+proc (^List<T>).iterator<T>(self) -> List_Iterator<T> {
+    return List_Iterator<T>(next_item: self.first_item)
+}
+
+proc (^List_Iterator<T>).has_next<T>(self) -> bool {
+    return self.next_item != null
+}
+
+proc (^List_Iterator<T>).next<T>(self) -> T {
+    if self.next_item == null {
+        panic "Iterator exhausted"
+    }
+    let value = self.next_item.value
+    self.next_item = self.next_item.next_item
+    return value
+}

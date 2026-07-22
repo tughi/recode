@@ -135,13 +135,20 @@ proc (^Procedure).append_block(self, block: ^Block) {
 
 type Block = struct {
     label: usize
+    predecessors: collections.List<^Block>
     first_instruction: ^Instruction
     last_instruction: ^Instruction
     next: ^Block
 }
 
 proc new_block(label: usize) -> ^Block {
-    return allocator.new(Block(label: label, first_instruction: null, last_instruction: null, next: null))
+    return allocator.new(Block(
+        label: label
+        predecessors: collections.empty_list<^Block>()
+        first_instruction: null
+        last_instruction: null
+        next: null
+    ))
 }
 
 type Type_Kind = enum {
