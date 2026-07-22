@@ -27,6 +27,28 @@ proc (^List<T>).append<T>(self, value: T) {
     self.size = self.size + 1
 }
 
+proc (^List<T>).remove<T>(self, value: T) -> bool {
+    let item = self.first_item
+    while item != null {
+        if item.value == value {
+            if item.prev_item == null {
+                self.first_item = item.next_item
+            } else {
+                item.prev_item.next_item = item.next_item
+            }
+            if item.next_item == null {
+                self.last_item = item.prev_item
+            } else {
+                item.next_item.prev_item = item.prev_item
+            }
+            self.size = self.size - 1
+            return true
+        }
+        item = item.next_item
+    }
+    return false
+}
+
 type List_Iterator<T> = struct {
     next_item: ^List_Item<T>
 }

@@ -1,0 +1,10 @@
+proc main() -> i32 {
+    if both(true, false) {
+        return 1
+    }
+    return 0
+}
+
+proc both(a: bool, b: bool) -> bool {
+    return a and b
+}

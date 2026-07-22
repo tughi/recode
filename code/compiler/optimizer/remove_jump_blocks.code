@@ -1,0 +1,89 @@
+import compiler.ir
+
+proc block_feeds_phi_in(target: ^ir.Block, block: ^ir.Block) -> bool {
+    let instruction = target.first_instruction
+    while instruction != null and instruction.kind == .Phi {
+        let entry = instruction.as(^ir.Phi_Instruction).first_entry
+        while entry != null {
+            if entry.block == block {
+                return true
+            }
+            entry = entry.next
+        }
+        instruction = instruction.next_instruction
+    }
+    return false
+}
+
+proc remove_jump_blocks(procedure: ^ir.Procedure) -> bool {
+    let changed = false
+    let previous: ^ir.Block = null
+    let block = procedure.first_block
+    while block != null {
+        let next = block.next
+        if previous != null and block.is_jump_only() {
+            let target = block.last_instruction.as(^ir.Jmp_Instruction).block
+            if target != block and not block_feeds_phi_in(target, block) {
+                target.predecessors.remove(block)
+                redirect_predecessors(block, target)
+                previous.next = next
+                if procedure.last_block == block {
+                    procedure.last_block = previous
+                }
+                changed = true
+            } else {
+                previous = block
+            }
+        } else {
+            previous = block
+        }
+        block = next
+    }
+    return changed
+}
+
+proc redirect_predecessors(block: ^ir.Block, target: ^ir.Block) {
+    let predecessor_iterator = block.predecessors.iterator()
+    while predecessor_iterator.has_next() {
+        redirect_terminator(predecessor_iterator.next(), block, target)
+    }
+}
+
+proc redirect_terminator(predecessor: ^ir.Block, block: ^ir.Block, target: ^ir.Block) {
+    let terminator = predecessor.last_instruction
+    switch terminator.kind {
+        case .Br {
+            let br_instruction = terminator.as(^ir.Br_Instruction)
+            if br_instruction.true_block == block {
+                br_instruction.true_block = target
+                target.predecessors.append(predecessor)
+            }
+            if br_instruction.false_block == block {
+                br_instruction.false_block = target
+                target.predecessors.append(predecessor)
+            }
+        }
+        case .Brx {
+            let brx_instruction = terminator.as(^ir.Brx_Instruction)
+            let brx_target = brx_instruction.first_target
+            while brx_target != null {
+                if brx_target.block == block {
+                    brx_target.block = target
+                    target.predecessors.append(predecessor)
+                }
+                brx_target = brx_target.next
+            }
+            if brx_instruction.default_block == block {
+                brx_instruction.default_block = target
+                target.predecessors.append(predecessor)
+            }
+        }
+        case .Jmp {
+            terminator.as(^ir.Jmp_Instruction).block = target
+            target.predecessors.append(predecessor)
+        }
+        else {
+            panic "Unreachable: predecessor terminator is not a branch"
+        }
+    }
+}

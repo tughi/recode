@@ -84,6 +84,13 @@ proc (^Block).is_terminated(self) -> bool {
     return kind == .Br or kind == .Brx or kind == .Jmp or kind == .Ret
 }
 
+proc (^Block).is_jump_only(self) -> bool {
+    if self.first_instruction == null {
+        return false
+    }
+    return self.first_instruction == self.last_instruction and self.first_instruction.kind == .Jmp
+}
+
 type Argument = struct {
     value: ^Value
     next: ^Argument

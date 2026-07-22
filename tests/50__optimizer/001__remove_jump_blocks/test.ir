@@ -19,9 +19,7 @@ $test.countdown(%n: i32): i32 {
   %i.1: i32 = load %i.ptr
   %1: i32 = const 0
   %2: bool = cmp_le %i.1 %1
-  br %2 @4 @5
-@4:
-  jmp @3
+  br %2 @3 @5
 @5:
   %i.2: i32 = load %i.ptr
   %3: i32 = const 1
@@ -37,17 +35,13 @@ $test.empty_arm(%n: i32): i32 {
 @1:
   %1: i32 = const 0
   %2: bool = cmp_gt %n %1
-  br %2 @2 @3
-@2:
-  jmp @3
+  br %2 @3 @3
 @3:
   ret %n
 }
 
 $test.trivial_loop(): i32 {
 @1:
-  jmp @2
-@2:
   jmp @3
 @3:
   %1: i32 = const 3

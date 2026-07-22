@@ -12,8 +12,8 @@ proc optimize_procedure(procedure: ^ir.Procedure) {
     let changed = true
     while changed {
         changed = false
-        // if remove_jump_blocks(procedure) {
-        //     changed = true
-        // }
+        if remove_jump_blocks(procedure) {
+            changed = true
+        }
     }
 }

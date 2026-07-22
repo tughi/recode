@@ -1,0 +1,13 @@
+proc main() -> i32 {
+    let i = 0
+    while i < 10 {
+        if i == 0 {
+            break
+        } else {
+            break
+        }
+        // unreachable
+        i = i + 1
+    }
+    return i
+}

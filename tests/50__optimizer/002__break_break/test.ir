@@ -1,0 +1,32 @@
+$test.main(): i32 {
+@1:
+  %i.ptr: [i32] = alloc i32
+  %1: i32 = const 0
+  store %i.ptr %1
+  jmp @2
+@2:
+  %i.1: i32 = load %i.ptr
+  %2: i32 = const 10
+  %3: bool = cmp_lt %i.1 %2
+  br %3 @3 @4
+@3:
+  %i.2: i32 = load %i.ptr
+  %4: i32 = const 0
+  %5: bool = cmp_eq %i.2 %4
+  br %5 @4 @4
+@7:
+  %i.3: i32 = load %i.ptr
+  %6: i32 = const 1
+  %7: i32 = add %i.3 %6
+  store %i.ptr %7
+  jmp @2
+@4:
+  %i.4: i32 = load %i.ptr
+  ret %i.4
+}
+
+$main(): i32 {
+@1:
+  %1: i32 = call $test.main
+  ret %1
+}
