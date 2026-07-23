@@ -16,6 +16,19 @@ proc empty_list<T>() -> List<T> {
     return List<T>(first_item: null, last_item: null, size: 0)
 }
 
+proc list_of_one<T>(value: T) -> List<T> {
+    let list = empty_list<T>()
+    list.append(value)
+    return list
+}
+
+proc list_of_two<T>(first_value: T, second_value: T) -> List<T> {
+    let list = empty_list<T>()
+    list.append(first_value)
+    list.append(second_value)
+    return list
+}
+
 proc (^List<T>).append<T>(self, value: T) {
     let item = allocator.new(List_Item<T>(value: value, next_item: null, prev_item: self.last_item))
     if self.first_item == null {

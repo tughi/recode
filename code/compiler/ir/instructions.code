@@ -1,4 +1,5 @@
 import allocator
+import collections
 import string
 
 type Instruction_Kind = enum {
@@ -41,6 +42,7 @@ type Instruction_Kind = enum {
 type Instruction = struct {
     super: Value
     kind: Instruction_Kind
+    operands: collections.List<^Value>
     next_instruction: ^Instruction
 }
 
@@ -51,6 +53,14 @@ proc (^Block).append_instruction(self, instruction: ^Instruction) {
         self.last_instruction.next_instruction = instruction
     }
     self.last_instruction = instruction
+
+    let operand_iterator = instruction.operands.iterator()
+    while operand_iterator.has_next() {
+        let operand = operand_iterator.next()
+        if operand != null {
+            operand.uses.append(instruction)
+        }
+    }
 
     switch instruction.kind {
         case .Br {
@@ -91,15 +101,6 @@ proc (^Block).is_jump_only(self) -> bool {
     return self.first_instruction == self.last_instruction and self.first_instruction.kind == .Jmp
 }
 
-type Argument = struct {
-    value: ^Value
-    next: ^Argument
-}
-
-proc new_argument(value: ^Value) -> ^Argument {
-    return allocator.new(Argument(value: value, next: null))
-}
-
 type Alloc_Instruction = struct {
     super: Instruction
     allocated_type: ^Type
@@ -110,8 +111,16 @@ proc new_alloc_instruction(variable: ^Variable) -> ^Alloc_Instruction {
     let result_name = name_builder.append(variable.name).append(".ptr").build()
     return allocator.new(Alloc_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: result_name, type: new_pointer_type(variable.type).as(^Type), variable: variable, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: result_name
+                type: new_pointer_type(variable.type).as(^Type)
+                variable: variable
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Alloc
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
         allocated_type: variable.type
@@ -120,45 +129,66 @@ proc new_alloc_instruction(variable: ^Variable) -> ^Alloc_Instruction {
 
 type Binary_Instruction = struct {
     super: Instruction
-    left: ^Value
-    right: ^Value
 }
 
 proc new_binary_instruction(kind: Instruction_Kind, name: str, type: ^Type, left: ^Value, right: ^Value) -> ^Binary_Instruction {
     return allocator.new(Binary_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: kind
+            operands: collections.list_of_two(left, right)
             next_instruction: null
         )
-        left: left
-        right: right
     ))
+}
+
+proc (^Binary_Instruction).left(self) -> ^Value {
+    return self.operands.first_item.value
+}
+
+proc (^Binary_Instruction).right(self) -> ^Value {
+    return self.operands.first_item.next_item.value
 }
 
 type Bind_Instruction = struct {
     super: Instruction
     name: str
     indirect: bool
-    value: ^Value
 }
 
 proc new_bind_instruction(name: str, indirect: bool, value: ^Value) -> ^Bind_Instruction {
     return allocator.new(Bind_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Bind
+            operands: collections.list_of_one(value)
             next_instruction: null
         )
         name: name
         indirect: indirect
-        value: value
     ))
+}
+
+proc (^Bind_Instruction).value(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Br_Instruction = struct {
     super: Instruction
-    condition: ^Value
     true_block: ^Block
     false_block: ^Block
 }
@@ -166,14 +196,25 @@ type Br_Instruction = struct {
 proc new_br_instruction(condition: ^Value, true_block: ^Block, false_block: ^Block) -> ^Br_Instruction {
     return allocator.new(Br_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Br
+            operands: collections.list_of_one(condition)
             next_instruction: null
         )
-        condition: condition
         true_block: true_block
         false_block: false_block
     ))
+}
+
+proc (^Br_Instruction).condition(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Brx_Target = struct {
@@ -187,7 +228,6 @@ proc new_brx_target(block: ^Block) -> ^Brx_Target {
 
 type Brx_Instruction = struct {
     super: Instruction
-    value: ^Value
     first_target: ^Brx_Target
     last_target: ^Brx_Target
     default_block: ^Block
@@ -196,15 +236,26 @@ type Brx_Instruction = struct {
 proc new_brx_instruction(value: ^Value, default_block: ^Block) -> ^Brx_Instruction {
     return allocator.new(Brx_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Brx
+            operands: collections.list_of_one(value)
             next_instruction: null
         )
-        value: value
         first_target: null
         last_target: null
         default_block: default_block
     ))
+}
+
+proc (^Brx_Instruction).value(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 proc (^Brx_Instruction).append_target(self, target: ^Brx_Target) {
@@ -218,36 +269,64 @@ proc (^Brx_Instruction).append_target(self, target: ^Brx_Target) {
 
 type Call_Instruction = struct {
     super: Instruction
-    callee: ^Value
-    first_argument: ^Argument
 }
 
 proc new_call_instruction(name: str, type: ^Type, callee: ^Value) -> ^Call_Instruction {
     return allocator.new(Call_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Call
+            operands: collections.list_of_one(callee)
             next_instruction: null
         )
-        callee: callee
-        first_argument: null
     ))
+}
+
+proc (^Call_Instruction).append_argument(self, value: ^Value) {
+    self.operands.append(value)
+}
+
+proc (^Call_Instruction).callee(self) -> ^Value {
+    return self.operands.first_item.value
+}
+
+proc (^Call_Instruction).arguments_iterator(self) -> collections.List_Iterator<^Value> {
+    let iterator = self.operands.iterator()
+    iterator.next() // skip callee
+    return iterator
 }
 
 type Cast_Instruction = struct {
     super: Instruction
-    value: ^Value
 }
 
 proc new_cast_instruction(name: str, type: ^Type, value: ^Value) -> ^Cast_Instruction {
     return allocator.new(Cast_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Cast
+            operands: collections.list_of_one(value)
             next_instruction: null
         )
-        value: value
     ))
+}
+
+proc (^Cast_Instruction).value(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Const_Instruction = struct {
@@ -259,8 +338,16 @@ type Const_Instruction = struct {
 proc new_const_instruction(name: str, type: ^Type, value: u64, lexeme: str) -> ^Const_Instruction {
     return allocator.new(Const_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Const
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
         value: value
@@ -276,8 +363,16 @@ type Jmp_Instruction = struct {
 proc new_jmp_instruction(block: ^Block) -> ^Jmp_Instruction {
     return allocator.new(Jmp_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Jmp
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
         block: block
@@ -294,8 +389,16 @@ type Line_Instruction = struct {
 proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> ^Line_Instruction {
     return allocator.new(Line_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Line
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
         source_file: source_file
@@ -306,182 +409,251 @@ proc new_line_instruction(source_file: ^Source_File, line: u32, column: u32) -> 
 
 type Load_Instruction = struct {
     super: Instruction
-    pointer: ^Value
 }
 
 proc new_load_instruction(name: str, type: ^Type, pointer: ^Value) -> ^Load_Instruction {
     return allocator.new(Load_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Load
+            operands: collections.list_of_one(pointer)
             next_instruction: null
         )
-        pointer: pointer
     ))
+}
+
+proc (^Load_Instruction).pointer(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Neg_Instruction = struct {
     super: Instruction
-    operand: ^Value
 }
 
 proc new_neg_instruction(name: str, type: ^Type, operand: ^Value) -> ^Neg_Instruction {
     return allocator.new(Neg_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Neg
+            operands: collections.list_of_one(operand)
             next_instruction: null
         )
-        operand: operand
     ))
+}
+
+proc (^Neg_Instruction).operand(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Not_Instruction = struct {
     super: Instruction
-    operand: ^Value
 }
 
 proc new_not_instruction(name: str, type: ^Type, operand: ^Value) -> ^Not_Instruction {
     return allocator.new(Not_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Not
+            operands: collections.list_of_one(operand)
             next_instruction: null
         )
-        operand: operand
     ))
+}
+
+proc (^Not_Instruction).operand(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Offset_Instruction = struct {
     super: Instruction
-    pointer: ^Value
-    index: ^Value
 }
 
 proc new_offset_instruction(name: str, type: ^Type, pointer: ^Value, index: ^Value) -> ^Offset_Instruction {
     return allocator.new(Offset_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Offset
+            operands: collections.list_of_two(pointer, index)
             next_instruction: null
         )
-        pointer: pointer
-        index: index
     ))
 }
 
-type Phi_Entry = struct {
-    block: ^Block
-    value: ^Value
-    next: ^Phi_Entry
+proc (^Offset_Instruction).pointer(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
-proc new_phi_entry(block: ^Block, value: ^Value) -> ^Phi_Entry {
-    return allocator.new(Phi_Entry(block: block, value: value, next: null))
+proc (^Offset_Instruction).index(self) -> ^Value {
+    return self.operands.first_item.next_item.value
 }
 
 type Phi_Instruction = struct {
     super: Instruction
-    first_entry: ^Phi_Entry
-    last_entry: ^Phi_Entry
+    blocks: collections.List<^Block>
 }
 
 proc new_phi_instruction(name: str, type: ^Type) -> ^Phi_Instruction {
     return allocator.new(Phi_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Phi
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
-        first_entry: null
-        last_entry: null
+        blocks: collections.empty_list<^Block>()
     ))
 }
 
 proc (^Phi_Instruction).append_entry(self, block: ^Block, value: ^Value) {
-    let entry = new_phi_entry(block: block, value: value)
-    if self.first_entry == null {
-        self.first_entry = entry
-    } else {
-        self.last_entry.next = entry
-    }
-    self.last_entry = entry
+    self.blocks.append(block)
+    self.operands.append(value)
 }
 
 type Ret_Instruction = struct {
     super: Instruction
-    value: ^Value
 }
 
 proc new_ret_instruction(value: ^Value) -> ^Ret_Instruction {
-    return allocator.new(Ret_Instruction(
+    let instruction = allocator.new(Ret_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Ret
+            operands: collections.list_of_one(value)
             next_instruction: null
         )
-        value: value
     ))
+    return instruction
+}
+
+proc (^Ret_Instruction).value(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
 type Store_Instruction = struct {
     super: Instruction
-    pointer: ^Value
-    value: ^Value
 }
 
 proc new_store_instruction(pointer: ^Value, value: ^Value) -> ^Store_Instruction {
     return allocator.new(Store_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: "", type: null, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: ""
+                type: null
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Store
+            operands: collections.list_of_two(pointer, value)
             next_instruction: null
         )
-        pointer: pointer
-        value: value
     ))
 }
 
-type Struct_Instruction_Field = struct {
-    name: str
-    value: ^Value
-    next: ^Struct_Instruction_Field
+proc (^Store_Instruction).pointer(self) -> ^Value {
+    return self.operands.first_item.value
 }
 
-proc new_struct_instruction_field(name: str, value: ^Value) -> ^Struct_Instruction_Field {
-    return allocator.new(Struct_Instruction_Field(name: name, value: value, next: null))
+proc (^Store_Instruction).value(self) -> ^Value {
+    return self.operands.first_item.next_item.value
 }
 
 type Struct_Instruction = struct {
     super: Instruction
-    first_field: ^Struct_Instruction_Field
+    fields: collections.List<str> // TODO: try to use `^Struct_Member` instead of the member name
 }
 
 proc new_struct_instruction(name: str, type: ^Type) -> ^Struct_Instruction {
     return allocator.new(Struct_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Struct
+            operands: collections.empty_list<^Value>()
             next_instruction: null
         )
-        first_field: null
+        fields: collections.empty_list<str>()
     ))
+}
+
+proc (^Struct_Instruction).append_field_value(self, name: str, value: ^Value) {
+    self.fields.append(name)
+    self.operands.append(value)
 }
 
 type Struct_Offset_Instruction = struct {
     super: Instruction
-    pointer: ^Value
     member: str
 }
 
 proc new_struct_offset_instruction(name: str, type: ^Type, pointer: ^Value, member: str) -> ^Struct_Offset_Instruction {
     return allocator.new(Struct_Offset_Instruction(
         super: Instruction(
-            super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null)
+            super: Value(
+                kind: .Instruction_Result
+                name: name
+                type: type
+                variable: null
+                next: null
+                uses: collections.empty_list<^Instruction>()
+            )
             kind: .Struct_Offset
+            operands: collections.list_of_one(pointer)
             next_instruction: null
         )
-        pointer: pointer
         member: member
     ))
+}
+
+proc (^Struct_Offset_Instruction).pointer(self) -> ^Value {
+    return self.operands.first_item.value
 }

@@ -463,10 +463,18 @@ type Value = struct {
     type: ^Type
     variable: ^Variable
     next: ^Value
+    uses: collections.List<^Instruction>
 }
 
 proc new_value(kind: Value_Kind, name: str, type: ^Type) -> ^Value {
-    return allocator.new(Value(kind: kind, name: name, type: type, variable: null, next: null))
+    return allocator.new(Value(
+        kind: kind
+        name: name
+        type: type
+        variable: null
+        next: null
+        uses: collections.empty_list<^Instruction>()
+    ))
 }
 
 type Symbol = struct {
@@ -492,7 +500,14 @@ type Global = struct {
 
 proc new_global(name: str, type: ^Type) -> ^Global {
     return allocator.new(Global(
-        super: Symbol(super: Value(kind: .Global, name: name, type: type, variable: null, next: null))
+        super: Symbol(super: Value(
+            kind: .Global
+            name: name
+            type: type
+            variable: null
+            next: null
+            uses: collections.empty_list<^Instruction>()
+        ))
         literal: ""
         constant: null
         is_external: false
@@ -526,7 +541,14 @@ type Variable = struct {
 
 proc new_variable(name: str, type: ^Type, symbol: ^checked.Symbol) -> ^Variable {
     return allocator.new(Variable(
-        super: Symbol(super: Value(kind: .Instruction_Result, name: name, type: type, variable: null, next: null))
+        super: Symbol(super: Value(
+            kind: .Instruction_Result
+            name: name
+            type: type
+            variable: null
+            next: null
+            uses: collections.empty_list<^Instruction>()
+        ))
         symbol: symbol
         version: 0
     ))

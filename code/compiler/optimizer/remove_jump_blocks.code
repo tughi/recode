@@ -3,12 +3,11 @@ import compiler.ir
 proc block_feeds_phi_in(target: ^ir.Block, block: ^ir.Block) -> bool {
     let instruction = target.first_instruction
     while instruction != null and instruction.kind == .Phi {
-        let entry = instruction.as(^ir.Phi_Instruction).first_entry
-        while entry != null {
-            if entry.block == block {
+        let block_iterator = instruction.as(^ir.Phi_Instruction).blocks.iterator()
+        while block_iterator.has_next() {
+            if block_iterator.next() == block {
                 return true
             }
-            entry = entry.next
         }
         instruction = instruction.next_instruction
     }
