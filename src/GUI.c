@@ -78,7 +78,7 @@ Font load_bitmap_font(const char *path) {
     int x = 0;
     for (int i = 0; i < glyphs_size; i++) {
         int width = glyphs[i].image.width;
-        ImageDraw(&atlas, glyphs[i].image, (Rectangle){0, 0, width, font_height}, (Rectangle){x, 0, width, font_height}, WHITE);
+        ImageDrawImage(&atlas, glyphs[i].image, x, 0, WHITE);
         recs[i] = (Rectangle){x, 0, width, font_height};
         x += width;
     }
